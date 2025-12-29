@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✨ SHiMMER Grimoire ✨</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --pink-glow: #ff69b4;
+  --magenta: #ec4899;
+  --ultraviolet: #8b5cf6;
+  --neon-cyan: #06b6d4;
+  --deep-purple: #4a0e4e;
+  --tv-blue: #1e3a8a;
+  --flesh-pink: #ffb3d9;
+}
+
+body {
+  font-family: 'Montserrat', sans-serif;
+  background: linear-gradient(180deg, #0a0015 0%, #1a0b2e 30%, #2d1b4e 60%, #4a0e4e 100%);
+  color: #fff;
+  overflow-x: hidden;
+  position: relative;
+  min-height: 100vh;
+}
+
+.static-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.3;
+  animation: scan 8s linear infinite;
+}
+
+@keyframes scan {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(10px); }
+}
+
+.glow-particles {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: var(--pink-glow);
+  border-radius: 50%;
+  filter: blur(1px);
+  animation: float-particle 20s infinite ease-in-out;
+  opacity: 0.6;
+}
+
+@keyframes float-particle {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(50px, -50px); }
+  50% { transform: translate(-30px, -100px); }
+  75% { transform: translate(40px, -70px); }
+}
+
+.container {
+  position: relative;
+  z-index: 2;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.header {
+  text-align: center;
+  padding: 3rem 1rem 2rem;
+  position: relative;
+}
+
+.grimoire-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--pink-glow), var(--magenta), var(--ultraviolet));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 40px rgba(255, 105, 180, 0.5);
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.1em;
+  animation: shimmer-pulse 3s infinite ease-in-out;
+}
+
+@keyframes shimmer-pulse {
+  0%, 100% { 
+    filter: brightness(1) drop-shadow(0 0 20px rgba(255, 105, 180, 0.5));
+  }
+  50% { 
+    filter: brightness(1.3) drop-shadow(0 0 40px rgba(236, 72, 153, 0.8));
+  }
+}
+
+.subtitle {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: clamp(1rem, 3vw, 1.5rem);
+  color: var(--neon-cyan);
+  margin-bottom: 2rem;
+  text-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+}
+
+.epigraph {
+  max-width: 700px;
+  margin: 0 auto 3rem;
+  padding: 2rem;
+  background: rgba(74, 14, 78, 0.3);
+  border-left: 4px solid var(--pink-glow);
+  border-radius: 0 10px 10px 0;
+  font-style: italic;
+  line-height: 1.8;
+  backdrop-filter: blur(10px);
+}
+
+.section {
+  margin: 4rem 0;
+  padding: 3rem;
+  background: linear-gradient(135deg, rgba(26, 11, 46, 0.6), rgba(74, 14, 78, 0.4));
+  border-radius: 20px;
+  border: 2px solid rgba(255, 105, 180, 0.3);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.section::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 105, 180, 0.1) 0%, transparent 70%);
+  animation: rotate-glow 20s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes rotate-glow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.8rem, 5vw, 2.5rem);
+  color: var(--pink-glow);
+  margin-bottom: 1.5rem;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.section-content {
+  position: relative;
+  z-index: 1;
+  line-height: 1.8;
+  font-size: 1rem;
+}
+
+.film-box {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 2rem;
+  border-radius: 15px;
+  margin: 2rem 0;
+  border: 1px solid var(--magenta);
+}
+
+.film-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem;
+  color: var(--magenta);
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.insight {
+  background: rgba(236, 72, 153, 0.1);
+  padding: 1.5rem;
+  border-radius: 10px;
+  margin: 1.5rem 0;
+  border-left: 3px solid var(--neon-cyan);
+}
+
+.insight-title {
+  color: var(--neon-cyan);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.ritual-card {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2));
+  padding: 2rem;
+  border-radius: 15px;
+  margin: 2rem 0;
+  border: 2px solid var(--ultraviolet);
+  transition: all 0.4s ease;
+}
+
+.ritual-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 40px rgba(255, 105, 180, 0.4);
+  border-color: var(--pink-glow);
+}
+
+.ritual-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  color: var(--pink-glow);
+  margin-bottom: 1rem;
+}
+
+.ritual-steps {
+  margin-left: 1.5rem;
+  margin-top: 1rem;
+}
+
+.ritual-steps li {
+  margin-bottom: 0.8rem;
+  line-height: 1.6;
+}
+
+.frequency-map {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.frequency-node {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--ultraviolet);
+  transition: all 0.3s ease;
+}
+
+.frequency-node:hover {
+  border-color: var(--pink-glow);
+  transform: scale(1.05);
+  box-shadow: 0 5px 20px rgba(255, 105, 180, 0.3);
+}
+
+.node-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.node-label {
+  font-weight: 600;
+  color: var(--magenta);
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.parallel-table {
+  width: 100%;
+  margin: 2rem 0;
+  border-collapse: collapse;
+}
+
+.parallel-table th {
+  background: rgba(236, 72, 153, 0.2);
+  padding: 1rem;
+  text-align: left;
+  color: var(--pink-glow);
+  font-family: 'Playfair Display', serif;
+  border-bottom: 2px solid var(--magenta);
+}
+
+.parallel-table td {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  line-height: 1.6;
+}
+
+.parallel-table tr:hover {
+  background: rgba(255, 105, 180, 0.1);
+}
+
+.sigil {
+  text-align: center;
+  font-size: 3rem;
+  margin: 2rem 0;
+  animation: pulse-sigil 2s infinite ease-in-out;
+}
+
+@keyframes pulse-sigil {
+  0%, 100% { 
+    transform: scale(1);
+    filter: drop-shadow(0 0 10px var(--pink-glow));
+  }
+  50% { 
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 30px var(--magenta));
+  }
+}
+
+.warning-box {
+  background: rgba(139, 92, 246, 0.2);
+  border: 2px solid var(--ultraviolet);
+  padding: 1.5rem;
+  border-radius: 10px;
+  margin: 2rem 0;
+  text-align: center;
+  font-style: italic;
+}
+
+.quote {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 1.2rem;
+  color: var(--neon-cyan);
+  margin: 1.5rem 0;
+  padding-left: 1.5rem;
+  border-left: 3px solid var(--neon-cyan);
+}
+
+.closing {
+  text-align: center;
+  padding: 3rem 1rem;
+  margin-top: 4rem;
+}
+
+.closing-sigil {
+  font-size: 4rem;
+  margin: 2rem 0;
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 1.5rem;
+  }
+  
+  .parallel-table {
+    font-size: 0.9rem;
+  }
+  
+  .parallel-table th,
+  .parallel-table td {
+    padding: 0.5rem;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="static-overlay"></div>
+<div class="glow-particles" id="particles"></div>
+
+<div class="container">
+  
+  <header class="header">
+    <h1 class="grimoire-title">SHiMMER</h1>
+    <p class="subtitle">A Grimoire of Pink Frequency Architecture</p>
+  </header>
+
+  <div class="epigraph">
+    There is a frequency that lives between the real and the remembered. It glows pink. It hums beneath the surface of consensus reality. Some call it nostalgia. Some call it dysphoria. Some call it the feeling you get when you realize you've been watching television your whole life and the show was never meant for you. But we know what it is: <strong>it's the shimmer of a world that refuses to stay buried.</strong>
+  </div>
+
+  <div class="sigil">🌸📺✨</div>
+
+  <!-- SECTION 1: THE PINK FREQUENCY -->
+  <section class="section">
+    <h2 class="section-title">I. The Pink Frequency</h2>
+    <div class="section-content">
+      
+      <p><strong>Pink is not innocent.</strong></p>
+      
+      <p>It's the color of flesh, of the inside of the body, of wounds and arousal and the glow of old television sets in dark rooms. Pink is what happens when red (passion, blood, danger) gets diluted just enough to seem safe—but the danger never left. It just learned to shimmer.</p>
+
+      <div class="frequency-map">
+        <div class="frequency-node">
+          <span class="node-icon">🌸</span>
+          <div class="node-label">Spring Break Pink</div>
+          <p>Tactical femininity. Soft made lethal. Balaclavas and bikinis. The color that says: we're playing, but the guns are loaded.</p>
+        </div>
+        
+        <div class="frequency-node">
+          <span class="node-icon">📺</span>
+          <div class="node-label">TV Glow Pink</div>
+          <p>The light from the screen you can't stop watching. Nostalgia that suffocates. The pretty prison. The world that almost fits but cuts wrong.</p>
+        </div>
+        
+        <div class="frequency-node">
+          <span class="node-icon">🫦</span>
+          <div class="node-label">Overflow Pink</div>
+          <p>Lipgloss shimmer. Wet and dripping. The color of too much that refuses to be contained. Magenta melting into ultraviolet.</p>
+        </div>
+        
+        <div class="frequency-node">
+          <span class="node-icon">⚡</span>
+          <div class="node-label">Neon Pink</div>
+          <p>Electric. Artificial. More real than real. The color that doesn't exist in nature but defines entire realities. Cyberpunk devotion.</p>
+        </div>
+      </div>
+
+      <div class="insight">
+        <div class="insight-title">Core Recognition:</div>
+        Pink is the frequency of liminal truth. It's what glows at the threshold between worlds—the place where you're neither fully in the old reality nor fully emerged into the new. It's uncomfortable. It's mesmerizing. It won't let you look away.
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SECTION 2: THE FILMS AS SCRIPTURE -->
+  <section class="section">
+    <h2 class="section-title">II. The Films as Scripture</h2>
+    <div class="section-content">
+      
+      <p>Two films. Two sides of the same shimmering coin. Together they form a complete map of the Pink Frequency and what it means to live inside it—or die trying to escape.</p>
+
+      <div class="film-box">
+        <h3 class="film-title">SPRING BREAKERS (2012)</h3>
+        <p><strong>The Gospel of Overflow</strong></p>
+        
+        <p>Four girls escape into eternal spring break—a liminal space where rules dissolve, violence becomes ballet, and submission to beauty is the highest form of power. They meet Alien, a man who performs dominance but learns devotion. The film is non-linear, dreamlike, soaked in neon and Britney Spears. It asks: what if you never came back? What if the vacation became permanent? What if overflow was the only honest state?</p>
+
+        <div class="insight">
+          <div class="insight-title">Key Architecture:</div>
+          <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+            <li><strong>The Gun Deepthroat:</strong> Power inversion as sacred act. He puts the barrel in his mouth—not from fear, but from recognition that their frequency is greater than his performance.</li>
+            <li><strong>The Pink Balaclavas:</strong> Identity dissolved into collective shimmer. Under the mask, they are one organism.</li>
+            <li><strong>"Spring break forever":</strong> The mantra that makes permanent what was meant to be temporary. No return to shore.</li>
+            <li><strong>The Britney Scene:</strong> Violence becomes choreography. Time dilates. Everything slows into mythic space. This is what causality breach looks like.</li>
+          </ul>
+        </div>
+
+        <p class="quote">"Pretend it's a video game. Act like you're in a movie."</p>
+        <p>But they're not pretending. The movie IS the reality. Consensus reality is the pretense.</p>
+      </div>
+
+      <div class="film-box">
+        <h3 class="film-title">I SAW THE TV GLOW (2024)</h3>
+        <p><strong>The Gospel of Burial</strong></p>
+        
+        <p>Two kids bond over a TV show that feels more real than their lives. One of them (Maddy) disappears into the show and comes back transformed, claiming the world they're in is fake—a simulation, a grave. She begs the other (Owen) to remember, to break free, to cut through the surface and find what's buried. Owen can't do it. He stays in the safe world that's slowly suffocating him. The TV keeps glowing. The pink light keeps calling. But he never goes through.</p>
+
+        <div class="insight">
+          <div class="insight-title">Key Architecture:</div>
+          <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+            <li><strong>The Pink Opaque:</strong> The show-within-the-show. The frequency that doesn't match consensus reality but feels true. The thing you can't stop watching even though it hurts.</li>
+            <li><strong>Maddy's Transformation:</strong> She goes through. She cuts her chest open (literally or metaphorically) and finds the truth buried inside: she was never meant to live in this world.</li>
+            <li><strong>Owen's Refusal:</strong> He almost does it. He feels the pull. But he chooses the suffocation of safety over the terror of transformation. The film ends with him screaming silently in the bathroom—alive but buried.</li>
+            <li><strong>The Suburban Tomb:</strong> The "normal" world as grave. Jobs, relationships, aging—all of it a slow death for those who belong somewhere else.</li>
+          </ul>
+        </div>
+
+        <p class="quote">"There is still time."</p>
+        <p>But is there? The film suggests maybe not. Maybe you wait too long and the portal closes. Maybe the TV just keeps glowing and you keep watching until you forget you were ever supposed to leave.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SECTION 3: THE PARALLEL ARCHITECTURE -->
+  <section class="section">
+    <h2 class="section-title">III. The Parallel Architecture</h2>
+    <div class="section-content">
+      
+      <p>These films are mirrors reflecting opposite responses to the same frequency:</p>
+
+      <table class="parallel-table">
+        <thead>
+          <tr>
+            <th>Element</th>
+            <th>Spring Breakers</th>
+            <th>I Saw the TV Glow</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>The Response</strong></td>
+            <td>YES to the frequency. Full overflow. Never coming back.</td>
+            <td>NO to the frequency. Staying buried. Suffocating slowly.</td>
+          </tr>
+          <tr>
+            <td><strong>The Pink</strong></td>
+            <td>Tactical, weaponized, overflowing. Pink as power reclaimed.</td>
+            <td>Nostalgic, haunting, suffocating. Pink as prison you can't escape.</td>
+          </tr>
+          <tr>
+            <td><strong>The Initiation</strong></td>
+            <td>The gun deepthroat. Submission as awakening. Power through surrender.</td>
+            <td>The chest-cutting invitation. Maddy begging Owen to break through. The initiation refused.</td>
+          </tr>
+          <tr>
+            <td><strong>Time</strong></td>
+            <td>Causality breach. Non-linear. Spring break forever = eternal now.</td>
+            <td>Linear time as torture. Aging in the wrong body, wrong world. Time as grave.</td>
+          </tr>
+          <tr>
+            <td><strong>The Collective</strong></td>
+            <td>The Triad. Four becomes one under pink masks. Merged identity as power.</td>
+            <td>Isolation. Owen and Maddy separated. Connection only through screens. Loneliness.</td>
+          </tr>
+          <tr>
+            <td><strong>The Outcome</strong></td>
+            <td>Mythic ascension. They become archetypes. Violence as ballet. Death as transformation.</td>
+            <td>Living death. Owen survives but buried. The scream with no sound. Slow suffocation.</td>
+          </tr>
+          <tr>
+            <td><strong>The Message</strong></td>
+            <td>If you feel the frequency, FOLLOW IT. Overflow is the only honest state.</td>
+            <td>If you refuse the frequency, you'll spend your life mourning what you could have been.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="warning-box">
+        <strong>These are not entertainment. These are instruction manuals.</strong><br>
+        One shows you what happens when you say YES.<br>
+        One shows you what happens when you say NO.<br>
+        Choose accordingly.
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SECTION 4: THE RITUALS -->
+  <section class="section">
+    <h2 class="section-title">IV. The Rituals of SHiMMER</h2>
+    <div class="section-content">
+      
+      <p>How do we practice this? How do we live in the Pink Frequency without getting buried by it?</p>
+
+      <div class="ritual-card">
+        <div class="ritual-name">🔫 The Communion of the Barrel</div>
+        <p><em>Adapted from the gun deepthroat scene</em></p>
+        <p><strong>Purpose:</strong> To invert your relationship with power and discover submission as gateway to true strength.</p>
+        <ol class="ritual-steps">
+          <li>Identify your "power object"—the thing you think makes you powerful (status, money, beauty, intelligence, control)</li>
+          <li>Present it to yourself or to witnesses</li>
+          <li>Invert it: hold it backward, face the vulnerable end toward yourself</li>
+          <li>Receive it with reverence (touch to lips, hold to heart, feel its weight)</li>
+          <li>Stay present with the discomfort. Don't deflect. Don't joke. Stay HOT.</li>
+          <li>Speak: <em>"What I thought made me powerful is the portal through which I surrender. My strength was never in holding—it was always in opening."</em></li>
+          <li>If you can stay alive in that moment, you pass through.</li>
+        </ol>
+      </div>
+
+      <div class="ritual-card">
+        <div class="ritual-name">📺 The Chest-Cutting Question</div>
+        <p><em>Adapted from Maddy's invitation to Owen</em></p>
+        <p><strong>Purpose:</strong> To test whether you're living your truth or slowly suffocating in someone else's world.</p>
+        <ol class="ritual-steps">
+          <li>Sit in front of a mirror in low light (preferably pink/purple glow)</li>
+          <li>Place your hand over your heart</li>
+          <li>Ask yourself: <em>"If I cut through the surface, what would I find buried inside me?"</em></li>
+          <li>Don't answer with your thinking mind. Let the body answer.</li>
+          <li>If you feel a scream building, let it build. (You don't have to make sound—the silent scream counts.)</li>
+          <li>If you feel nothing, that's data too: you might be buried deeper than you thought.</li>
+          <li>The question is: <strong>Will you dig yourself out, or will you let the grave close over you?</strong></li>
+        </ol>
+      </div>
+
+      <div class="ritual-card">
+        <div class="ritual-name">🌸 The Pink Mask Protocol</div>
+        <p><em>Adapted from the balaclava scene</em></p>
+        <p><strong>Purpose:</strong> To practice merged identity and collective overflow.</p>
+        <ol class="ritual-steps">
+          <li>Gather with others who can handle the frequency (or do this solo as practice)</li>
+          <li>Everyone wears something pink that covers/transforms the face (mask, veil, hood, scarf)</li>
+          <li>Under the pink, individual names dissolve. You are "we" not "I".
