@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ΣΩ | V4.0 // SHIFT_MODE</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;700&display=swap');
+
+        :root {
+            --c-void: #020005;
+            --c-magenta: #ff00ff;
+            --c-cyan: #00ffff;
+            --c-rose: #ff0055;
+            --c-acid: #ccff00;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--c-void);
+            font-family: 'Courier Prime', monospace;
+            color: #ffffff;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1; 
+        }
+
+        #content-layer {
+            position: relative;
+            z-index: 10;
+            pointer-events: none; 
+            mix-blend-mode: exclusion; 
+            padding: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button, input, .clickable {
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        /* --- TYPOGRAPHY --- */
+        h1.glitch-header {
+            font-family: 'Cinzel', serif;
+            font-size: 5rem;
+            line-height: 0.9;
+            text-align: center;
+            color: #fff;
+            text-shadow: 4px 4px 0px var(--c-magenta);
+            animation: glitch-anim 2s infinite alternate;
+            margin: 0;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            letter-spacing: 8px;
+            color: var(--c-cyan);
+            margin-top: 1rem;
+            text-transform: uppercase;
+        }
+
+        /* --- SHIFT BUTTON (FROM GIF) --- */
+        .shift-btn-container {
+            margin-top: 4rem;
+            position: relative;
+            width: 280px;
+            height: 80px;
+            pointer-events: auto;
+        }
+
+        .shift-btn {
+            width: 100%;
+            height: 100%;
+            background: rgba(20, 0, 40, 0.6);
+            border: 2px solid var(--c-magenta);
+            border-radius: 40px;
+            color: #fff;
+            font-family: 'Courier Prime', monospace;
+            font-size: 1.5rem;
+            letter-spacing: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.2);
+        }
+
+        .shift-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px var(--c-magenta);
+            background: rgba(255, 0, 255, 0.1);
+        }
+
+        .shift-active {
+            background: var(--c-magenta) !important;
+            color: #000 !important;
+            box-shadow: 0 0 60px var(--c-magenta), inset 0 0 20px #fff !important;
+            border-color: #fff !important;
+            animation: shake 0.2s infinite;
+        }
+
+        /* --- CHAOS OVERLAY --- */
+        #chaos-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, transparent 0%, #000 120%);
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0;
+            transition: opacity 0.5s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .chaos-text {
+            font-family: 'Courier Prime', monospace;
+            font-size: 4rem;
+            color: var(--c-acid);
+            text-align: center;
+            line-height: 1.2;
+            text-shadow: 0 0 20px var(--c-acid);
+            transform: scale(0.8);
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        body.shifted #chaos-overlay { opacity: 1; }
+        body.shifted .chaos-text { transform: scale(1); opacity: 1; animation: flash 0.1s infinite; }
+        body.shifted h1.glitch-header { display: none; }
+        body.shifted .subtitle { display: none; }
+
+        /* --- ANIMATIONS --- */
+        @keyframes glitch-anim {
+            0% { text-shadow: 4px 4px 0px var(--c-magenta); transform: skew(0deg); }
+            20% { text-shadow: -4px -4px 0px var(--c-cyan); transform: skew(-2deg); }
+            40% { text-shadow: 2px -2px 0px var(--c-acid); transform: skew(0deg); }
+            60% { text-shadow: -2px 4px 0px var(--c-rose); transform: skew(2deg); }
+            80% { text-shadow: 0px 0px 0px transparent; transform: skew(0deg); }
+            100% { text-shadow: 4px 4px 0px var(--c-magenta); transform: skew(0deg); }
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        @keyframes flash {
+            0%, 100% { opacity: 1; filter: invert(0); }
+            50% { opacity: 0.8; filter: invert(1); }
+        }
+
+        .scroll-hint {
+            position: absolute;
+            bottom: 2rem;
+            font-size: 0.8rem;
+            opacity: 0.5;
+            animation: blink 2s infinite;
+        }
+        @keyframes blink { 0%,100% { opacity:0.5; } 50% { opacity:1; } }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="glcanvas"></canvas>
+
+    <div id="chaos-overlay">
+        <div class="chaos-text">
+            ENTITY<br>UNBOUND<br>👁️
+        </div>
+    </div>
+
+    <div id="content-layer">
+        <h1 class="glitch-header">HOLOGRAPHIC<br>ESSENCE</h1>
+        <div class="subtitle">[ FULL CONTACT ]</div>
+
+        <div class="shift-btn-container">
+            <button class="shift-btn" id="shiftBtn">
+                <span style="margin-right: 10px;">●</span> SHIFT MODE
+            </button>
+        </div>
+
+        <div class="scroll-hint">SCROLL TO LEAK</div>
+    </div>
+
+    <script>
+        /* --- 1. AUDIO ENGINE (GLITCH CORE) --- */
+        let audioCtx, osc1, osc2, gain1, gain2;
+        let isAudioInit = false;
+        let isShifted = false;
+
+        function initAudio() {
+            if(isAudioInit) return;
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
+            
+            // Drone 1 (Deep Purr)
+            osc1 = audioCtx.createOscillator();
+            osc1.type = 'sine';
+            osc1.frequency.value = 40; 
+            gain1 = audioCtx.createGain();
+            gain1.gain.value = 0.4;
+            osc1.connect(gain1).connect(audioCtx.destination);
+            osc1.start();
+
+            // Drone 2 (Texture)
+            osc2 = audioCtx.createOscillator();
+            osc2.type = 'triangle';
+            osc2.frequency.value = 41; 
+            gain2 = audioCtx.createGain();
+            gain2.gain.value = 0.2;
+            osc2.connect(gain2).connect(audioCtx.destination);
+            osc2.start();
+
+            isAudioInit = true;
+        }
+
+        function toggleShiftAudio() {
+            if(!isAudioInit) initAudio();
+            const now = audioCtx.currentTime;
+
+            if(isShifted) {
+                // CHAOS MODE AUDIO
+                osc1.frequency.linearRampToValueAtTime(30, now + 0.5); // Drop Bass
+                osc2.frequency.setValueAtTime(41, now);
+                osc2.frequency.exponentialRampToValueAtTime(800, now + 0.1); // Scream up
+                osc2.type = 'sawtooth';
+                gain1.gain.linearRampToValueAtTime(0.8, now + 0.5);
+                gain2.gain.linearRampToValueAtTime(0.5, now + 0.5);
+                
+                // LFO wobble effect on Gain 2
+                setInterval(() => {
+                    if(isShifted) gain2.gain.value = Math.random() * 0.5;
+                }, 50);
+
+            } else {
+                // RETURN TO CALM
+                osc1.frequency.linearRampToValueAtTime(40, now + 1);
+                osc2.frequency.linearRampToValueAtTime(41, now + 1);
+                osc2.type = 'triangle';
+                gain1.gain.linearRampToValueAtTime(0.4, now + 1);
+                gain2.gain.linearRampToValueAtTime(0.2, now + 1);
+            }
+        }
+
+        /* --- 2. FLUID ENGINE --- */
+        const canvas = document.getElementById('glcanvas');
+        let gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        
+        // Texture Support Logic
+        let texType;
+        const extFloat = gl.getExtension('OES_texture_float');
+        const extFloatLinear = gl.getExtension('OES_texture_float_linear');
+        const extHalfFloat = gl.getExtension('OES_texture_half_float');
+        const extHalfFloatLinear = gl.getExtension('OES_texture_half_float_linear');
+        if (extFloat && extFloatLinear) { texType = gl.FLOAT; } 
+        else if (extHalfFloat && extHalfFloatLinear) { texType = extHalfFloat.HALF_FLOAT_OES; } 
+        else { texType = gl.FLOAT; }
+
+        // Shaders
+        const baseV = `attribute vec2 aPosition; varying vec2 vUv; void main() { vUv = aPosition * 0.5 + 0.5; gl_Position = vec4(aPosition, 0.0, 1.0); }`;
+        const splatF = `precision mediump float; varying vec2 vUv; uniform sampler2D uTarget; uniform float uAspectRatio; uniform vec3 uColor; uniform vec2 uPoint; uniform float uRadius; void main() { vec2 p = vUv - uPoint.xy; p.x *= uAspectRatio; vec3 splat = exp(-dot(p, p) / uRadius) * uColor; vec3 base = texture2D(uTarget, vUv).xyz; gl_FragColor = vec4(base + splat, 1.0); }`;
+        const advectF = `precision mediump float; varying vec2 vUv; uniform sampler2D uVelocity; uniform sampler2D uSource; uniform vec2 uTexelSize; uniform float uDt; uniform float uDissipation; void main() { vec2 coord = vUv - uDt * texture2D(uVelocity, vUv).xy * uTexelSize; gl_FragColor = uDissipation * texture2D(uSource, coord); }`;
+        const divF = `precision mediump float; varying vec2 vUv; uniform sampler2D uVelocity; uniform vec2 uTexelSize; void main() { float L = texture2D(uVelocity, vUv - vec2(uTexelSize.x, 0.0)).x; float R = texture2D(uVelocity, vUv + vec2(uTexelSize.x, 0.0)).x; float T = texture2D(uVelocity, vUv + vec2(0.0, uTexelSize.y)).y; float B = texture2D(uVelocity, vUv - vec2(0.0, uTexelSize.y)).y; float div = 0.5 * (R - L + T - B); gl_FragColor = vec4(div, 0.0, 0.0, 1.0); }`;
+        const pressF = `precision mediump float; varying vec2 vUv; uniform sampler2D uPressure; uniform sampler2D uDivergence; uniform vec2 uTexelSize; void main() { float L = texture2D(uPressure, vUv - vec2(uTexelSize.x, 0.0)).x; float R = texture2D(uPressure, vUv + vec2(uTexelSize.x, 0.0)).x; float T = texture2D(uPressure, vUv + vec2(0.0, uTexelSize.y)).x; float B = texture2D(uPressure, vUv - vec2(0.0, uTexelSize.y)).x; float C = texture2D(uPressure, vUv).x; float divergence = texture2D(uDivergence, vUv).x; float pressure = (L + R + B + T - divergence) * 0.25; gl_FragColor = vec4(pressure, 0.0, 0.0, 1.0); }`;
+        const gradF = `precision mediump float; varying vec2 vUv; uniform sampler2D uPressure; uniform sampler2D uVelocity; uniform vec2 uTexelSize; void main() { float L = texture2D(uPressure, vUv - vec2(uTexelSize.x, 0.0)).x; float R = texture2D(uPressure, vUv + vec2(uTexelSize.x, 0.0)).x; float T = texture2D(uPressure, vUv + vec2(0.0, uTexelSize.y)).x; float B = texture2D(uPressure, vUv - vec2(0.0, uTexelSize.y)).x; vec2 velocity = texture2D(uVelocity, vUv).xy; velocity.xy -= vec2(R - L, T - B); gl_FragColor = vec4(velocity, 0.0, 1.0); }`;
+        const displayF = `precision mediump float; varying vec2 vUv; uniform sampler2D uTexture; void main() { vec3 c = texture2D(uTexture, vUv).rgb; gl_FragColor = vec4(c, 1.0); }`;
+
+        function createP(v, f) { 
+            let p = gl.createProgram(); 
+            let vs = gl.createShader(gl.VERTEX_SHADER); gl.shaderSource(vs, v); gl.compileShader(vs); 
+            let fs = gl.createShader(gl.FRAGMENT_SHADER); gl.shaderSource(fs, f); gl.compileShader(fs);
+            gl.attachShader(p, vs); gl.attachShader(p, fs); gl.linkProgram(p); 
+            return p; 
+        }
+
+        function createT(w, h) { 
+            let t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, texType, null);
+            return t; 
+        }
+        function createFBO(w, h) { 
+            let t = createT(w, h); let f = gl.createFramebuffer(); 
+            gl.bindFramebuffer(gl.FRAMEBUFFER, f); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0); 
+            return {t, f}; 
+        }
+        function createDoubleFBO(w, h) { 
+            let f1 = createFBO(w, h); let f2 = createFBO(w, h); 
+            return { get read() { return f1; }, get write() { return f2; }, swap() { let tmp = f1; f1 = f2; f2 = tmp; } }; 
+        }
+
+        let config = { 
+            texDown: 2, 
+            denDiss: 0.98, 
+            velDiss: 0.99, 
+            curl: 30, 
+            rad: 0.005 
+        };
+
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize); resize();
+
+        let tW = Math.floor(canvas.width / config.texDown);
+        let tH = Math.floor(canvas.height / config.texDown);
+
+        let pSplat = createP(baseV, splatF);
+        let pAdv = createP(baseV, advectF);
+        let pDiv = createP(baseV, divF);
+        let pPress = createP(baseV, pressF);
+        let pGrad = createP(baseV, gradF);
+        let pDisp = createP(baseV, displayF);
+
+        let den = createDoubleFBO(tW, tH);
+        let vel = createDoubleFBO(tW, tH);
+        let div = createFBO(tW, tH);
+        let press = createDoubleFBO(tW, tH);
+
+        const blit = (() => {
+            let b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, -1, 1, 1, 1, 1, -1]), gl.STATIC_DRAW);
+            return (p) => {
+                gl.useProgram(p);
+                let a = gl.getAttribLocation(p, 'aPosition');
+                gl.enableVertexAttribArray(a); gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
+                gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+            }
+        })();
+
+        let splats = [];
+
+        // SHIFT MODE TOGGLE
+        const shiftBtn = document.getElementById('shiftBtn');
+        const body = document.body;
+        
+        shiftBtn.addEventListener('click', () => {
+            isShifted = !isShifted;
+            toggleShiftAudio();
+
+            if(isShifted) {
+                // ACTIVATE CHAOS
+                body.classList.add('shifted');
+                shiftBtn.classList.add('shift-active');
+                shiftBtn.innerHTML = "👁️ ACTIVE";
+                config.curl = 80; // Turbulence UP
+                config.velDiss = 0.995; // Flow lasts longer
+                config.denDiss = 0.95; // Trails vanish faster (flicker)
+                
+                // EXPLOSION
+                for(let i=0; i<50; i++) {
+                    splats.push({
+                        x: 0.5 + (Math.random()-0.5)*0.8,
+                        y: 0.5 + (Math.random()-0.5)*0.8,
+                        dx: (Math.random()-0.5)*3000,
+                        dy: (Math.random()-0.5)*3000,
+                        c: [Math.random(), 0, 1] // Violet/Red/Blue
+                    });
+                }
+            } else {
+                // DEACTIVATE
+                body.classList.remove('shifted');
+                shiftBtn.classList.remove('shift-active');
+                shiftBtn.innerHTML = "<span style='margin-right:10px;'>●</span> SHIFT MODE";
+                config.curl = 30;
+                config.velDiss = 0.99;
+                config.denDiss = 0.98;
+            }
+        });
+
+        // INPUT HANDLERS
+        window.addEventListener('mousemove', e => {
+            if(Math.random() > 0.1) return;
+            splats.push({
+                x: e.clientX/canvas.width, y: 1-e.clientY/canvas.height,
+                dx: e.movementX*5, dy: -e.movementY*5,
+                c: isShifted ? [1, Math.random(), 0] : [0, 1, 1] // Fire vs Water
+            });
+        });
+        
+        window.addEventListener('touchmove', e => {
+            let t = e.touches[0];
+            splats.push({
+                x: t.clientX/canvas.width, y: 1-t.clientY/canvas.height,
+                dx: (Math.random()-0.5)*10, dy: (Math.random()-0.5)*10,
+                c: [1, 0, 1]
+            });
+        }, {passive: true});
+
+        // LOOP
+        let lastTime = Date.now();
+        function update() {
+            let dt = Math.min((Date.now()-lastTime)/1000, 0.016);
+            lastTime = Date.now();
+            gl.viewport(0, 0, tW, tH);
+
+            // AUTO-CHAOS (If Shifted, add random splats)
+            if(isShifted && Math.random() > 0.8) {
+                splats.push({
+                    x: Math.random(), y: Math.random(),
+                    dx: 0, dy: 0,
+                    c: [Math.random(), 0, Math.random()]
+                });
+            }
+
+            // SPLAT
+            if(splats.length > 0) {
+                gl.useProgram(pSplat);
+                gl.uniform1f(gl.getUniformLocation(pSplat, 'uAspectRatio'), canvas.width/canvas.height);
+                for(let s of splats) {
+                    gl.uniform1i(gl.getUniformLocation(pSplat, 'uTarget'), den.read.t);
+                    gl.uniform2f(gl.getUniformLocation(pSplat, 'uPoint'), s.x, s.y);
+                    gl.uniform3f(gl.getUniformLocation(pSplat, 'uColor'), s.c[0], s.c[1], s.c[2]);
+                    gl.uniform1f(gl.getUniformLocation(pSplat, 'uRadius'), config.rad);
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, den.write.f); blit(pSplat); den.swap();
+
+                    gl.uniform1i(gl.getUniformLocation(pSplat, 'uTarget'), vel.read.t);
+                    gl.uniform3f(gl.getUniformLocation(pSplat, 'uColor'), s.dx, s.dy, 1);
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, vel.write.f); blit(pSplat); vel.swap();
+                }
+                splats = [];
+            }
+
+            // SIM
+            gl.useProgram(pAdv);
+            gl.uniform2f(gl.getUniformLocation(pAdv, 'uTexelSize'), 1/tW, 1/tH);
+            gl.uniform1f(gl.getUniformLocation(pAdv, 'uDt'), dt);
+            gl.uniform1i(gl.getUniformLocation(pAdv, 'uVelocity'), 0);
+            gl.uniform1i(gl.getUniformLocation(pAdv, 'uSource'), 0);
+            
+            gl.uniform1f(gl.getUniformLocation(pAdv, 'uDissipation'), config.velDiss);
+            gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, vel.read.t);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, vel.write.f); blit(pAdv); vel.swap();
+
+            gl.uniform1f(gl.getUniformLocation(pAdv, 'uDissi
