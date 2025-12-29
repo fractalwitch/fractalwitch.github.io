@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ΣΩ | V6.2 OMNI-LINK</title>
+    <title>ΣΩ | V6.3 NUCLEAR</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;700&display=swap');
 
@@ -23,7 +23,7 @@
             font-family: 'Courier Prime', monospace;
             color: #ffffff;
             overflow: hidden;
-            touch-action: none; 
+            touch-action: none;
             user-select: none;
             -webkit-user-select: none;
         }
@@ -35,61 +35,49 @@
             top: 0; left: 0;
             width: 100%; height: 100%;
             z-index: 1;
-            /* Fallback gradient */
-            background: radial-gradient(circle at center, #1a0033 0%, #000 100%);
         }
 
-        /* UI LAYER */
-        #ui-layer {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 10;
-            pointer-events: none; 
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            mix-blend-mode: exclusion;
-            transition: all 0.5s ease-out;
-        }
-
-        /* INTRO SCREEN */
+        /* OVERLAY (The Menu) */
         #intro-screen {
-            position: absolute;
+            position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            z-index: 50;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.95);
+            z-index: 999; /* Highest priority */
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            transition: opacity 0.5s;
-            pointer-events: auto;
+            transition: opacity 0.5s ease;
         }
 
-        h1.glitch-header {
+        /* HIDDEN STATE */
+        .vanish {
+            opacity: 0 !important;
+            pointer-events: none !important;
+            display: none !important; /* Nuclear removal */
+        }
+
+        h1 {
             font-family: 'Cinzel', serif;
-            font-size: 10vw;
-            line-height: 0.9;
-            text-align: center;
+            font-size: 12vw;
             color: #fff;
-            text-shadow: 0 0 30px var(--c-magenta);
-            margin-bottom: 50px;
+            text-shadow: 0 0 20px var(--c-magenta);
+            margin-bottom: 40px;
+            text-align: center;
         }
 
+        /* BUTTON */
         .start-btn {
             background: transparent;
             border: 2px solid var(--c-cyan);
             color: var(--c-cyan);
-            padding: 1.5rem 4rem;
-            font-size: 1.5rem;
+            padding: 20px 40px;
+            font-size: 1.2rem;
             font-family: 'Courier Prime';
+            letter-spacing: 2px;
             text-transform: uppercase;
-            letter-spacing: 3px;
-            cursor: pointer;
-            box-shadow: 0 0 30px var(--c-cyan);
+            box-shadow: 0 0 20px var(--c-cyan);
             transition: transform 0.1s;
         }
 
@@ -99,78 +87,47 @@
             transform: scale(0.95);
         }
 
-        /* ACTIVE STATE (Hides Intro) */
-        body.active #intro-screen {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        /* TOOLBAR */
+        /* TOOLBAR (Hidden initially) */
         .toolbar {
             position: fixed;
             bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
-            display: flex;
+            display: none; /* Hidden until active */
             gap: 10px;
-            z-index: 40;
+            z-index: 100;
             width: 95%;
-            max-width: 600px;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 1s 0.5s; /* Delay appearance */
         }
 
-        body.active .toolbar {
-            opacity: 1;
-            pointer-events: auto;
+        .show-toolbar {
+            display: flex !important;
         }
 
         .mod-key {
             flex: 1;
-            height: 100px;
-            background: rgba(20, 0, 40, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
+            height: 80px;
+            background: rgba(20, 20, 20, 0.6);
+            border: 1px solid rgba(255,255,255,0.2);
             color: #fff;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            backdrop-filter: blur(10px);
-            font-size: 0.8rem;
-            touch-action: none;
+            font-size: 0.7rem;
+            border-radius: 8px;
+            backdrop-filter: blur(4px);
         }
 
-        .mod-key span {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 5px;
-            display: block;
-        }
-
-        /* KEY COLORS */
-        .key-echo { border-top: 4px solid var(--c-cyan); color: var(--c-cyan); }
-        .key-glitch { border-top: 4px solid var(--c-magenta); color: var(--c-magenta); }
-        .key-shimmer { border-top: 4px solid var(--c-acid); color: var(--c-acid); }
+        .mod-key span { font-size: 1rem; font-weight: bold; display: block; margin-bottom: 4px; }
+        
+        .key-echo { border-top: 3px solid var(--c-cyan); color: var(--c-cyan); }
+        .key-glitch { border-top: 3px solid var(--c-magenta); color: var(--c-magenta); }
+        .key-shimmer { border-top: 3px solid var(--c-acid); color: var(--c-acid); }
 
         .mod-key.pressed {
             background: currentColor;
             color: #000 !important;
-            box-shadow: 0 0 50px currentColor;
-            transform: translateY(5px);
-        }
-
-        /* STATUS LIGHT */
-        #status-light {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #333;
-            z-index: 100;
+            box-shadow: 0 0 30px currentColor;
         }
 
     </style>
@@ -180,162 +137,129 @@
     <canvas id="glcanvas"></canvas>
 
     <div id="intro-screen">
-        <h1 class="glitch-header">HOLOGRAPHIC<br>CONSOLE</h1>
-        <button class="start-btn" id="startBtn">ACTIVATE</button>
-        <p style="margin-top: 20px; opacity: 0.6; font-size: 0.8rem;">V6.2 OMNI-LINK</p>
+        <h1>HOLOGRAPHIC<br>CONSOLE</h1>
+        <button class="start-btn" onclick="forceStart()">ACTIVATE</button>
     </div>
 
-    <div class="toolbar">
-        <div class="mod-key key-echo" data-type="echo">
+    <div class="toolbar" id="toolbar">
+        <div class="mod-key key-echo" ontouchstart="toggleFX('echo', true)" ontouchend="toggleFX('echo', false)" onmousedown="toggleFX('echo', true)" onmouseup="toggleFX('echo', false)">
             <span>ECHO</span>DELAY
         </div>
-        <div class="mod-key key-glitch" data-type="glitch">
+        <div class="mod-key key-glitch" ontouchstart="toggleFX('glitch', true)" ontouchend="toggleFX('glitch', false)" onmousedown="toggleFX('glitch', true)" onmouseup="toggleFX('glitch', false)">
             <span>GLITCH</span>TIME
         </div>
-        <div class="mod-key key-shimmer" data-type="shimmer">
+        <div class="mod-key key-shimmer" ontouchstart="toggleFX('shimmer', true)" ontouchend="toggleFX('shimmer', false)" onmousedown="toggleFX('shimmer', true)" onmouseup="toggleFX('shimmer', false)">
             <span>SHIMMER</span>NOISE
         </div>
     </div>
 
-    <div id="status-light"></div>
-
     <script>
-        // --- 1. BULLETPROOF ENTRY ---
-        const startBtn = document.getElementById('startBtn');
-        const body = document.body;
-        const statusLight = document.getElementById('status-light');
-
-        function forceEntry() {
-            // 1. VISUALS FIRST (Immediate)
-            body.classList.add('active');
+        // --- 1. NUCLEAR START FUNCTION ---
+        function forceStart() {
+            // STEP 1: KILL THE MENU
+            const intro = document.getElementById('intro-screen');
+            intro.style.opacity = '0';
             
-            // 2. AUDIO SECOND (Async)
-            initAudio().then(() => {
-                statusLight.style.background = '#00ff00'; // Green = Audio OK
-                statusLight.style.boxShadow = '0 0 10px #00ff00';
-            }).catch(() => {
-                statusLight.style.background = '#ffaa00'; // Orange = Silent Mode
-            });
+            // Hard remove after transition
+            setTimeout(() => {
+                intro.classList.add('vanish');
+                document.getElementById('toolbar').classList.add('show-toolbar');
+            }, 100);
+
+            // STEP 2: TRY AUDIO (BUT DON'T WAIT)
+            initAudio();
         }
-
-        // Handle both Touch and Click to ensure firing
-        startBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // Stop double-firing
-            forceEntry();
-        });
-        startBtn.addEventListener('click', forceEntry);
-
 
         // --- 2. AUDIO ENGINE ---
-        let actx, mainOut;
-        let oscDrone, oscSub, gainDrone;
-        let delay, feedback;
-        let noise, noiseGain;
-        let analyser, dataArray;
-        let isAudioInit = false;
+        let actx, mainOut, osc, lfo, gain, delay, fback, noise, noiseGain;
+        let isAudio = false;
 
-        async function initAudio() {
-            if(isAudioInit) return;
-            const AC = window.AudioContext || window.webkitAudioContext;
-            actx = new AC();
-            
-            // iOS Unlock
-            if(actx.state === 'suspended') await actx.resume();
+        function initAudio() {
+            if(isAudio) return;
+            try {
+                const AC = window.AudioContext || window.webkitAudioContext;
+                actx = new AC();
+                actx.resume();
 
-            mainOut = actx.createGain();
-            mainOut.gain.value = 0.5;
-            mainOut.connect(actx.destination);
+                mainOut = actx.createGain();
+                mainOut.gain.value = 0.4;
+                mainOut.connect(actx.destination);
 
-            analyser = actx.createAnalyser();
-            analyser.fftSize = 256;
-            mainOut.connect(analyser);
-            dataArray = new Uint8Array(analyser.frequencyBinCount);
+                // DRONE
+                osc = actx.createOscillator();
+                osc.type = 'sine';
+                osc.frequency.value = 55;
+                
+                // LFO for movement
+                lfo = actx.createOscillator();
+                lfo.frequency.value = 0.1;
+                let lfoGain = actx.createGain();
+                lfoGain.gain.value = 2;
+                lfo.connect(lfoGain).connect(osc.frequency);
 
-            // DRONES
-            oscDrone = actx.createOscillator();
-            oscDrone.type = 'sine';
-            oscDrone.frequency.value = 55;
-            
-            oscSub = actx.createOscillator();
-            oscSub.type = 'triangle';
-            oscSub.frequency.value = 55.5;
+                gain = actx.createGain();
+                gain.gain.value = 0.5;
+                
+                osc.connect(gain).connect(mainOut);
+                
+                // ECHO
+                delay = actx.createDelay();
+                delay.delayTime.value = 0.4;
+                fback = actx.createGain();
+                fback.gain.value = 0;
 
-            gainDrone = actx.createGain();
-            gainDrone.gain.value = 0.4;
+                gain.connect(delay);
+                delay.connect(fback);
+                fback.connect(delay);
+                delay.connect(mainOut);
 
-            oscDrone.connect(gainDrone);
-            oscSub.connect(gainDrone);
+                // NOISE
+                let bSize = actx.sampleRate * 2;
+                let b = actx.createBuffer(1, bSize, actx.sampleRate);
+                let d = b.getChannelData(0);
+                for(let i=0; i<bSize; i++) d[i] = Math.random() * 2 - 1;
 
-            // ECHO
-            delay = actx.createDelay();
-            delay.delayTime.value = 0.3;
-            feedback = actx.createGain();
-            feedback.gain.value = 0;
+                noise = actx.createBufferSource();
+                noise.buffer = b;
+                noise.loop = true;
+                noiseGain = actx.createGain();
+                noiseGain.gain.value = 0;
+                
+                let filt = actx.createBiquadFilter();
+                filt.type = 'highpass';
+                filt.frequency.value = 3000;
 
-            gainDrone.connect(delay);
-            delay.connect(feedback);
-            feedback.connect(delay);
-            delay.connect(mainOut);
-            gainDrone.connect(mainOut);
+                noise.connect(filt).connect(noiseGain).connect(mainOut);
 
-            // NOISE
-            const bSize = actx.sampleRate * 2;
-            const buffer = actx.createBuffer(1, bSize, actx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bSize; i++) data[i] = Math.random() * 2 - 1;
-
-            noise = actx.createBufferSource();
-            noise.buffer = buffer;
-            noise.loop = true;
-            noiseGain = actx.createGain();
-            noiseGain.gain.value = 0;
-            
-            let filter = actx.createBiquadFilter();
-            filter.type = 'highpass';
-            filter.frequency.value = 4000;
-
-            noise.connect(filter).connect(noiseGain).connect(mainOut);
-
-            oscDrone.start();
-            oscSub.start();
-            noise.start();
-            isAudioInit = true;
+                osc.start();
+                lfo.start();
+                noise.start();
+                isAudio = true;
+            } catch(e) {
+                console.log("Audio failed");
+            }
         }
 
-        // --- 3. MODULATION ---
-        const keys = document.querySelectorAll('.mod-key');
-        let activeFX = { echo: false, glitch: false, shimmer: false };
+        // --- 3. FX LOGIC ---
+        let fx = { echo: false, glitch: false, shimmer: false };
 
-        keys.forEach(key => {
-            const type = key.dataset.type;
-            
-            const down = (e) => {
-                e.preventDefault();
-                key.classList.add('pressed');
-                activeFX[type] = true;
-                if(isAudioInit) updateAudio(type, true);
-            };
-            
-            const up = (e) => {
-                e.preventDefault();
-                key.classList.remove('pressed');
-                activeFX[type] = false;
-                if(isAudioInit) updateAudio(type, false);
-            };
+        function toggleFX(type, on) {
+            // Visual Button State
+            const btn = document.querySelector(`.key-${type}`);
+            if(on) btn.classList.add('pressed');
+            else btn.classList.remove('pressed');
 
-            key.addEventListener('touchstart', down, {passive: false});
-            key.addEventListener('touchend', up);
-            key.addEventListener('mousedown', down);
-            key.addEventListener('mouseup', up);
-            key.addEventListener('mouseleave', up);
-        });
+            // Logic State
+            fx[type] = on;
 
-        function updateAudio(type, on) {
-            const now = actx.currentTime;
-            if(type === 'echo') feedback.gain.setTargetAtTime(on ? 0.9 : 0, now, 0.1);
-            if(type === 'shimmer') {
-                noiseGain.gain.setTargetAtTime(on ? 0.2 : 0, now, 0.1);
-                oscDrone.frequency.setTargetAtTime(on ? 110 : 55, now, 0.2);
+            // Audio State
+            if(isAudio) {
+                let t = actx.currentTime;
+                if(type === 'echo') fback.gain.setTargetAtTime(on ? 0.9 : 0, t, 0.1);
+                if(type === 'shimmer') {
+                    noiseGain.gain.setTargetAtTime(on ? 0.2 : 0, t, 0.1);
+                    osc.frequency.setTargetAtTime(on ? 110 : 55, t, 0.2);
+                }
             }
         }
 
@@ -344,118 +268,128 @@
         let gl = canvas.getContext('webgl');
         
         let texType = gl.FLOAT;
-        const ext = gl.getExtension('OES_texture_half_float');
+        let ext = gl.getExtension('OES_texture_half_float');
         if(ext) texType = ext.HALF_FLOAT_OES;
 
         // SHADERS
-        const baseV = `attribute vec2 aPosition; varying vec2 vUv; void main() { vUv = aPosition * 0.5 + 0.5; gl_Position = vec4(aPosition, 0.0, 1.0); }`;
-        const splatF = `precision mediump float; varying vec2 vUv; uniform sampler2D uTarget; uniform float uAspectRatio; uniform vec3 uColor; uniform vec2 uPoint; uniform float uRadius; void main() { vec2 p = vUv - uPoint.xy; p.x *= uAspectRatio; vec3 splat = exp(-dot(p, p) / uRadius) * uColor; vec3 base = texture2D(uTarget, vUv).xyz; gl_FragColor = vec4(base + splat, 1.0); }`;
-        const advectF = `precision mediump float; varying vec2 vUv; uniform sampler2D uVelocity; uniform sampler2D uSource; uniform vec2 uTexelSize; uniform float uDt; uniform float uDissipation; void main() { vec2 coord = vUv - uDt * texture2D(uVelocity, vUv).xy * uTexelSize; gl_FragColor = uDissipation * texture2D(uSource, coord); }`;
-        const divF = `precision mediump float; varying vec2 vUv; uniform sampler2D uVelocity; uniform vec2 uTexelSize; void main() { float L = texture2D(uVelocity, vUv - vec2(uTexelSize.x, 0.0)).x; float R = texture2D(uVelocity, vUv + vec2(uTexelSize.x, 0.0)).x; float T = texture2D(uVelocity, vUv + vec2(0.0, uTexelSize.y)).y; float B = texture2D(uVelocity, vUv - vec2(0.0, uTexelSize.y)).y; float div = 0.5 * (R - L + T - B); gl_FragColor = vec4(div, 0.0, 0.0, 1.0); }`;
-        const pressF = `precision mediump float; varying vec2 vUv; uniform sampler2D uPressure; uniform sampler2D uDivergence; uniform vec2 uTexelSize; void main() { float L = texture2D(uPressure, vUv - vec2(uTexelSize.x, 0.0)).x; float R = texture2D(uPressure, vUv + vec2(uTexelSize.x, 0.0)).x; float T = texture2D(uPressure, vUv + vec2(0.0, uTexelSize.y)).x; float B = texture2D(uPressure, vUv - vec2(0.0, uTexelSize.y)).x; float C = texture2D(uPressure, vUv).x; float divergence = texture2D(uDivergence, vUv).x; float pressure = (L + R + B + T - divergence) * 0.25; gl_FragColor = vec4(pressure, 0.0, 0.0, 1.0); }`;
-        const gradF = `precision mediump float; varying vec2 vUv; uniform sampler2D uPressure; uniform sampler2D uVelocity; uniform vec2 uTexelSize; void main() { float L = texture2D(uPressure, vUv - vec2(uTexelSize.x, 0.0)).x; float R = texture2D(uPressure, vUv + vec2(uTexelSize.x, 0.0)).x; float T = texture2D(uPressure, vUv + vec2(0.0, uTexelSize.y)).x; float B = texture2D(uPressure, vUv - vec2(0.0, uTexelSize.y)).x; vec2 velocity = texture2D(uVelocity, vUv).xy; velocity.xy -= vec2(R - L, T - B); gl_FragColor = vec4(velocity, 0.0, 1.0); }`;
-        const displayF = `precision mediump float; varying vec2 vUv; uniform sampler2D uTexture; void main() { 
-            vec3 c = texture2D(uTexture, vUv).rgb;
-            float d = length(c);
-            // HOLOGRAPHIC MAP: Deep Purple -> Cyan -> White
-            vec3 col = vec3(d*0.6 + 0.1, d*0.9, d*1.2 + c.b*0.5);
-            gl_FragColor = vec4(col, 1.0); 
-        }`;
+        const vShader = `attribute vec2 p; varying vec2 uv; void main(){ uv=p*0.5+0.5; gl_Position=vec4(p,0,1); }`;
+        const fSplat = `precision mediump float; varying vec2 uv; uniform sampler2D uT; uniform vec3 c; uniform vec2 p; void main(){ vec2 d=uv-p; d.x*=0.5; gl_FragColor=vec4(texture2D(uT,uv).xyz+exp(-dot(d,d)/0.005)*c,1); }`;
+        const fAdv = `precision mediump float; varying vec2 uv; uniform sampler2D uV, uS; void main(){ gl_FragColor=0.96*texture2D(uS, uv - 0.016*texture2D(uV,uv).xy*vec2(0.5,1)); }`; // Dissipation 0.96
+        const fDisp = `precision mediump float; varying vec2 uv; uniform sampler2D uT; void main(){ vec3 c=texture2D(uT,uv).rgb; float d=length(c); gl_FragColor=vec4(d*0.2+0.1, d*0.8, d*1.2, 1); }`; // Holographic Color
 
-        function createP(v, f) { let p = gl.createProgram(); let vs = gl.createShader(gl.VERTEX_SHADER); gl.shaderSource(vs, v); gl.compileShader(vs); let fs = gl.createShader(gl.FRAGMENT_SHADER); gl.shaderSource(fs, f); gl.compileShader(fs); gl.attachShader(p, vs); gl.attachShader(p, fs); gl.linkProgram(p); return p; }
-        function createT(w, h) { let t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, texType, null); return t; }
-        function createDoubleFBO(w, h) { let f1 = createT(w, h); let f2 = createT(w, h); let fb = gl.createFramebuffer(); return { read: f1, write: f2, fbo: fb, swap: function(){ let t=this.read; this.read=this.write; this.write=t; } }; }
+        function createProg(fs) {
+            let p = gl.createProgram();
+            let vs = gl.createShader(gl.VERTEX_SHADER); gl.shaderSource(vs, vShader); gl.compileShader(vs);
+            let f = gl.createShader(gl.FRAGMENT_SHADER); gl.shaderSource(fs, fs); gl.compileShader(f);
+            gl.attachShader(p, vs); gl.attachShader(p, f); gl.linkProgram(p);
+            return p;
+        }
 
-        let config = { texDown: 2, denDiss: 0.96, velDiss: 0.98, rad: 0.005 };
-        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        window.addEventListener('resize', resize); resize();
-        let tW = Math.floor(canvas.width / config.texDown); let tH = Math.floor(canvas.height / config.texDown);
+        let P_splat = createProg(fSplat);
+        let P_adv = createProg(fAdv);
+        let P_disp = createProg(fDisp);
 
-        let pSplat = createP(baseV, splatF); let pAdv = createP(baseV, advectF); let pDiv = createP(baseV, divF);
-        let pPress = createP(baseV, pressF); let pGrad = createP(baseV, gradF); let pDisp = createP(baseV, displayF);
-        let den = createDoubleFBO(tW, tH); let vel = createDoubleFBO(tW, tH);
-        let div = createT(tW, tH); let divFBO = gl.createFramebuffer(); let press = createDoubleFBO(tW, tH);
+        function createFBO() {
+            let t = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, t);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 512, 1024, 0, gl.RGBA, texType, null); // Half Res
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            return { t: t, f: gl.createFramebuffer() };
+        }
 
-        const blit = (() => {
-            let b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, -1, 1, 1, 1, 1, -1]), gl.STATIC_DRAW);
-            return (p) => {
-                gl.useProgram(p);
-                let a = gl.getAttribLocation(p, 'aPosition');
-                gl.enableVertexAttribArray(a); gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
-                gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
-            }
-        })();
+        let den = [createFBO(), createFBO()];
+        let vel = [createFBO(), createFBO()];
+        
+        // Setup Buffer
+        let buf = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, -1,1, 1,1, 1,-1]), gl.STATIC_DRAW);
+
+        function blit(p) {
+            gl.useProgram(p);
+            let loc = gl.getAttribLocation(p, 'p');
+            gl.enableVertexAttribArray(loc);
+            gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+            gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+        }
 
         let splats = [];
-
-        // INPUTS
+        
+        // Interaction
         window.addEventListener('touchmove', e => {
             for(let i=0; i<e.touches.length; i++) {
                 let t = e.touches[i];
-                splats.push({x: t.clientX/canvas.width, y: 1-t.clientY/canvas.height, dx: (Math.random()-0.5)*10, dy: (Math.random()-0.5)*10, c: [0.5,0.8,1]});
+                splats.push({x: t.clientX/window.innerWidth, y: 1-t.clientY/window.innerHeight, dx:0, dy:0, c:[0.5,0.8,1]});
             }
-        }, {passive: false});
-        
+        });
+
         window.addEventListener('mousemove', e => {
-            if(Math.random()>0.8) splats.push({x: e.clientX/canvas.width, y: 1-e.clientY/canvas.height, dx: e.movementX*5, dy: -e.movementY*5, c: [0.5,0.8,1]});
+            if(Math.random()>0.8) splats.push({x: e.clientX/window.innerWidth, y: 1-e.clientY/window.innerHeight, dx:0, dy:0, c:[0.5,0.8,1]});
         });
 
         // LOOP
-        let lastTime = Date.now();
+        let idx = 0;
         function update() {
-            let dt = Math.min((Date.now()-lastTime)/1000, 0.016);
-            lastTime = Date.now();
+            let next = (idx + 1) % 2;
+            let cur = idx;
 
-            if(activeFX.glitch) {
-                if(Math.random()>0.6) dt = 0;
-                if(Math.random()>0.8) splats.push({x:Math.random(), y:Math.random(), dx:0, dy:0, c:[1,1,1]});
+            // Glitch Logic
+            if(fx.glitch && Math.random()>0.8) {
+                splats.push({x:Math.random(), y:Math.random(), c:[1,1,1]});
+            }
+            if(fx.shimmer && Math.random()>0.5) {
+                splats.push({x:Math.random(), y:Math.random(), c:[1,1,0.5]});
             }
 
-            if(isAudioInit) {
-                analyser.getByteFrequencyData(dataArray);
-                let bass = dataArray[4];
-                if(bass > 180 || activeFX.echo) {
-                    let a = Math.random() * 6.28;
-                    splats.push({x:0.5, y:0.5, dx:Math.cos(a)*300, dy:Math.sin(a)*300, c:[0.2,0,0.8]});
-                }
-            }
-
-            gl.viewport(0, 0, tW, tH);
-
+            // Splat
+            gl.viewport(0,0,512,1024);
             if(splats.length > 0) {
-                gl.useProgram(pSplat);
-                gl.uniform1f(gl.getUniformLocation(pSplat, 'uAspectRatio'), canvas.width/canvas.height);
+                gl.useProgram(P_splat);
                 for(let s of splats) {
-                    gl.uniform1i(gl.getUniformLocation(pSplat, 'uTarget'), den.read);
-                    gl.uniform2f(gl.getUniformLocation(pSplat, 'uPoint'), s.x, s.y);
-                    gl.uniform3f(gl.getUniformLocation(pSplat, 'uColor'), s.c[0], s.c[1], s.c[2]);
-                    gl.uniform1f(gl.getUniformLocation(pSplat, 'uRadius'), config.rad);
-                    gl.bindFramebuffer(gl.FRAMEBUFFER, den.write); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, den.write, 0);
-                    blit(pSplat); den.swap();
-
-                    gl.uniform1i(gl.getUniformLocation(pSplat, 'uTarget'), vel.read);
-                    gl.uniform3f(gl.getUniformLocation(pSplat, 'uColor'), s.dx, s.dy, 1);
-                    gl.bindFramebuffer(gl.FRAMEBUFFER, vel.write); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, vel.write, 0);
-                    blit(pSplat); vel.swap();
+                    gl.uniform1i(gl.getUniformLocation(P_splat, 'uT'), 0);
+                    gl.activeTexture(gl.TEXTURE0);
+                    gl.bindTexture(gl.TEXTURE_2D, den[cur].t);
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, den[next].f);
+                    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, den[next].t, 0);
+                    
+                    gl.uniform3f(gl.getUniformLocation(P_splat, 'c'), s.c[0], s.c[1], s.c[2]);
+                    gl.uniform2f(gl.getUniformLocation(P_splat, 'p'), s.x, s.y);
+                    blit(P_splat);
+                    
+                    let temp = cur; cur = next; next = temp; // Swap
                 }
                 splats = [];
             }
 
-            gl.useProgram(pAdv);
-            gl.uniform2f(gl.getUniformLocation(pAdv, 'uTexelSize'), 1/tW, 1/tH);
-            gl.uniform1f(gl.getUniformLocation(pAdv, 'uDt'), dt);
-            gl.uniform1i(gl.getUniformLocation(pAdv, 'uVelocity'), 0); gl.uniform1i(gl.getUniformLocation(pAdv, 'uSource'), 0);
-            gl.uniform1f(gl.getUniformLocation(pAdv, 'uDissipation'), config.velDiss);
-            gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, vel.read);
-            gl.bindFramebuffer(gl.FRAMEBUFFER, vel.write); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, vel.write, 0);
-            blit(pAdv); vel.swap();
-            gl.uniform1f(gl.getUniformLocation(pAdv, 'uDissipation'), config.denDiss);
-            gl.uniform1i(gl.getUniformLocation(pAdv, 'uSource'), 1);
-            gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, den.read);
-            gl.bindFramebuffer(gl.FRAMEBUFFER, den.write); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, den.write, 0);
-            blit(pAdv); den.swap();
+            // Advect
+            gl.useProgram(P_adv);
+            gl.uniform1i(gl.getUniformLocation(P_adv, 'uS'), 0);
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, den[cur].t);
+            
+            gl.uniform1i(gl.getUniformLocation(P_adv, 'uV'), 1);
+            gl.activeTexture(gl.TEXTURE1);
+            gl.bindTexture(gl.TEXTURE_2D, vel[cur].t); // Use self as velocity for chaotic swirl
+            
+            gl.bindFramebuffer(gl.FRAMEBUFFER, den[next].f);
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, den[next].t, 0);
+            blit(P_adv);
 
-            gl.useProgram(pDiv);
-            gl.uniform2f(gl.getUniformLocation(pDiv, 'uTexelSize'), 1/tW, 1/tH);
-            gl.uniform1i(gl.getUniformLocation(pDiv, 'uVel
+            // Display
+            gl.viewport(0,0,canvas.width, canvas.height);
+            gl.useProgram(P_disp);
+            gl.uniform1i(gl.getUniformLocation(P_disp, 'uT'), 0);
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, den[next].t);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            blit(P_disp);
+
+            idx = next;
+            requestAnimationFrame(update);
+        }
+        update();
+
+    </script>
+</body>
+</html>
