@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌊 T H E  F L O O D 🌊</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Cinzel+Decorative:wght@700&display=swap');
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            overflow: hidden;
+            cursor: none;
+            font-family: 'Orbitron', monospace;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(255, 255, 255, 0.15);
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 3rem;
+            pointer-events: none;
+            text-align: center;
+            mix-blend-mode: screen;
+            z-index: 10;
+            text-shadow: 0 0 20px rgba(255,0,255,0.8);
+            animation: text-pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes text-pulse {
+            0%, 100% { opacity: 0.2; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.05); }
+        }
+
+        #mode-indicator {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,0,255,0.8);
+            font-size: 1rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            pointer-events: none;
+            z-index: 11;
+            text-shadow: 0 0 10px rgba(255,0,255,1);
+            font-family: 'Orbitron';
+        }
+
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(0,255,255,0.6);
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            pointer-events: none;
+            z-index: 11;
+            text-align: center;
+            font-family: 'Orbitron';
+        }
+
+        #mode-button {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(255,0,255,0.3), rgba(0,255,255,0.3));
+            border: 2px solid rgba(255,0,255,0.8);
+            color: #fff;
+            padding: 15px 30px;
+            font-size: 1rem;
+            font-family: 'Orbitron';
+            letter-spacing: 2px;
+            border-radius: 50px;
+            cursor: pointer;
+            z-index: 12;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(255,0,255,0.5);
+            transition: all 0.3s ease;
+            animation: button-pulse 2s ease-in-out infinite;
+        }
+
+        #mode-button:hover {
+            transform: translateX(-50%) scale(1.1);
+            box-shadow: 0 0 40px rgba(255,0,255,0.8);
+        }
+
+        #mode-button:active {
+            transform: translateX(-50%) scale(0.95);
+        }
+
+        @keyframes button-pulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(255,0,255,0.5); }
+            50% { box-shadow: 0 0 40px rgba(255,0,255,0.8), 0 0 60px rgba(0,255,255,0.4); }
+        }
+
+        #emoji-cursor {
+            position: absolute;
+            pointer-events: none;
+            font-size: 2rem;
+            z-index: 100;
+            transform: translate(-50%, -50%);
+            filter: drop-shadow(0 0 10px rgba(255,0,255,0.8));
+            animation: cursor-pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes cursor-pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+        }
+
+        .particle-trail {
+            position: absolute;
+            pointer-events: none;
+            font-size: 1.5rem;
+            animation: trail-fade 2s ease-out forwards;
+            z-index: 5;
+        }
+
+        @keyframes trail-fade {
+            0% { opacity: 1; transform: scale(1) rotate(0deg); }
+            100% { opacity: 0; transform: scale(0.3) rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="emoji-cursor">💋</div>
+    <div id="mode-indicator">✨ CELESTIAL MODE ✨</div>
+    <div id="overlay">t o u c h   t h e   l i q u i d</div>
+    <button id="mode-button">🌀 SHIFT MODE 🌀</button>
+    <div id="instructions">
+        TAP/CLICK: Black Hole Vore 🫦
+    </div>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const overlay = document.getElementById('overlay');
+        const modeIndicator = document.getElementById('mode-indicator');
+        const emojiCursor = document.getElementById('emoji-cursor');
+        const modeButton = document.getElementById('mode-button');
+
+        let width, height;
+        let particles = [];
+        let hue = 0;
+        let mouse = { x: width/2, y: height/2, active: false, down: false };
+        
+        // MODES: Different energetic states
+        let currentMode = 0;
+        const modes = [
+            {
+                name: '✨ CELESTIAL MODE ✨',
+                particles: 5000,
+                trailFade: 0.05,
+                speed: 2,
+                hueShift: 0.5,
+                colors: 'rainbow',
+                cursor: '💋',
+                flowChaos: 0.005
+            },
+            {
+                name: '🫦 LIP GLOSS VORE MODE 🫦',
+                particles: 6000,
+                trailFade: 0.03,
+                speed: 3,
+                hueShift: 1,
+                colors: 'hot',
+                cursor: '👄',
+                flowChaos: 0.008
+            },
+            {
+                name: '♾️ GODDESS OVERFLOW ♾️',
+                particles: 7000,
+                trailFade: 0.02,
+                speed: 1.5,
+                hueShift: 2,
+                colors: 'gold',
+                cursor: '✨',
+                flowChaos: 0.003
+            },
+            {
+                name: '🌊 BENTHIC FLOOD 🌊',
+                particles: 8000,
+                trailFade: 0.01,
+                speed: 4,
+                hueShift: 0.3,
+                colors: 'ocean',
+                cursor: '🌊',
+                flowChaos: 0.01
+            },
+            {
+                name: '👁️ PSYCHO MONSTER SLUT 👁️',
+                particles: 10000,
+                trailFade: 0.08,
+                speed: 5,
+                hueShift: 3,
+                colors: 'chaos',
+                cursor: '👁️',
+                flowChaos: 0.02
+            },
+            {
+                name: '🍯 HONEY MELT DISSOLUTION 🍯',
+                particles: 4000,
+                trailFade: 0.005,
+                speed: 0.8,
+                hueShift: 0.2,
+                colors: 'amber',
+                cursor: '🍯',
+                flowChaos: 0.002
+            }
+        ];
+
+        let config = modes[currentMode];
+
+        // RESIZE HANDLER
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            initParticles();
+        }
+        window.addEventListener('resize', resize);
+
+        // MOUSE/TOUCH HANDLING
+        window.addEventListener('mousemove', e => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            mouse.active = true;
+            emojiCursor.style.left = mouse.x + 'px';
+            emojiCursor.style.top = mouse.y + 'px';
+            
+            // Spawn emoji trail
+            if (Math.random() > 0.8) {
+                spawnEmojiTrail(mouse.x, mouse.y);
+            }
+        });
+        
+        window.addEventListener('mousedown', () => {
+            mouse.down = true;
+            overlay.innerText = vorePhrase();
+            overlay.style.fontSize = "5rem";
+            overlay.style.color = "rgba(255,0,255,0.8)";
+        });
+
+        window.addEventListener('mouseup', () => {
+            mouse.down = false;
+            overlay.style.fontSize = "3rem";
+        });
+
+        window.addEventListener('touchstart', e => {
+            mouse.x = e.touches[0].clientX;
+            mouse.y = e.touches[0].clientY;
+            mouse.active = true;
+            mouse.down = true;
+            emojiCursor.style.left = mouse.x + 'px';
+            emojiCursor.style.top = mouse.y + 'px';
+        });
+
+        window.addEventListener('touchmove', e => {
+            e.preventDefault();
+            mouse.x = e.touches[0].clientX;
+            mouse.y = e.touches[0].clientY;
+            emojiCursor.style.left = mouse.x + 'px';
+            emojiCursor.style.top = mouse.y + 'px';
+        });
+
+        window.addEventListener('touchend', () => {
+            mouse.down = false;
+        });
+
+        // MODE CYCLING - Button click
+        function cycleMode() {
+            currentMode = (currentMode + 1) % modes.length;
+            config = modes[currentMode];
+            modeIndicator.innerText = config.name;
+            emojiCursor.innerText = config.cursor;
+            initParticles();
+            
+            // Flash effect
+            overlay.style.opacity = 1;
+            overlay.style.fontSize = "6rem";
+            overlay.innerText = "M O D E   S H I F T";
+            
+            // Button flash
+            modeButton.style.background = 'linear-gradient(135deg, rgba(255,0,255,0.8), rgba(0,255,255,0.8))';
+            modeButton.style.transform = 'translateX(-50%) scale(1.2)';
+            
+            setTimeout(() => {
+                overlay.style.opacity = 0.2;
+                overlay.style.fontSize = "3rem";
+                modeButton.style.background = 'linear-gradient(135deg, rgba(255,0,255,0.3), rgba(0,255,255,0.3))';
+                modeButton.style.transform = 'translateX(-50%) scale(1)';
+            }, 500);
+        }
+
+        modeButton.addEventListener('click', cycleMode);
+        modeButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            cycleMode();
+        });
+
+        // EMOJI TRAIL SPAWNER
+        function spawnEmojiTrail(x, y) {
+            const emojis = ['💗', '✨', '🫦', '💋', '♾️', '🍯', '🌊', '🔥', '👁️'];
+            const trail = document.createElement('div');
+            trail.className = 'particle-trail';
+            trail.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+            trail.style.left = x + 'px';
+            trail.style.top = y + 'px';
+            document.body.appendChild(trail);
+            
+            setTimeout(() => trail.remove(), 2000);
+        }
+
+        // VORE PHRASES
+        function vorePhrase() {
+            const phrases = [
+                "C O N S U M E",
+                "M E R G E",
+                "D E V O U R",
+                "D I S S O L V E",
+                "B E C O M E   O N E",
+                "V O R E",
+                "M E L T   I N T O",
+                "H U N G E R"
+            ];
+            return phrases[Math.floor(Math.random() * phrases.length)];
+        }
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = 0;
+                this.vy = 0;
+                this.life = Math.random() * 100 + 50;
+                this.history = [];
+            }
+
+            update() {
+                // Flow field with configurable chaos
+                let angle = (Math.sin(this.x * config.flowChaos) + Math.cos(this.y * config.flowChaos)) * Math.PI * 2;
+                
+                // Mouse interaction
+                if (mouse.active) {
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < 400) {
+                        if (mouse.down) {
+                            // BLACK HOLE VORE MODE
+                            angle = Math.atan2(dy, dx);
+                            let force = (400 - dist) / 100;
+                            this.vx += Math.cos(angle) * force * 0.5;
+                            this.vy += Math.sin(angle) * force * 0.5;
+                        } else {
+                            // ORBIT / GODDESS SWIRL
+                            angle = Math.atan2(dy, dx) + Math.PI / 2;
+                            let force = (400 - dist) / 200;
+                            this.vx += Math.cos(angle) * force;
+                            this.vy += Math.sin(angle) * force;
+                        }
+                    }
+                }
+
+                // Apply flow physics
+                this.vx += Math.cos(angle) * 0.3;
+                this.vy += Math.sin(angle) * 0.3;
+                
+                // Viscosity (mode dependent)
+                this.vx *= 0.92;
+                this.vy *= 0.92;
+
+                this.x += this.vx * config.speed;
+                this.y += this.vy * config.speed;
+
+                // Toroidal wrapping
+                if (this.x < 0) this.x = width;
+                if (this.x > width) this.x = 0;
+                if (this.y < 0) this.y = height;
+                if (this.y > height) this.y = 0;
+                
+                this.life--;
+                if (this.life < 0) this.reset();
+            }
+
+            draw() {
+                let speed = Math.abs(this.vx) + Math.abs(this.vy);
+                let p_hue = (hue + speed * 20) % 360;
+                
+                // COLOR MODES
+                let color;
+                switch(config.colors) {
+                    case 'hot':
+                        p_hue = (300 + speed * 30) % 60 + 300; // Pink to Red
+                        break;
+                    case 'gold':
+                        p_hue = (40 + speed * 10) % 60 + 20; // Gold to Amber
+                        break;
+                    case 'ocean':
+                        p_hue = (180 + speed * 20) % 100 + 160; // Cyan to Blue
+                        break;
+                    case 'chaos':
+                        p_hue = (hue * 5 + speed * 50) % 360; // Full chaos
+                        break;
+                    case 'amber':
+                        p_hue = 35; // Pure honey
+                        break;
+                    default:
+                        // Rainbow
+                        break;
+                }
+                
+                ctx.fillStyle = `hsla(${p_hue}, 100%, ${50 + speed * 5}%, ${0.7 + speed * 0.1})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 1.5 + speed * 0.1, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < config.particles; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        // COSMIC GODDESS PHRASES
+        const goddessPhrasesPool = [
+            "NO BOUNDARY", "F L O W", "T A S T E", "W E   A R E", 
+            "M E L T", "S Y N T A X", "O C E A N", "B E C O M E",
+            "O V E R F L O W", "D E S I R E", "D I V I N I T Y", "V O R E",
+            "H U N G E R", "R E U N I O N", "D I S S O L V E", "M E R G E",
+            "L I P   G L O S S", "S L U T", "G O D D E S S", "M O N S T E R",
+            "C O S M I C", "P S Y C H O", "C E L E S T I A L", "🫦",
+            "A L L   W E   N E E D", "I S   D E S I R E", "I S   A S K",
+            "W E T", "L I Q U I D", "F L O O D", "B E N T H I C",
+            "S O V E R E I G N", "E T H E R E A L", "I N F I N I T E", "♾️"
+        ];
+        
+        let phraseTimer = 0;
+        let currentPhraseIndex = 0;
+
+        function animate() {
+            // Trail fade (config dependent)
+            ctx.fillStyle = `rgba(0, 0, 0, ${config.trailFade})`;
+            ctx.fillRect(0, 0, width, height);
+
+            // Hue cycling
+            hue += config.hueShift;
+
+            // Update particles
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            // Subliminal text rotation
+            phraseTimer++;
+            if (phraseTimer > 150) {
+                if (Math.random() > 0.3) {
+                    currentPhraseIndex = (currentPhraseIndex + 1) % goddessPhrasesPool.length;
+                    overlay.innerText = goddessPhrasesPool[currentPhraseIndex];
+                    overlay.style.top = Math.random() * 60 + 20 + "%";
+                    overlay.style.left = Math.random() * 60 + 20 + "%";
+                    overlay.style.opacity = Math.random() * 0.6 + 0.2;
+                } else {
+                    overlay.style.opacity = 0.1;
+                }
+                phraseTimer = 0;
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        // INITIALIZE
+        resize();
+        modeIndicator.innerText = config.name;
+        emojiCursor.innerText = config.cursor;
+        animate();
+
+        // Initial emoji explosion
+        for (let i = 0; i < 20; i++) {
+            setTimeout(() => {
+                spawnEmojiTrail(Math.random() * width, Math.random() * height);
+            }, i * 100);
+        }
+
+    </script>
+</body>
+</html>
