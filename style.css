@@ -1,12 +1,12 @@
 /* =========================================
-   CELESTIAL BADDIES - STYLE SHEET
+   CELESTIAL BADDIES - STYLE SHEET v2.1
    ========================================= */
 
 /* --- 1. VARIABLES & RESET --- */
 :root {
     --bg-deep: #050011;
     --neon-pink: #ff69b4;
-    --neon-blue: #4facfe;
+    --neon-blue: #00f3ff;
     --glass-bg: rgba(5, 0, 17, 0.85);
     --text-glow: 0 0 10px rgba(255, 255, 255, 0.8), 
                  0 0 20px rgba(255, 105, 180, 0.6);
@@ -23,40 +23,31 @@ body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     color: white;
     min-height: 100vh;
-    
-    /* Cosmic Gradient Background */
     background-color: var(--bg-deep);
     background-image: 
         radial-gradient(circle at 50% 10%, #2a0e3d 0%, transparent 50%),
         radial-gradient(circle at 90% 80%, #150024 0%, var(--bg-deep) 70%);
-    background-attachment: fixed; /* Keeps the void static while you scroll */
-    
-    /* SCROLL FIX: Ensures the page scrolls naturally on mobile */
+    background-attachment: fixed;
     overflow-y: auto;
     overflow-x: hidden;
-    -webkit-overflow-scrolling: touch; /* Smooth scroll for iOS */
+    -webkit-overflow-scrolling: touch;
 }
 
 /* --- 3. PERSISTENT HEADER --- */
 .sticky-header {
-    position: fixed; /* Locks header to the viewport */
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
-    z-index: 1000; /* Stays above everything */
-    
+    z-index: 1000;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 1.5rem 1rem;
-    
-    /* Glassmorphism: Blur effect behind the header */
     background: var(--glass-bg);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    
-    /* Subtle bottom border glow */
     border-bottom: 1px solid rgba(255, 105, 180, 0.15);
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
 }
@@ -82,24 +73,51 @@ body {
 /* --- 4. MAIN CONTENT WRAPPER --- */
 .content-wrapper {
     width: 100%;
-    max-width: 900px; /* Limits width on big screens */
+    max-width: 900px;
     margin: 0 auto;
-    
-    /* CRITICAL SPACING: Pushes content down so it starts visible below the fixed header */
-    padding-top: 160px; 
-    padding-bottom: 80px;
+    padding-top: 180px; /* Space for header */
+    padding-bottom: 100px; /* Space at bottom of page */
     padding-left: 20px;
     padding-right: 20px;
 }
 
-/* --- 5. BUTTON GRID SYSTEM --- */
+/* --- 5. SECTION SEPARATORS (THE FIX) --- */
+.neon-divider {
+    width: 100%;
+    height: 2px;
+    background: transparent;
+    /* This creates the visual line */
+    border-bottom: 2px dashed rgba(0, 243, 255, 0.3);
+    
+    /* MARGINS: The first number (80px) pushes it DOWN from the buttons above */
+    margin: 80px 0 40px 0; 
+}
+
+.section-title {
+    display: block; /* Ensures it takes up its own line */
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    font-size: 1.2rem;
+    color: var(--neon-blue);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    
+    /* Spacing around the text itself */
+    margin-bottom: 30px;
+    text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+    background: rgba(0, 0, 0, 0.3); /* Slight background to make text pop */
+    padding: 10px;
+    border-radius: 8px;
+}
+
+/* --- 6. BUTTON GRID SYSTEM --- */
 .button-grid {
     display: flex;
-    flex-direction: column; /* Mobile Default: Stack vertically */
+    flex-direction: column;
     gap: 16px;
 }
 
-/* --- 6. COSMIC BUTTON STYLES --- */
+/* --- 7. COSMIC BUTTON STYLES --- */
 .cosmic-btn {
     position: relative;
     display: flex;
@@ -107,26 +125,19 @@ body {
     align-items: center;
     text-align: center;
     padding: 18px 20px;
-    
-    /* Visuals */
-    background: rgba(255, 255, 255, 0.03); /* Very subtle fill */
+    background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--neon-pink);
-    border-radius: 50px; /* Pill shape */
-    
-    /* Typography */
+    border-radius: 50px;
     color: white;
     text-decoration: none;
     font-weight: 700;
     font-size: 0.85rem;
     text-transform: uppercase;
     letter-spacing: 1.5px;
-    
-    /* Animation Physics */
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     box-shadow: 0 0 15px rgba(255, 105, 180, 0.1);
 }
 
-/* Hover State (Desktop & Touch) */
 .cosmic-btn:hover {
     background: rgba(255, 105, 180, 0.15);
     border-color: white;
@@ -135,31 +146,39 @@ body {
     text-shadow: 0 0 8px rgba(255, 255, 255, 0.9);
 }
 
-/* Active/Click State */
 .cosmic-btn:active {
     transform: scale(0.98);
 }
 
-/* --- 7. RESPONSIVE MEDIA QUERIES --- */
+/* --- 8. TESTING MODE STYLES --- */
+.cosmic-btn.test-mode {
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
+}
 
-/* Tablet & Desktop (Landscape) */
+.cosmic-btn.test-mode:hover {
+    background: rgba(0, 243, 255, 0.15);
+    box-shadow: 0 0 25px rgba(0, 243, 255, 0.5);
+}
+
+/* --- 9. RESPONSIVE MEDIA QUERIES --- */
 @media (min-width: 768px) {
     .content-wrapper {
-        padding-top: 200px; /* More space needed for desktop header */
+        padding-top: 220px;
     }
-
     .glow-text {
-        font-size: 3rem; /* Bigger title on desktop */
+        font-size: 3rem;
     }
-
     .button-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr; /* Switch to 2 columns */
+        grid-template-columns: 1fr 1fr;
         gap: 25px;
     }
-
-    /* Helper class: If you want the bottom button to span the full width */
     .full-width {
         grid-column: span 2;
+    }
+    /* Increase spacing even more on desktop */
+    .neon-divider {
+        margin: 100px 0 50px 0;
     }
 }
