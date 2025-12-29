@@ -1,52 +1,25 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-body {
-  overflow: hidden;
-  background: #000;
-  font-family: 'Courier New', monospace;
-  cursor: crosshair;
-}
-canvas {
-  display: block;
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-.hud {
-  position: absolute;
-  color: #0ff;
-  text-shadow: 0 0 10px #0ff;
-  z-index: 10;
-  font-size: 11px;
-  pointer-events: none;
-  user-select: none;
-}
-.top-left {
-  top: 15px;
-  left: 15px;
-}
-.top-right {
-  top: 15px;
-  right: 15px;
-  text-align: right;
-}
-.bottom-left {
-  bottom: 15px;
-  left: 15px;
-}
-.bottom-right {
-  bottom: 15px;
-  right: 15px;
-  text-align: right;
-}
-.node-display {
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Elysian Garden</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>Welcome 🌸</h1>
+        <p>Select a module to begin.</p>
+    </header>
+
+    <main class="button-container">
+        <a href="modules/module1.html" class="portal-button">Wormhole: Alien Transmission</a>
+        <a href="modules/wormhole.html" 
+    </main>
+
+</body>
+</html>
   position: absolute;
   top: 50%;
   left: 50%;
