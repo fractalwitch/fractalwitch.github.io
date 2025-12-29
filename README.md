@@ -9,8 +9,8 @@
 <body>
 
     <header>
-        <h1>Welcome 🌸</h1>
-        <p>Select a module to begin.</p>
+        <h1>Welcome, traveler! 🌙</h1>
+        <p>Select a portal to begin.</p>
     </header>
 
     <main class="button-container">
