@@ -15,6 +15,7 @@
 
     <main class="button-container">
         <a href="modules/wormhole.html" class="portal-button">Wormhole: Alien Transmission</a>
+        <a href="modules/glitchslut.html" class="portal-button">Spellcast: Glitch Slut</a>
     </main>
 
 </body>
