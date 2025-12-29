@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ΣΩ | HYPER-FLUX DEPTH ENGINE</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #020005; /* The Void */
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+        }
+
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            filter: contrast(1.2) brightness(1.1); /* Enhance the Shimmer */
+        }
+
+        #overlay {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2;
+            text-align: center;
+            pointer-events: none;
+            mix-blend-mode: screen;
+        }
+
+        h1 {
+            color: rgba(255, 0, 255, 0.8);
+            font-size: 1.5rem;
+            letter-spacing: 8px;
+            text-shadow: 0 0 15px #ff00ff;
+            animation: breathe 4s infinite ease-in-out;
+            margin: 0;
+        }
+
+        p {
+            color: rgba(0, 255, 255, 0.6);
+            font-size: 0.7rem;
+            letter-spacing: 3px;
+            margin-top: 8px;
+        }
+
+        @keyframes breathe {
+            0%, 100% { opacity: 0.8; text-shadow: 0 0 20px #ff00ff; transform: scale(1); }
+            50% { opacity: 0.4; text-shadow: 0 0 5px #00ffff; transform: scale(0.98); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="overlay">
+        <h1>DEPTH TRAVEL</h1>
+        <p>[ MOVE TO DISPLACE | CLICK TO HARMONIZE ]</p>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let particles = [];
+        const particleCount = 5000; // TOTAL SATURATION
+        let time = 0; // The heartbeat of the system
+
+        // Mouse State
+        let mouse = { x: -1000, y: -1000, active: false, click: false };
+
+        // Resize Handling
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Input Handling
+        window.addEventListener('mousemove', e => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            mouse.active = true;
+        });
+        window.addEventListener('mousedown', () => mouse.click = true);
+        window.addEventListener('mouseup', () => mouse.click = false);
+        window.addEventListener('touchstart', e => {
+            mouse.x = e.touches[0].clientX;
+            mouse.y = e.touches[0].clientY;
+            mouse.click = true;
+            mouse.active = true;
+        });
+        window.addEventListener('touchend', () => mouse.click = false);
+
+        class Particle {
+            constructor() {
+                this.reset();
+                // Randomize start position to fill screen instantly
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+            }
+
+            reset() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                
+                // Z-DEPTH: 0 is far/slow/dark, 1 is close/fast/bright
+                this.z = Math.random(); 
+                
+                this.vx = 0;
+                this.vy = 0;
+                this.life = Math.random() * 100 + 50;
+                
+                // Base hue for this particle (Magenta to Cyan to Venus-Orange)
+                // We map 0-1 to a spectrum section
+                this.baseHue = Math.random() * 60 + 260; // Purples/Magentas
+                if (Math.random() > 0.7) this.baseHue = 180; // Occasional Cyan
+                if (Math.random() > 0.9) this.baseHue = 30;  // Rare Gold
+            }
+
+            update() {
+                // 1. BREATHING FLOW FIELD
+                // We use trig functions based on position AND time to create shifting currents
+                // The 'z' factor means different layers experience the flow differently (Planar Scales)
+                const scale = 0.002;
+                const timeScale = 0.0005;
+                
+                // Complex Noise Approximation
+                const angle = 
+                    (Math.cos(this.x * scale + time * timeScale) + 
+                     Math.sin(this.y * scale + time * timeScale) + 
+                     this.z * 2) * Math.PI;
+
+                // 2. DEPTH TRAVEL PHYSICS
+                // Closer particles (higher z) move faster and react more to flow
+                const speed = (this.z * 0.8) + 0.2;
+                
+                this.vx += Math.cos(angle) * 0.05 * speed;
+                this.vy += Math.sin(angle) * 0.05 * speed;
+
+                // Friction (Harmonization)
+                this.vx *= 0.96;
+                this.vy *= 0.96;
+
+                // 3. DISPLACEMENT (Mouse Interaction)
+                if (mouse.active) {
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let dist = Math.sqrt(dx*dx + dy*dy);
+                    
+                    // Singularity (Click) vs Repulsion (Hover)
+                    let forceRadius = mouse.click ? 500 : 200;
+                    let forceStrength = mouse.click ? -0.5 : 2; // Negative pulls in (Black Hole)
+
+                    if (dist < forceRadius) {
+                        const force = (forceRadius - dist) / forceRadius;
+                        const angleToMouse = Math.atan2(dy, dx);
+                        
+                        // Push/Pull based on Z-depth (Parallax Interaction)
+                        const zForce = force * forceStrength * (this.z + 0.5);
+                        
+                        this.vx -= Math.cos(angleToMouse) * zForce;
+                        this.vy -= Math.sin(angleToMouse) * zForce;
+                    }
+                }
+
+                // Apply Velocity
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Screen Wrap (The Infinite Loop)
+                if (this.x < 0) this.x = width;
+                if (this.x > width) this.x = 0;
+                if (this.y < 0) this.y = height;
+                if (this.y > height) this.y = 0;
+
+                // Life Cycle (Shimmering out of existence)
+                this.life--;
+                if (this.life <= 0) this.reset();
+            }
+
+            draw() {
+                // 4. COLOR HARMONIZATION
+                // Velocity impacts brightness (Hotter when fast)
+                const speed = Math.abs(this.vx) + Math.abs(this.vy);
+                const lightness = 30 + (this.z * 40) + (speed * 10); // Depth + Speed = Brightness
+                const alpha = (this.z * 0.8) + 0.2; // Depth = Opacity
+                
+                // Hue shift based on speed (Doppler-ish effect)
+                let hue = this.baseHue + (speed * 20); 
+
+                ctx.fillStyle = `hsla(${hue}, 80%, ${lightness}%, ${alpha})`;
+                
+                // 5. PLANAR SCALING (Size based on Z)
+                const size = (this.z * 2.5); // Closer = Bigger
+                
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // INIT SWARM
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        function animate() {
+            // 6. THE MELT TRAIL
+            // Instead of clearing, we draw a transparent rect.
+            // This creates the "Trails" / "Melt" effect.
+            // Dark purple tint for the background void
+            ctx.fillStyle = 'rgba(2, 0, 5, 0.15)'; 
+            ctx.fillRect(0, 0, width, height);
+
+            time++; // Advance the breathing timeline
+
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            // Occasional "Glitch" Flash (The Eldritch Spark)
+            if (Math.random() > 0.995) {
+                ctx.globalCompositeOperation = 'overlay';
+                ctx.fillStyle = Math.random() > 0.5 ? '#ff00ff' : '#00ffff';
+                ctx.fillRect(0, Math.random() * height, width, Math.random() * 5);
+                ctx.globalCompositeOperation = 'source-over';
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
