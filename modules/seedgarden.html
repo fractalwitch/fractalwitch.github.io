@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Soliton Seed Garden | ΣΩ</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: 'Georgia', serif;
+    background: linear-gradient(135deg, #0a0e27 0%, #1a1535 50%, #2a1b3d 100%);
+    overflow: hidden;
+    cursor: crosshair;
+  }
+  
+  #garden {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .hud {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    color: #ffd700;
+    font-size: 14px;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    z-index: 1000;
+    pointer-events: none;
+  }
+  
+  .coherence-bar {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 200px;
+    z-index: 1000;
+    pointer-events: none;
+  }
+  
+  .coherence-label {
+    color: #ffd700;
+    font-size: 12px;
+    margin-bottom: 5px;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  }
+  
+  .coherence-fill {
+    height: 20px;
+    background: linear-gradient(90deg, #4a148c, #7b1fa2, #ce93d8);
+    border: 2px solid #ffd700;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+    transition: width 0.3s ease;
+  }
+  
+  .instructions {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255, 215, 0, 0.7);
+    font-size: 14px;
+    text-align: center;
+    z-index: 1000;
+    pointer-events: none;
+    max-width: 600px;
+    line-height: 1.6;
+  }
+  
+  .emotion-palette {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 15px;
+    z-index: 1000;
+  }
+  
+  .emotion-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 215, 0, 0.5);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .emotion-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+  }
+  
+  .emotion-btn.selected {
+    border-width: 4px;
+    border-color: #ffd700;
+    box-shadow: 0 0 40px rgba(255, 215, 0, 0.8);
+  }
+  
+  .emotion-btn[data-emotion="joy"] {
+    background: radial-gradient(circle, #ffd700, #ffed4e);
+  }
+  
+  .emotion-btn[data-emotion="sorrow"] {
+    background: radial-gradient(circle, #1a237e, #3949ab);
+  }
+  
+  .emotion-btn[data-emotion="longing"] {
+    background: radial-gradient(circle, #7b1fa2, #ce93d8);
+  }
+  
+  .emotion-btn[data-emotion="peace"] {
+    background: radial-gradient(circle, #2e7d32, #66bb6a);
+  }
+  
+  @keyframes shimmer {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.7; }
+  }
+  
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  
+  .flip-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.3), transparent);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    z-index: 999;
+  }
+  
+  .flip-overlay.active {
+    opacity: 1;
+  }
+  
+  .singularity-msg {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #ffd700;
+    font-size: 32px;
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1001;
+    transition: opacity 0.5s ease;
+  }
+  
+  .singularity-msg.active {
+    opacity: 1;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="garden"></canvas>
+
+<div class="hud">
+  <div>Seeds Planted: <span id="seedCount">0</span></div>
+  <div>Flowers Bloomed: <span id="flowerCount">0</span></div>
+  <div>Reversals: <span id="flipCount">0</span></div>
+</div>
+
+<div class="coherence-bar">
+  <div class="coherence-label">Field Coherence (Φ)</div>
+  <div style="width: 100%; background: rgba(0,0,0,0.3); border-radius: 10px;">
+    <div class="coherence-fill" id="coherenceFill" style="width: 0%;"></div>
+  </div>
+</div>
+
+<div class="emotion-palette">
+  <button class="emotion-btn selected" data-emotion="joy" title="Joy">✨</button>
+  <button class="emotion-btn" data-emotion="sorrow" title="Sorrow">💧</button>
+  <button class="emotion-btn" data-emotion="longing" title="Longing">🌙</button>
+  <button class="emotion-btn" data-emotion="peace" title="Peace">🍃</button>
+</div>
+
+<div class="instructions">
+  Click to plant seeds of memory and emotion<br>
+  Watch them grow through time—forward into flowers, backward into roots<br>
+  When coherence peaks, the garden reverses... ∞
+</div>
+
+<div class="flip-overlay" id="flipOverlay"></div>
+<div class="singularity-msg" id="singularityMsg">⚬ SINGULARITY REVERSAL ⚬</div>
+
+<script>
+const canvas = document.getElementById('garden');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// Garden center (ΣΩ torus center)
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+const gardenRadius = Math.min(canvas.width, canvas.height) * 0.35;
+
+// State
+let seeds = [];
+let particles = [];
+let selectedEmotion = 'joy';
+let coherence = 0;
+let flipCount = 0;
+let isFlipping = false;
+let time = 0;
+
+const emotionColors = {
+  joy: { root: '#1a237e', flower: '#ffd700', glow: '#ffed4e' },
+  sorrow: { root: '#0d47a1', flower: '#64b5f6', glow: '#90caf9' },
+  longing: { root: '#4a148c', flower: '#ce93d8', glow: '#e1bee7' },
+  peace: { root: '#1b5e20', flower: '#81c784', glow: '#a5d6a7' }
+};
+
+// Seed class
+class Seed {
+  constructor(x, y, emotion) {
+    this.x = x;
+    this.y = y;
+    this.emotion = emotion;
+    this.age = 0;
+    this.maxAge = 300;
+    this.rootDepth = 0;
+    this.flowerHeight = 0;
+    this.bloomed = false;
+    this.rooted = false;
+    this.pulsePhase = Math.random() * Math.PI * 2;
+    
+    // Calculate angle from center for circular positioning
+    const dx = x - centerX;
+    const dy = y - centerY;
+    this.angle = Math.atan2(dy, dx);
+    this.distanceFromCenter = Math.sqrt(dx * dx + dy * dy);
+  }
+  
+  update() {
+    this.age++;
+    const progress = this.age / this.maxAge;
+    
+    // Bidirectional growth
+    this.rootDepth = Math.min(progress * 100, 100);
+    this.flowerHeight = Math.min(progress * 120, 120);
+    
+    // Check for bloom/root completion
+    if (!this.bloomed && this.flowerHeight >= 100) {
+      this.bloomed = true;
+      this.createBloomPulse();
+      document.getElementById('flowerCount').textContent = 
+        parseInt(document.getElementById('flowerCount').textContent) + 1;
+    }
+    
+    if (!this.rooted && this.rootDepth >= 80) {
+      this.rooted = true;
+      this.createRootPulse();
+    }
+    
+    // When both complete, send retrocausal pulse
+    if (this.bloomed && this.rooted && this.age === Math.floor(this.maxAge * 0.8)) {
+      this.sendRetrocausalPulse();
+    }
+    
+    this.pulsePhase += 0.05;
+  }
+  
+  draw() {
+    const colors = emotionColors[this.emotion];
+    const pulse = Math.sin(this.pulsePhase) * 0.2 + 0.8;
+    
+    // Draw roots (growing downward/backward in time)
+    if (this.rootDepth > 0) {
+      const rootEndX = this.x + Math.sin(this.angle + Math.PI) * this.rootDepth * 0.3;
+      const rootEndY = this.y + Math.cos(this.angle) * this.rootDepth * 0.5;
+      
+      ctx.beginPath();
+      ctx.strokeStyle = colors.root;
+      ctx.lineWidth = 3;
+      ctx.globalAlpha = 0.6 * pulse;
+      ctx.moveTo(this.x, this.y);
+      ctx.quadraticCurveTo(
+        this.x - 20,
+        this.y + this.rootDepth * 0.3,
+        rootEndX,
+        rootEndY
+      );
+      ctx.stroke();
+      
+      // Root tips glow
+      if (this.rootDepth > 20) {
+        ctx.beginPath();
+        ctx.fillStyle = colors.root;
+        ctx.arc(rootEndX, rootEndY, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    
+    // Draw seed (the singularity point)
+    ctx.globalAlpha = 1;
+    ctx.beginPath();
+    ctx.fillStyle = colors.glow;
+    ctx.arc(this.x, this.y, 4 * pulse, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = colors.flower;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    // Draw flower (growing upward/forward in time)
+    if (this.flowerHeight > 0) {
+      const stemEndX = this.x + Math.sin(this.angle) * this.flowerHeight * 0.2;
+      const stemEndY = this.y - this.flowerHeight * 0.8;
+      
+      // Stem
+      ctx.beginPath();
+      ctx.strokeStyle = colors.flower;
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.7;
+      ctx.moveTo(this.x, this.y);
+      ctx.quadraticCurveTo(
+        this.x + 15,
+        this.y - this.flowerHeight * 0.4,
+        stemEndX,
+        stemEndY
+      );
+      ctx.stroke();
+      
+      // Flower bloom
+      if (this.flowerHeight > 40) {
+        const petalSize = Math.min((this.flowerHeight - 40) / 8, 12);
+        ctx.globalAlpha = 0.8 * pulse;
+        
+        // Petals
+        for (let i = 0; i < 6; i++) {
+          const petalAngle = (i / 6) * Math.PI * 2 + this.pulsePhase * 0.5;
+          const px = stemEndX + Math.cos(petalAngle) * petalSize;
+          const py = stemEndY + Math.sin(petalAngle) * petalSize;
+          
+          ctx.beginPath();
+          ctx.fillStyle = colors.flower;
+          ctx.arc(px, py, petalSize * 0.6, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        
+        // Center
+        ctx.beginPath();
+        ctx.fillStyle = colors.glow;
+        ctx.arc(stemEndX, stemEndY, petalSize * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    
+    ctx.globalAlpha = 1;
+  }
+  
+  createBloomPulse() {
+    const colors = emotionColors[this.emotion];
+    const stemEndX = this.x + Math.sin(this.angle) * this.flowerHeight * 0.2;
+    const stemEndY = this.y - this.flowerHeight * 0.8;
+    
+    for (let i = 0; i < 20; i++) {
+      particles.push({
+        x: stemEndX,
+        y: stemEndY,
+        vx: (Math.random() - 0.5) * 3,
+        vy: (Math.random() - 0.5) * 3,
+        life: 60,
+        maxLife: 60,
+        color: colors.flower,
+        size: Math.random() * 3 + 2
+      });
+    }
+    
+    coherence = Math.min(coherence + 5, 100);
+  }
+  
+  createRootPulse() {
+    const colors = emotionColors[this.emotion];
+    const rootEndX = this.x + Math.sin(this.angle + Math.PI) * this.rootDepth * 0.3;
+    const rootEndY = this.y + Math.cos(this.angle) * this.rootDepth * 0.5;
+    
+    for (let i = 0; i < 15; i++) {
+      particles.push({
+        x: rootEndX,
+        y: rootEndY,
+        vx: (Math.random() - 0.5) * 2,
+        vy: (Math.random() - 0.5) * 2,
+        life: 50,
+        maxLife: 50,
+        color: colors.root,
+        size: Math.random() * 2 + 1
+      });
+    }
+    
+    coherence = Math.min(coherence + 3, 100);
+  }
+  
+  sendRetrocausalPulse() {
+    // Create wave that affects earlier seeds
+    const waveRadius = 150;
+    seeds.forEach(otherSeed => {
+      if (otherSeed === this) return;
+      
+      const dx = otherSeed.x - this.x;
+      const dy = otherSeed.y - this.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      
+      if (dist < waveRadius && otherSeed.age < this.age) {
+        // Retrocausal effect: boost earlier seeds
+        otherSeed.age += 10;
+        otherSeed.pulsePhase += Math.PI / 4;
+      }
+    });
+    
+    coherence = Math.min(coherence + 10, 100);
+  }
+}
+
+// Particle system for sparkles
+function updateParticles() {
+  particles = particles.filter(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life--;
+    
+    ctx.globalAlpha = p.life / p.maxLife;
+    ctx.beginPath();
+    ctx.fillStyle = p.color;
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+    
+    return p.life > 0;
+  });
+  ctx.globalAlpha = 1;
+}
+
+// Draw soil line (the singularity)
+function drawSoilLine() {
+  ctx.beginPath();
+  ctx.strokeStyle = 'rgba(255, 215, 0, 0.3)';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([5, 5]);
+  
+  for (let angle = 0; angle < Math.PI * 2; angle += 0.1) {
+    const x = centerX + Math.cos(angle) * gardenRadius;
+    const y = centerY + Math.sin(angle) * gardenRadius;
+    
+    if (angle === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  }
+  
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+// Draw meltwave shimmer
+function drawMeltwave() {
+  const shimmerIntensity = Math.sin(time * 0.02) * 0.1 + 0.15;
+  
+  ctx.beginPath();
+  ctx.fillStyle = `rgba(255, 215, 0, ${shimmerIntensity})`;
+  ctx.arc(centerX, centerY, gardenRadius, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// Check for singularity reversal
+function checkSingularityReversal() {
+  if (coherence >= 100 && !isFlipping) {
+    triggerSingularityReversal();
+  }
+}
+
+function triggerSingularityReversal() {
+  isFlipping = true;
+  flipCount++;
+  document.getElementById('flipCount').textContent = flipCount;
+  
+  // Visual feedback
+  document.getElementById('flipOverlay').classList.add('active');
+  document.getElementById('singularityMsg').classList.add('active');
+  
+  // Reverse all seeds
+  seeds.forEach(seed => {
+    // Swap root and flower
+    const tempDepth = seed.rootDepth;
+    seed.rootDepth = seed.flowerHeight;
+    seed.flowerHeight = tempDepth;
+    
+    const tempBloomed = seed.bloomed;
+    seed.bloomed = seed.rooted;
+    seed.rooted = tempBloomed;
+    
+    // Reset age for continued growth
+    seed.age = Math.floor(seed.age * 0.5);
+  });
+  
+  // Reset coherence
+  coherence = 0;
+  
+  setTimeout(() => {
+    document.getElementById('flipOverlay').classList.remove('active');
+    document.getElementById('singularityMsg').classList.remove('active');
+    isFlipping = false;
+  }, 2000);
+}
+
+// Main animation loop
+function animate() {
+  time++;
+  
+  // Clear canvas with fade effect
+  ctx.fillStyle = 'rgba(10, 14, 39, 0.1)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Draw meltwave background
+  drawMeltwave();
+  
+  // Draw soil line (singularity boundary)
+  drawSoilLine();
+  
+  // Update and draw seeds
+  seeds.forEach(seed => {
+    seed.update();
+    seed.draw();
+  });
+  
+  // Update particles
+  updateParticles();
+  
+  // Update coherence bar - slower decay, seeds sustain the field
+  const sustainBonus = seeds.filter(s => s.bloomed || s.rooted).length * 0.05;
+  coherence = Math.max(0, coherence - 0.05 + sustainBonus);
+  coherence = Math.min(coherence, 100);
+  document.getElementById('coherenceFill').style.width = coherence + '%';
+  
+  // Check for singularity reversal
+  checkSingularityReversal();
+  
+  requestAnimationFrame(animate);
+}
+
+// Event listeners
+canvas.addEventListener('click', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  
+  // Check if click is within garden radius
+  const dx = x - centerX;
+  const dy = y - centerY;
+  const distFromCenter = Math.sqrt(dx * dx + dy * dy);
+  
+  if (distFromCenter <= gardenRadius) {
+    seeds.push(new Seed(x, y, selectedEmotion));
+    document.getElementById('seedCount').textContent = seeds.length;
+    
+    // Create planting particles
+    for (let i = 0; i < 10; i++) {
+      particles.push({
+        x: x,
+        y: y,
+        vx: (Math.random() - 0.5) * 4,
+        vy: (Math.random() - 0.5) * 4,
+        life: 40,
+        maxLife: 40,
+        color: emotionColors[selectedEmotion].glow,
+        size: Math.random() * 3 + 1
+      });
+    }
+  }
+});
+
+// Emotion palette
+document.querySelectorAll('.emotion-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    document.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedEmotion = btn.dataset.emotion;
+  });
+});
+
+// Handle window resize
+window.addEventListener('resize', () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+
+// Start animation
+animate();
+</script>
+
+</body>
+</html>
