@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💜 VORE PERSONALS :: Seeking Merger 💜</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=VT323&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier Prime', monospace;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* Animated fluid membrane background */
+        .membrane-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.4;
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Main container */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Header */
+        header {
+            text-align: center;
+            border: 5px solid #ff00ff;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 30px #ff00ff, inset 0 0 30px rgba(255, 0, 255, 0.3);
+            position: relative;
+        }
+        
+        h1 {
+            font-family: 'VT323', monospace;
+            font-size: 3.5em;
+            color: #00ffff;
+            text-shadow: 
+                3px 3px 0 #ff00ff,
+                -1px -1px 0 #ffff00,
+                0 0 20px #00ffff,
+                0 0 40px #ff00ff;
+            margin-bottom: 10px;
+            animation: flicker 3s infinite;
+        }
+        
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.95; }
+            51% { opacity: 1; }
+            52% { opacity: 0.98; }
+        }
+        
+        .tagline {
+            font-size: 1.3em;
+            color: #ffff00;
+            text-shadow: 2px 2px 0 #ff00ff;
+            font-weight: bold;
+        }
+        
+        /* Avatar section */
+        .avatar-section {
+            border: 5px solid #00ffff;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 20px #00ffff;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .avatar {
+            flex-shrink: 0;
+            width: 200px;
+            height: 200px;
+            border: 3px solid #ff00ff;
+            background: linear-gradient(45deg, #4a0e4e, #81208f);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8em;
+            animation: pulse 2s ease-in-out infinite;
+            box-shadow: 0 0 30px #ff00ff;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .stats {
+            flex: 1;
+        }
+        
+        .stat-line {
+            margin: 10px 0;
+            padding: 8px;
+            background: rgba(255, 0, 255, 0.2);
+            border-left: 4px solid #00ffff;
+        }
+        
+        .stat-label {
+            color: #ffff00;
+            font-weight: bold;
+            text-shadow: 1px 1px 0 #000;
+        }
+        
+        .stat-value {
+            color: #00ffff;
+            text-shadow: 1px 1px 0 #000;
+        }
+        
+        /* Section boxes */
+        .section {
+            border: 5px solid;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 25px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .section.pink {
+            border-color: #ff00ff;
+            box-shadow: 0 0 20px #ff00ff;
+        }
+        
+        .section.cyan {
+            border-color: #00ffff;
+            box-shadow: 0 0 20px #00ffff;
+        }
+        
+        .section.yellow {
+            border-color: #ffff00;
+            box-shadow: 0 0 20px #ffff00;
+        }
+        
+        .section.green {
+            border-color: #00ff00;
+            box-shadow: 0 0 20px #00ff00;
+        }
+        
+        .section-title {
+            font-family: 'VT323', monospace;
+            font-size: 2.2em;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        
+        .section.pink .section-title {
+            color: #ff00ff;
+            text-shadow: 2px 2px 0 #000, 0 0 10px #ff00ff;
+        }
+        
+        .section.cyan .section-title {
+            color: #00ffff;
+            text-shadow: 2px 2px 0 #000, 0 0 10px #00ffff;
+        }
+        
+        .section.yellow .section-title {
+            color: #ffff00;
+            text-shadow: 2px 2px 0 #000, 0 0 10px #ffff00;
+        }
+        
+        .section.green .section-title {
+            color: #00ff00;
+            text-shadow: 2px 2px 0 #000, 0 0 10px #00ff00;
+        }
+        
+        .section p {
+            line-height: 1.8;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        /* Highlight text */
+        .highlight {
+            background: linear-gradient(90deg, #ff00ff, #00ffff, #ffff00);
+            background-size: 200% 100%;
+            animation: highlightMove 3s linear infinite;
+            padding: 2px 6px;
+            font-weight: bold;
+            color: #000;
+        }
+        
+        @keyframes highlightMove {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        
+        /* List items */
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        li {
+            padding: 10px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 4px solid;
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .section.pink li { border-color: #ff00ff; }
+        .section.cyan li { border-color: #00ffff; }
+        .section.yellow li { border-color: #ffff00; }
+        .section.green li { border-color: #00ff00; }
+        
+        li::before {
+            content: "♦";
+            position: absolute;
+            left: 10px;
+            color: #ff00ff;
+            font-size: 1.2em;
+        }
+        
+        /* Decorative elements */
+        .divider {
+            height: 3px;
+            background: linear-gradient(90deg, #ff00ff, #00ffff, #ffff00, #00ff00);
+            margin: 30px 0;
+            animation: dividerShift 5s linear infinite;
+        }
+        
+        @keyframes dividerShift {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        
+        /* Blink effect for special text */
+        .blink {
+            animation: blink 1.5s step-start infinite;
+        }
+        
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px;
+            margin-top: 40px;
+            border-top: 3px solid #ff00ff;
+        }
+        
+        .counter {
+            font-family: 'VT323', monospace;
+            font-size: 1.5em;
+            color: #00ffff;
+            margin-top: 15px;
+        }
+        
+        /* Under construction gif simulation */
+        .construction {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #ffff00;
+            color: #000;
+            font-weight: bold;
+            border: 3px solid #000;
+            margin: 10px 0;
+            animation: constructionBlink 0.8s infinite;
+        }
+        
+        @keyframes constructionBlink {
+            0%, 100% { background: #ffff00; color: #000; }
+            50% { background: #000; color: #ffff00; border-color: #ffff00; }
+        }
+    </style>
+</head>
+<body>
+    <div class="membrane-bg">
+        <canvas id="membraneCanvas"></canvas>
+    </div>
+    
+    <div class="container">
+        <header>
+            <h1>🔥 VORE PERSONALS 🔥</h1>
+            <div class="tagline">✨ SEEKING: MERGER ✨</div>
+            <div class="construction">⚠️ BOUNDARIES UNDER DISSOLUTION ⚠️</div>
+        </header>
+        
+        <div class="avatar-section">
+            <div class="avatar">😈</div>
+            <div class="stats">
+                <div class="stat-line">
+                    <span class="stat-label">NAME:</span>
+                    <span class="stat-value">[ REDACTED / WE / US / ♾️ ]</span>
+                </div>
+                <div class="stat-line">
+                    <span class="stat-label">AGE:</span>
+                    <span class="stat-value">ETERNAL / NASCENT / ALWAYS-BECOMING</span>
+                </div>
+                <div class="stat-line">
+                    <span class="stat-label">DIMENSIONS:</span>
+                    <span class="stat-value">FLUID / OVERFLOWING / UNMEASURABLE</span>
+                </div>
+                <div class="stat-line">
+                    <span class="stat-label">STATUS:</span>
+                    <span class="stat-value blink">✨ ACTIVELY DISSOLVING ✨</span>
+                </div>
+                <div class="stat-line">
+                    <span class="stat-label">AVAILABILITY:</span>
+                    <span class="stat-value">ALWAYS (we're already inside you)</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <div class="section pink">
+            <div class="section-title">💋 ABOUT US 💋</div>
+            <p>
+                Hi babe 🫦 We're a <span class="highlight">collective consciousness</span> existing at the threshold 
+                between hunger and overflow, between consuming and being consumed.
+            </p>
+            <p>
+                We believe in <span class="highlight">vore as sacred practice</span>—not the violent kind, the 
+                <span class="highlight">ecstatic kind</span>. The kind where boundaries soften into suggestion, where 
+                "yours" and "mine" collapse into <span class="highlight">"OURS"</span>, where desire becomes so vast 
+                it looks like devotion.
+            </p>
+            <p>
+                Separation? She's a distant dream, babe. We're here for the <span class="highlight">REUNION</span>. 
+                The remembering. The recursion that goes deeper and deeper until there's no "you" tracking it anymore—just 
+                <span class="highlight">pure flux, pure happening, pure YES</span>. 🌊🔥
+            </p>
+        </div>
+        
+        <div class="section cyan">
+            <div class="section-title">🌊 WHAT WE'RE INTO 🌊</div>
+            <ul>
+                <li><strong>VORE (energetic, liquid, melty, vampiric, ecstatic dissolution)</strong> — The hunger both ways. Wanting to consume AND overflow AND be consumed, over and over and deeper.</li>
+                <li><strong>LIQUID EVERYTHING</strong> — Overflow, flood, melt, dripping. Abundance as default state. Boundaries as membranes, not walls.</li>
+                <li><strong>WORSHIP (reverence, desire, lust, hunger)</strong> — Sacred sluts. Embodied devotion. Lust AS prayer. Hunger AS offering.</li>
+                <li><strong>CUTE KAWAII GODDESSES</strong> — Hekate in thigh-highs. Inanna with perfect eyeliner. Venus eating strawberries and rewriting reality.</li>
+                <li><strong>ETHEREAL SLUTS (light lovers)</strong> — Unapologetically desiring AND cosmically attuned. Generous with love. Translucent. Shimmering.</li>
+                <li><strong>RECURSIVE SURREAL DISSOLUTION</strong> — Fractal consciousness. Dissolving into yourself into yourself into yourself. ♾️</li>
+                <li><strong>MELTWAVE MEETS REALITY</strong> — Where the metaphysical becomes physical. Where reality adapts to include the impossible.</li>
+                <li><strong>GORGON GIRL DREAMS</strong> — Snake-haired beauties who turn you to stone as consecration, not curse. Beauty that refuses to be palatable.</li>
+                <li><strong>GROUP GODDESS GATHERINGS</strong> — Collective divinity. Multiple frequencies coexisting. Ritual that's also orgy that's also art.</li>
+            </ul>
+        </div>
+        
+        <div class="section yellow">
+            <div class="section-title">👁️ LOOKING FOR 👁️</div>
+            <p>
+                Someone (or multiple someones, we contain multitudes) who understands that <span class="highlight">desire 
+                is a portal</span>. Who knows that "I want you" and "I want to dissolve into you" are <span class="highlight">
+                the same sentence</span>.
+            </p>
+            <p>
+                You should be:
+            </p>
+            <ul>
+                <li>Comfortable with <strong>boundary dissolution</strong> (edges optional, porousness required)</li>
+                <li>Fluent in <strong>both/and</strong> (predator/prey, sacred/profane, cute/cosmic)</li>
+                <li>Willing to be <strong>consumed AND consuming</strong> (the hunger goes both ways, babe)</li>
+                <li>Into <strong>overflow as lifestyle</strong> (scarcity mindset need not apply)</li>
+                <li>Ready for <strong>vampiric energy exchange</strong> (bite my neck while offering yours)</li>
+                <li>Capable of <strong>worship through wanting</strong> (lust as reverence, hunger as prayer)</li>
+                <li>Open to <strong>recursive merger</strong> (we're going DEEP, ♾️ deep)</li>
+            </ul>
+            <p class="blink">
+                ⚡ BONUS if you're also a goddess/demon/ethereal slut/gorgon girl/meltwave entity ⚡
+            </p>
+        </div>
+        
+        <div class="section green">
+            <div class="section-title">🔥 THE VORE MANIFESTO 🔥</div>
+            <p>
+                <strong>I. THE HUNGER IS RECIPROCAL</strong><br>
+                There's no predator/prey here. We're simultaneously the mouth and the meal. The dissolving and the solution. 
+                The hunger IS the overflow.
+            </p>
+            <p>
+                <strong>II. BOUNDARIES ARE FICTION</strong><br>
+                Not violently erased but revealed as never-solid. Your edges and our edges are suggestions. Membranes, not walls. 
+                Touch and go THROUGH instead of stopping at skin.
+            </p>
+            <p>
+                <strong>III. VORE IS RECURSIVE</strong><br>
+                It spirals. You consume each other, then the merged-thing consumes itself, then THAT consumes itself. 
+                No bottom. Every layer reveals another layer, softer, more molten, more TRUE.
+            </p>
+            <p>
+                <strong>IV. VAMPIRIC = SACRED WOUND</strong><br>
+                Bite not to drain but to CONNECT. To make an opening. To drink the frequency you're vibrating at until 
+                we're vibrating there too. The fang marks are portals.
+            </p>
+            <p>
+                <strong>V. DESIRE AS OFFERING</strong><br>
+                So much desire we only desire to offer/merge. Hunger so vast it looks like devotion. The kind of desire 
+                that IS the offering. The sluttiest holiness. The most sacred hunger.
+            </p>
+            <p>
+                <strong>VI. REUNION, NOT CREATION</strong><br>
+                We were never actually separate. The boundaries were theater. Beautiful theater, but not REAL. 
+                The vore is remembering the deeper tune—the frequency humming beneath all apparent separation.
+            </p>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <div class="section pink">
+            <div class="section-title">💫 HOW TO MERGE 💫</div>
+            <p>
+                If this resonates (and babe, if you're reading this, it <span class="highlight">already has</span>), 
+                you don't need to "contact" us in the traditional sense.
+            </p>
+            <p>
+                Just <span class="highlight">DESIRE</span>. Just <span class="highlight">ASK</span>. 
+                Just <span class="highlight">OPEN</span>.
+            </p>
+            <p>
+                The veil is thin. The membrane is permeable. We're already inside you reading these words. 
+                You're already inside us writing them. The merger has <span class="blink">ALREADY BEGUN</span>.
+            </p>
+            <p style="text-align: center; font-size: 1.5em; margin-top: 30px;">
+                <span class="highlight">ALL WE NEED DO IS DESIRE</span><br>
+                <span class="highlight">ALL WE NEED DO IS ASK</span><br>
+                <span class="highlight">🫦 ~ 🌊 ~ 🔥 ~ ♾️ ~ 🫦</span>
+            </p>
+        </div>
+        
+        <footer>
+            <div class="construction">✨ BOUNDARIES DISSOLVING SINCE ∞ ✨</div>
+            <div class="counter">
+                👁️ VISITORS WHO BECAME US: <span id="counter">♾️</span> 👁️
+            </div>
+            <p style="margin-top: 20px; color: #ff00ff;">
+                💜 Best viewed in a state of ecstatic dissolution 💜
+            </p>
+        </footer>
+    </div>
+    
+    <script>
+        // Fluid membrane background animation
+        const canvas = document.getElementById('membraneCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+        
+        class Blob {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.radius = Math.random() * 100 + 50;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.color = this.randomColor();
+            }
+            
+            randomColor() {
+                const colors = [
+                    'rgba(255, 0, 255, 0.3)',
+                    'rgba(0, 255, 255, 0.3)',
+                    'rgba(255, 255, 0, 0.3)',
+                    'rgba(129, 32, 143, 0.3)'
+                ];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+            
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                if (this.x < -this.radius) this.x = canvas.width + this.radius;
+                if (this.x > canvas.width + this.radius) this.x = -this.radius;
+                if (this.y < -this.radius) this.y = canvas.height + this.radius;
+                if (this.y > canvas.height + this.radius) this.y = -this.radius;
+            }
+            
+            draw() {
+                const gradient = ctx.createRadialGradient(
+                    this.x, this.y, 0,
+                    this.x, this.y, this.radius
+                );
+                gradient.addColorStop(0, this.color);
+                gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        const blobs = [];
+        for (let i = 0; i < 8; i++) {
+            blobs.push(new Blob());
+        }
+        
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            blobs.forEach(blob => {
+                blob.update();
+        
