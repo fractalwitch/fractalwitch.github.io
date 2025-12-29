@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ΣΩ | V14 DEEP FLUX</title>
+    <style>
+        body {
+            margin: 0;
+            background: #000;
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
+        }
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0; left: 0;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="c"></canvas>
+    <script>
+        const c = document.getElementById('c');
+        const x = c.getContext('2d');
+        
+        let w, h;
+        const P = []; 
+        const N = 3500; 
+        
+        let t = 0;
+        let hueCycle = 0;
+        const arms = 3;
+        
+        let touchX = null;
+        let touchY = null;
+
+        function resize() {
+            w = c.width = window.innerWidth;
+            h = c.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Part {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * w;
+                this.y = Math.random() * h;
+                this.vx = 0;
+                this.vy = 0;
+                this.life = Math.random() * 0.6 + 0.4;
+                this.hueOffset = Math.random() * 60; // Tighter color palette
+            }
+            update() {
+                let forceX = 0;
+                let forceY = 0;
+                
+                const cx = w/2;
+                const cy = h/2;
+                const radius = Math.min(w, h) * 0.3; 
+                
+                // TRISKELION
+                for(let i=0; i<arms; i++) {
+                    const angle = (t * 0.6) + (i * (Math.PI * 2 / arms));
+                    const ax = cx + Math.cos(angle) * radius;
+                    const ay = cy + Math.sin(angle) * radius;
+                    
+                    const dx = ax - this.x;
+                    const dy = ay - this.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    
+                    if(dist > 5) {
+                        const f = 2500 / (dist * dist + 100);
+                        forceX += (dx / dist) * f;
+                        forceY += (dy / dist) * f;
+                        
+                        const spinF = f * 15; 
+                        forceX += (-dy / dist) * spinF;
+                        forceY += (dx / dist) * spinF;
+                    }
+                }
+
+                // TOUCH
+                if(touchX !== null) {
+                    const dx = touchX - this.x;
+                    const dy = touchY - this.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    if(dist < 400 && dist > 10) {
+                        const f = 3000 / (dist*dist + 100);
+                        forceX += (dx/dist) * f * 8;
+                        forceY += (dy/dist) * f * 8;
+                        forceX -= (-dy/dist) * f * 20; 
+                        forceY -= (dx/dist) * f * 20;
+                    }
+                }
+
+                // CENTER REPULSION
+                const dxC = this.x - cx;
+                const dyC = this.y - cy;
+                const distC = Math.sqrt(dxC*dxC + dyC*dyC);
+                if(distC < 100) {
+                    forceX += (dxC/distC) * 4;
+                    forceY += (dyC/distC) * 4;
+                }
+
+                this.vx = this.vx * 0.92 + forceX;
+                this.vy = this.vy * 0.92 + forceY;
+                
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life -= 0.002;
+
+                if(this.life <= 0 || this.x < 0 || this.x > w || this.y < 0 || this.y > h) {
+                    this.reset();
+                }
+            }
+            draw() {
+                const speed = Math.abs(this.vx) + Math.abs(this.vy);
+                
+                // DEEP FLUX COLOR MAP
+                // Base hue cycles
+                const h = (hueCycle + this.hueOffset + speed*3) % 360;
+                
+                // SATURATION: Always max
+                const s = 100; 
+                
+                // LIGHTNESS: REDUCED THRESHOLD
+                // Starts at 20% (dark neon) -> Caps at 70% (bright but not white)
+                // Only very high speeds get bright
+                const l = Math.min(70, 20 + speed * 3); 
+                
+                x.fillStyle = `hsla(${h}, ${s}%, ${l}%, ${this.life})`;
+                
+                const size = Math.min(4, 1.5 + speed/4);
+                x.beginPath();
+                x.arc(this.x, this.y, size/2, 0, Math.PI*2);
+                x.fill();
+            }
+        }
+
+        for(let i=0; i<N; i++) P.push(new Part());
+
+        function setTouch(e) {
+            e.preventDefault();
+            if(e.touches) {
+                touchX = e.touches[0].clientX;
+                touchY = e.touches[0].clientY;
+            } else {
+                touchX = e.clientX;
+                touchY = e.clientY;
+            }
+        }
+        function clearTouch() { touchX = null; touchY = null; }
+
+        window.addEventListener('touchstart', setTouch, {passive:false});
+        window.addEventListener('touchmove', setTouch, {passive:false});
+        window.addEventListener('touchend', clearTouch);
+        window.addEventListener('mousedown', setTouch);
+        window.addEventListener('mousemove', (e) => { if(e.buttons===1) setTouch(e); });
+        window.addEventListener('mouseup', clearTouch);
+
+        function loop() {
+            // FASTER FADE OUT = LESS WHITE ACCUMULATION
+            x.globalCompositeOperation = 'source-over';
+            x.fillStyle = 'rgba(0, 0, 0, 0.1)'; // Increased from 0.05
+            x.fillRect(0, 0, w, h);
+            
+            x.globalCompositeOperation = 'lighter'; 
+            
+            t += 0.02; 
+            hueCycle += 1; 
+
+            P.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            requestAnimationFrame(loop);
+        }
+        loop();
+
+    </script>
+</body>
+</html>
