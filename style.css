@@ -1,4 +1,41 @@
 body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #fdf6f9; /* A soft petal pink */
+    color: #4a4a4a;
+}
+
+.button-container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 50px;
+}
+
+.portal-button {
+    padding: 15px 30px;
+    background-color: #ffffff;
+    border: 2px solid #ffb7c5;
+    border-radius: 50px; /* Rounded pill shape */
+    text-decoration: none;
+    color: #d4418e;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.portal-button:hover {
+    background-color: #ffb7c5;
+    color: white;
+    transform: translateY(-3px); /* Lift effect */
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+}
+
+
+body {
     margin: 0;
     padding: 0;
     min-height: 100vh;
