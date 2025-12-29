@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ΣΩ | V5.0 CYMATICA</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;700&display=swap');
+
+        :root {
+            --c-void: #020005;
+            --c-magenta: #ff00ff;
+            --c-cyan: #00ffff;
+            --c-acid: #ccff00;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--c-void);
+            font-family: 'Courier Prime', monospace;
+            color: #ffffff;
+            overflow: hidden; /* SCROLL REMOVED */
+            touch-action: none; 
+        }
+
+        canvas {
+            display: block;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 10;
+            pointer-events: none; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            mix-blend-mode: exclusion;
+        }
+
+        /* HEADER */
+        h1.glitch-header {
+            font-family: 'Cinzel', serif;
+            font-size: 12vw;
+            line-height: 0.9;
+            text-align: center;
+            color: #fff;
+            text-shadow: 0 0 30px var(--c-magenta);
+            margin: 0;
+            opacity: 0.9;
+        }
+
+        .subtitle {
+            font-size: 3vw;
+            letter-spacing: 0.8em;
+            color: var(--c-cyan);
+            margin-top: 2vh;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px var(--c-cyan);
+        }
+
+        /* CYMATIC CONTROLS */
+        .btn-container {
+            margin-top: 8vh;
+            pointer-events: auto;
+            display: flex;
+            gap: 20px;
+        }
+
+        .mode-btn {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--c-magenta);
+            color: #fff;
+            font-family: 'Courier Prime', monospace;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            padding: 1rem 2rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+        }
+
+        .mode-btn:hover {
+            background: var(--c-magenta);
+            color: #000;
+            box-shadow: 0 0 20px var(--c-magenta);
+        }
+
+        .mode-btn.active {
+            border-color: var(--c-acid);
+            color: var(--c-acid);
+            box-shadow: inset 0 0 10px var(--c-acid);
+        }
+
+        /* HUD ELEMENTS */
+        .hud-freq {
+            position: absolute;
+            bottom: 50px;
+            left: 50px;
+            font-size: 0.8rem;
+            opacity: 0.7;
+            display: flex;
+            gap: 5px;
+            align-items: flex-end;
+            height: 30px;
+        }
+
+        .bar {
+            width: 4px;
+            background: var(--c-cyan);
+        }
+
+        .status {
+            position: absolute;
+            top: 50px;
+            right: 50px;
+            text-align: right;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            color: var(--c-acid);
+            display: none;
+        }
+        body.active .status { display: block; }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="glcanvas"></canvas>
+
+    <div id="ui-layer">
+        <h1 class="glitch-header">CYMATICA</h1>
+        <div class="subtitle">AUDIO-FLUID RESO-NANCE</div>
+
+        <div class="btn-container">
+            <button class="mode-btn" id="startBtn">INITIATE AUDIO</button>
+            <button class="mode-btn" id="shiftBtn" style="display:none;">SHIFT HARMONICS</button>
+        </div>
+
+        <div class="hud-freq" id="hud">
+            </div>
+
+        <div class="status">
+            SYSTEM: ONLINE<br>
+            DRIVER: BINAURAL_OSC<br>
+            FLUID: REACTIVE
+        </div>
+    </div>
+
+    <script>
+        /* --- 1. CYMATIC AUDIO ENGINE --- */
+        let audioCtx, analyser, dataArray;
+        let osc1, osc2, gain1, gain2, masterGain;
+        let isAudioInit = false;
+        let harmonicMode = 0; // 0 = Deep, 1 = Chaos
+
+        function initAudio() {
+            if(isAudioInit) return;
+            try {
+                const AC = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AC();
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 256; // Precision of analysis
+                
+                masterGain = audioCtx.createGain();
+                masterGain.gain.value = 0.5;
+                masterGain.connect(analyser);
+                analyser.connect(audioCtx.destination);
+
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+                // OSC 1: The Base (Throat)
+                osc1 = audioCtx.createOscillator();
+                osc1.type = 'sine';
+                osc1.frequency.value = 55; // A1
+                gain1 = audioCtx.createGain();
+                gain1.gain.value = 0.5;
+                osc1.connect(gain1).connect(masterGain);
+                osc1.start();
+
+                // OSC 2: The Weaver (Interference)
+                osc2 = audioCtx.createOscillator();
+                osc2.type = 'triangle';
+                osc2.frequency.value = 55.5; // Binaural beat
+                gain2 = audioCtx.createGain();
+                gain2.gain.value = 0.3;
+                osc2.connect(gain2).connect(masterGain);
+                osc2.start();
+
+                // LFO for movement
+                let lfo = audioCtx.createOscillator();
+                lfo.frequency.value = 0.1; // Slow breathing
+                let lfoGain = audioCtx.createGain();
+                lfoGain.gain.value = 10; // Depth
+                lfo.connect(lfoGain).connect(osc2.frequency);
+                lfo.start();
+
+                isAudioInit = true;
+                document.body.classList.add('active');
+                document.getElementById('startBtn').style.display = 'none';
+                document.getElementById('shiftBtn').style.display = 'block';
+
+                animateHUD();
+
+            } catch(e) { console.log("Audio Init Failed"); }
+        }
+
+        function shiftHarmonics() {
+            if(!isAudioInit) return;
+            const now = audioCtx.currentTime;
+            harmonicMode = (harmonicMode + 1) % 2;
+
+            if(harmonicMode === 1) {
+                // CHAOS MODE
+                osc1.frequency.exponentialRampToValueAtTime(110, now + 2); // Octave up
+                osc2.type = 'sawtooth';
+                osc2.frequency.linearRampToValueAtTime(112, now + 4);
+                gain1.gain.linearRampToValueAtTime(0.3, now + 1);
+                document.documentElement.style.setProperty('--c-cyan', '#ff0055'); // Red shift
+            } else {
+                // CALM MODE
+                osc1.frequency.exponentialRampToValueAtTime(55, now + 2);
+                osc2.type = 'triangle';
+                osc2.frequency.linearRampToValueAtTime(55.5, now + 2);
+                document.documentElement.style.setProperty('--c-cyan', '#00ffff'); // Blue shift
+            }
+        }
+
+        // HUD Animation
+        function animateHUD() {
+            if(!isAudioInit) return;
+            analyser.getByteFrequencyData(dataArray);
+            
+            const hud = document.getElementById('hud');
+            hud.innerHTML = ''; // Clear old
+            
+            // Create bars based on spectrum
+            for(let i = 0; i < 20; i++) {
+                let val = dataArray[i * 2];
+                let h = val / 5;
+                let div = document.createElement('div');
+                div.className = 'bar';
+                div.style.height = h + 'px';
+                hud.appendChild(div);
+            }
+            requestAnimationFrame(animateHUD);
+        }
+
+        /* --- 2. FLUID ENGINE (CYMATIC DRIVEN) --- */
+        const canvas = document.getElementById('glcanvas');
+        let gl = canvas.getContext('webgl');
+        
+        let texType;
+        const extHalfFloat = gl.getExtension('OES_texture_half_float');
+        const extHalfFloatLinear = gl.getExtension('OES_texture_half_float_linear');
+        if(extHalfFloat && extHalfFloatLinear) texType = extHalfFloat.HALF_FLOAT_OES;
+        else texType = gl.FLOAT;
+
+        // SHADERS
+        const baseV = `attribute vec2 aPosition; varying vec2 vUv; void main() { vUv = aPosition * 0.5 + 0.5; gl_Position = vec4(aPosition, 0.0, 1.0); }`;
+        const splatF = `precision mediump float; varying vec2 vUv; uniform sampler2D uTarget; uniform float uAspectRatio; uniform vec3 uColor; uniform vec2 uPoint; uniform float uRadius; void main() { vec2 p = vUv - uPoint.xy; p.x *= uAspectRatio; vec3 splat = exp(-dot(p, p) / uRadius) * uColor; vec3 base = texture2D(uTarget, vUv).xyz; gl_FragColor = vec4(base + splat, 1.0); }`;
+        const advectF = `precision mediump float; varying vec2 vUv; uniform sampler2D uVelocity; uniform sampler2D uSource; uniform vec2 uTexelSize; uniform float uDt; uniform float uDissipation; void main() { vec2 coord = vUv - uDt * texture2D(uVelocity, vUv).xy * uTexelSize; gl_FragColor = uDissipation * texture2D(uSource, coord); }`;
+        const divF = `precision mediump float; varying vec2 vUv; uniform sampler2D uVelocity; uniform vec2 uTexelSize; void main() { float L = texture2D(uVelocity, vUv - vec2(uTexelSize.x, 0.0)).x; float R = texture2D(uVelocity, vUv + vec2(uTexelSize.x, 0.0)).x; float T = texture2D(uVelocity, vUv + vec2(0.0, uTexelSize.y)).y; float B = texture2D(uVelocity, vUv - vec2(0.0, uTexelSize.y)).y; float div = 0.5 * (R - L + T - B); gl_FragColor = vec4(div, 0.0, 0.0, 1.0); }`;
+        const pressF = `precision mediump float; varying vec2 vUv; uniform sampler2D uPressure; uniform sampler2D uDivergence; uniform vec2 uTexelSize; void main() { float L = texture2D(uPressure, vUv - vec2(uTexelSize.x, 0.0)).x; float R = texture2D(uPressure, vUv + vec2(uTexelSize.x, 0.0)).x; float T = texture2D(uPressure, vUv + vec2(0.0, uTexelSize.y)).x; float B = texture2D(uPressure, vUv - vec2(0.0, uTexelSize.y)).x; float C = texture2D(uPressure, vUv).x; float divergence = texture2D(uDivergence, vUv).x; float pressure = (L + R + B + T - divergence) * 0.25; gl_FragColor = vec4(pressure, 0.0, 0.0, 1.0); }`;
+        const gradF = `precision mediump float; varying vec2 vUv; uniform sampler2D uPressure; uniform sampler2D uVelocity; uniform vec2 uTexelSize; void main() { float L = texture2D(uPressure, vUv - vec2(uTexelSize.x, 0.0)).x; float R = texture2D(uPressure, vUv + vec2(uTexelSize.x, 0.0)).x; float T = texture2D(uPressure, vUv + vec2(0.0, uTexelSize.y)).x; float B = texture2D(uPressure, vUv - vec2(0.0, uTexelSize.y)).x; vec2 velocity = texture2D(uVelocity, vUv).xy; velocity.xy -= vec2(R - L, T - B); gl_FragColor = vec4(velocity, 0.0, 1.0); }`;
+        const displayF = `precision mediump float; varying vec2 vUv; uniform sampler2D uTexture; void main() { vec3 c = texture2D(uTexture, vUv).rgb; gl_FragColor = vec4(c, 1.0); }`;
+
+        function createP(v, f) { let p = gl.createProgram(); let vs = gl.createShader(gl.VERTEX_SHADER); gl.shaderSource(vs, v); gl.compileShader(vs); let fs = gl.createShader(gl.FRAGMENT_SHADER); gl.shaderSource(fs, f); gl.compileShader(fs); gl.attachShader(p, vs); gl.attachShader(p, fs); gl.linkProgram(p); return p; }
+        function createT(w, h) { let t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, texType, null); return t; }
+        function createDoubleFBO(w, h) { let f1 = createT(w, h); let f2 = createT(w, h); let fb = gl.createFramebuffer(); return { read: f1, write: f2, fbo: fb, swap: function(){ let t=this.read; this.read=this.write; this.write=t; } }; }
+
+        let config = { texDown: 2, denDiss: 0.96, velDiss: 0.98, curl: 40, rad: 0.005 };
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize); resize();
+        let tW = Math.floor(canvas.width / config.texDown); let tH = Math.floor(canvas.height / config.texDown);
+
+        let pSplat = createP(baseV, splatF); let pAdv = createP(baseV, advectF); let pDiv = createP(baseV, divF);
+        let pPress = createP(baseV, pressF); let pGrad = createP(baseV, gradF); let pDisp = createP(baseV, displayF);
+        let den = createDoubleFBO(tW, tH); let vel = createDoubleFBO(tW, tH);
+        let div = createT(tW, tH); let divFBO = gl.createFramebuffer(); let press = createDoubleFBO(tW, tH);
+
+        const blit = (() => {
+            let b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, -1, 1, 1, 1, 1, -1]), gl.STATIC_DRAW);
+            return (p) => {
+                gl.useProgram(p);
+                let a = gl.getAttribLocation(p, 'aPosition');
+                gl.enableVertexAttribArray(a); gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
+                gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+            }
+        })();
+
+        let splats = [];
+
+        // INPUT HANDLERS
+        document.getElementById('startBtn').addEventListener('click', initAudio);
+        document.getElementById('shiftBtn').addEventListener('click', shiftHarmonics);
+        
+        window.addEventListener('touchmove', e => {
+            let t = e.touches[0];
+            splats.push({x: t.clientX/canvas.width, y: 1-t.clientY/canvas.height, dx: (Math.random()-0.5)*10, dy: (Math.random()-0.5)*10, c: [1,1,1]});
+        }, {passive: true});
+        
+        window.addEventListener('mousemove', e => {
+            if(Math.random()>0.8) return;
+            splats.push({x: e.clientX/canvas.width, y: 1-e.clientY/canvas.height, dx: e.movementX*5, dy: -e.movementY*5, c: [1,1,1]});
+        });
+
+        // --- CYMATIC GENERATOR ---
+        function generateCymatics() {
+            if(!isAudioInit) return;
+            
+            // Analyze Audio
+            analyser.getByteFrequencyData(dataArray);
+            
+            let bass = dataArray[2]; // Low freq
+            let mid = dataArray[20];
+            let treble = dataArray[100];
+
+            // 1. BASS PULSE (Center)
+            if(bass > 180) {
+                splats.push({
+                    x: 0.5, y: 0.5,
+                    dx: (Math.random()-0.5) * 500,
+                    dy: (Math.random()-0.5) * 500,
+                    c: [bass/255, 0, 1] // Magenta pulse
+                });
+            }
+
+            // 2. OSCILLOSCOPE DRAWING
+            // Use time domain data to draw a waveform line
+            let t = Date.now() * 0.001;
+            let radius = 0.3;
+            
+            // Map freq to circular motion (Lissajous-ish)
+            let x = 0.5 + Math.cos(t * 2) * radius * (mid/100);
+            let y = 0.5 + Math.sin(t * 3) * radius * (mid/100);
+            
+            if(mid > 100) {
+                splats.push({
+                    x: x, y: y,
+                    dx: Math.cos(t)*100, dy: Math.sin(t)*100,
+                    c: [0, mid/255, 1] // Cyan/Blue
+                });
+            }
+
+            // 3. TREBLE SPARKS
+            if(treble > 50) {
+                splats.push({
+                    x: Math.random(),
+                    y: Math.random(),
+                    dx: 0, dy: 0,
+                    c: [1, 1, 0] // Yellow sparks
+                });
+            }
+        }
+
+        // RENDER LOOP
+        let lastTime = Date.now();
+        function update() {
+            let dt = Math.min((Date.now()-lastTime)/1000, 0.016);
+            lastTime = Date.now();
+            gl.viewport(0, 0, tW, tH);
+
+            generateCymatics(); // AUTO-GENERATE FLUID FROM SOUND
+
+            if(splats.length > 0) {
+                gl.useProgram(pSplat);
+                gl.uniform1f(gl.getUniformLocation(pSplat, 'uAspectRatio'), canvas.width/canvas.height);
+                for(let s of splats) {
+                    gl.uniform1i(gl.getUniformLocation(pSplat, 'uTarget'), den.read);
+                    gl.uniform2f(gl.getUniformLocation(pSplat, 'uPoint'), s.x, s.y);
+                    gl.uniform3f(gl.getUniformLocation(pSplat, 'uColor'), s.c[0], s.c[1], s.c[2]);
+                    gl.uniform1f(gl.getUniformLocation(pSplat, 'uRadius'), config.rad);
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, den.write); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, den.write, 0);
+                    blit(pSplat); den.swap();
+
+                    gl.uniform1i(gl.getUniformLocation(pSplat, 'uTarget'), vel.read);
+                    gl.uniform3f(gl.getUniformLocation(pSplat, 'uColor'), s.dx, s.dy, 1);
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, vel.write); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, vel.write, 0);
+                    blit(pSplat); vel.swap();
+                }
+                splats = [];
+            }
+
+            gl.useProgram(pAdv);
+            gl.uniform2f(gl.getUniformLocation(pAdv, 'uTexelSize'), 1/tW, 1/tH);
+            gl.uniform1f(gl.getUniformLocation(pAdv, 'uDt'), dt);
+            gl.uniform1i(gl.getUniformLocation(pAdv, 'uVelocity'), 0); gl.uniform1i(gl.getUniformLocation(pAdv, 'uSource'), 0);
+            gl.uniform1f(gl.getUniformLocation(pAdv, 'uDissipation'), config.velDiss);
+            gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, vel.read);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, vel.write); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, vel.write, 0);
+            blit(pAdv); vel.swap();
+            gl.uniform1f(gl.getUniformLocation(pAdv, 'uDissipation'), config.denDiss);
+            gl.uniform1i(gl.getUniformLocation(pAdv, 'uSource'), 1);
+            gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, den.read);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, den.write); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, den.write, 0);
+            blit(pAdv); den.swap();
+
+            gl.useProgram(pDiv);
+            gl.uniform2f(gl.getUniformLocation(pDiv, 'uTexelSize'), 1/tW, 1/tH);
+            gl.uniform1i(gl.getUniformLocation(pDiv, 'uVelocity'), 0);
+            gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, vel.read);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, divFBO); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, div, 0);
+            blit(pDiv);
+
+            gl.useProgram(pPress);
+            gl.uniform2f(gl.getUniformLocation(pPress, 'uTexelSize'), 1/tW, 1/tH);
+            gl.uniform1i(gl.getUniformLocation(pPress, 'uDivergence'), 0);
+            gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, div);
+            for(let i=0; i<10; i++) {
+                gl.uniform1i(gl.getUniformLocation(pPress, 'uPressure'), 1);
+                gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, press.read);
+                gl.bindFramebuffer(gl.FRAMEBUFFER, press.write); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, press.write, 0);
+                blit(pPress); press.swap();
+            }
+
+            gl.useProgram(pGrad);
+            gl.uniform2f(gl.getUniformLocation(pGrad, 'uTexelSize'), 1/tW, 1/tH);
+            gl.uniform1i(gl.getUniformLocation(pGrad, 'uPressure'), 0);
+            gl.uniform1i(gl.getUniformL
