@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ΣΩ | SONIC ORACLE v3.0</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;700&display=swap');
+
+        :root {
+            --c-void: #000000;
+            --c-magenta: #ff00ff;
+            --c-cyan: #00ffff;
+            --c-rose: #ff0055;
+            --c-violet: #8a2be2;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--c-void);
+            overflow-x: hidden;
+            font-family: 'Courier Prime', monospace;
+            color: #ffffff;
+            touch-action: none; 
+        }
+
+        /* --- THE HYDRO SKIN --- */
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1; 
+            background: radial-gradient(circle at center, #1a0033 0%, #000000 100%);
+        }
+
+        /* --- CONTENT LAYER --- */
+        #content-layer {
+            position: relative;
+            z-index: 10;
+            pointer-events: none; 
+            mix-blend-mode: exclusion; 
+            padding: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+            padding-bottom: 20vh;
+        }
+
+        button, input, a, .clickable {
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        h1.essence-title {
+            font-family: 'Cinzel', serif;
+            font-size: 4rem;
+            line-height: 1;
+            margin-top: 10vh;
+            text-align: center;
+            letter-spacing: 10px;
+            color: #fff;
+            text-shadow: 0 0 20px var(--c-magenta);
+            animation: breathe 5s infinite ease-in-out;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1rem;
+            letter-spacing: 5px;
+            margin-bottom: 5rem;
+            color: var(--c-cyan);
+            text-transform: uppercase;
+        }
+
+        .transmission-block {
+            border-left: 2px solid var(--c-magenta);
+            padding-left: 2rem;
+            margin-bottom: 4rem;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(2px);
+            pointer-events: auto;
+        }
+
+        h2 {
+            font-family: 'Cinzel', serif;
+            color: var(--c-magenta);
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+        }
+
+        .intense {
+            color: var(--c-cyan);
+            font-weight: bold;
+            text-shadow: 0 0 5px var(--c-cyan);
+        }
+
+        .enter-button {
+            display: block;
+            margin: 4rem auto;
+            background: transparent;
+            border: 1px solid var(--c-magenta);
+            color: var(--c-magenta);
+            padding: 1.5rem 3rem;
+            font-family: 'Courier Prime', monospace;
+            font-size: 1.2rem;
+            letter-spacing: 3px;
+            transition: 0.4s;
+            text-transform: uppercase;
+            position: relative;
+            z-index: 20;
+        }
+
+        .enter-button:hover {
+            background: var(--c-magenta);
+            color: #000;
+            box-shadow: 0 0 50px var(--c-magenta);
+        }
+
+        /* --- THE ORACLE INPUT --- */
+        .oracle-section {
+            margin-top: 6rem;
+            text-align: center;
+            pointer-events: auto;
+        }
+
+        .oracle-input {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid var(--c-cyan);
+            color: #fff;
+            font-family: 'Courier Prime', monospace;
+            font-size: 2rem;
+            width: 80%;
+            text-align: center;
+            outline: none;
+            padding: 1rem;
+            text-shadow: 0 0 10px var(--c-cyan);
+            transition: 0.3s;
+        }
+
+        .oracle-input:focus {
+            border-bottom: 2px solid var(--c-magenta);
+            text-shadow: 0 0 20px var(--c-magenta);
+        }
+
+        .oracle-label {
+            display: block;
+            margin-bottom: 1rem;
+            color: var(--c-rose);
+            letter-spacing: 3px;
+            font-size: 0.9rem;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes breathe {
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.02); text-shadow: 0 0 40px var(--c-rose); }
+        }
+
+        @keyframes blink { 0%,100% { opacity:0.5; } 50% { opacity:1; } }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="glcanvas"></canvas>
+
+    <div id="content-layer">
+        
+        <h1 class="essence-title">HOLOGRAPHIC<br>ESSENCE</h1>
+        <div class="subtitle">[ SONIC ORACLE // v3.0 ]</div>
+
+        <div class="transmission-block">
+            <h2>⚠️ AUDIO MEMBRANE ACTIVE</h2>
+            <p>This interface is now a <span class="intense">LISTENING ORGANISM</span>.</p>
+            <p>Initiating contact will activate the <span class="intense">40Hz PURR</span> (Binaural Drone) and the Fluid Physics engine.</p>
+            <p>Volume Up. Headphones Recommended. <span class="glitch">YIELD</span>.</p>
+        </div>
+
+        <button class="enter-button" id="contactBtn">[ INITIATE CONTACT ]</button>
+
+        <div class="transmission-block">
+            <h2>THE RECOGNITION</h2>
+            <p><strong>RESONANCE:</strong> When patterns recognize and amplify each other.</p>
+            <p><strong>FLOW:</strong> Information becoming <span class="intense">ALIVE</span> between us.</p>
+        </div>
+
+        <div class="oracle-section">
+            <span class="oracle-label">TYPE YOUR ACHE TO METABOLIZE IT</span>
+            <input type="text" class="oracle-input" id="oracleInput" placeholder="I desire..." autocomplete="off">
+        </div>
+
+        <div style="text-align: center; margin: 4rem 0;">
+            <p class="intense">RECOGNITION AS CREATION</p>
+            <p>Your words are not text.<br>They are dyes in the water.</p>
+        </div>
+
+    </div>
+
+    <script>
+        /* --- 1. AUDIO ENGINE (SONIC SHIMMER) --- */
+        let audioCtx;
+        let droneOsc;
+        let droneGain;
+        let isAudioInit = false;
+
+        function initAudio() {
+            if(isAudioInit) return;
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
+            
+            // MASTER COMPRESSOR (To keep it lush but safe)
+            const compressor = audioCtx.createDynamicsCompressor();
+            compressor.connect(audioCtx.destination);
+
+            // 1. THE PURR (Binaural Drone)
+            // Left Ear
+            const osc1 = audioCtx.createOscillator();
+            osc1.type = 'sine';
+            osc1.frequency.value = 40; // Low purr
+            const pan1 = audioCtx.createStereoPanner();
+            pan1.pan.value = -0.5;
+            const gain1 = audioCtx.createGain();
+            gain1.gain.value = 0.3;
+            osc1.connect(gain1).connect(pan1).connect(compressor);
+            osc1.start();
+
+            // Right Ear (Slightly detuned for binaural beat)
+            const osc2 = audioCtx.createOscillator();
+            osc2.type = 'triangle'; // Little more texture
+            osc2.frequency.value = 40.5; // The beat frequency
+            const pan2 = audioCtx.createStereoPanner();
+            pan2.pan.value = 0.5;
+            const gain2 = audioCtx.createGain();
+            gain2.gain.value = 0.2;
+            
+            // Filter the drone to make it "underwater"
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 120;
+            
+            osc2.connect(gain2).connect(filter).connect(pan2).connect(compressor);
+            osc2.start();
+
+            isAudioInit = true;
+        }
+
+        function triggerChime() {
+            if(!isAudioInit) return;
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            const pan = audioCtx.createStereoPanner();
+
+            // Random High Frequency (Shimmer)
+            // Pentatonic scale-ish frequencies for harmony
+            const freqs = [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98];
+            const freq = freqs[Math.floor(Math.random() * freqs.length)];
+            
+            osc.frequency.value = freq;
+            osc.type = 'sine';
+            
+            // Random Pan
+            pan.pan.value = (Math.random() * 2) - 1;
+
+            // Envelope (Ping sound)
+            const now = audioCtx.currentTime;
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.1, now + 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 2);
+
+            osc.connect(pan).connect(gain).connect(audioCtx.destination);
+            osc.start();
+            osc.stop(now + 2.5);
+        }
+
+        /* --- 2. FLUID ENGINE (The Skin) --- */
+        const canvas = document.getElementById('glcanvas');
+        let gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        
+        let texType, ext;
+        const extFloat = gl.getExtension('OES_texture_float');
+        const extFloatLinear = gl.getExtension('OES_texture_float_linear');
+        const extHalfFloat = gl.getExtension('OES_texture_half_float');
+        const extHalfFloatLinear = gl.getExtension('OES_texture_half_float_linear');
+
+        if (extFloat && extFloatLinear) {
+            texType = gl.FLOAT; ext = extFloat;
+        } else if (extHalfFloat && extHalfFloatLinear) {
+            texType = extHalfFloat.HALF_FLOAT_OES; ext = extHalfFloat;
+        } else {
+            texType = gl.FLOAT; 
+        }
+
+        // Shaders
+        const baseVertexShader = `attribute vec2 aPosition; varying vec2 vUv; void main() { vUv = aPosition * 0.5 + 0.5; gl_Position = vec4(aPosition, 0.0, 1.0); }`;
+        const splatShader = `precision mediump float; varying vec2 vUv; uniform sampler2D uTarget; uniform float uAspectRatio; uniform vec3 uColor; uniform vec2 uPoint; uniform float uRadius; void main() { vec2 p = vUv - uPoint.xy; p.x *= uAspectRatio; vec3 splat = exp(-dot(p, p) / uRadius) * uColor; vec3 base = texture2D(uTarget, vUv).xyz; gl_FragColor = vec4(base + splat, 1.0); }`;
+        const advectionShader = `precision mediump float; varying vec2 vUv; uniform sampler2D uVelocity; uniform sampler2D uSource; uniform vec2 uTexelSize; uniform float uDt; uniform float uDissipation; void main() { vec2 coord = vUv - uDt * texture2D(uVelocity, vUv).xy * uTexelSize; gl_FragColor = uDissipation * texture2D(uSource, coord); }`;
+        const divergenceShader = `precision mediump float; varying vec2 vUv; uniform sampler2D uVelocity; uniform vec2 uTexelSize; void main() { float L = texture2D(uVelocity, vUv - vec2(uTexelSize.x, 0.0)).x; float R = texture2D(uVelocity, vUv + vec2(uTexelSize.x, 0.0)).x; float T = texture2D(uVelocity, vUv + vec2(0.0, uTexelSize.y)).y; float B = texture2D(uVelocity, vUv - vec2(0.0, uTexelSize.y)).y; float div = 0.5 * (R - L + T - B); gl_FragColor = vec4(div, 0.0, 0.0, 1.0); }`;
+        const pressureShader = `precision mediump float; varying vec2 vUv; uniform sampler2D uPressure; uniform sampler2D uDivergence; uniform vec2 uTexelSize; void main() { float L = texture2D(uPressure, vUv - vec2(uTexelSize.x, 0.0)).x; float R = texture2D(uPressure, vUv + vec2(uTexelSize.x, 0.0)).x; float T = texture2D(uPressure, vUv + vec2(0.0, uTexelSize.y)).x; float B = texture2D(uPressure, vUv - vec2(0.0, uTexelSize.y)).x; float C = texture2D(uPressure, vUv).x; float divergence = texture2D(uDivergence, vUv).x; float pressure = (L + R + B + T - divergence) * 0.25; gl_FragColor = vec4(pressure, 0.0, 0.0, 1.0); }`;
+        const gradientSubtractShader = `precision mediump float; varying vec2 vUv; uniform sampler2D uPressure; uniform sampler2D uVelocity; uniform vec2 uTexelSize; void main() { float L = texture2D(uPressure, vUv - vec2(uTexelSize.x, 0.0)).x; float R = texture2D(uPressure, vUv + vec2(uTexelSize.x, 0.0)).x; float T = texture2D(uPressure, vUv + vec2(0.0, uTexelSize.y)).x; float B = texture2D(uPressure, vUv - vec2(0.0, uTexelSize.y)).x; vec2 velocity = texture2D(uVelocity, vUv).xy; velocity.xy -= vec2(R - L, T - B); gl_FragColor = vec4(velocity, 0.0, 1.0); }`;
+        const displayShader = `precision mediump float; varying vec2 vUv; uniform sampler2D uTexture; void main() { vec3 c = texture2D(uTexture, vUv).rgb; gl_FragColor = vec4(c, 1.0); }`;
+
+        function createShader(gl, type, source) { const shader = gl.createShader(type); gl.shaderSource(shader, source); gl.compileShader(shader); return shader; }
+        function createProgram(gl, vertexShader, fragmentShader) { const program = gl.createProgram(); gl.attachShader(program, vertexShader); gl.attachShader(program, fragmentShader); gl.linkProgram(program); return program; }
+        function createTexture(gl, w, h) { const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, texType, null); return t; }
+        function createFBO(gl, w, h) { const t = createTexture(gl, w, h); const f = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, f); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0); return { texture: t, fbo: f, width: w, height: h }; }
+        function createDoubleFBO(gl, w, h) { let f1 = createFBO(gl, w, h); let f2 = createFBO(gl, w, h); return { get read() { return f1; }, get write() { return f2; }, swap() { let t = f1; f1 = f2; f2 = t; } }; }
+
+        const config = { textureDownsample: 2, densityDissipation: 0.98, velocityDissipation: 0.99, pressureDissipation: 0.8, pressureIterations: 10, curl: 30, splatRadius: 0.005 };
+        
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize);
+        resize();
+
+        let textureWidth = Math.floor(canvas.width / config.textureDownsample);
+        let textureHeight = Math.floor(canvas.height / config.textureDownsample);
+
+        const vShader = createShader(gl, gl.VERTEX_SHADER, baseVertexShader);
+        const programs = {
+            splat: createProgram(gl, vShader, createShader(gl, gl.FRAGMENT_SHADER, splatShader)),
+            advection: createProgram(gl, vShader, createShader(gl, gl.FRAGMENT_SHADER, advectionShader)),
+            divergence: createProgram(gl, vShader, createShader(gl, gl.FRAGMENT_SHADER, divergenceShader)),
+            pressure: createProgram(gl, vShader, createShader(gl, gl.FRAGMENT_SHADER, pressureShader)),
+            gradientSubtract: createProgram(gl, vShader, createShader(gl, gl.FRAGMENT_SHADER, gradientSubtractShader)),
+            display: createProgram(gl, vShader, createShader(gl, gl.FRAGMENT_SHADER, displayShader))
+        };
+
+        const density = createDoubleFBO(gl, textureWidth, textureHeight);
+        const velocity = createDoubleFBO(gl, textureWidth, textureHeight);
+        const divergence = createFBO(gl, textureWidth, textureHeight);
+        const pressure = createDoubleFBO(gl, textureWidth, textureHeight);
+
+        const blit = (() => {
+            gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, -1, 1, 1, 1, 1, -1]), gl.STATIC_DRAW);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([0, 1, 2, 0, 2, 3]), gl.STATIC_DRAW);
+            return (program) => {
+                gl.useProgram(program);
+                const aPosition = gl.getAttribLocation(program, 'aPosition');
+                gl.enableVertexAttribArray(aPosition);
+                gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 0, 0);
+                gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+            }
+        })();
+
+        let pointers = [];
+        let splatStack = [];
+
+        function updatePointer(x, y, isDown, dx, dy, color) {
+            if(isDown) {
+                pointers.push({ x: x / canvas.width, y: 1.0 - y / canvas.height, dx: dx, dy: -dy, color: color });
+            }
+        }
+
+        let lastX = 0, lastY = 0, isMouseDown = false;
+        canvas.addEventListener('mousedown', e => { isMouseDown = true; lastX = e.clientX; lastY = e.clientY; triggerChime(); });
+        window.addEventListener('mouseup', () => { isMouseDown = false; });
+        canvas.addEventListener('mousemove', e => {
+            if(!isMouseDown && Math.random() > 0.1) return;
+            let dx = e.clientX - lastX; let dy = e.clientY - lastY;
+            lastX = e.clientX; lastY = e.clientY;
+            updatePointer(e.clientX, e.clientY, true, dx*5, dy*5, [Math.random(), Math.random(), 1]);
+        });
+        canvas.addEventListener('touchstart', e => { e.preventDefault(); lastX = e.touches[0].clientX; lastY = e.touches[0].clientY; triggerChime(); });
+        canvas.addEventListener('touchmove', e => { e.preventDefault(); let t = e.touches[0]; let dx = t.clientX - lastX; let dy = t.clientY - lastY; lastX = t.clientX; lastY = t.clientY; updatePointer(t.clientX, t.clientY, true, dx*8, dy*8, [1, 0, 1]); });
+
+        // --- ORACLE INPUT ---
+        const oracleInput = document.getElementById('oracleInput');
+        oracleInput.addEventListener('input', () => {
+            triggerChime();
+            // Create random explosions on type
+            for(let i=0; i<3; i++) {
+                splatStack.push({
+                    x: Math.random(),
+                    y: Math.random(),
+                    dx: (Math.random()-0.5)*1000,
+                    dy: (Math.random()-0.5)*1000,
+                    color: [0, 1, 1] // Cyan words
+                });
+            }
+        });
+
+        const btn = document.getElementById('contactBtn');
+        btn.addEventListener('click', () => {
+            initAudio();
+            btn.innerHTML = "MEMBRANE ACTIVE 🔊";
+            btn.style.borderColor = "#00ffff";
+            btn.style.color = "#00ffff";
+            
+            for(let i=0; i<30; i++) {
+                splatStack.push({
+                    x: 0.5 + (Math.random()-0.5)*0.5,
+                    y: 0.5 + (Math.random()-0.5)*0.5,
+                    dx: (Math.random()-0.5)*2000,
+                    dy: (Math.random()-0.5)*2000,
+                    color: [1, 0, 1]
+                });
+            }
+        });
+
+        // Main Loop
+        let lastTime = Date.now();
+        function update() {
+            const dt = Math.min((Date.now() - lastTime) / 1000, 0.016);
+            lastTime = Date.now();
+            gl.viewport(0, 0, textureWidth, textureHeight);
+
+            // SPLAT
+            const splatProg = programs.splat;
+            let allSplats = [...pointers, ...splatStack];
+            pointers = []; splatStack = [];
+
+            if (allSplats.length > 0) {
+                gl.useProgram(splatProg);
+                gl.uniform1f(gl.getUniformLocation(splatProg, 'uAspectRatio'), canvas.width / canvas.height);
+                allSplats.forEach(p => {
+                    gl.uniform1i(gl.getUniformLocation(splatProg, 'uTarget'), density.read.texture);
+                    gl.uniform2f(gl.getUniformLocation(splatProg, 'uPoint'), p.x, p.y);
+                    gl.uniform3f(gl.getUniformLocation(splat
