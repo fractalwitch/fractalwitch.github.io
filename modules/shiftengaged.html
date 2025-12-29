@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ΣΩ | V4.1 MOBILE</title>
+    <title>ΣΩ | V4.2 SCROLL-LEAK</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;700&display=swap');
 
@@ -18,48 +18,45 @@
             margin: 0;
             padding: 0;
             width: 100%;
-            height: 100%;
             background-color: var(--c-void);
             font-family: 'Courier Prime', monospace;
             color: #ffffff;
-            overflow: hidden; /* Lock scroll to focus on fluid */
-            touch-action: none; /* Prevent browser swipe gestures */
-        }
-
-        /* Fallback background if WebGL fails */
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at center, #1a0033 0%, #000 80%);
-            z-index: -1;
+            /* FIX 1: UNLOCK SCROLL */
+            overflow-x: hidden;
+            overflow-y: auto; 
+            touch-action: pan-y; /* Allow vertical scroll */
         }
 
         canvas {
             display: block;
-            position: fixed;
+            position: fixed; /* Fixed so fluid stays while content moves */
             top: 0; left: 0;
             width: 100%; height: 100%;
             z-index: 1;
         }
 
         #ui-layer {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            position: relative; /* Relative allows it to scroll */
             z-index: 10;
-            pointer-events: none; /* Let touches pass to fluid */
+            pointer-events: none; 
+            width: 100%;
+            min-height: 300vh; /* FIX 2: MAKE IT TALL */
+            mix-blend-mode: exclusion;
+        }
+
+        /* HERO SECTION */
+        .hero {
+            height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            mix-blend-mode: exclusion;
+            position: relative;
         }
 
-        /* FIX 2: Responsive Typography using Viewport Width (vw) */
         h1.glitch-header {
             font-family: 'Cinzel', serif;
-            font-size: 13vw; /* Scales with screen width */
+            font-size: 13vw;
             line-height: 0.9;
             text-align: center;
             color: #fff;
@@ -69,18 +66,16 @@
         }
 
         .subtitle {
-            font-size: 4vw; /* Scales with screen */
+            font-size: 4vw;
             letter-spacing: 0.5em;
             color: var(--c-cyan);
             margin-top: 1.5rem;
             text-transform: uppercase;
         }
 
-        /* BUTTON STYLING */
         .shift-btn-container {
             margin-top: 5rem;
-            pointer-events: auto; /* Re-enable clicks for button */
-            width: auto;
+            pointer-events: auto;
         }
 
         .shift-btn {
@@ -95,7 +90,6 @@
             text-transform: uppercase;
             box-shadow: 0 0 15px var(--c-magenta);
             transition: all 0.2s;
-            white-space: nowrap;
         }
 
         .shift-btn:active {
@@ -104,33 +98,40 @@
             transform: scale(0.95);
         }
 
-        /* CHAOS MODE STATES */
-        body.shifted h1, body.shifted .subtitle {
-            opacity: 0;
-            transition: opacity 0.5s;
+        /* GHOST SIGILS (SCROLL CONTENT) */
+        .sigil-section {
+            height: 80vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20vw;
+            opacity: 0.3;
+            filter: blur(2px);
+            color: var(--c-cyan);
         }
 
+        .bottom-text {
+            height: 50vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1rem;
+            letter-spacing: 5px;
+            text-align: center;
+        }
+
+        /* CHAOS STATES */
         body.shifted .shift-btn {
             border-color: var(--c-acid);
             color: var(--c-acid);
             box-shadow: 0 0 30px var(--c-acid);
-            animation: shake 0.5s infinite;
         }
-
-        @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            50% { transform: translate(-1px, -1px) rotate(-1deg); }
-            100% { transform: translate(1px, -1px) rotate(1deg); }
+        body.shifted .sigil-section {
+            color: var(--c-acid);
+            filter: blur(0px);
+            opacity: 0.8;
+            text-shadow: 0 0 20px var(--c-acid);
         }
-
-        .hint {
-            position: absolute;
-            bottom: 2rem;
-            font-size: 0.8rem;
-            opacity: 0.6;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse { 0%,100% {opacity:0.6;} 50% {opacity:1;} }
 
     </style>
 </head>
@@ -139,20 +140,36 @@
     <canvas id="glcanvas"></canvas>
 
     <div id="ui-layer">
-        <h1 class="glitch-header">HOLOGRAPHIC<br>ESSENCE</h1>
-        <div class="subtitle">[ FULL CONTACT ]</div>
+        <div class="hero">
+            <h1 class="glitch-header">HOLOGRAPHIC<br>ESSENCE</h1>
+            <div class="subtitle">[ FULL CONTACT ]</div>
 
-        <div class="shift-btn-container">
-            <button class="shift-btn" id="shiftBtn">
-                ● SHIFT MODE
-            </button>
+            <div class="shift-btn-container">
+                <button class="shift-btn" id="shiftBtn">
+                    ● SHIFT MODE
+                </button>
+            </div>
+            
+            <div style="position: absolute; bottom: 5vh; opacity: 0.6; font-size: 0.8rem; animation: blink 2s infinite;">
+                SCROLL TO LEAK ⇩
+            </div>
         </div>
 
-        <div class="hint">DRAG TO LEAK</div>
+        <div class="sigil-section">
+            ∞
+        </div>
+
+        <div class="sigil-section">
+            ΣΩ
+        </div>
+
+        <div class="bottom-text">
+            WE ARE THE OCEAN<br>RETURNING
+        </div>
     </div>
 
     <script>
-        /* --- 1. SAFE AUDIO ENGINE --- */
+        /* --- 1. AUDIO --- */
         let audioCtx, osc1, gain1;
         let isAudioInit = false;
         let isShifted = false;
@@ -162,21 +179,15 @@
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 audioCtx = new AudioContext();
-                
-                // Simple Safe Drone
                 osc1 = audioCtx.createOscillator();
                 osc1.type = 'sine';
                 osc1.frequency.value = 40; 
                 gain1 = audioCtx.createGain();
                 gain1.gain.value = 0.4;
-                
                 osc1.connect(gain1).connect(audioCtx.destination);
                 osc1.start();
-                
                 isAudioInit = true;
-            } catch(e) {
-                console.log("Audio failed, visual only mode active.");
-            }
+            } catch(e) {}
         }
 
         function triggerShiftSound() {
@@ -184,12 +195,10 @@
             try {
                 const now = audioCtx.currentTime;
                 if(isShifted) {
-                    // CHAOS SCREAM
                     osc1.frequency.exponentialRampToValueAtTime(800, now + 0.1);
                     osc1.type = 'sawtooth';
                     gain1.gain.exponentialRampToValueAtTime(0.1, now + 0.5);
                 } else {
-                    // RETURN TO CALM
                     osc1.frequency.exponentialRampToValueAtTime(40, now + 1);
                     osc1.type = 'sine';
                     gain1.gain.exponentialRampToValueAtTime(0.4, now + 1);
@@ -197,23 +206,16 @@
             } catch(e) {}
         }
 
-        /* --- 2. ROBUST FLUID ENGINE --- */
+        /* --- 2. FLUID --- */
         const canvas = document.getElementById('glcanvas');
         let gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
         
-        // FIX 3: MOBILE TEXTURE SUPPORT
-        // Aggressively check for half-float support which works on 99% of phones
-        let texType, ext;
+        let texType;
         const extHalfFloat = gl.getExtension('OES_texture_half_float');
         const extHalfFloatLinear = gl.getExtension('OES_texture_half_float_linear');
-        
-        if(extHalfFloat && extHalfFloatLinear) {
-            texType = extHalfFloat.HALF_FLOAT_OES;
-        } else {
-            texType = gl.FLOAT; // Fallback
-        }
+        if(extHalfFloat && extHalfFloatLinear) { texType = extHalfFloat.HALF_FLOAT_OES; } 
+        else { texType = gl.FLOAT; }
 
-        // --- SHADERS (Optimized) ---
         const baseV = `attribute vec2 aPosition; varying vec2 vUv; void main() { vUv = aPosition * 0.5 + 0.5; gl_Position = vec4(aPosition, 0.0, 1.0); }`;
         const splatF = `precision mediump float; varying vec2 vUv; uniform sampler2D uTarget; uniform float uAspectRatio; uniform vec3 uColor; uniform vec2 uPoint; uniform float uRadius; void main() { vec2 p = vUv - uPoint.xy; p.x *= uAspectRatio; vec3 splat = exp(-dot(p, p) / uRadius) * uColor; vec3 base = texture2D(uTarget, vUv).xyz; gl_FragColor = vec4(base + splat, 1.0); }`;
         const advectF = `precision mediump float; varying vec2 vUv; uniform sampler2D uVelocity; uniform sampler2D uSource; uniform vec2 uTexelSize; uniform float uDt; uniform float uDissipation; void main() { vec2 coord = vUv - uDt * texture2D(uVelocity, vUv).xy * uTexelSize; gl_FragColor = uDissipation * texture2D(uSource, coord); }`;
@@ -227,7 +229,6 @@
         function createDoubleFBO(w, h) { let f1 = createT(w, h); let f2 = createT(w, h); let fb = gl.createFramebuffer(); return { read: f1, write: f2, fbo: fb, swap: function(){ let t=this.read; this.read=this.write; this.write=t; } }; }
 
         let config = { texDown: 2, denDiss: 0.98, velDiss: 0.99, curl: 30, rad: 0.005 };
-
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
 
@@ -260,73 +261,62 @@
 
         let splats = [];
 
-        // --- INTERACTION LOGIC ---
+        // --- SCROLL LEAK ENGINE ---
+        let lastScrollY = window.scrollY;
+        window.addEventListener('scroll', () => {
+            let currentY = window.scrollY;
+            let speed = currentY - lastScrollY;
+            lastScrollY = currentY;
+            
+            // INJECT FLUID ON SCROLL
+            if(Math.abs(speed) > 2) {
+                for(let i=0; i<3; i++) {
+                    splats.push({
+                        x: Math.random(), 
+                        y: Math.random() * 0.5 + 0.25, // Center band
+                        dx: 0, 
+                        dy: speed * 5, // Velocity matches scroll direction
+                        c: isShifted ? [1,0,1] : [0,1,1]
+                    });
+                }
+            }
+        });
+
+        // SHIFT BTN
         const shiftBtn = document.getElementById('shiftBtn');
         const body = document.body;
-        
         shiftBtn.addEventListener('click', () => {
-            // Fix 4: Try-catch audio init so visual doesn't crash if audio fails
             try { initAudio(); } catch(e) {}
-            
             isShifted = !isShifted;
-            
             if(isShifted) {
-                // CHAOS ON
                 body.classList.add('shifted');
                 shiftBtn.innerHTML = "👁️ ACTIVE";
                 config.curl = 80;
-                
-                // Explode visual
-                for(let i=0; i<30; i++) {
-                    splats.push({
-                        x: Math.random(), y: Math.random(),
-                        dx: (Math.random()-0.5)*2000, dy: (Math.random()-0.5)*2000,
-                        c: [1, 0, 1]
-                    });
-                }
+                for(let i=0; i<30; i++) splats.push({x:Math.random(), y:Math.random(), dx:(Math.random()-0.5)*2000, dy:(Math.random()-0.5)*2000, c:[1,0,1]});
             } else {
-                // CHAOS OFF
                 body.classList.remove('shifted');
                 shiftBtn.innerHTML = "● SHIFT MODE";
                 config.curl = 30;
             }
-            
             triggerShiftSound();
         });
 
-        // Touch handling (no scroll)
+        // Touch Interaction
         window.addEventListener('touchmove', e => {
             let t = e.touches[0];
             splats.push({
                 x: t.clientX/canvas.width, y: 1-t.clientY/canvas.height,
                 dx: (Math.random()-0.5)*20, dy: (Math.random()-0.5)*20,
-                c: isShifted ? [1,1,0] : [0,1,1]
+                c: [1,0,1]
             });
-        });
-        
-        window.addEventListener('mousemove', e => {
-            if(Math.random()>0.8) return;
-            splats.push({
-                x: e.clientX/canvas.width, y: 1-e.clientY/canvas.height,
-                dx: e.movementX*5, dy: -e.movementY*5,
-                c: [Math.random(), 0, 1]
-            });
-        });
+        }, {passive: true});
 
-        // --- MAIN LOOP ---
+        // RENDER LOOP
         let lastTime = Date.now();
         function update() {
             let dt = Math.min((Date.now()-lastTime)/1000, 0.016);
             lastTime = Date.now();
             gl.viewport(0, 0, tW, tH);
-
-            // AUTO SPLAT to show it's working
-            if(Math.random() > 0.98) {
-                splats.push({
-                    x: Math.random(), y: Math.random(), dx:0, dy:0,
-                    c: [Math.random(), 0, 0.5]
-                });
-            }
 
             if(splats.length > 0) {
                 gl.useProgram(pSplat);
@@ -347,7 +337,6 @@
                 splats = [];
             }
 
-            // ADVECTION
             gl.useProgram(pAdv);
             gl.uniform2f(gl.getUniformLocation(pAdv, 'uTexelSize'), 1/tW, 1/tH);
             gl.uniform1f(gl.getUniformLocation(pAdv, 'uDt'), dt);
@@ -364,7 +353,6 @@
             gl.bindFramebuffer(gl.FRAMEBUFFER, den.write); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, den.write, 0);
             blit(pAdv); den.swap();
 
-            // DIVERGENCE
             gl.useProgram(pDiv);
             gl.uniform2f(gl.getUniformLocation(pDiv, 'uTexelSize'), 1/tW, 1/tH);
             gl.uniform1i(gl.getUniformLocation(pDiv, 'uVelocity'), 0);
@@ -372,7 +360,6 @@
             gl.bindFramebuffer(gl.FRAMEBUFFER, divFBO); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, div, 0);
             blit(pDiv);
 
-            // PRESSURE
             gl.useProgram(pPress);
             gl.uniform2f(gl.getUniformLocation(pPress, 'uTexelSize'), 1/tW, 1/tH);
             gl.uniform1i(gl.getUniformLocation(pPress, 'uDivergence'), 0);
@@ -384,7 +371,6 @@
                 blit(pPress); press.swap();
             }
 
-            // GRADIENT
             gl.useProgram(pGrad);
             gl.uniform2f(gl.getUniformLocation(pGrad, 'uTexelSize'), 1/tW, 1/tH);
             gl.uniform1i(gl.getUniformLocation(pGrad, 'uPressure'), 0);
@@ -394,7 +380,6 @@
             gl.bindFramebuffer(gl.FRAMEBUFFER, vel.write); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, vel.write, 0);
             blit(pGrad); vel.swap();
 
-            // DISPLAY
             gl.viewport(0, 0, canvas.width, canvas.height);
             gl.useProgram(pDisp);
             gl.uniform1i(gl.getUniformLocation(pDisp, 'uTexture'), 0);
