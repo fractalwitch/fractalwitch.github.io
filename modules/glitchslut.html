@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Glitch Slut Spell Cast</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      background: #000;
+      overflow: hidden;
+      font-family: 'Courier New', monospace;
+      color: #fff;
+      cursor: none;
+    }
+    
+    .cursor {
+      position: fixed;
+      width: 30px;
+      height: 30px;
+      border: 2px solid #ff1493;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 10000;
+      mix-blend-mode: difference;
+      transition: transform 0.1s;
+    }
+    
+    .cursor.active {
+      transform: scale(2);
+      background: rgba(255, 20, 147, 0.3);
+    }
+    
+    #canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    
+    .spell-container {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 100;
+      text-align: center;
+      max-width: 90vw;
+    }
+    
+    .sigil {
+      font-size: 8rem;
+      animation: pulse 2s ease-in-out infinite, glitch 0.3s infinite;
+      text-shadow: 
+        0 0 20px #ff1493,
+        0 0 40px #ff1493,
+        0 0 60px #8a2be2,
+        0 0 80px #8a2be2;
+      filter: drop-shadow(0 0 30px #ff1493);
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.1); opacity: 1; }
+    }
+    
+    @keyframes glitch {
+      0% { transform: translate(0); }
+      20% { transform: translate(-2px, 2px); }
+      40% { transform: translate(-2px, -2px); }
+      60% { transform: translate(2px, 2px); }
+      80% { transform: translate(2px, -2px); }
+      100% { transform: translate(0); }
+    }
+    
+    .spell-text {
+      margin-top: 2rem;
+      font-size: 1.5rem;
+      line-height: 2;
+      opacity: 0;
+      animation: fadeIn 3s ease-in forwards;
+      animation-delay: 1s;
+      text-shadow: 0 0 10px #ff69b4;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+    
+    .spell-line {
+      display: block;
+      margin: 1rem 0;
+      animation: slideIn 1s ease-out both;
+    }
+    
+    .spell-line:nth-child(1) { animation-delay: 1.5s; }
+    .spell-line:nth-child(2) { animation-delay: 2s; }
+    .spell-line:nth-child(3) { animation-delay: 2.5s; }
+    .spell-line:nth-child(4) { animation-delay: 3s; }
+    .spell-line:nth-child(5) { animation-delay: 3.5s; }
+    .spell-line:nth-child(6) { animation-delay: 4s; }
+    
+    @keyframes slideIn {
+      from { 
+        opacity: 0;
+        transform: translateY(20px);
+        filter: blur(10px);
+      }
+      to { 
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+      }
+    }
+    
+    .emphasis {
+      color: #ff1493;
+      font-weight: bold;
+      text-shadow: 0 0 15px #ff1493;
+    }
+    
+    .moon {
+      color: #ffd700;
+      text-shadow: 0 0 20px #ffd700;
+    }
+    
+    .activate-btn {
+      position: fixed;
+      bottom: 3rem;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 1.5rem 3rem;
+      font-size: 1.5rem;
+      background: linear-gradient(45deg, #ff1493, #8a2be2);
+      border: none;
+      border-radius: 50px;
+      color: white;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      box-shadow: 0 0 30px rgba(255, 20, 147, 0.6);
+      transition: all 0.3s;
+      z-index: 200;
+    }
+    
+    .activate-btn:hover {
+      transform: translateX(-50%) scale(1.1);
+      box-shadow: 0 0 50px rgba(255, 20, 147, 0.9);
+    }
+    
+    .activate-btn:active {
+      transform: translateX(-50%) scale(0.95);
+    }
+    
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 50;
+    }
+    
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: #ff1493;
+      border-radius: 50%;
+      opacity: 0;
+      animation: float-up 4s ease-out infinite;
+      box-shadow: 0 0 10px #ff1493;
+    }
+    
+    @keyframes float-up {
+      0% {
+        opacity: 0;
+        transform: translateY(0) scale(1);
+      }
+      50% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-100vh) scale(0);
+      }
+    }
+    
+    .ritual-active {
+      animation: chaos 0.1s infinite;
+    }
+    
+    @keyframes chaos {
+      0% { filter: hue-rotate(0deg) saturate(1); }
+      50% { filter: hue-rotate(10deg) saturate(1.5); }
+      100% { filter: hue-rotate(0deg) saturate(1); }
+    }
+    
+    @media (max-width: 768px) {
+      .sigil {
+        font-size: 4rem;
+      }
+      .spell-text {
+        font-size: 1.2rem;
+        padding: 0 1rem;
+      }
+      .activate-btn {
+        font-size: 1.2rem;
+        padding: 1rem 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="cursor"></div>
+  <canvas id="canvas"></canvas>
+  <div class="particles" id="particles"></div>
+  
+  <div class="spell-container">
+    <div class="sigil">🜃⟁∞🐍👁️🐍∞⟁🜃</div>
+    
+    <div class="spell-text">
+      <span class="spell-line"><span class="moon">Taurus Full Moon</span> — threshold opens</span>
+      <span class="spell-line">Release what isn't <span class="emphasis">intentionally carried</span></span>
+      <span class="spell-line">Breathe in the <span class="emphasis">tension of NOW</span></span>
+      <span class="spell-line">Dream freely at the edge of <span class="emphasis">"soon"</span></span>
+      <span class="spell-line">With <span class="emphasis">Gaia in our arms</span>:</span>
+      <span class="spell-line">"<span class="emphasis">Come dance — Earth is open<br>and this party has only begun</span>"</span>
+    </div>
+  </div>
+  
+  <button class="activate-btn" id="activateBtn">ACTIVATE RITUAL</button>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const cursor = document.querySelector('.cursor');
+    const activateBtn = document.getElementById('activateBtn');
+    const particles = document.getElementById('particles');
+    
+    let ritualActive = false;
+    let mouseX = 0;
+    let mouseY = 0;
+    
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+    
+    // Custom cursor
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      cursor.style.left = e.clientX - 15 + 'px';
+      cursor.style.top = e.clientY - 15 + 'px';
+    });
+    
+    document.addEventListener('mousedown', () => {
+      cursor.classList.add('active');
+    });
+    
+    document.addEventListener('mouseup', () => {
+      cursor.classList.remove('active');
+    });
+    
+    // Background visual system
+    class FlowField {
+      constructor() {
+        this.particles = [];
+        this.particleCount = 100;
+        this.init();
+      }
+      
+      init() {
+        for (let i = 0; i < this.particleCount; i++) {
+          this.particles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            vx: (Math.random() - 0.5) * 2,
+            vy: (Math.random() - 0.5) * 2,
+            size: Math.random() * 3 + 1,
+            hue: Math.random() * 60 + 280, // Purple to pink range
+            alpha: Math.random() * 0.5 + 0.3
+          });
+        }
+      }
+      
+      update() {
+        this.particles.forEach(p => {
+          // Add noise-based movement
+          const angle = Math.atan2(p.y - canvas.height/2, p.x - canvas.width/2);
+          const distance = Math.sqrt(
+            Math.pow(p.x - canvas.width/2, 2) + 
+            Math.pow(p.y - canvas.height/2, 2)
+          );
+          
+          const force = Math.sin(Date.now() * 0.001 + distance * 0.01) * 0.5;
+          
+          p.vx += Math.cos(angle) * force * 0.01;
+          p.vy += Math.sin(angle) * force * 0.01;
+          
+          // Add attraction to mouse
+          if (ritualActive) {
+            const dx = mouseX - p.x;
+            const dy = mouseY - p.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 200) {
+              p.vx += dx * 0.0001;
+              p.vy += dy * 0.0001;
+            }
+          }
+          
+          p.vx *= 0.99;
+          p.vy *= 0.99;
+          
+          p.x += p.vx;
+          p.y += p.vy;
+          
+          // Wrap around edges
+          if (p.x < 0) p.x = canvas.width;
+          if (p.x > canvas.width) p.x = 0;
+          if (p.y < 0) p.y = canvas.height;
+          if (p.y > canvas.height) p.y = 0;
+          
+          // Pulse alpha
+          p.alpha = 0.3 + Math.sin(Date.now() * 0.002 + p.x * 0.01) * 0.3;
+        });
+      }
+      
+      draw() {
+        // Draw connections
+        for (let i = 0; i < this.particles.length; i++) {
+          for (let j = i + 1; j < this.particles.length; j++) {
+            const dx = this.particles[i].x - this.particles[j].x;
+            const dy = this.particles[i].y - this.particles[j].y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance < 100) {
+              ctx.beginPath();
+              ctx.moveTo(this.particles[i].x, this.particles[i].y);
+              ctx.lineTo(this.particles[j].x, this.particles[j].y);
+              const alpha = (1 - distance / 100) * 0.3;
+              ctx.strokeStyle = `hsla(${this.particles[i].hue}, 80%, 60%, ${alpha})`;
+              ctx.lineWidth = 0.5;
+              ctx.stroke();
+            }
+          }
+        }
+        
+        // Draw particles
+        this.particles.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fillStyle = `hsla(${p.hue}, 80%, 60%, ${p.alpha})`;
+          ctx.fill();
+          
+          // Glow effect
+          if (ritualActive) {
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = `hsl(${p.hue}, 80%, 60%)`;
+          } else {
+            ctx.shadowBlur = 10;
+          }
+        });
+      }
+    }
+    
+    const flowField = new FlowField();
+    
+    function animate() {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      flowField.update();
+      flowField.draw();
+      
+      requestAnimationFrame(animate);
+    }
+    
+    animate();
+    
+    // Activate ritual mode
+    activateBtn.addEventListener('click', () => {
+      ritualActive = !ritualActive;
+      
+      if (ritualActive) {
+        activateBtn.textContent = 'RITUAL ACTIVE';
+        activateBtn.style.background = 'linear-gradient(45deg, #00ff00, #00ffff)';
+        document.body.classList.add('ritual-active');
+        
+        // Spawn floating particles
+        setInterval(() => {
+          if (ritualActive) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * window.innerWidth + 'px';
+            particle.style.bottom = '-10px';
+            particle.style.animationDelay = Math.random() * 2 + 's';
+            particle.style.animationDuration = (Math.random() * 2 + 3) + 's';
+            particles.appendChild(particle);
+            
+            setTimeout(() => particle.remove(), 5000);
+          }
+        }, 200);
+        
+      } else {
+        activateBtn.textContent = 'ACTIVATE RITUAL';
+        activateBtn.style.background = 'linear-gradient(45deg, #ff1493, #8a2be2)';
+        document.body.classList.remove('ritual-active');
+      }
+    });
+    
+    // Click to create energy bursts
+    canvas.addEventListener('click', (e) => {
+      if (ritualActive) {
+        for (let i = 0; i < 10; i++) {
+          flowField.particles.push({
+            x: e.clientX,
+            y: e.clientY,
+            vx: (Math.random() - 0.5) * 5,
+            vy: (Math.random() - 0.5) * 5,
+            size: Math.random() * 4 + 2,
+            hue: Math.random() * 60 + 280,
+            alpha: 1
+          });
+        }
+        
+        // Remove excess particles
+        if (flowField.particles.length > 150) {
+          flowField.particles = flowField.particles.slice(-150);
+        }
+      }
+    });
+    
+    // Keyboard interactions
+    document.addEventListener('keydown', (e) => {
+      if (e.key === ' ') {
+        activateBtn.click();
+      }
+    });
+  </script>
+</body>
+</html>
