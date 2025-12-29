@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ΣΩ | V10 ANALOG</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;700&display=swap');
+
+        body {
+            margin: 0;
+            background: #020005;
+            color: #fff;
+            font-family: 'Courier Prime', monospace;
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
+        }
+
+        canvas {
+            display: block;
+            position: fixed;
+            top: 0; left: 0;
+            z-index: 1;
+        }
+
+        #intro {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(2,0,5,0.95);
+            z-index: 99;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s;
+        }
+
+        .vanish { opacity: 0; pointer-events: none; }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 10vw;
+            color: #ff00ff;
+            text-shadow: 0 0 20px #ff00ff;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        button {
+            background: transparent;
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            padding: 20px 40px;
+            font-size: 1.2rem;
+            font-family: 'Courier Prime';
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            box-shadow: 0 0 20px #00ffff;
+        }
+
+        /* TOOLBAR */
+        .toolbar {
+            position: fixed;
+            bottom: 20px;
+            left: 5%;
+            width: 90%;
+            display: flex;
+            gap: 10px;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 1s 0.5s;
+        }
+        .show-tools { opacity: 1; }
+
+        .btn {
+            flex: 1;
+            height: 60px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.8rem;
+            backdrop-filter: blur(4px);
+        }
+        .btn:active, .btn.active {
+            background: #fff;
+            color: #000;
+            box-shadow: 0 0 20px #fff;
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas"></canvas>
+
+    <div id="intro">
+        <h1>ANALOG<br>SIGNAL</h1>
+        <button onclick="start()">INITIATE</button>
+    </div>
+
+    <div class="toolbar" id="toolbar">
+        <div class="btn" id="btn1">ECHO</div>
+        <div class="btn" id="btn2">GLITCH</div>
+        <div class="btn" id="btn3">TEAR</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let particles = [];
+        let running = false;
+
+        // RESIZE
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // --- AUDIO (SIMPLE) ---
+        let actx, osc, gain;
+        function initAudio() {
+            try {
+                const AC = window.AudioContext || window.webkitAudioContext;
+                actx = new AC();
+                actx.resume();
+                osc = actx.createOscillator();
+                osc.type = 'sawtooth';
+                osc.frequency.value = 55;
+                gain = actx.createGain();
+                gain.gain.value = 0;
+                osc.connect(gain).connect(actx.destination);
+                osc.start();
+            } catch(e) {}
+        }
+
+        function playSound(freq, vol) {
+            if(!actx) return;
+            osc.frequency.setTargetAtTime(freq, actx.currentTime, 0.1);
+            gain.gain.setTargetAtTime(vol, actx.currentTime, 0.1);
+        }
+
+        // --- VISUALS (CANVAS PARTICLES) ---
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 10;
+                this.vy = (Math.random() - 0.5) * 10;
+                this.life = 1.0;
+                this.color = color;
+                this.size = Math.random() * 20 + 5;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life -= 0.02;
+                this.size *= 0.95;
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.life;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+                ctx.fill();
+            }
+        }
+
+        // --- LOOP ---
+        function loop() {
+            // TRAIL EFFECT (The "Melt")
+            ctx.fillStyle = 'rgba(2, 0, 5, 0.2)'; 
+            ctx.fillRect(0, 0, width, height);
+            
+            // Draw Particles
+            for(let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.update();
+                p.draw();
+                if(p.life <= 0) particles.splice(i, 1);
+            }
+
+            // FX: GLITCH
+            if(activeFX.glitch && Math.random() > 0.8) {
+                let h = Math.random() * 50;
+                let y = Math.random() * height;
+                // Shift screen slice
+                let slice = ctx.getImageData(0, y, width, h);
+                ctx.putImageData(slice, Math.random()*20 - 10, y);
+                // Flash
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, y, width, 2);
+            }
+
+            // AUTO PULSE
+            if(Math.random() > 0.95) {
+                particles.push(new Particle(width/2, height/2, '#00ffff'));
+            }
+
+            requestAnimationFrame(loop);
+        }
+
+        // --- INPUT ---
+        function touch(x, y) {
+            // Add particles
+            for(let i=0; i<5; i++) {
+                let color = activeFX.tear ? '#ccff00' : '#ff00ff';
+                particles.push(new Particle(x, y, color));
+            }
+            // Sound
+            let freq = 55 + (1 - y/height) * 400; // Pitch by height
+            let vol = 0.5;
+            if(activeFX.tear) { freq *= 2; vol = 0.8; }
+            playSound(freq, vol);
+        }
+
+        function stopTouch() {
+            playSound(55, 0); // Silence
+        }
+
+        window.addEventListener('touchstart', e => {
+            e.preventDefault();
+            for(let i=0; i<e.touches.length; i++) {
+                touch(e.touches[i].clientX, e.touches[i].clientY);
+            }
+        }, {passive: false});
+
+        window.addEventListener('touchmove', e => {
+            e.preventDefault();
+            for(let i=0; i<e.touches.length; i++) {
+                touch(e.touches[i].clientX, e.touches[i].clientY);
+            }
+        }, {passive: false});
+
+        window.addEventListener('touchend', stopTouch);
+        window.addEventListener('mousedown', e => touch(e.clientX, e.clientY));
+        window.addEventListener('mouseup', stopTouch);
+
+        // --- CONTROL ---
+        let activeFX = { echo: false, glitch: false, tear: false };
+        
+        function toggle(id, type) {
+            let btn = document.getElementById(id);
+            let state = !activeFX[type];
+            activeFX[type] = state;
+            btn.style.background = state ? '#fff' : 'rgba(255,255,255,0.1)';
+            btn.style.color = state ? '#000' : '#fff';
+        }
+
+        document.getElementById('btn1').addEventListener('touchstart', (e)=>{ e.preventDefault(); toggle('btn1', 'echo'); });
+        document.getElementById('btn2').addEventListener('touchstart', (e)=>{ e.preventDefault(); toggle('btn2', 'glitch'); });
+        document.getElementById('btn3').addEventListener('touchstart', (e)=>{ e.preventDefault(); toggle('btn3', 'tear'); });
+
+        // --- START ---
+        window.start = function() {
+            document.getElementById('intro').classList.add('vanish');
+            document.getElementById('toolbar').classList.add('show-tools');
+            initAudio();
+            if(!running) {
+                running = true;
+                loop();
+            }
+        };
+    </script>
+</body>
+</html>
