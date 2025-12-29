@@ -2,18 +2,25 @@
 body {
     margin: 0;
     padding: 0;
-    height: 100svh; /* Optimized for mobile browser bars */
+    height: 100vh;
     width: 100vw;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    background: linear-gradient(135deg, #4A0E4E, #000000, #1a051c, #4A0E4E);
-    background-size: 400% 400%;
-    animation: breathingGradient 15s ease infinite;
+    background: #000; /* Deepest black base */
     color: #ffffff;
     font-family: 'Segoe UI', sans-serif;
-    overflow: hidden; /* Keeps background still */
-    box-sizing: border-box;
+    overflow: hidden; /* Prevent the whole page from bouncing */
+}
+
+/* Velvet Breathing Background */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(45deg, #4A0E4E, #000000, #1a051c, #4A0E4E);
+    background-size: 400% 400%;
+    animation: breathingGradient 15s ease infinite;
+    z-index: -1;
 }
 
 @keyframes breathingGradient {
@@ -22,98 +29,102 @@ body {
     100% { background-position: 0% 50%; }
 }
 
-/* --- GLOW ORBS --- */
-.glow-orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(60px);
-    z-index: 0;
-    opacity: 0.4;
-    pointer-events: none;
-    animation: float 15s infinite alternate ease-in-out;
+/* --- GLITCH LOADER --- */
+#loader {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 1s ease, visibility 1s;
 }
 
-.orb-1 { width: 60vw; height: 60vw; background: #8B5CF6; top: -10%; left: -10%; }
-.orb-2 { width: 50vw; height: 50vw; background: #EC4899; bottom: -5%; right: -5%; }
-.orb-3 { width: 40vw; height: 40vw; background: #06B6D4; top: 20%; left: 10%; }
+#loader.fade-out { opacity: 0; visibility: hidden; }
 
-@keyframes float {
-    from { transform: translate(0, 0) rotate(0deg); }
-    to { transform: translate(5vw, 5vh) rotate(10deg); }
+.blossom-glitch {
+    font-size: 5rem;
+    animation: blossomBloom 2s infinite ease-in-out;
 }
 
-/* --- FIXED HEADER --- */
+@keyframes blossomBloom {
+    0% { transform: scale(1) rotate(0); filter: hue-rotate(0deg) blur(0px); }
+    20% { transform: scale(1.2) rotate(10deg); filter: hue-rotate(90deg) blur(2px); text-shadow: 5px 0 #06B6D4; }
+    40% { transform: scale(0.9) rotate(-10deg); filter: hue-rotate(180deg) blur(0px); text-shadow: -5px 0 #FF69B4; }
+    100% { transform: scale(1) rotate(0); filter: hue-rotate(360deg) blur(0px); }
+}
+
+.loading-text {
+    color: #06B6D4;
+    text-transform: uppercase;
+    letter-spacing: 5px;
+    font-size: 0.6rem;
+    margin-top: 20px;
+}
+
+/* --- HEADER (Fixed) --- */
 .hero {
+    padding: 40px 20px 20px;
     text-align: center;
-    z-index: 20;
-    padding: 30px 10px 10px;
-    flex-shrink: 0; /* Ensures header never squishes */
+    z-index: 50;
+    flex-shrink: 0;
 }
 
 .glitch-text {
-    font-size: clamp(1.8rem, 5vh, 3rem);
-    font-weight: 900;
+    font-size: clamp(2rem, 8vw, 3.5rem);
     margin: 0;
-    text-shadow: 0 0 10px #FF69B4;
-    animation: textPulse 3s infinite;
+    color: #fff;
+    text-shadow: 0 0 15px #FF69B4, 0 0 30px #8B5CF6;
+    animation: pulse 3s infinite ease-in-out;
 }
 
-@keyframes textPulse {
-    0%, 100% { text-shadow: 0 0 10px #FF69B4; }
-    50% { text-shadow: 0 0 20px #06B6D4, 0 0 30px #8B5CF6; }
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.03); opacity: 0.9; }
 }
 
 .sub-text {
     color: #06B6D4;
-    letter-spacing: 3px;
+    letter-spacing: 4px;
     text-transform: uppercase;
-    font-size: 0.65rem;
+    font-size: 0.7rem;
+    margin-top: 10px;
 }
 
-/* --- SCROLLABLE PORTAL WINDOW --- */
-.scroll-container {
-    width: 100%;
-    flex-grow: 1; /* Takes up remaining space */
-    overflow-y: auto; /* This allows ONLY the buttons to scroll */
-    padding: 20px 0;
+/* --- PORTAL GRID & INTERNAL SCROLL --- */
+.portal-window {
+    flex-grow: 1;
+    overflow-y: auto; /* This is the secret sauce! */
+    padding: 0 20px 60px; /* Space at bottom for last button */
     z-index: 10;
-    /* Hide scrollbar for aesthetics */
-    scrollbar-width: none; 
-    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
-.scroll-container::-webkit-scrollbar {
-    display: none;
-}
+.portal-window::-webkit-scrollbar { display: none; }
 
 .portal-grid {
     display: grid;
-    grid-template-columns: 1fr; /* Single column for mobile flow */
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Responsive columns */
     gap: 15px;
-    width: 85%;
+    max-width: 800px;
     margin: 0 auto;
-    padding-bottom: 50px; /* Space at bottom so last button isn't cut off */
-}
-
-/* Desktop override: switch to 2 columns if screen is wide enough */
-@media (min-width: 600px) {
-    .portal-grid { grid-template-columns: repeat(2, 1fr); max-width: 800px; }
 }
 
 .portal-button {
-    position: relative;
-    padding: 16px;
-    font-size: 0.8rem;
-    font-weight: bold;
-    text-transform: uppercase;
-    text-decoration: none;
-    text-align: center;
-    color: #fff;
+    padding: 15px 10px;
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border: 1.5px solid #EC4899;
-    border-radius: 40px;
+    border: 1px solid #EC4899;
+    border-radius: 20px;
+    color: #fff;
+    text-decoration: none;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
     transition: 0.3s;
     display: flex;
     align-items: center;
@@ -121,34 +132,36 @@ body {
 }
 
 .portal-button:hover, .portal-button:active {
+    background: rgba(6, 182, 212, 0.2);
     border-color: #06B6D4;
-    box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
-    animation: buttonGlitch 0.2s infinite;
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+    transform: translateY(-3px);
 }
 
-@keyframes buttonGlitch {
-    0% { transform: translate(0) skewX(-1deg); }
-    50% { transform: translate(-1px, 1px) skewX(1deg); }
-    100% { transform: translate(1px, -1px) skewX(0); }
-}
-
-/* --- PARTICLES --- */
-.particle {
-    position: absolute;
-    width: 2px;
-    height: 2px;
-    background: #fff;
+/* --- ATMOSPHERE --- */
+.glow-orb {
+    position: fixed;
     border-radius: 50%;
-    animation: rise 10s infinite linear;
-    opacity: 0;
+    filter: blur(80px);
+    z-index: 1;
+    opacity: 0.3;
     pointer-events: none;
 }
 
-.particle:nth-child(1) { left: 10%; animation-delay: 0s; }
-.particle:nth-child(2) { left: 80%; animation-delay: 3s; }
+.orb-1 { width: 300px; height: 300px; background: #8B5CF6; top: -10%; left: -10%; }
+.orb-2 { width: 400px; height: 400px; background: #EC4899; bottom: -5%; right: -5%; }
+.orb-3 { width: 250px; height: 250px; background: #06B6D4; top: 40%; left: 30%; }
+
+/* --- PARTICLES --- */
+.particle {
+    position: fixed;
+    width: 2px; height: 2px; background: #fff;
+    border-radius: 50%; opacity: 0.3;
+    animation: rise 10s infinite linear;
+    pointer-events: none;
+}
 
 @keyframes rise {
-    0% { bottom: -5%; opacity: 0; }
-    50% { opacity: 0.5; }
-    100% { bottom: 105%; opacity: 0; }
+    0% { bottom: -10%; transform: translateX(0); }
+    100% { bottom: 110%; transform: translateX(20px); }
 }
