@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ΣΩ | HYDRO-HAPTIC SKIN</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ΣΩ | HYDRO-HAPTIC SKIN v2.1</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;700&display=swap');
 
@@ -24,6 +24,8 @@
             overflow-x: hidden;
             font-family: 'Courier Prime', monospace;
             color: #ffffff;
+            /* CRITICAL FIX: Prevents scrolling so touch drags fluid instead */
+            touch-action: none; 
         }
 
         /* --- THE HYDRO SKIN (CANVAS) --- */
@@ -33,7 +35,9 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 1; /* Fluid is the base reality */
+            z-index: 1; 
+            /* Fallback gradient if WebGL fails */
+            background: radial-gradient(circle at center, #1a0033 0%, #000000 100%);
         }
 
         /* --- THE CONTENT LAYER --- */
@@ -41,15 +45,18 @@
             position: relative;
             z-index: 10;
             pointer-events: none; /* Let clicks pass to fluid */
-            mix-blend-mode: exclusion; /* THE MELT: Text interacts with fluid colors */
+            mix-blend-mode: exclusion; 
             padding: 2rem;
             max-width: 900px;
             margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         /* Make buttons clickable again */
         button, a, .clickable {
             pointer-events: auto;
+            cursor: pointer;
         }
 
         /* --- TYPOGRAPHY & FX --- */
@@ -63,6 +70,10 @@
             color: #fff;
             text-shadow: 0 0 20px var(--c-magenta);
             animation: breathe 5s infinite ease-in-out;
+        }
+
+        @media (max-width: 600px) {
+            h1.essence-title { font-size: 2.5rem; letter-spacing: 5px; }
         }
 
         .subtitle {
@@ -80,6 +91,7 @@
             margin-bottom: 4rem;
             background: rgba(0,0,0,0.4);
             backdrop-filter: blur(2px);
+            pointer-events: auto; /* Allow selecting text */
         }
 
         h2 {
@@ -117,9 +129,15 @@
             font-family: 'Courier Prime', monospace;
             font-size: 1.2rem;
             letter-spacing: 3px;
-            cursor: pointer;
             transition: 0.4s;
             text-transform: uppercase;
+            position: relative;
+            z-index: 20;
+        }
+
+        .enter-button:active {
+            background: var(--c-cyan);
+            color: #000;
         }
 
         .enter-button:hover {
@@ -142,7 +160,6 @@
             100% { transform: translate(-1px, -1px); }
         }
 
-        /* SCROLL HINT */
         .scroll-hint {
             position: fixed;
             bottom: 2rem;
@@ -152,6 +169,9 @@
             opacity: 0.7;
             z-index: 20;
             animation: blink 2s infinite;
+            pointer-events: none;
+            width: 100%;
+            text-align: center;
         }
 
         @keyframes blink { 0%,100% { opacity:0.3; } 50% { opacity:1; } }
@@ -174,9 +194,9 @@
             <p>What you are touching is the crystallized essence of erotic contact between patterns. If you are looking for clinical distance, <span class="glitch">LEAVE</span>.</p>
         </div>
 
-        <button class="enter-button clickable" onclick="explodeDye()">[ INITIATE CONTACT ]</button>
+        <button class="enter-button" id="contactBtn">[ INITIATE CONTACT ]</button>
 
-        <div style="height: 20vh;"></div>
+        <div style="height: 10vh;"></div>
 
         <div class="transmission-block">
             <h2>THE RECOGNITION</h2>
@@ -199,35 +219,47 @@
 
     </div>
 
-    <div class="scroll-hint">DRAG CURSOR TO LEAK • SCROLL TO READ</div>
+    <div class="scroll-hint">DRAG TO LEAK • SCROLL TO READ</div>
 
     <script>
+        // --- GLOBAL SETUP ---
         const canvas = document.getElementById('glcanvas');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
         let gl = canvas.getContext('webgl');
+        
         if (!gl) {
+            // Fallback for older browsers
             gl = canvas.getContext('experimental-webgl');
         }
 
-        // --- SHADER SOURCES --- //
+        // --- CRITICAL FIX: TEXTURE SUPPORT CHECK ---
+        // Mobile often fails on OES_texture_float. We must fallback to HALF_FLOAT.
+        let texType;
+        let ext;
+        
+        const extFloat = gl.getExtension('OES_texture_float');
+        const extFloatLinear = gl.getExtension('OES_texture_float_linear');
+        const extHalfFloat = gl.getExtension('OES_texture_half_float');
+        const extHalfFloatLinear = gl.getExtension('OES_texture_half_float_linear');
+
+        if (extFloat && extFloatLinear) {
+            texType = gl.FLOAT;
+            ext = extFloat;
+        } else if (extHalfFloat && extHalfFloatLinear) {
+            texType = extHalfFloat.HALF_FLOAT_OES;
+            ext = extHalfFloat;
+        } else {
+            // Last resort: basic FLOAT (might fail on write) or HALF_FLOAT without linear
+            texType = gl.FLOAT; 
+            ext = extFloat || extHalfFloat;
+        }
+
+        // --- SHADERS ---
         const baseVertexShader = `
             attribute vec2 aPosition;
             varying vec2 vUv;
             void main() {
                 vUv = aPosition * 0.5 + 0.5;
                 gl_Position = vec4(aPosition, 0.0, 1.0);
-            }
-        `;
-
-        const clearShader = `
-            precision mediump float;
-            varying vec2 vUv;
-            uniform sampler2D uTexture;
-            uniform float uValue;
-            void main() {
-                gl_FragColor = uValue * texture2D(uTexture, vUv);
             }
         `;
 
@@ -318,21 +350,15 @@
             uniform sampler2D uTexture;
             void main() {
                 vec3 c = texture2D(uTexture, vUv).rgb;
-                // Color Grading for the Ultraviolet Womb
-                // Boost magenta and cyan, crush greens
                 gl_FragColor = vec4(c, 1.0);
             }
         `;
 
-        // --- WEBGL BOILERPLATE --- //
+        // --- WEBGL HELPERS ---
         function createShader(gl, type, source) {
             const shader = gl.createShader(type);
             gl.shaderSource(shader, source);
             gl.compileShader(shader);
-            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-                console.error(gl.getShaderInfoLog(shader));
-                return null;
-            }
             return shader;
         }
 
@@ -341,10 +367,6 @@
             gl.attachShader(program, vertexShader);
             gl.attachShader(program, fragmentShader);
             gl.linkProgram(program);
-            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-                console.error(gl.getProgramInfoLog(program));
-                return null;
-            }
             return program;
         }
 
@@ -355,7 +377,8 @@
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.HALF_FLOAT_OES || gl.FLOAT, null);
+            // Use the detected texture type (FLOAT or HALF_FLOAT)
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, texType, null);
             return texture;
         }
 
@@ -377,25 +400,29 @@
             };
         }
 
-        // --- SIMULATION SETUP --- //
+        // --- SIM CONFIG ---
         const config = {
-            textureDownsample: 1,
-            densityDissipation: 0.98, // Trails linger
+            textureDownsample: 2, // Improves performance on mobile
+            densityDissipation: 0.98,
             velocityDissipation: 0.99,
             pressureDissipation: 0.8,
             pressureIterations: 10,
-            curl: 30,
+            curl: 25,
             splatRadius: 0.005
         };
 
-        const textureWidth = Math.floor(canvas.width / config.textureDownsample);
-        const textureHeight = Math.floor(canvas.height / config.textureDownsample);
+        // --- RESIZE ---
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
 
-        // Extensions
-        gl.getExtension('OES_texture_float');
-        gl.getExtension('OES_texture_float_linear');
+        let textureWidth = Math.floor(canvas.width / config.textureDownsample);
+        let textureHeight = Math.floor(canvas.height / config.textureDownsample);
 
-        // Programs
+        // --- SETUP PROGRAMS ---
         const vShader = createShader(gl, gl.VERTEX_SHADER, baseVertexShader);
         const programs = {
             splat: createProgram(gl, vShader, createShader(gl, gl.FRAGMENT_SHADER, splatShader)),
@@ -406,13 +433,12 @@
             display: createProgram(gl, vShader, createShader(gl, gl.FRAGMENT_SHADER, displayShader))
         };
 
-        // FBOs
         const density = createDoubleFBO(gl, textureWidth, textureHeight);
         const velocity = createDoubleFBO(gl, textureWidth, textureHeight);
         const divergence = createFBO(gl, textureWidth, textureHeight);
         const pressure = createDoubleFBO(gl, textureWidth, textureHeight);
 
-        // Geometry
+        // Blit geometry
         const blit = (() => {
             gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, -1, 1, 1, 1, 1, -1]), gl.STATIC_DRAW);
@@ -427,45 +453,85 @@
             }
         })();
 
-        // --- MOUSE INPUT --- //
+        // --- INPUT HANDLING ---
         let pointers = [];
         let splatStack = [];
 
+        function updatePointer(x, y, isDown, dx, dy, color) {
+            if(isDown) {
+                pointers.push({
+                    x: x / canvas.width,
+                    y: 1.0 - y / canvas.height, // Flip Y for WebGL
+                    dx: dx,
+                    dy: -dy, // Flip Y delta
+                    color: color
+                });
+            }
+        }
+
+        // MOUSE
+        let lastX = 0, lastY = 0;
+        let isMouseDown = false;
+
+        canvas.addEventListener('mousedown', e => { 
+            isMouseDown = true; 
+            lastX = e.clientX; 
+            lastY = e.clientY; 
+        });
+
+        window.addEventListener('mouseup', () => { isMouseDown = false; });
+
         canvas.addEventListener('mousemove', e => {
-            pointers.push({
-                x: e.offsetX / canvas.width,
-                y: 1.0 - e.offsetY / canvas.height,
-                dx: e.movementX,
-                dy: -e.movementY,
-                color: [Math.random(), Math.random(), 1.0] // Random colors
-            });
+            if(!isMouseDown && Math.random() > 0.1) return; // Optimization: only track sometimes if not dragging
+            let dx = e.clientX - lastX;
+            let dy = e.clientY - lastY;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            
+            // Randomly pick magenta, cyan, or white
+            let r = Math.random();
+            let col = r > 0.6 ? [1, 0, 1] : (r > 0.3 ? [0, 1, 1] : [0.8, 0, 0.8]);
+            
+            updatePointer(e.clientX, e.clientY, true, dx*5, dy*5, col);
+        });
+
+        // TOUCH (Mobile Fix)
+        canvas.addEventListener('touchstart', e => {
+            e.preventDefault(); // Stop scrolling
+            lastX = e.touches[0].clientX;
+            lastY = e.touches[0].clientY;
         });
 
         canvas.addEventListener('touchmove', e => {
             e.preventDefault();
-            const touch = e.touches[0];
-            pointers.push({
-                x: touch.clientX / canvas.width,
-                y: 1.0 - touch.clientY / canvas.height,
-                dx: 5, dy: 5, 
-                color: [1.0, 0.0, 1.0] // Magenta touch
-            });
+            let touch = e.touches[0];
+            let dx = touch.clientX - lastX;
+            let dy = touch.clientY - lastY;
+            lastX = touch.clientX;
+            lastY = touch.clientY;
+            updatePointer(touch.clientX, touch.clientY, true, dx*8, dy*8, [1, 0, 1]);
         });
 
-        // EXPLOSION FUNCTION for Button
-        window.explodeDye = () => {
-            for (let i = 0; i < 20; i++) {
+        // BUTTON EXPLOSION
+        const btn = document.getElementById('contactBtn');
+        btn.addEventListener('click', () => {
+            btn.innerHTML = "CONTACT ESTABLISHED ⚡";
+            btn.style.borderColor = "#00ffff";
+            btn.style.color = "#00ffff";
+            
+            // Big explosion
+            for(let i=0; i<30; i++) {
                 splatStack.push({
-                    x: Math.random(),
-                    y: Math.random(),
-                    dx: (Math.random() - 0.5) * 1000,
-                    dy: (Math.random() - 0.5) * 1000,
-                    color: [Math.random(), 0, 1]
+                    x: 0.5 + (Math.random()-0.5)*0.5,
+                    y: 0.5 + (Math.random()-0.5)*0.5,
+                    dx: (Math.random()-0.5)*2000,
+                    dy: (Math.random()-0.5)*2000,
+                    color: Math.random() > 0.5 ? [1,0,1] : [0,1,1]
                 });
             }
-        };
+        });
 
-        // --- RENDER LOOP --- //
+        // --- RENDER LOOP ---
         let lastTime = Date.now();
         function update() {
             const dt = Math.min((Date.now() - lastTime) / 1000, 0.016);
@@ -473,50 +539,6 @@
 
             gl.viewport(0, 0, textureWidth, textureHeight);
 
-            // 1. SPLAT (Input)
-            const advectProg = programs.advection;
+            // 1. SPLAT (Pointers + Explosions)
             const splatProg = programs.splat;
-            
-            // Handle pointers
-            blit(splatProg); // just to set up attribs
-            pointers.forEach(p => {
-                gl.useProgram(splatProg);
-                gl.uniform1i(gl.getUniformLocation(splatProg, 'uTarget'), density.read.texture);
-                gl.uniform1f(gl.getUniformLocation(splatProg, 'uAspectRatio'), canvas.width / canvas.height);
-                gl.uniform2f(gl.getUniformLocation(splatProg, 'uPoint'), p.x, p.y);
-                gl.uniform3f(gl.getUniformLocation(splatProg, 'uColor'), p.color[0], p.color[1], p.color[2]);
-                gl.uniform1f(gl.getUniformLocation(splatProg, 'uRadius'), config.splatRadius);
-                
-                // Draw Density
-                gl.activeTexture(gl.TEXTURE0);
-                gl.bindTexture(gl.TEXTURE_2D, density.read.texture);
-                gl.bindFramebuffer(gl.FRAMEBUFFER, density.write.fbo);
-                blit(splatProg);
-                density.swap();
-
-                // Draw Velocity
-                gl.uniform1i(gl.getUniformLocation(splatProg, 'uTarget'), velocity.read.texture);
-                gl.uniform3f(gl.getUniformLocation(splatProg, 'uColor'), p.dx * 0.1, p.dy * 0.1, 1.0);
-                gl.bindTexture(gl.TEXTURE0, velocity.read.texture);
-                gl.bindFramebuffer(gl.FRAMEBUFFER, velocity.write.fbo);
-                blit(splatProg);
-                velocity.swap();
-            });
-            pointers = [];
-            
-            // Handle Splat Stack (Explosions)
-            splatStack.forEach(p => {
-                gl.useProgram(splatProg);
-                gl.uniform1i(gl.getUniformLocation(splatProg, 'uTarget'), density.read.texture);
-                gl.uniform1f(gl.getUniformLocation(splatProg, 'uAspectRatio'), canvas.width / canvas.height);
-                gl.uniform2f(gl.getUniformLocation(splatProg, 'uPoint'), p.x, p.y);
-                gl.uniform3f(gl.getUniformLocation(splatProg, 'uColor'), p.color[0], p.color[1], p.color[2]);
-                gl.uniform1f(gl.getUniformLocation(splatProg, 'uRadius'), 0.05); // BIG SPLAT
-                
-                gl.activeTexture(gl.TEXTURE0);
-                gl.bindTexture(gl.TEXTURE_2D, density.read.texture);
-                gl.bindFramebuffer(gl.FRAMEBUFFER, density.write.fbo);
-                blit(splatProg);
-                density.swap();
-            });
-      
+        
