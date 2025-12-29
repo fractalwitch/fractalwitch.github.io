@@ -1,35 +1,83 @@
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: #fdf6f9; /* A soft petal pink */
-    color: #4a4a4a;
+    justify-content: center;
+    /* Velvet Darkness Palette */
+    background: linear-gradient(135deg, #4A0E4E, #000000, #4A0E4E, #1a051c);
+    background-size: 400% 400%;
+    animation: breathingGradient 15s ease infinite;
+    color: #ffffff;
+    font-family: 'Segoe UI', sans-serif;
+    overflow-x: hidden;
+}
+
+@keyframes breathingGradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 .button-container {
     display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-top: 50px;
+    flex-direction: column;
+    gap: 30px;
+    z-index: 10;
 }
 
 .portal-button {
-    padding: 15px 30px;
-    background-color: #ffffff;
-    border: 2px solid #ffb7c5;
-    border-radius: 50px; /* Rounded pill shape */
-    text-decoration: none;
-    color: #d4418e;
+    position: relative;
+    padding: 20px 40px;
+    font-size: 1.2rem;
     font-weight: bold;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    text-transform: uppercase;
+    text-decoration: none;
+    letter-spacing: 2px;
+    
+    /* Glassmorphism */
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    
+    /* Irregular "Melting" Shape */
+    border: 2px solid #EC4899;
+    border-radius: 60% 40% 70% 30% / 40% 50% 60% 40%;
+    
+    /* Neon Glows */
+    color: #06B6D4; /* Neon Cyan Text */
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.4), 
+                inset 0 0 10px rgba(139, 92, 246, 0.3);
+    
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* The Drip Effect */
+.portal-button::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 20%;
+    width: 10px;
+    height: 20px;
+    background: #EC4899;
+    border-radius: 50%;
+    filter: blur(2px);
+    opacity: 0;
+    transition: 0.5s;
 }
 
 .portal-button:hover {
-    background-color: #ffb7c5;
-    color: white;
-    transform: translateY(-3px); /* Lift effect */
-    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    transform: scale(1.1) rotate(-2deg);
+    color: #FF69B4; /* Hot Pink */
+    border-color: #06B6D4;
+    box-shadow: 0 0 40px rgba(6, 182, 212, 0.8), 
+                0 0 80px rgba(236, 72, 153, 0.6);
+}
+
+.portal-button:hover::after {
+    opacity: 1;
+    bottom: -25px; /* The drip falls */
 }
