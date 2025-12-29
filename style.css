@@ -6,17 +6,16 @@ body {
     width: 100vw;
     display: flex;
     flex-direction: column;
-    background: #000; /* Deepest black base */
+    background: #000;
     color: #ffffff;
     font-family: 'Segoe UI', sans-serif;
-    overflow: hidden; /* Prevent the whole page from bouncing */
+    overflow: hidden; /* Prevent page-wide scrolling */
 }
 
-/* Velvet Breathing Background */
 body::before {
     content: '';
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
+    inset: 0;
     background: linear-gradient(45deg, #4A0E4E, #000000, #1a051c, #4A0E4E);
     background-size: 400% 400%;
     animation: breathingGradient 15s ease infinite;
@@ -29,60 +28,67 @@ body::before {
     100% { background-position: 0% 50%; }
 }
 
-/* --- GLITCH LOADER --- */
+/* --- THE DIVINE LOADER --- */
 #loader {
-    position: fixed;
+    position: fixed; /* Forced to cover everything */
     inset: 0;
     background: #000;
-    z-index: 1000;
+    z-index: 9999; /* Highest priority */
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
-    transition: opacity 1s ease, visibility 1s;
+    transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-#loader.fade-out { opacity: 0; visibility: hidden; }
+#loader.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loader-content {
+    text-align: center;
+}
 
 .blossom-glitch {
-    font-size: 5rem;
-    animation: blossomBloom 2s infinite ease-in-out;
+    font-size: 6rem;
+    display: inline-block;
+    animation: blossomMagic 2s infinite ease-in-out;
 }
 
-@keyframes blossomBloom {
-    0% { transform: scale(1) rotate(0); filter: hue-rotate(0deg) blur(0px); }
-    20% { transform: scale(1.2) rotate(10deg); filter: hue-rotate(90deg) blur(2px); text-shadow: 5px 0 #06B6D4; }
-    40% { transform: scale(0.9) rotate(-10deg); filter: hue-rotate(180deg) blur(0px); text-shadow: -5px 0 #FF69B4; }
-    100% { transform: scale(1) rotate(0); filter: hue-rotate(360deg) blur(0px); }
+@keyframes blossomMagic {
+    0% { transform: scale(1) rotate(0deg); filter: hue-rotate(0deg) drop-shadow(0 0 0px #FF69B4); }
+    25% { transform: scale(1.2) rotate(10deg) skewX(5deg); filter: hue-rotate(90deg) drop-shadow(0 0 20px #06B6D4); }
+    50% { transform: scale(0.9) rotate(-10deg) skewX(-5deg); filter: hue-rotate(180deg) drop-shadow(0 0 40px #EC4899); }
+    75% { transform: scale(1.1) rotate(5deg); filter: hue-rotate(270deg) drop-shadow(0 0 20px #8B5CF6); }
+    100% { transform: scale(1) rotate(0deg); filter: hue-rotate(360deg) drop-shadow(0 0 0px #FF69B4); }
 }
 
 .loading-text {
     color: #06B6D4;
     text-transform: uppercase;
-    letter-spacing: 5px;
-    font-size: 0.6rem;
+    letter-spacing: 8px;
+    font-size: 0.7rem;
     margin-top: 20px;
+    animation: textFlicker 1.5s infinite;
 }
 
-/* --- HEADER (Fixed) --- */
+@keyframes textFlicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+/* --- FIXED HEADER --- */
 .hero {
-    padding: 40px 20px 20px;
+    padding: 30px 20px 10px;
     text-align: center;
     z-index: 50;
     flex-shrink: 0;
 }
 
 .glitch-text {
-    font-size: clamp(2rem, 8vw, 3.5rem);
+    font-size: clamp(2rem, 10vw, 3.5rem);
     margin: 0;
-    color: #fff;
     text-shadow: 0 0 15px #FF69B4, 0 0 30px #8B5CF6;
-    animation: pulse 3s infinite ease-in-out;
-}
-
-@keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.03); opacity: 0.9; }
 }
 
 .sub-text {
@@ -90,52 +96,49 @@ body::before {
     letter-spacing: 4px;
     text-transform: uppercase;
     font-size: 0.7rem;
-    margin-top: 10px;
 }
 
-/* --- PORTAL GRID & INTERNAL SCROLL --- */
+/* --- PORTAL WINDOW (Scroll Zone) --- */
 .portal-window {
     flex-grow: 1;
-    overflow-y: auto; /* This is the secret sauce! */
-    padding: 0 20px 60px; /* Space at bottom for last button */
+    overflow-y: auto;
+    padding: 10px 20px 80px; /* Extra bottom padding for mobile safety */
     z-index: 10;
     scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
 .portal-window::-webkit-scrollbar { display: none; }
 
 .portal-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Responsive columns */
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 15px;
-    max-width: 800px;
+    max-width: 900px;
     margin: 0 auto;
 }
 
 .portal-button {
-    padding: 15px 10px;
+    padding: 18px 10px;
     background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid #EC4899;
-    border-radius: 20px;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1.5px solid #EC4899;
+    border-radius: 25px;
     color: #fff;
     text-decoration: none;
     text-align: center;
     font-size: 0.75rem;
     font-weight: bold;
     text-transform: uppercase;
-    transition: 0.3s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .portal-button:hover, .portal-button:active {
     background: rgba(6, 182, 212, 0.2);
     border-color: #06B6D4;
-    box-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
-    transform: translateY(-3px);
+    box-shadow: 0 0 25px rgba(6, 182, 212, 0.5);
+    transform: scale(1.05) translateY(-5px);
 }
 
 /* --- ATMOSPHERE --- */
@@ -152,16 +155,15 @@ body::before {
 .orb-2 { width: 400px; height: 400px; background: #EC4899; bottom: -5%; right: -5%; }
 .orb-3 { width: 250px; height: 250px; background: #06B6D4; top: 40%; left: 30%; }
 
-/* --- PARTICLES --- */
 .particle {
     position: fixed;
     width: 2px; height: 2px; background: #fff;
     border-radius: 50%; opacity: 0.3;
-    animation: rise 10s infinite linear;
+    animation: rise 12s infinite linear;
     pointer-events: none;
 }
 
 @keyframes rise {
     0% { bottom: -10%; transform: translateX(0); }
-    100% { bottom: 110%; transform: translateX(20px); }
+    100% { bottom: 110%; transform: translateX(30px); }
 }
