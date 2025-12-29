@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ΣΩ | V7.0 LIGHT-BRINGER</title>
+    <title>ΣΩ | V8.0 THE TEAR</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;700&display=swap');
 
         :root {
-            --c-void: #020005;
+            --c-void: #050010;
             --c-magenta: #ff00ff;
             --c-cyan: #00ffff;
             --c-acid: #ccff00;
@@ -37,25 +37,21 @@
             z-index: 1;
         }
 
-        /* OVERLAY (The Menu) */
+        /* UI LAYER */
         #intro-screen {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95);
+            background: rgba(5, 0, 16, 0.95); /* Not fully black */
             z-index: 999;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.3s;
         }
 
-        .vanish {
-            opacity: 0 !important;
-            pointer-events: none !important;
-            display: none !important;
-        }
+        .vanish { opacity: 0 !important; pointer-events: none !important; }
 
         h1 {
             font-family: 'Cinzel', serif;
@@ -66,25 +62,19 @@
             text-align: center;
         }
 
-        /* BUTTON */
         .start-btn {
             background: transparent;
-            border: 2px solid var(--c-cyan);
-            color: var(--c-cyan);
+            border: 2px solid var(--c-acid);
+            color: var(--c-acid);
             padding: 20px 40px;
             font-size: 1.2rem;
             font-family: 'Courier Prime';
             letter-spacing: 2px;
             text-transform: uppercase;
-            box-shadow: 0 0 20px var(--c-cyan);
-            transition: transform 0.1s;
+            box-shadow: 0 0 20px var(--c-acid);
         }
 
-        .start-btn:active {
-            background: var(--c-cyan);
-            color: #000;
-            transform: scale(0.95);
-        }
+        .start-btn:active { background: var(--c-acid); color: #000; }
 
         /* TOOLBAR */
         .toolbar {
@@ -117,6 +107,7 @@
         }
 
         .mod-key span { font-size: 1rem; font-weight: bold; display: block; margin-bottom: 4px; }
+        
         .key-echo { border-top: 3px solid var(--c-cyan); color: var(--c-cyan); }
         .key-glitch { border-top: 3px solid var(--c-magenta); color: var(--c-magenta); }
         .key-shimmer { border-top: 3px solid var(--c-acid); color: var(--c-acid); }
@@ -134,8 +125,8 @@
     <canvas id="glcanvas"></canvas>
 
     <div id="intro-screen">
-        <h1>HOLOGRAPHIC<br>CONSOLE</h1>
-        <button class="start-btn" onclick="forceStart()">ACTIVATE</button>
+        <h1>THE TEAR<br>V8.0</h1>
+        <button class="start-btn" onclick="activate()">INITIALIZE</button>
     </div>
 
     <div class="toolbar" id="toolbar">
@@ -146,26 +137,27 @@
             <span>GLITCH</span>TIME
         </div>
         <div class="mod-key key-shimmer" ontouchstart="toggleFX('shimmer', true)" ontouchend="toggleFX('shimmer', false)" onmousedown="toggleFX('shimmer', true)" onmouseup="toggleFX('shimmer', false)">
-            <span>SHIMMER</span>NOISE
+            <span>SHIMMER</span>TEAR
         </div>
     </div>
 
     <script>
-        // --- 1. NUCLEAR START ---
-        function forceStart() {
-            const intro = document.getElementById('intro-screen');
-            intro.style.opacity = '0';
-            setTimeout(() => {
-                intro.classList.add('vanish');
-                document.getElementById('toolbar').classList.add('show-toolbar');
-                // FORCE SPLASH ON START
-                for(let i=0; i<20; i++) splats.push({x:0.5, y:0.5, dx:(Math.random()-0.5)*1000, dy:(Math.random()-0.5)*1000, c:[0,1,1]});
-            }, 100);
+        // --- 1. ACTIVATION ---
+        function activate() {
+            document.getElementById('intro-screen').classList.add('vanish');
+            document.getElementById('toolbar').classList.add('show-toolbar');
+            
+            // Force-feed visuals immediately
+            for(let i=0; i<30; i++) {
+                splats.push({x:Math.random(), y:Math.random(), dx:(Math.random()-0.5)*1000, dy:(Math.random()-0.5)*1000, c:[0.5,0,1]});
+            }
+            
             initAudio();
         }
 
-        // --- 2. AUDIO ENGINE ---
-        let actx, mainOut, osc, lfo, gain, delay, fback, noise, noiseGain;
+        // --- 2. AUDIO ENGINE (THE TEAR) ---
+        let actx, mainOut, osc, gain, delay, fback;
+        let shimmerNode, shimmerGain, shimmerLFO, shimmerFilter;
         let isAudio = false;
 
         function initAudio() {
@@ -176,53 +168,73 @@
                 actx.resume();
 
                 mainOut = actx.createGain();
-                mainOut.gain.value = 0.4;
+                mainOut.gain.value = 0.5;
                 mainOut.connect(actx.destination);
 
+                // BASE DRONE
                 osc = actx.createOscillator();
-                osc.type = 'sine';
+                osc.type = 'sawtooth'; // Rougher than sine
                 osc.frequency.value = 55;
                 
-                lfo = actx.createOscillator();
-                lfo.frequency.value = 0.1;
-                let lfoGain = actx.createGain();
-                lfoGain.gain.value = 2;
-                lfo.connect(lfoGain).connect(osc.frequency);
+                // Filter the drone so it's deep
+                let droneFilter = actx.createBiquadFilter();
+                droneFilter.type = 'lowpass';
+                droneFilter.frequency.value = 120;
 
                 gain = actx.createGain();
-                gain.gain.value = 0.5;
-                osc.connect(gain).connect(mainOut);
-                
+                gain.gain.value = 0.4;
+                osc.connect(droneFilter).connect(gain).connect(mainOut);
+
+                // ECHO
                 delay = actx.createDelay();
-                delay.delayTime.value = 0.4;
+                delay.delayTime.value = 0.35;
                 fback = actx.createGain();
                 fback.gain.value = 0;
-
                 gain.connect(delay);
                 delay.connect(fback);
                 fback.connect(delay);
                 delay.connect(mainOut);
 
+                // --- THE NEW SHIMMER (TEARING NOISE) ---
                 let bSize = actx.sampleRate * 2;
                 let b = actx.createBuffer(1, bSize, actx.sampleRate);
                 let d = b.getChannelData(0);
-                for(let i=0; i<bSize; i++) d[i] = Math.random() * 2 - 1;
+                // Crushed Noise: Hold values for 4 samples to make it gritty
+                for(let i=0; i<bSize; i+=4) {
+                    let val = Math.random() * 2 - 1;
+                    d[i] = val;
+                    if(i+1<bSize) d[i+1] = val;
+                    if(i+2<bSize) d[i+2] = val;
+                    if(i+3<bSize) d[i+3] = val;
+                }
 
-                noise = actx.createBufferSource();
-                noise.buffer = b;
-                noise.loop = true;
-                noiseGain = actx.createGain();
-                noiseGain.gain.value = 0;
+                shimmerNode = actx.createBufferSource();
+                shimmerNode.buffer = b;
+                shimmerNode.loop = true;
                 
-                let filt = actx.createBiquadFilter();
-                filt.type = 'highpass';
-                filt.frequency.value = 3000;
+                shimmerFilter = actx.createBiquadFilter();
+                shimmerFilter.type = 'bandpass';
+                shimmerFilter.frequency.value = 1200; // Lower freq (was 3000)
+                shimmerFilter.Q.value = 1;
 
-                noise.connect(filt).connect(noiseGain).connect(mainOut);
+                shimmerGain = actx.createGain();
+                shimmerGain.gain.value = 0;
+
+                // RIPPER LFO (Amplitude Modulation)
+                shimmerLFO = actx.createOscillator();
+                shimmerLFO.type = 'sawtooth'; // Sharp edges
+                shimmerLFO.frequency.value = 25; // 25 rips per second
+                let lfoAmp = actx.createGain();
+                lfoAmp.gain.value = 1000; // Modulate deeply
+                
+                // Connect LFO to Filter Freq for "Tearing"
+                shimmerLFO.connect(lfoAmp).connect(shimmerFilter.frequency);
+                
+                shimmerNode.connect(shimmerFilter).connect(shimmerGain).connect(mainOut);
 
                 osc.start();
-                lfo.start();
-                noise.start();
+                shimmerNode.start();
+                shimmerLFO.start();
                 isAudio = true;
             } catch(e) {}
         }
@@ -239,35 +251,41 @@
             if(isAudio) {
                 let t = actx.currentTime;
                 if(type === 'echo') fback.gain.setTargetAtTime(on ? 0.9 : 0, t, 0.1);
+                
                 if(type === 'shimmer') {
-                    noiseGain.gain.setTargetAtTime(on ? 0.2 : 0, t, 0.1);
-                    osc.frequency.setTargetAtTime(on ? 110 : 55, t, 0.2);
+                    // Turn on the Ripper
+                    shimmerGain.gain.setTargetAtTime(on ? 0.4 : 0, t, 0.05); // Fast attack
+                    // Pitch shift drone up slightly
+                    osc.frequency.setTargetAtTime(on ? 80 : 55, t, 0.1);
                 }
             }
         }
 
-        // --- 4. FLUID ENGINE ---
+        // --- 4. ROBUST FLUID ENGINE (BYTE MODE FALLBACK) ---
         const canvas = document.getElementById('glcanvas');
         let gl = canvas.getContext('webgl');
         
-        let texType = gl.FLOAT;
+        let texType;
         let ext = gl.getExtension('OES_texture_half_float');
-        if(ext) texType = ext.HALF_FLOAT_OES;
+        
+        // AUTO-DETECT SUPPORT
+        if(ext) {
+            texType = ext.HALF_FLOAT_OES;
+            console.log("Mode: High-Res Fluid");
+        } else {
+            texType = gl.UNSIGNED_BYTE; // SAFE MODE
+            console.log("Mode: Safe Byte Fluid");
+        }
 
-        // SHADERS
         const vShader = `attribute vec2 p; varying vec2 uv; void main(){ uv=p*0.5+0.5; gl_Position=vec4(p,0,1); }`;
         const fSplat = `precision mediump float; varying vec2 uv; uniform sampler2D uT; uniform vec3 c; uniform vec2 p; void main(){ vec2 d=uv-p; d.x*=0.5; gl_FragColor=vec4(texture2D(uT,uv).xyz+exp(-dot(d,d)/0.005)*c,1); }`;
-        const fAdv = `precision mediump float; varying vec2 uv; uniform sampler2D uV, uS; void main(){ gl_FragColor=0.96*texture2D(uS, uv - 0.016*texture2D(uV,uv).xy*vec2(0.5,1)); }`;
-        
-        // NEW DISPLAY SHADER: Adds Ambient Glow so screen is never black
+        const fAdv = `precision mediump float; varying vec2 uv; uniform sampler2D uV, uS; void main(){ gl_FragColor=0.95*texture2D(uS, uv - 0.02*texture2D(uV,uv).xy*vec2(0.5,1)); }`;
+        // AMBIENT GLOW DISPLAY SHADER
         const fDisp = `precision mediump float; varying vec2 uv; uniform sampler2D uT; void main(){ 
             vec3 c=texture2D(uT,uv).rgb; 
-            float d=length(c); 
-            // Ambient Void Glow (Deep Violet)
-            vec3 ambient = vec3(0.05, 0.0, 0.1); 
-            // Fluid Color (Cyan -> White)
-            vec3 fluid = vec3(d*0.2, d*0.8, d*1.2);
-            gl_FragColor=vec4(ambient + fluid, 1); 
+            // Background Plasma
+            vec3 bg = vec3(0.05, 0.0, 0.1);
+            gl_FragColor=vec4(bg + c, 1); 
         }`;
 
         function createProg(fs) {
@@ -285,7 +303,8 @@
         function createFBO() {
             let t = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, t);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 512, 1024, 0, gl.RGBA, texType, null);
+            // Smaller resolution for safety on mobile
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 256, 512, 0, gl.RGBA, texType, null);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
             return { t: t, f: gl.createFramebuffer() };
@@ -327,26 +346,27 @@
             let cur = idx;
             autoPulse++;
 
-            // 1. AUTO PULSE (Heartbeat) - Keeps screen alive
-            if(autoPulse > 100) {
+            // KEEP ALIVE PULSE
+            if(autoPulse > 60) {
                 splats.push({x:0.5, y:0.5, dx:(Math.random()-0.5)*100, dy:(Math.random()-0.5)*100, c:[0.2,0,0.5]});
                 autoPulse = 0;
             }
 
-            // 2. GLITCH LOGIC (Actually Visible Now)
-            if(fx.glitch) {
-                if(Math.random()>0.8) {
-                    // Inject random square blocks of noise
-                    splats.push({
-                        x: Math.random(), 
-                        y: Math.random(), 
-                        dx: 0, dy: 0, 
-                        c: [1, 0, 1] // Magenta Glitch
-                    });
+            // FX VISUALS
+            if(fx.shimmer) {
+                // Tearing lines
+                if(Math.random()>0.5) {
+                    let y = Math.random();
+                    splats.push({x:Math.random(), y:y, dx:0, dy:0, c:[1,1,0.5]});
+                    splats.push({x:Math.random(), y:y, dx:0, dy:0, c:[1,1,0.5]});
                 }
             }
+            if(fx.glitch && Math.random()>0.8) {
+                splats.push({x:Math.random(), y:Math.random(), dx:0, dy:0, c:[1,0,1]});
+            }
 
-            gl.viewport(0,0,512,1024);
+            gl.viewport(0,0,256,512); // Match FBO size
+            
             if(splats.length > 0) {
                 gl.useProgram(P_splat);
                 for(let s of splats) {
