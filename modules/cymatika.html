@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ΣΩ | V6.0 HOLOGRAPHIC CONSOLE</title>
+    <title>ΣΩ | V6.1 UNBOUND CONSOLE</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;700&display=swap');
 
@@ -23,11 +23,12 @@
             font-family: 'Courier Prime', monospace;
             color: #ffffff;
             overflow: hidden;
-            touch-action: none; 
+            touch-action: none; /* No scrolling allowed */
             user-select: none;
             -webkit-user-select: none;
         }
 
+        /* FLUID LAYER */
         canvas {
             display: block;
             position: fixed;
@@ -36,6 +37,7 @@
             z-index: 1;
         }
 
+        /* UI LAYER */
         #ui-layer {
             position: absolute;
             top: 0; left: 0;
@@ -47,6 +49,7 @@
             justify-content: center;
             align-items: center;
             mix-blend-mode: exclusion;
+            transition: opacity 0.5s;
         }
 
         /* HEADER */
@@ -58,15 +61,17 @@
             color: #fff;
             text-shadow: 0 0 30px var(--c-magenta);
             margin: 0;
-            opacity: 0.8;
-            transition: opacity 0.5s;
+            transition: all 0.5s;
         }
 
-        body.active h1.glitch-header { opacity: 0.3; }
-
-        /* ACTIVATE BUTTON */
-        .start-btn {
+        /* START BUTTON */
+        #startContainer {
+            margin-top: 50px;
             pointer-events: auto;
+            z-index: 20;
+        }
+
+        .start-btn {
             background: rgba(0,0,0,0.8);
             border: 2px solid var(--c-cyan);
             color: var(--c-cyan);
@@ -77,70 +82,84 @@
             letter-spacing: 2px;
             cursor: pointer;
             box-shadow: 0 0 20px var(--c-cyan);
-            z-index: 20;
+            transition: all 0.2s;
         }
 
-        /* MODULATION TOOLBAR */
+        .start-btn:active {
+            background: var(--c-cyan);
+            color: #000;
+            transform: scale(0.95);
+        }
+
+        /* ACTIVE STATE TRANSITIONS */
+        body.active h1.glitch-header {
+            opacity: 0.3;
+            transform: translateY(-30vh) scale(0.8);
+        }
+        body.active #startContainer {
+            display: none;
+        }
+
+        /* MODULATION TOOLBAR (The Deck) */
         .toolbar {
             position: fixed;
-            bottom: 30px;
+            bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
             gap: 15px;
             z-index: 30;
-            pointer-events: auto;
+            pointer-events: none; /* Hidden until active */
             width: 90%;
-            max-width: 500px;
+            max-width: 600px;
             opacity: 0;
             transition: opacity 1s;
         }
 
-        body.active .toolbar { opacity: 1; }
+        body.active .toolbar {
+            opacity: 1;
+            pointer-events: auto;
+        }
 
         .mod-key {
             flex: 1;
-            height: 80px;
-            background: rgba(255, 255, 255, 0.05);
+            height: 90px;
+            background: rgba(10, 0, 20, 0.4);
             border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 8px;
+            border-radius: 12px;
             color: #fff;
             font-family: 'Courier Prime';
-            font-size: 0.9rem;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(10px);
             transition: all 0.1s;
-            touch-action: manipulation;
-            user-select: none;
+            touch-action: none; /* Critical for multi-touch */
+            text-align: center;
         }
+
+        .mod-key span {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        /* KEY STYLES */
+        .key-echo { border-color: var(--c-cyan); color: var(--c-cyan); }
+        .key-glitch { border-color: var(--c-magenta); color: var(--c-magenta); }
+        .key-shimmer { border-color: var(--c-acid); color: var(--c-acid); }
 
         /* PRESSED STATES */
-        .mod-key:active, .mod-key.pressed {
+        .mod-key.pressed {
             transform: scale(0.95);
-            box-shadow: 0 0 30px currentColor;
             background: currentColor;
-            color: #000;
-            border-color: #fff;
+            color: #000 !important;
+            box-shadow: 0 0 40px currentColor;
         }
-
-        .key-echo { color: var(--c-cyan); }
-        .key-glitch { color: var(--c-magenta); }
-        .key-shimmer { color: var(--c-acid); }
-
-        /* VISUALIZER OVERLAY */
-        .vis-ring {
-            position: absolute;
-            width: 200px;
-            height: 200px;
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 50%;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 1s;
-        }
-        body.active .vis-ring { opacity: 0.5; }
 
     </style>
 </head>
@@ -150,31 +169,47 @@
 
     <div id="ui-layer">
         <h1 class="glitch-header">HOLOGRAPHIC<br>CONSOLE</h1>
-        <div id="startContainer" style="margin-top: 50px;">
+        <div id="startContainer">
             <button class="start-btn" id="startBtn">ACTIVATE CONSOLE</button>
         </div>
-        
-        <div class="vis-ring" id="visRing"></div>
     </div>
 
     <div class="toolbar">
-        <div class="mod-key key-echo" id="btnEcho" data-type="echo">ECHO<br>DELAY</div>
-        <div class="mod-key key-glitch" id="btnGlitch" data-type="glitch">GLITCH<br>TIME</div>
-        <div class="mod-key key-shimmer" id="btnShimmer" data-type="shimmer">SHIMMER<br>NOISE</div>
+        <div class="mod-key key-echo" data-type="echo">
+            <span>ECHO</span>DELAY
+        </div>
+        <div class="mod-key key-glitch" data-type="glitch">
+            <span>GLITCH</span>TIME
+        </div>
+        <div class="mod-key key-shimmer" data-type="shimmer">
+            <span>SHIMMER</span>NOISE
+        </div>
     </div>
 
     <script>
-        // --- 1. AUDIO ENGINE (MODULAR) ---
+        // --- 1. ROBUST SYSTEM INIT ---
+        const startBtn = document.getElementById('startBtn');
+        const body = document.body;
+        
+        startBtn.addEventListener('click', async () => {
+            // IMMEDIATE VISUAL TRANSITION (No waiting)
+            body.classList.add('active');
+            
+            // Try to boot audio, but don't block if it fails
+            try { await initAudio(); } 
+            catch(e) { console.log("Audio failed, visual only"); }
+        });
+
+        // --- 2. AUDIO ENGINE (MODULAR) ---
         let actx, mainOut;
         let oscDrone, oscSub, gainDrone;
-        let delayNode, feedbackNode, delayGain; // Echo
-        let glitchLFO, glitchGain; // Glitch
+        let delayNode, feedbackNode; // Echo
         let noiseNode, noiseGain; // Shimmer
         let analyser, dataArray;
-        let isInit = false;
+        let isAudioInit = false;
 
         async function initAudio() {
-            if(isInit) return;
+            if(isAudioInit) return;
             const AC = window.AudioContext || window.webkitAudioContext;
             actx = new AC();
             if(actx.state === 'suspended') await actx.resume();
@@ -183,129 +218,119 @@
             mainOut.gain.value = 0.5;
             mainOut.connect(actx.destination);
 
-            // ANALYSER
+            // Analyser for visuals
             analyser = actx.createAnalyser();
             analyser.fftSize = 256;
             mainOut.connect(analyser);
             dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-            // 1. DRONE (Base)
+            // BASE DRONE (Deep & Wide)
             oscDrone = actx.createOscillator();
             oscDrone.type = 'sine';
             oscDrone.frequency.value = 55; // A1
+            
             oscSub = actx.createOscillator();
             oscSub.type = 'triangle';
-            oscSub.frequency.value = 55.5; // Binaural beat
+            oscSub.frequency.value = 55.5; // Binaural rub
 
             gainDrone = actx.createGain();
             gainDrone.gain.value = 0.4;
 
             oscDrone.connect(gainDrone);
             oscSub.connect(gainDrone);
-            gainDrone.connect(mainOut);
 
-            // 2. ECHO LOOP (Send Effect)
+            // ECHO CHAIN
             delayNode = actx.createDelay();
-            delayNode.delayTime.value = 0.3; // 300ms
+            delayNode.delayTime.value = 0.4;
             feedbackNode = actx.createGain();
-            feedbackNode.gain.value = 0; // Off by default
-            
-            // Routing: Main -> Delay -> Feedback -> Delay -> Main
+            feedbackNode.gain.value = 0; // Off
+
             gainDrone.connect(delayNode);
             delayNode.connect(feedbackNode);
             feedbackNode.connect(delayNode);
             delayNode.connect(mainOut);
+            gainDrone.connect(mainOut); // Dry signal
 
-            // 3. SHIMMER (High Noise)
-            const bufferSize = actx.sampleRate * 2; // 2 sec buffer
-            const buffer = actx.createBuffer(1, bufferSize, actx.sampleRate);
+            // SHIMMER CHAIN (Pink Noise)
+            const bSize = actx.sampleRate * 2;
+            const buffer = actx.createBuffer(1, bSize, actx.sampleRate);
             const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            for (let i = 0; i < bSize; i++) data[i] = Math.random() * 2 - 1;
 
             noiseNode = actx.createBufferSource();
             noiseNode.buffer = buffer;
             noiseNode.loop = true;
+            
             const noiseFilter = actx.createBiquadFilter();
             noiseFilter.type = 'highpass';
-            noiseFilter.frequency.value = 2000;
+            noiseFilter.frequency.value = 3000;
+            
             noiseGain = actx.createGain();
             noiseGain.gain.value = 0; // Off
 
             noiseNode.connect(noiseFilter).connect(noiseGain).connect(mainOut);
 
-            // START ALL
+            // IGNITION
             oscDrone.start();
             oscSub.start();
             noiseNode.start();
-
-            isInit = true;
-            document.body.classList.add('active');
-            document.getElementById('startContainer').style.display = 'none';
+            isAudioInit = true;
         }
 
-        // --- 2. MODULATION LOGIC ---
+        // --- 3. MODULATION LOGIC ---
         const keys = document.querySelectorAll('.mod-key');
-        
-        // Touch Handlers for Multi-Tap
+        let activeEffects = { echo: false, glitch: false, shimmer: false };
+
         keys.forEach(key => {
             const type = key.dataset.type;
             
-            const start = (e) => {
-                e.preventDefault();
+            const activate = (e) => {
+                if(e.cancelable) e.preventDefault();
                 key.classList.add('pressed');
-                applyEffect(type, true);
+                activeEffects[type] = true;
+                if(isAudioInit) updateAudio(type, true);
             };
             
-            const end = (e) => {
-                e.preventDefault();
+            const deactivate = (e) => {
+                if(e.cancelable) e.preventDefault();
                 key.classList.remove('pressed');
-                applyEffect(type, false);
+                activeEffects[type] = false;
+                if(isAudioInit) updateAudio(type, false);
             };
 
-            key.addEventListener('mousedown', start);
-            key.addEventListener('mouseup', end);
-            key.addEventListener('mouseleave', end);
-            key.addEventListener('touchstart', start, {passive: false});
-            key.addEventListener('touchend', end, {passive: false});
+            // Multi-touch listeners
+            key.addEventListener('touchstart', activate, {passive: false});
+            key.addEventListener('touchend', deactivate, {passive: false});
+            key.addEventListener('mousedown', activate);
+            key.addEventListener('mouseup', deactivate);
+            key.addEventListener('mouseleave', deactivate);
         });
 
-        function applyEffect(type, active) {
-            if(!isInit) return;
+        function updateAudio(type, active) {
             const now = actx.currentTime;
-
             if(type === 'echo') {
-                // Ramp feedback up/down
-                feedbackNode.gain.setTargetAtTime(active ? 0.8 : 0, now, 0.1);
-            }
-            if(type === 'glitch') {
-                // Chaos FM Synthesis
-                if(active) {
-                    oscDrone.frequency.setValueAtTime(55, now);
-                    oscDrone.frequency.linearRampToValueAtTime(110, now + 0.05); // Blip
-                    // Visual glitch handled in render loop
-                } else {
-                    oscDrone.frequency.setTargetAtTime(55, now, 0.1);
-                }
+                feedbackNode.gain.setTargetAtTime(active ? 0.9 : 0, now, 0.1);
             }
             if(type === 'shimmer') {
-                noiseGain.gain.setTargetAtTime(active ? 0.2 : 0, now, 0.1);
-                // Pitch shift drone up for majesty
-                oscSub.frequency.setTargetAtTime(active ? 110 : 55.5, now, 0.2);
+                noiseGain.gain.setTargetAtTime(active ? 0.15 : 0, now, 0.1);
+                // Pitch shift the drone for drama
+                oscDrone.frequency.setTargetAtTime(active ? 110 : 55, now, 0.2);
+            }
+            if(type === 'glitch') {
+                // Audio glitching handled in main loop
             }
         }
 
-        // --- 3. HOLOGRAPHIC FLUID ENGINE ---
+        // --- 4. HOLOGRAPHIC FLUID ENGINE ---
         const canvas = document.getElementById('glcanvas');
         let gl = canvas.getContext('webgl');
         
-        // TEXTURE SUPPORT (Mobile Fix)
+        // Mobile Texture Fallback
         let texType;
-        const extHalfFloat = gl.getExtension('OES_texture_half_float');
-        const extHalfFloatLinear = gl.getExtension('OES_texture_half_float_linear');
-        if(extHalfFloat && extHalfFloatLinear) texType = extHalfFloat.HALF_FLOAT_OES;
-        else texType = gl.FLOAT;
+        const ext = gl.getExtension('OES_texture_half_float');
+        texType = ext ? ext.HALF_FLOAT_OES : gl.FLOAT;
 
-        // SHADERS (Remapped for Holographic Vibrance)
+        // SHADERS
         const baseV = `attribute vec2 aPosition; varying vec2 vUv; void main() { vUv = aPosition * 0.5 + 0.5; gl_Position = vec4(aPosition, 0.0, 1.0); }`;
         const splatF = `precision mediump float; varying vec2 vUv; uniform sampler2D uTarget; uniform float uAspectRatio; uniform vec3 uColor; uniform vec2 uPoint; uniform float uRadius; void main() { vec2 p = vUv - uPoint.xy; p.x *= uAspectRatio; vec3 splat = exp(-dot(p, p) / uRadius) * uColor; vec3 base = texture2D(uTarget, vUv).xyz; gl_FragColor = vec4(base + splat, 1.0); }`;
         const advectF = `precision mediump float; varying vec2 vUv; uniform sampler2D uVelocity; uniform sampler2D uSource; uniform vec2 uTexelSize; uniform float uDt; uniform float uDissipation; void main() { vec2 coord = vUv - uDt * texture2D(uVelocity, vUv).xy * uTexelSize; gl_FragColor = uDissipation * texture2D(uSource, coord); }`;
@@ -313,14 +338,15 @@
         const pressF = `precision mediump float; varying vec2 vUv; uniform sampler2D uPressure; uniform sampler2D uDivergence; uniform vec2 uTexelSize; void main() { float L = texture2D(uPressure, vUv - vec2(uTexelSize.x, 0.0)).x; float R = texture2D(uPressure, vUv + vec2(uTexelSize.x, 0.0)).x; float T = texture2D(uPressure, vUv + vec2(0.0, uTexelSize.y)).x; float B = texture2D(uPressure, vUv - vec2(0.0, uTexelSize.y)).x; float C = texture2D(uPressure, vUv).x; float divergence = texture2D(uDivergence, vUv).x; float pressure = (L + R + B + T - divergence) * 0.25; gl_FragColor = vec4(pressure, 0.0, 0.0, 1.0); }`;
         const gradF = `precision mediump float; varying vec2 vUv; uniform sampler2D uPressure; uniform sampler2D uVelocity; uniform vec2 uTexelSize; void main() { float L = texture2D(uPressure, vUv - vec2(uTexelSize.x, 0.0)).x; float R = texture2D(uPressure, vUv + vec2(uTexelSize.x, 0.0)).x; float T = texture2D(uPressure, vUv + vec2(0.0, uTexelSize.y)).x; float B = texture2D(uPressure, vUv - vec2(0.0, uTexelSize.y)).x; vec2 velocity = texture2D(uVelocity, vUv).xy; velocity.xy -= vec2(R - L, T - B); gl_FragColor = vec4(velocity, 0.0, 1.0); }`;
         
-        // HOLOGRAPHIC DISPLAY SHADER: Adds glow and color shift
+        // HOLOGRAPHIC DISPLAY SHADER (Hyper-Flux Remap)
         const displayF = `precision mediump float; varying vec2 vUv; uniform sampler2D uTexture; void main() { 
-            vec3 c = texture2D(uTexture, vUv).rgb; 
-            // Color Mapping: Velocity/Density -> Spectrum
-            // Boost low values for glow, clamp high values
-            float brightness = length(c);
-            vec3 hologram = vec3(c.r * 1.5, c.g * 0.8 + c.r*0.2, c.b * 2.0); 
-            gl_FragColor = vec4(hologram, 1.0); 
+            vec3 c = texture2D(uTexture, vUv).rgb;
+            float density = length(c);
+            // HEATMAP: Purple -> Cyan -> White
+            vec3 col = vec3(density * 0.5, density * 0.8, density * 1.5); 
+            // Add Shimmer
+            col += vec3(0.1, 0.0, 0.2); // Base Ultraviolet
+            gl_FragColor = vec4(col, 1.0); 
         }`;
 
         function createP(v, f) { let p = gl.createProgram(); let vs = gl.createShader(gl.VERTEX_SHADER); gl.shaderSource(vs, v); gl.compileShader(vs); let fs = gl.createShader(gl.FRAGMENT_SHADER); gl.shaderSource(fs, f); gl.compileShader(fs); gl.attachShader(p, vs); gl.attachShader(p, fs); gl.linkProgram(p); return p; }
@@ -350,68 +376,48 @@
 
         let splats = [];
 
-        document.getElementById('startBtn').addEventListener('click', initAudio);
+        // INPUTS
+        window.addEventListener('mousemove', e => {
+            if(Math.random()>0.5) splats.push({x: e.clientX/canvas.width, y: 1-e.clientY/canvas.height, dx: e.movementX*5, dy: -e.movementY*5, c: [0.5,0.5,1]});
+        });
+        window.addEventListener('touchmove', e => {
+            for(let i=0; i<e.touches.length; i++) {
+                let t = e.touches[i];
+                splats.push({x: t.clientX/canvas.width, y: 1-t.clientY/canvas.height, dx: (Math.random()-0.5)*10, dy: (Math.random()-0.5)*10, c: [0.8,0,1]});
+            }
+        }, {passive: false});
 
-        // --- MAIN RENDER LOOP ---
+        // MAIN LOOP
         let lastTime = Date.now();
         function update() {
             let dt = Math.min((Date.now()-lastTime)/1000, 0.016);
             lastTime = Date.now();
-            
-            // GLITCH MODULATION
-            if(document.getElementById('btnGlitch').classList.contains('pressed')) {
-                // Randomize time step for visual stutter
-                if(Math.random() > 0.5) dt = 0; 
-                if(Math.random() > 0.9) {
-                    // Random color injection
-                    splats.push({x:Math.random(), y:Math.random(), dx:0, dy:0, c:[1,0,1]});
+
+            // GLITCH EFFECT
+            if(activeEffects.glitch) {
+                if(Math.random() > 0.5) dt = 0; // Freeze time
+                if(Math.random() > 0.8) splats.push({x:Math.random(), y:Math.random(), dx:0, dy:0, c:[1,1,1]});
+            }
+
+            // AUDIO REACTION
+            if(isAudioInit) {
+                analyser.getByteFrequencyData(dataArray);
+                let bass = dataArray[4];
+                if(bass > 180 || activeEffects.echo) {
+                    let angle = Math.random() * Math.PI * 2;
+                    splats.push({
+                        x: 0.5, y: 0.5,
+                        dx: Math.cos(angle) * 300, dy: Math.sin(angle) * 300,
+                        c: [bass/255, 0, 1]
+                    });
+                }
+                if(activeEffects.shimmer) {
+                    splats.push({x:Math.random(), y:Math.random(), dx:0, dy:0, c:[1,1,0.5]});
                 }
             }
 
             gl.viewport(0, 0, tW, tH);
 
-            // AUDIO REACTIVE INJECTION
-            if(isInit) {
-                analyser.getByteFrequencyData(dataArray);
-                let bass = dataArray[4];
-                let mid = dataArray[30];
-                let high = dataArray[100];
-
-                // BASS: Big pushes
-                if(bass > 180) {
-                    let angle = Math.random() * Math.PI * 2;
-                    splats.push({
-                        x: 0.5, y: 0.5,
-                        dx: Math.cos(angle) * 500,
-                        dy: Math.sin(angle) * 500,
-                        c: [0.2, 0, 0.5] // Deep Purple
-                    });
-                    document.getElementById('visRing').style.transform = `scale(${1 + bass/200})`;
-                }
-
-                // MID: Orbitals
-                if(mid > 100) {
-                    let t = Date.now() * 0.002;
-                    splats.push({
-                        x: 0.5 + Math.cos(t) * 0.3,
-                        y: 0.5 + Math.sin(t) * 0.3,
-                        dx: Math.cos(t + 1.5) * 200,
-                        dy: Math.sin(t + 1.5) * 200,
-                        c: [0, 0.8, 1] // Cyan
-                    });
-                }
-
-                // HIGH: Sparkles
-                if(high > 50 || document.getElementById('btnShimmer').classList.contains('pressed')) {
-                    splats.push({
-                        x: Math.random(), y: Math.random(),
-                        dx: 0, dy: 0,
-                        c: [1, 1, 0.5] // White/Yellow
-                    });
-                }
-            }
-
-            // FLUID PHYSICS
             if(splats.length > 0) {
                 gl.useProgram(pSplat);
                 gl.uniform1f(gl.getUniformLocation(pSplat, 'uAspectRatio'), canvas.width/canvas.height);
@@ -439,4 +445,7 @@
             gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, vel.read);
             gl.bindFramebuffer(gl.FRAMEBUFFER, vel.write); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, vel.write, 0);
             blit(pAdv); vel.swap();
-            gl.uniform1f(g
+            gl.uniform1f(gl.getUniformLocation(pAdv, 'uDissipation'), config.denDiss);
+            gl.uniform1i(gl.getUniformLocation(pAdv, 'uSource'), 1);
+            gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, den.read);
+         
