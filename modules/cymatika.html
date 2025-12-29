@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ΣΩ | V5.0 CYMATICA</title>
+    <title>ΣΩ | V5.1 CYMATICA SAFEGUARD</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;700&display=swap');
 
@@ -22,7 +22,7 @@
             background-color: var(--c-void);
             font-family: 'Courier Prime', monospace;
             color: #ffffff;
-            overflow: hidden; /* SCROLL REMOVED */
+            overflow: hidden;
             touch-action: none; 
         }
 
@@ -47,7 +47,6 @@
             mix-blend-mode: exclusion;
         }
 
-        /* HEADER */
         h1.glitch-header {
             font-family: 'Cinzel', serif;
             font-size: 12vw;
@@ -61,76 +60,78 @@
 
         .subtitle {
             font-size: 3vw;
-            letter-spacing: 0.8em;
+            letter-spacing: 0.5em;
             color: var(--c-cyan);
             margin-top: 2vh;
             text-transform: uppercase;
             text-shadow: 0 0 10px var(--c-cyan);
         }
 
-        /* CYMATIC CONTROLS */
+        /* CONTROLS */
         .btn-container {
             margin-top: 8vh;
             pointer-events: auto;
             display: flex;
-            gap: 20px;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
         }
 
         .mode-btn {
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.6);
             border: 1px solid var(--c-magenta);
             color: #fff;
             font-family: 'Courier Prime', monospace;
-            font-size: 1rem;
+            font-size: 1.2rem;
             letter-spacing: 2px;
-            padding: 1rem 2rem;
+            padding: 1.2rem 3rem;
             text-transform: uppercase;
             cursor: pointer;
             transition: all 0.3s;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(10px);
+            min-width: 200px;
         }
 
-        .mode-btn:hover {
+        .mode-btn:active {
             background: var(--c-magenta);
             color: #000;
-            box-shadow: 0 0 20px var(--c-magenta);
+            transform: scale(0.95);
         }
 
-        .mode-btn.active {
-            border-color: var(--c-acid);
+        /* DEBUG CONSOLE (Visible if errors occur) */
+        #debug-console {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            width: 90%;
+            font-size: 10px;
             color: var(--c-acid);
-            box-shadow: inset 0 0 10px var(--c-acid);
+            background: rgba(0,0,0,0.8);
+            padding: 5px;
+            pointer-events: none;
+            display: none; /* Hidden unless error */
+            z-index: 100;
         }
 
-        /* HUD ELEMENTS */
-        .hud-freq {
+        .visualizer-ring {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.1);
             position: absolute;
-            bottom: 50px;
-            left: 50px;
-            font-size: 0.8rem;
-            opacity: 0.7;
+            bottom: 15vh;
             display: flex;
-            gap: 5px;
-            align-items: flex-end;
-            height: 30px;
+            justify-content: center;
+            align-items: center;
         }
-
-        .bar {
-            width: 4px;
+        
+        .pulse-core {
+            width: 10px;
+            height: 10px;
             background: var(--c-cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 20px var(--c-cyan);
         }
-
-        .status {
-            position: absolute;
-            top: 50px;
-            right: 50px;
-            text-align: right;
-            font-size: 0.8rem;
-            line-height: 1.5;
-            color: var(--c-acid);
-            display: none;
-        }
-        body.active .status { display: block; }
 
     </style>
 </head>
@@ -140,131 +141,108 @@
 
     <div id="ui-layer">
         <h1 class="glitch-header">CYMATICA</h1>
-        <div class="subtitle">AUDIO-FLUID RESO-NANCE</div>
+        <div class="subtitle">V5.1 // GHOST DRIVER</div>
 
         <div class="btn-container">
             <button class="mode-btn" id="startBtn">INITIATE AUDIO</button>
-            <button class="mode-btn" id="shiftBtn" style="display:none;">SHIFT HARMONICS</button>
+            <div style="font-size: 0.7rem; opacity: 0.7; margin-top: 10px;">(VISUALS ACTIVE)</div>
         </div>
 
-        <div class="hud-freq" id="hud">
-            </div>
-
-        <div class="status">
-            SYSTEM: ONLINE<br>
-            DRIVER: BINAURAL_OSC<br>
-            FLUID: REACTIVE
+        <div class="visualizer-ring">
+            <div class="pulse-core" id="core"></div>
         </div>
     </div>
 
+    <div id="debug-console"></div>
+
     <script>
-        /* --- 1. CYMATIC AUDIO ENGINE --- */
+        // LOGGING
+        function log(msg) {
+            console.log(msg);
+            const d = document.getElementById('debug-console');
+            d.style.display = 'block';
+            d.innerText = "STATUS: " + msg;
+        }
+
+        /* --- 1. AUDIO ENGINE (ROBUST) --- */
         let audioCtx, analyser, dataArray;
-        let osc1, osc2, gain1, gain2, masterGain;
-        let isAudioInit = false;
-        let harmonicMode = 0; // 0 = Deep, 1 = Chaos
+        let osc1, osc2, gainNode;
+        let isAudioActive = false;
+        
+        // GHOST SIGNAL (Simulates audio if real audio fails)
+        let ghostTime = 0;
+        function getGhostSignal() {
+            ghostTime += 0.05;
+            // Create fake frequency data
+            return {
+                bass: (Math.sin(ghostTime) + 1) * 120, // 0-240 pulsing
+                mid: (Math.cos(ghostTime * 2.5) + 1) * 100,
+                treble: (Math.sin(ghostTime * 10) + 1) * 50
+            };
+        }
 
-        function initAudio() {
-            if(isAudioInit) return;
+        async function initAudio() {
             try {
+                log("Requesting Audio Context...");
                 const AC = window.AudioContext || window.webkitAudioContext;
-                audioCtx = new AC();
-                analyser = audioCtx.createAnalyser();
-                analyser.fftSize = 256; // Precision of analysis
+                if (!AC) throw new Error("Web Audio API not supported");
                 
-                masterGain = audioCtx.createGain();
-                masterGain.gain.value = 0.5;
-                masterGain.connect(analyser);
-                analyser.connect(audioCtx.destination);
+                audioCtx = new AC();
+                
+                // RESUME (Crucial for iOS)
+                if (audioCtx.state === 'suspended') {
+                    await audioCtx.resume();
+                }
 
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 256;
                 dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-                // OSC 1: The Base (Throat)
+                // OSCILLATORS
                 osc1 = audioCtx.createOscillator();
                 osc1.type = 'sine';
-                osc1.frequency.value = 55; // A1
-                gain1 = audioCtx.createGain();
-                gain1.gain.value = 0.5;
-                osc1.connect(gain1).connect(masterGain);
-                osc1.start();
-
-                // OSC 2: The Weaver (Interference)
+                osc1.frequency.value = 60; // Deep drone
+                
                 osc2 = audioCtx.createOscillator();
                 osc2.type = 'triangle';
-                osc2.frequency.value = 55.5; // Binaural beat
-                gain2 = audioCtx.createGain();
-                gain2.gain.value = 0.3;
-                osc2.connect(gain2).connect(masterGain);
+                osc2.frequency.value = 62; // Beat freq
+
+                gainNode = audioCtx.createGain();
+                gainNode.gain.value = 0.3;
+
+                osc1.connect(gainNode);
+                osc2.connect(gainNode);
+                gainNode.connect(analyser);
+                analyser.connect(audioCtx.destination);
+
+                osc1.start();
                 osc2.start();
 
-                // LFO for movement
-                let lfo = audioCtx.createOscillator();
-                lfo.frequency.value = 0.1; // Slow breathing
-                let lfoGain = audioCtx.createGain();
-                lfoGain.gain.value = 10; // Depth
-                lfo.connect(lfoGain).connect(osc2.frequency);
-                lfo.start();
+                isAudioActive = true;
+                document.getElementById('startBtn').innerText = "AUDIO LOCKED";
+                document.getElementById('startBtn').style.borderColor = "var(--c-acid)";
+                document.getElementById('startBtn').style.color = "var(--c-acid)";
+                log("Audio Online");
 
-                isAudioInit = true;
-                document.body.classList.add('active');
-                document.getElementById('startBtn').style.display = 'none';
-                document.getElementById('shiftBtn').style.display = 'block';
-
-                animateHUD();
-
-            } catch(e) { console.log("Audio Init Failed"); }
-        }
-
-        function shiftHarmonics() {
-            if(!isAudioInit) return;
-            const now = audioCtx.currentTime;
-            harmonicMode = (harmonicMode + 1) % 2;
-
-            if(harmonicMode === 1) {
-                // CHAOS MODE
-                osc1.frequency.exponentialRampToValueAtTime(110, now + 2); // Octave up
-                osc2.type = 'sawtooth';
-                osc2.frequency.linearRampToValueAtTime(112, now + 4);
-                gain1.gain.linearRampToValueAtTime(0.3, now + 1);
-                document.documentElement.style.setProperty('--c-cyan', '#ff0055'); // Red shift
-            } else {
-                // CALM MODE
-                osc1.frequency.exponentialRampToValueAtTime(55, now + 2);
-                osc2.type = 'triangle';
-                osc2.frequency.linearRampToValueAtTime(55.5, now + 2);
-                document.documentElement.style.setProperty('--c-cyan', '#00ffff'); // Blue shift
+            } catch (e) {
+                log("Audio Error: " + e.message);
+                document.getElementById('startBtn').innerText = "USING GHOST SIGNAL";
             }
         }
 
-        // HUD Animation
-        function animateHUD() {
-            if(!isAudioInit) return;
-            analyser.getByteFrequencyData(dataArray);
-            
-            const hud = document.getElementById('hud');
-            hud.innerHTML = ''; // Clear old
-            
-            // Create bars based on spectrum
-            for(let i = 0; i < 20; i++) {
-                let val = dataArray[i * 2];
-                let h = val / 5;
-                let div = document.createElement('div');
-                div.className = 'bar';
-                div.style.height = h + 'px';
-                hud.appendChild(div);
-            }
-            requestAnimationFrame(animateHUD);
-        }
-
-        /* --- 2. FLUID ENGINE (CYMATIC DRIVEN) --- */
+        /* --- 2. FLUID ENGINE (ALWAYS ON) --- */
         const canvas = document.getElementById('glcanvas');
-        let gl = canvas.getContext('webgl');
+        let gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
         
+        // TEXTURE CHECK
         let texType;
         const extHalfFloat = gl.getExtension('OES_texture_half_float');
         const extHalfFloatLinear = gl.getExtension('OES_texture_half_float_linear');
-        if(extHalfFloat && extHalfFloatLinear) texType = extHalfFloat.HALF_FLOAT_OES;
-        else texType = gl.FLOAT;
+        if(extHalfFloat && extHalfFloatLinear) {
+            texType = extHalfFloat.HALF_FLOAT_OES;
+        } else {
+            texType = gl.FLOAT;
+        }
 
         // SHADERS
         const baseV = `attribute vec2 aPosition; varying vec2 vUv; void main() { vUv = aPosition * 0.5 + 0.5; gl_Position = vec4(aPosition, 0.0, 1.0); }`;
@@ -279,7 +257,7 @@
         function createT(w, h) { let t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, texType, null); return t; }
         function createDoubleFBO(w, h) { let f1 = createT(w, h); let f2 = createT(w, h); let fb = gl.createFramebuffer(); return { read: f1, write: f2, fbo: fb, swap: function(){ let t=this.read; this.read=this.write; this.write=t; } }; }
 
-        let config = { texDown: 2, denDiss: 0.96, velDiss: 0.98, curl: 40, rad: 0.005 };
+        let config = { texDown: 2, denDiss: 0.97, velDiss: 0.98, curl: 30, rad: 0.005 };
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
         let tW = Math.floor(canvas.width / config.texDown); let tH = Math.floor(canvas.height / config.texDown);
@@ -304,8 +282,6 @@
 
         // INPUT HANDLERS
         document.getElementById('startBtn').addEventListener('click', initAudio);
-        document.getElementById('shiftBtn').addEventListener('click', shiftHarmonics);
-        
         window.addEventListener('touchmove', e => {
             let t = e.touches[0];
             splats.push({x: t.clientX/canvas.width, y: 1-t.clientY/canvas.height, dx: (Math.random()-0.5)*10, dy: (Math.random()-0.5)*10, c: [1,1,1]});
@@ -318,61 +294,54 @@
 
         // --- CYMATIC GENERATOR ---
         function generateCymatics() {
-            if(!isAudioInit) return;
-            
-            // Analyze Audio
-            analyser.getByteFrequencyData(dataArray);
-            
-            let bass = dataArray[2]; // Low freq
-            let mid = dataArray[20];
-            let treble = dataArray[100];
+            let bass, mid, treble;
+
+            if(isAudioActive) {
+                analyser.getByteFrequencyData(dataArray);
+                bass = dataArray[2]; 
+                mid = dataArray[20];
+                treble = dataArray[100];
+            } else {
+                // USE GHOST SIGNAL
+                const ghost = getGhostSignal();
+                bass = ghost.bass;
+                mid = ghost.mid;
+                treble = ghost.treble;
+            }
+
+            // Visual feedback on the little center dot
+            document.getElementById('core').style.transform = `scale(${1 + bass/100})`;
 
             // 1. BASS PULSE (Center)
-            if(bass > 180) {
+            if(bass > 150) {
                 splats.push({
                     x: 0.5, y: 0.5,
                     dx: (Math.random()-0.5) * 500,
                     dy: (Math.random()-0.5) * 500,
-                    c: [bass/255, 0, 1] // Magenta pulse
+                    c: [bass/255, 0, 1] 
                 });
             }
 
-            // 2. OSCILLOSCOPE DRAWING
-            // Use time domain data to draw a waveform line
+            // 2. ORBITALS
             let t = Date.now() * 0.001;
-            let radius = 0.3;
-            
-            // Map freq to circular motion (Lissajous-ish)
-            let x = 0.5 + Math.cos(t * 2) * radius * (mid/100);
-            let y = 0.5 + Math.sin(t * 3) * radius * (mid/100);
-            
-            if(mid > 100) {
+            if(mid > 80) {
                 splats.push({
-                    x: x, y: y,
+                    x: 0.5 + Math.cos(t * 2) * 0.3,
+                    y: 0.5 + Math.sin(t * 3) * 0.3,
                     dx: Math.cos(t)*100, dy: Math.sin(t)*100,
-                    c: [0, mid/255, 1] // Cyan/Blue
-                });
-            }
-
-            // 3. TREBLE SPARKS
-            if(treble > 50) {
-                splats.push({
-                    x: Math.random(),
-                    y: Math.random(),
-                    dx: 0, dy: 0,
-                    c: [1, 1, 0] // Yellow sparks
+                    c: [0, mid/255, 1] 
                 });
             }
         }
 
-        // RENDER LOOP
+        // MAIN LOOP
         let lastTime = Date.now();
         function update() {
             let dt = Math.min((Date.now()-lastTime)/1000, 0.016);
             lastTime = Date.now();
             gl.viewport(0, 0, tW, tH);
 
-            generateCymatics(); // AUTO-GENERATE FLUID FROM SOUND
+            generateCymatics(); // ALWAYS RUNS
 
             if(splats.length > 0) {
                 gl.useProgram(pSplat);
@@ -428,4 +397,23 @@
             gl.useProgram(pGrad);
             gl.uniform2f(gl.getUniformLocation(pGrad, 'uTexelSize'), 1/tW, 1/tH);
             gl.uniform1i(gl.getUniformLocation(pGrad, 'uPressure'), 0);
-            gl.uniform1i(gl.getUniformL
+            gl.uniform1i(gl.getUniformLocation(pGrad, 'uVelocity'), 1);
+            gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, press.read);
+            gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, vel.read);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, vel.write); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, vel.write, 0);
+            blit(pGrad); vel.swap();
+
+            gl.viewport(0, 0, canvas.width, canvas.height);
+            gl.useProgram(pDisp);
+            gl.uniform1i(gl.getUniformLocation(pDisp, 'uTexture'), 0);
+            gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, den.read);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            blit(pDisp);
+
+            requestAnimationFrame(update);
+        }
+        update();
+
+    </script>
+</body>
+</html>
