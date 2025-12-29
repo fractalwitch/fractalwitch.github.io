@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ΣΩ | V6.3 NUCLEAR</title>
+    <title>ΣΩ | V7.0 LIGHT-BRINGER</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;700&display=swap');
 
@@ -43,7 +43,7 @@
             top: 0; left: 0;
             width: 100%; height: 100%;
             background: rgba(0,0,0,0.95);
-            z-index: 999; /* Highest priority */
+            z-index: 999;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -51,11 +51,10 @@
             transition: opacity 0.5s ease;
         }
 
-        /* HIDDEN STATE */
         .vanish {
             opacity: 0 !important;
             pointer-events: none !important;
-            display: none !important; /* Nuclear removal */
+            display: none !important;
         }
 
         h1 {
@@ -87,21 +86,20 @@
             transform: scale(0.95);
         }
 
-        /* TOOLBAR (Hidden initially) */
+        /* TOOLBAR */
         .toolbar {
             position: fixed;
             bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
-            display: none; /* Hidden until active */
+            display: none;
             gap: 10px;
             z-index: 100;
             width: 95%;
+            pointer-events: auto;
         }
 
-        .show-toolbar {
-            display: flex !important;
-        }
+        .show-toolbar { display: flex !important; }
 
         .mod-key {
             flex: 1;
@@ -119,7 +117,6 @@
         }
 
         .mod-key span { font-size: 1rem; font-weight: bold; display: block; margin-bottom: 4px; }
-        
         .key-echo { border-top: 3px solid var(--c-cyan); color: var(--c-cyan); }
         .key-glitch { border-top: 3px solid var(--c-magenta); color: var(--c-magenta); }
         .key-shimmer { border-top: 3px solid var(--c-acid); color: var(--c-acid); }
@@ -154,19 +151,16 @@
     </div>
 
     <script>
-        // --- 1. NUCLEAR START FUNCTION ---
+        // --- 1. NUCLEAR START ---
         function forceStart() {
-            // STEP 1: KILL THE MENU
             const intro = document.getElementById('intro-screen');
             intro.style.opacity = '0';
-            
-            // Hard remove after transition
             setTimeout(() => {
                 intro.classList.add('vanish');
                 document.getElementById('toolbar').classList.add('show-toolbar');
+                // FORCE SPLASH ON START
+                for(let i=0; i<20; i++) splats.push({x:0.5, y:0.5, dx:(Math.random()-0.5)*1000, dy:(Math.random()-0.5)*1000, c:[0,1,1]});
             }, 100);
-
-            // STEP 2: TRY AUDIO (BUT DON'T WAIT)
             initAudio();
         }
 
@@ -185,12 +179,10 @@
                 mainOut.gain.value = 0.4;
                 mainOut.connect(actx.destination);
 
-                // DRONE
                 osc = actx.createOscillator();
                 osc.type = 'sine';
                 osc.frequency.value = 55;
                 
-                // LFO for movement
                 lfo = actx.createOscillator();
                 lfo.frequency.value = 0.1;
                 let lfoGain = actx.createGain();
@@ -199,10 +191,8 @@
 
                 gain = actx.createGain();
                 gain.gain.value = 0.5;
-                
                 osc.connect(gain).connect(mainOut);
                 
-                // ECHO
                 delay = actx.createDelay();
                 delay.delayTime.value = 0.4;
                 fback = actx.createGain();
@@ -213,7 +203,6 @@
                 fback.connect(delay);
                 delay.connect(mainOut);
 
-                // NOISE
                 let bSize = actx.sampleRate * 2;
                 let b = actx.createBuffer(1, bSize, actx.sampleRate);
                 let d = b.getChannelData(0);
@@ -235,24 +224,18 @@
                 lfo.start();
                 noise.start();
                 isAudio = true;
-            } catch(e) {
-                console.log("Audio failed");
-            }
+            } catch(e) {}
         }
 
         // --- 3. FX LOGIC ---
         let fx = { echo: false, glitch: false, shimmer: false };
 
         function toggleFX(type, on) {
-            // Visual Button State
             const btn = document.querySelector(`.key-${type}`);
             if(on) btn.classList.add('pressed');
             else btn.classList.remove('pressed');
-
-            // Logic State
             fx[type] = on;
 
-            // Audio State
             if(isAudio) {
                 let t = actx.currentTime;
                 if(type === 'echo') fback.gain.setTargetAtTime(on ? 0.9 : 0, t, 0.1);
@@ -274,8 +257,18 @@
         // SHADERS
         const vShader = `attribute vec2 p; varying vec2 uv; void main(){ uv=p*0.5+0.5; gl_Position=vec4(p,0,1); }`;
         const fSplat = `precision mediump float; varying vec2 uv; uniform sampler2D uT; uniform vec3 c; uniform vec2 p; void main(){ vec2 d=uv-p; d.x*=0.5; gl_FragColor=vec4(texture2D(uT,uv).xyz+exp(-dot(d,d)/0.005)*c,1); }`;
-        const fAdv = `precision mediump float; varying vec2 uv; uniform sampler2D uV, uS; void main(){ gl_FragColor=0.96*texture2D(uS, uv - 0.016*texture2D(uV,uv).xy*vec2(0.5,1)); }`; // Dissipation 0.96
-        const fDisp = `precision mediump float; varying vec2 uv; uniform sampler2D uT; void main(){ vec3 c=texture2D(uT,uv).rgb; float d=length(c); gl_FragColor=vec4(d*0.2+0.1, d*0.8, d*1.2, 1); }`; // Holographic Color
+        const fAdv = `precision mediump float; varying vec2 uv; uniform sampler2D uV, uS; void main(){ gl_FragColor=0.96*texture2D(uS, uv - 0.016*texture2D(uV,uv).xy*vec2(0.5,1)); }`;
+        
+        // NEW DISPLAY SHADER: Adds Ambient Glow so screen is never black
+        const fDisp = `precision mediump float; varying vec2 uv; uniform sampler2D uT; void main(){ 
+            vec3 c=texture2D(uT,uv).rgb; 
+            float d=length(c); 
+            // Ambient Void Glow (Deep Violet)
+            vec3 ambient = vec3(0.05, 0.0, 0.1); 
+            // Fluid Color (Cyan -> White)
+            vec3 fluid = vec3(d*0.2, d*0.8, d*1.2);
+            gl_FragColor=vec4(ambient + fluid, 1); 
+        }`;
 
         function createProg(fs) {
             let p = gl.createProgram();
@@ -292,7 +285,7 @@
         function createFBO() {
             let t = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, t);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 512, 1024, 0, gl.RGBA, texType, null); // Half Res
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 512, 1024, 0, gl.RGBA, texType, null);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
             return { t: t, f: gl.createFramebuffer() };
@@ -301,7 +294,6 @@
         let den = [createFBO(), createFBO()];
         let vel = [createFBO(), createFBO()];
         
-        // Setup Buffer
         let buf = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, buf);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, -1,1, 1,1, 1,-1]), gl.STATIC_DRAW);
@@ -316,33 +308,44 @@
 
         let splats = [];
         
-        // Interaction
         window.addEventListener('touchmove', e => {
             for(let i=0; i<e.touches.length; i++) {
                 let t = e.touches[i];
                 splats.push({x: t.clientX/window.innerWidth, y: 1-t.clientY/window.innerHeight, dx:0, dy:0, c:[0.5,0.8,1]});
             }
         });
-
         window.addEventListener('mousemove', e => {
-            if(Math.random()>0.8) splats.push({x: e.clientX/window.innerWidth, y: 1-e.clientY/window.innerHeight, dx:0, dy:0, c:[0.5,0.8,1]});
+            if(Math.random()>0.5) splats.push({x: e.clientX/window.innerWidth, y: 1-e.clientY/window.innerHeight, dx:0, dy:0, c:[0.5,0.8,1]});
         });
 
         // LOOP
         let idx = 0;
+        let autoPulse = 0;
+
         function update() {
             let next = (idx + 1) % 2;
             let cur = idx;
+            autoPulse++;
 
-            // Glitch Logic
-            if(fx.glitch && Math.random()>0.8) {
-                splats.push({x:Math.random(), y:Math.random(), c:[1,1,1]});
-            }
-            if(fx.shimmer && Math.random()>0.5) {
-                splats.push({x:Math.random(), y:Math.random(), c:[1,1,0.5]});
+            // 1. AUTO PULSE (Heartbeat) - Keeps screen alive
+            if(autoPulse > 100) {
+                splats.push({x:0.5, y:0.5, dx:(Math.random()-0.5)*100, dy:(Math.random()-0.5)*100, c:[0.2,0,0.5]});
+                autoPulse = 0;
             }
 
-            // Splat
+            // 2. GLITCH LOGIC (Actually Visible Now)
+            if(fx.glitch) {
+                if(Math.random()>0.8) {
+                    // Inject random square blocks of noise
+                    splats.push({
+                        x: Math.random(), 
+                        y: Math.random(), 
+                        dx: 0, dy: 0, 
+                        c: [1, 0, 1] // Magenta Glitch
+                    });
+                }
+            }
+
             gl.viewport(0,0,512,1024);
             if(splats.length > 0) {
                 gl.useProgram(P_splat);
@@ -357,12 +360,11 @@
                     gl.uniform2f(gl.getUniformLocation(P_splat, 'p'), s.x, s.y);
                     blit(P_splat);
                     
-                    let temp = cur; cur = next; next = temp; // Swap
+                    let temp = cur; cur = next; next = temp;
                 }
                 splats = [];
             }
 
-            // Advect
             gl.useProgram(P_adv);
             gl.uniform1i(gl.getUniformLocation(P_adv, 'uS'), 0);
             gl.activeTexture(gl.TEXTURE0);
@@ -370,13 +372,12 @@
             
             gl.uniform1i(gl.getUniformLocation(P_adv, 'uV'), 1);
             gl.activeTexture(gl.TEXTURE1);
-            gl.bindTexture(gl.TEXTURE_2D, vel[cur].t); // Use self as velocity for chaotic swirl
+            gl.bindTexture(gl.TEXTURE_2D, vel[cur].t);
             
             gl.bindFramebuffer(gl.FRAMEBUFFER, den[next].f);
             gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, den[next].t, 0);
             blit(P_adv);
 
-            // Display
             gl.viewport(0,0,canvas.width, canvas.height);
             gl.useProgram(P_disp);
             gl.uniform1i(gl.getUniformLocation(P_disp, 'uT'), 0);
