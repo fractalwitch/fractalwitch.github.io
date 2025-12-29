@@ -1,154 +1,115 @@
-/* --- BASE & ATMOSPHERE --- */
-body {
+/* --- RESET & BASE STYLES --- */
+* {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    height: 100svh; /* Optimized for mobile browser bars */
-    width: 100vw;
+}
+
+body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background-color: #050011;
+    /* Deep cosmic gradient background */
+    background-image: radial-gradient(circle at 50% 30%, #1a0b2e 0%, #000000 70%);
+    background-attachment: fixed; /* Keeps background still while content scrolls */
+    color: white;
+    min-height: 100vh;
+    /* FIX: Ensure scroll is enabled */
+    overflow-y: auto; 
+    overflow-x: hidden;
+}
+
+/* --- PERSISTENT HEADER --- */
+.sticky-header {
+    position: fixed; /* This locks it to the viewport */
+    top: 0;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    padding: 2rem 1rem 1rem 1rem;
+    z-index: 1000; /* Ensures it stays on top of buttons */
+    
+    /* Glassmorphism effect to let the background blur behind it */
+    background: rgba(5, 0, 17, 0.85); 
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 105, 180, 0.2);
+}
+
+.glow-text {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: white;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 
+                 0 0 20px rgba(255, 105, 180, 0.6),
+                 0 0 30px rgba(0, 200, 255, 0.6);
+}
+
+.subtitle {
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    margin-top: 0.5rem;
+    color: #4facfe;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+/* --- MAIN CONTENT LAYOUT --- */
+.content-wrapper {
+    width: 100%;
+    max-width: 900px; /* Constraints width on large screens */
+    margin: 0 auto;
+    /* FIX: Add padding to top so first buttons aren't hidden behind header */
+    padding-top: 180px; 
+    padding-bottom: 50px;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.button-grid {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    background: linear-gradient(135deg, #4A0E4E, #000000, #1a051c, #4A0E4E);
-    background-size: 400% 400%;
-    animation: breathingGradient 15s ease infinite;
-    color: #ffffff;
-    font-family: 'Segoe UI', sans-serif;
-    overflow: hidden; /* Keeps background still */
-    box-sizing: border-box;
-}
-
-@keyframes breathingGradient {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
-/* --- GLOW ORBS --- */
-.glow-orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(60px);
-    z-index: 0;
-    opacity: 0.4;
-    pointer-events: none;
-    animation: float 15s infinite alternate ease-in-out;
-}
-
-.orb-1 { width: 60vw; height: 60vw; background: #8B5CF6; top: -10%; left: -10%; }
-.orb-2 { width: 50vw; height: 50vw; background: #EC4899; bottom: -5%; right: -5%; }
-.orb-3 { width: 40vw; height: 40vw; background: #06B6D4; top: 20%; left: 10%; }
-
-@keyframes float {
-    from { transform: translate(0, 0) rotate(0deg); }
-    to { transform: translate(5vw, 5vh) rotate(10deg); }
-}
-
-/* --- FIXED HEADER --- */
-.hero {
-    text-align: center;
-    z-index: 20;
-    padding: 30px 10px 10px;
-    flex-shrink: 0; /* Ensures header never squishes */
-}
-
-.glitch-text {
-    font-size: clamp(1.8rem, 5vh, 3rem);
-    font-weight: 900;
-    margin: 0;
-    text-shadow: 0 0 10px #FF69B4;
-    animation: textPulse 3s infinite;
-}
-
-@keyframes textPulse {
-    0%, 100% { text-shadow: 0 0 10px #FF69B4; }
-    50% { text-shadow: 0 0 20px #06B6D4, 0 0 30px #8B5CF6; }
-}
-
-.sub-text {
-    color: #06B6D4;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    font-size: 0.65rem;
-}
-
-/* --- SCROLLABLE PORTAL WINDOW --- */
-.scroll-container {
-    width: 100%;
-    flex-grow: 1; /* Takes up remaining space */
-    overflow-y: auto; /* This allows ONLY the buttons to scroll */
-    padding: 20px 0;
-    z-index: 10;
-    /* Hide scrollbar for aesthetics */
-    scrollbar-width: none; 
-    -ms-overflow-style: none;
-}
-
-.scroll-container::-webkit-scrollbar {
-    display: none;
-}
-
-.portal-grid {
-    display: grid;
-    grid-template-columns: 1fr; /* Single column for mobile flow */
     gap: 15px;
-    width: 85%;
-    margin: 0 auto;
-    padding-bottom: 50px; /* Space at bottom so last button isn't cut off */
 }
 
-/* Desktop override: switch to 2 columns if screen is wide enough */
-@media (min-width: 600px) {
-    .portal-grid { grid-template-columns: repeat(2, 1fr); max-width: 800px; }
-}
-
-.portal-button {
-    position: relative;
-    padding: 16px;
-    font-size: 0.8rem;
-    font-weight: bold;
-    text-transform: uppercase;
-    text-decoration: none;
-    text-align: center;
-    color: #fff;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1.5px solid #EC4899;
-    border-radius: 40px;
-    transition: 0.3s;
+/* --- BUTTON STYLING --- */
+.cosmic-btn {
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 18px 25px;
+    
+    /* The Aesthetic */
+    background: transparent;
+    border: 2px solid #ff69b4; /* Neon Pink Border */
+    border-radius: 50px; /* Pill shape */
+    color: white;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 10px rgba(255, 105, 180, 0.2);
 }
 
-.portal-button:hover, .portal-button:active {
-    border-color: #06B6D4;
-    box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
-    animation: buttonGlitch 0.2s infinite;
+/* Hover Effects */
+.cosmic-btn:hover {
+    background: rgba(255, 105, 180, 0.1);
+    box-shadow: 0 0 20px rgba(255, 105, 180, 0.6);
+    transform: scale(1.02);
+    text-shadow: 0 0 5px white;
 }
 
-@keyframes buttonGlitch {
-    0% { transform: translate(0) skewX(-1deg); }
-    50% { transform: translate(-1px, 1px) skewX(1deg); }
-    100% { transform: translate(1px, -1px) skewX(0); }
-}
+/* --- DESKTOP VIEW (Landscape/Scaling) --- */
+@media (min-width: 768px) {
+    .button-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* Two columns */
+        gap: 20px;
+    }
 
-/* --- PARTICLES --- */
-.particle {
-    position: absolute;
-    width: 2px;
-    height: 2px;
-    background: #fff;
-    border-radius: 50%;
-    animation: rise 10s infinite linear;
-    opacity: 0;
-    pointer-events: none;
-}
-
-.particle:nth-child(1) { left: 10%; animation-delay: 0s; }
-.particle:nth-child(2) { left: 80%; animation-delay: 3s; }
-
-@keyframes rise {
-    0% { bottom: -5%; opacity: 0; }
-    50% { opacity: 0.5; }
-    100% { bottom: 105%; opacity: 0; }
+    /* Optional: Make the last item span full width if you have an odd number */
+    .full-width {
+        grid-column: span 2;
+    }
 }
