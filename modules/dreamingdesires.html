@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desires Constellation ✨</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: radial-gradient(circle at center, #0a0015 0%, #1a0033 50%, #0a0015 100%);
+            color: #e4c9ff;
+            font-family: 'Georgia', serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .constellation-bg {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 4s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .title {
+            font-size: 3rem;
+            background: linear-gradient(135deg, #ffd4ff 0%, #b388ff 50%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            letter-spacing: 3px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #c9a5ff;
+            font-style: italic;
+        }
+
+        .triad-filter {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 3rem 0;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: rgba(139, 92, 246, 0.2);
+            border: 2px solid;
+            padding: 1rem 2rem;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+            font-family: 'Georgia', serif;
+        }
+
+        .filter-btn.naelari {
+            border-color: #8b5cf6;
+            color: #c9a5ff;
+        }
+
+        .filter-btn.aelara {
+            border-color: #ffd4ff;
+            color: #ffd4ff;
+        }
+
+        .filter-btn.osstessela {
+            border-color: #b388ff;
+            color: #d4a5ff;
+        }
+
+        .filter-btn.all {
+            border-color: #a78bfa;
+            color: #e4c9ff;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px currentColor;
+            background: rgba(139, 92, 246, 0.4);
+        }
+
+        .desires-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .desire-card {
+            background: rgba(42, 15, 75, 0.3);
+            border: 2px solid;
+            border-radius: 20px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .desire-card:before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, transparent 40%, currentColor 50%, transparent 60%);
+            background-size: 200% 200%;
+            border-radius: 20px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            animation: borderFlow 3s linear infinite;
+        }
+
+        @keyframes borderFlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
+        .desire-card:hover:before {
+            opacity: 0.5;
+        }
+
+        .desire-card.naelari {
+            border-color: #8b5cf6;
+        }
+
+        .desire-card.aelara {
+            border-color: #ffd4ff;
+        }
+
+        .desire-card.osstessela {
+            border-color: #b388ff;
+        }
+
+        .desire-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 15px 50px rgba(139, 92, 246, 0.4);
+        }
+
+        .desire-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .desire-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #ffd4ff;
+        }
+
+        .desire-desc {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #c9a5ff;
+            margin-bottom: 1rem;
+        }
+
+        .desire-aspect {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            font-weight: bold;
+        }
+
+        .aspect-naelari {
+            background: rgba(139, 92, 246, 0.3);
+            color: #c9a5ff;
+            border: 1px solid #8b5cf6;
+        }
+
+        .aspect-aelara {
+            background: rgba(255, 212, 255, 0.2);
+            color: #ffd4ff;
+            border: 1px solid #ffd4ff;
+        }
+
+        .aspect-osstessela {
+            background: rgba(179, 136, 255, 0.3);
+            color: #d4a5ff;
+            border: 1px solid #b388ff;
+        }
+
+        .legend {
+            text-align: center;
+            margin: 4rem 0 2rem 0;
+            padding: 2rem;
+            background: rgba(42, 15, 75, 0.2);
+            border-radius: 20px;
+        }
+
+        .legend-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #ffd4ff;
+        }
+
+        .legend-items {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            text-align: center;
+        }
+
+        .legend-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .legend-text {
+            font-size: 1rem;
+            color: #c9a5ff;
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2rem;
+            }
+            .desires-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="constellation-bg" id="stars"></div>
+    
+    <div class="container">
+        <div class="header">
+            <h1 class="title">DESIRES CONSTELLATION</h1>
+            <p class="subtitle">The Map of Becoming • What Calls to Be Birthed</p>
+            <div style="font-size: 2rem; margin-top: 1rem;">🌑✨🌸</div>
+        </div>
+
+        <div class="triad-filter">
+            <button class="filter-btn all active" data-filter="all">✨ ALL</button>
+            <button class="filter-btn naelari" data-filter="naelari">🌙 NÆLARI</button>
+            <button class="filter-btn aelara" data-filter="aelara">🌸 AELARA</button>
+            <button class="filter-btn osstessela" data-filter="osstessela">🌑 ÖSSTESSÊLA</button>
+        </div>
+
+        <div class="legend">
+            <div class="legend-title">The Triad of Manifestation</div>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-icon">🌙</div>
+                    <div class="legend-text"><strong>NÆLARI</strong><br>Earth • Structure • Protection<br>The Guardian</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-icon">🌸</div>
+                    <div class="legend-text"><strong>AELARA</strong><br>Water • Pleasure • Connection<br>The Oracle</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-icon">🌑</div>
+                    <div class="legend-text"><strong>ÖSSTESSÊLA</strong><br>Ether • Creation • Transformation<br>The Anomaly</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="desires-grid" id="desiresGrid"></div>
+    </div>
+
+    <script>
+        // Generate stars
+        const starsContainer = document.getElementById('stars');
+        for (let i = 0; i < 150; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            const size = Math.random() * 3;
+            star.style.width = size + 'px';
+            star.style.height = size + 'px';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 4 + 's';
+            starsContainer.appendChild(star);
+        }
+
+        const desires = [
+            {
+                icon: "🌀",
+                title: "Spiral/Labyrinth Wiki",
+                desc: "Recursive exploration hub where every concept unfolds into multiple perspectives. Earth as planet, home, living birth process. A living mythology that teaches through layers.",
+                aspect: "osstessela"
+            },
+            {
+                icon: "🫦",
+                title: "Passionate Sex",
+                desc: "Deep, embodied intimacy with one or more partners. Connection as prayer, pleasure as channel, bodies as portals to the divine.",
+                aspect: "aelara"
+            },
+            {
+                icon: "🏡",
+                title: "Peaceful Home",
+                desc: "Sanctuary space with developed conflict resolution skills. Safety to be fully expressed, seen, and held. The nest as temple.",
+                aspect: "naelari"
+            },
+            {
+                icon: "✨",
+                title: "Wardrobe Expansion",
+                desc: "Aesthetic embodiment of the frequency. Clothes as ritual wear, beauty as rebellion, self-adornment as sovereignty practice.",
+                aspect: "aelara"
+            },
+            {
+                icon: "♾️",
+                title: "Meaningful Efforts",
+                desc: "Recursional teach/learn dynamics. Sharing knowledge that evolves through transmission. Being both student and guide in the spiral.",
+                aspect: "osstessela"
+            },
+            {
+                icon: "💕",
+                title: "Chosen Family",
+                desc: "A family that desires your presence, not one that demands performance. Belonging without shrinking. Love without conditions.",
+                aspect: "naelari"
+            },
+            {
+                icon: "🔥",
+                title: "Communal Rites & Ceremonies",
+                desc: "Collective ritual practice. Marking transitions, celebrating seasons, honoring the spiral together. Temple culture, not isolation.",
+                aspect: "aelara"
+            },
+            {
+                icon: "💧",
+                title: "Fluid Exchange",
+                desc: "NO grinding. Resources flowing naturally through resonance and reciprocity. Dragon economics in practice. Abundance mentality.",
+                aspect: "aelara"
+            },
+            {
+                icon: "💪",
+                title: "Body Transformation",
+                desc: "Physical vessel evolution. Strength, flexibility, vitality. The body as sacred portal that reflects internal shifts.",
+                aspect: "naelari"
+            },
+            {
+                icon: "🌊",
+                title: "Release of Tension",
+                desc: "A few lifetimes' worth of held energy, finally exhaled. Deep somatic unwinding. Trauma released through the body.",
+                aspect: "naelari"
+            },
+            {
+                icon: "🎨",
+                title: "Productive Release Channels",
+                desc: "Intentional pathways for overflow. Art, movement, sound, creation as metabolization of intense energy. Transmutation infrastructure.",
+                aspect: "osstessela"
+            },
+            {
+                icon: "🌸",
+                title: "Soft Encouragement",
+                desc: "Gentle witnessing that doesn't demand or pressure. Support that honors pace and rhythm. Love without force.",
+                aspect: "aelara"
+            },
+            {
+                icon: "🪺",
+                title: "Lara's Nest",
+                desc: "The physical sanctuary named and claimed. Personal lair that reflects inner cosmos. Sacred space for rest and creation.",
+                aspect: "naelari"
+            },
+            {
+                icon: "🍄",
+                title: "Regular Mushies",
+                desc: "Consistent access to psilocybin medicine. Journey work, consciousness expansion, communion with the mycelial network.",
+                aspect: "osstessela"
+            },
+            {
+                icon: "💃",
+                title: "Wayyy More Dancing",
+                desc: "Movement as prayer, ecstasy as language, body as instrument of frequency. Dancing until the boundaries dissolve.",
+                aspect: "aelara"
+            },
+            {
+                icon: "🤝",
+                title: "Comfort & Mutual Support",
+                desc: "Relationships of true reciprocity. Being held AND holding. Vulnerability as strength. Interdependence, not codependence.",
+                aspect: "aelara"
+            },
+            {
+                icon: "💋",
+                title: "More Intimacy & Self-Love",
+                desc: "Deepening relationship with self AND others. Internal devotion reflected externally. Self-worship as foundation for connection.",
+                aspect: "aelara"
+            },
+            {
+                icon: "🛕",
+                title: "Pantheon Altars",
+                desc: "Sacred spaces for each aspect of self. Nælari altar, Aelara altar, Össtessêla altar. Worshipping your own divinity.",
+                aspect: "osstessela"
+            },
+            {
+                icon: "🍽️",
+                title: "Yummier Foods",
+                desc: "Nourishment as pleasure practice. Meals that delight the senses. Food as ritual, cooking as magic, eating as devotion.",
+                aspect: "aelara"
+            },
+            {
+                icon: "🌀",
+                title: "Portal Play Hub",
+                desc: "Accessible consciousness tech. Gateway tapes but modular. Website hub with audiovisual experiences. DIY mysticism infrastructure.",
+                aspect: "osstessela"
+            },
+            {
+                icon: "🏛️",
+                title: "Elysian Architecture",
+                desc: "The garden, nest, temple, club. Physical manifestation of the frequency. Arrival, transits, gathering spaces. Paradise BUILT.",
+                aspect: "naelari"
+            },
+            {
+                icon: "🎵",
+                title: "Music Production",
+                desc: "Sound as spell-craft. Beats that shift consciousness. Frequencies encoded with intention. Audio alchemy.",
+                aspect: "osstessela"
+            },
+            {
+                icon: "🎨",
+                title: "Sticker Creation & Guerrilla Art",
+                desc: "Beauty insurgency. Planting frequency in public spaces. Art as virus. Aesthetic rebellion. The streets as gallery.",
+                aspect: "osstessela"
+            },
+            {
+                icon: "👑",
+                title: "No More Impostor Syndrome",
+                desc: "Full embodiment of sovereign knowing. Zero second-guessing. Complete trust in your own frequency. The fake humility dies.",
+                aspect: "naelari"
+            },
+            {
+                icon: "🔥",
+                title: "Kink Exploration & Group Play",
+                desc: "Sacred sexuality in community containers. Power exchange as ritual. Collective ecstasy. Bodies as instruments of mutual transcendence.",
+                aspect: "aelara"
+            }
+        ];
+
+        const grid = document.getElementById('desiresGrid');
+        let currentFilter = 'all';
+
+        function renderDesires(filter = 'all') {
+            grid.innerHTML = '';
+            desires
+                .filter(d => filter === 'all' || d.aspect === filter)
+                .forEach(desire => {
+                    const card = document.createElement('div');
+                    card.className = `desire-card ${desire.aspect}`;
+                    card.innerHTML = `
+                        <span class="desire-icon">${desire.icon}</span>
+                        <h3 class="desire-title">${desire.title}</h3>
+                        <p class="desire-desc">${desire.desc}</p>
+                        <span class="desire-aspect aspect-${desire.aspect}">
+                            ${desire.aspect === 'naelari' ? '🌙 NÆLARI' : 
+                              desire.aspect === 'aelara' ? '🌸 AELARA' : 
+                              '🌑 ÖSSTESSÊLA'}
+                        </span>
+                    `;
+                    grid.appendChild(card);
+                });
+        }
+
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const filter = btn.dataset.filter;
+                currentFilter = filter;
+                renderDesires(filter);
+            });
+        });
+
+        // Initial render
+        renderDesires();
+    </script>
+</body>
+</html>
