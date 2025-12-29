@@ -8,17 +8,21 @@
 </head>
 <body>
 
+    <div id="loader">
+        <div class="blossom-glitch">🌸</div>
+        <p class="loading-text">initializing magic...</p>
+    </div>
+
     <div class="glow-orb orb-1"></div>
     <div class="glow-orb orb-2"></div>
     <div class="glow-orb orb-3"></div>
-    <div class="glow-orb orb-4"></div>
 
     <header class="hero">
-        <h1 class="glitch-text">Welcome, hottie 🌸</h1>
+        <h1 class="glitch-text" data-text="welcome, hottie 🌸">welcome, hottie 🌸</h1>
         <p class="sub-text">Celestial Baddies Only 🌙</p>
     </header>
 
-    <div class="scroll-container">
+    <div class="portal-window">
         <main class="portal-grid">
             <a href="modules/wormhole.html" class="portal-button">Wormhole: Alien Transmission</a>
             <a href="modules/glitchslut.html" class="portal-button">Spellcast: Glitch Slut</a>
@@ -40,6 +44,14 @@
         <span class="particle"></span>
         <span class="particle"></span>
     </div>
+
+    <script>
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loader').classList.add('fade-out');
+            }, 2000); // 2 seconds of blossom magic
+        });
+    </script>
 
 </body>
 </html>
