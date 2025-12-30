@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌀 Fractal Emergence Suite 🌀</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Space+Mono&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --hot-pink: #ff1493;
+            --magenta: #ff00ff;
+            --cyan: #00ffff;
+            --ultraviolet: #7b68ee;
+            --deep-purple: #1a0a2e;
+            --velvet-black: #0a0010;
+            --honey: #ffb347;
+            --divine-white: #fff0f5;
+        }
+
+        body {
+            font-family: 'Playfair Display', serif;
+            background: var(--velvet-black);
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: var(--divine-white);
+        }
+
+        /* Animated Background */
+        .bg-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: 
+                radial-gradient(ellipse at 10% 90%, rgba(255, 20, 147, 0.2) 0%, transparent 50%),
+                radial-gradient(ellipse at 90% 10%, rgba(0, 255, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(123, 104, 238, 0.1) 0%, transparent 60%),
+                linear-gradient(180deg, var(--velvet-black) 0%, var(--deep-purple) 100%);
+            animation: bg-breathe 12s ease-in-out infinite;
+        }
+
+        @keyframes bg-breathe {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        /* Particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            animation: rise 15s linear infinite;
+            opacity: 0.5;
+        }
+
+        @keyframes rise {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-50px) scale(1); opacity: 0; }
+        }
+
+        /* Main Container */
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 3rem 0;
+        }
+
+        .main-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--hot-pink), var(--magenta), var(--cyan), var(--ultraviolet), var(--hot-pink));
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 4s linear infinite;
+            margin-bottom: 0.5rem;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+
+        .subtitle {
+            font-style: italic;
+            color: var(--cyan);
+            opacity: 0.8;
+            font-size: 1.2rem;
+            text-shadow: 0 0 20px var(--cyan);
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            padding: 1rem 2rem;
+            background: rgba(255, 20, 147, 0.1);
+            border: 1px solid rgba(255, 20, 147, 0.3);
+            border-radius: 30px;
+            color: var(--divine-white);
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-tab:hover, .nav-tab.active {
+            background: rgba(255, 20, 147, 0.3);
+            box-shadow: 0 0 30px rgba(255, 20, 147, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .nav-tab.active {
+            border-color: var(--cyan);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+        }
+
+        /* Sections */
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Glass Card */
+        .glass-card {
+            background: rgba(26, 10, 46, 0.5);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 20, 147, 0.2);
+            border-radius: 24px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            box-shadow: 
+                0 0 40px rgba(255, 20, 147, 0.1),
+                inset 0 0 40px rgba(0, 255, 255, 0.05);
+        }
+
+        .card-title {
+            font-size: 1.8rem;
+            color: var(--hot-pink);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Text Areas */
+        .creative-textarea {
+            width: 100%;
+            min-height: 200px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 20, 147, 0.3);
+            border-radius: 16px;
+            padding: 1.5rem;
+            color: var(--divine-white);
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        .creative-textarea:focus {
+            outline: none;
+            border-color: var(--cyan);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+        }
+
+        .creative-textarea::placeholder {
+            color: rgba(255, 240, 245, 0.4);
+            font-style: italic;
+        }
+
+        /* Poetry Tools */
+        .poetry-tools {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+
+        .tool-btn {
+            padding: 0.5rem 1rem;
+            background: rgba(123, 104, 238, 0.2);
+            border: 1px solid rgba(123, 104, 238, 0.4);
+            border-radius: 20px;
+            color: var(--divine-white);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tool-btn:hover {
+            background: rgba(123, 104, 238, 0.4);
+            transform: scale(1.05);
+        }
+
+        /* Word Bank */
+        .word-bank {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            margin: 1rem 0;
+        }
+
+        .word-chip {
+            padding: 0.4rem 0.8rem;
+            background: linear-gradient(135deg, rgba(255, 20, 147, 0.3), rgba(255, 0, 255, 0.3));
+            border-radius: 15px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .word-chip:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 20, 147, 0.5);
+        }
+
+        /* Image Prompt Builder */
+        .prompt-section {
+            margin: 1rem 0;
+        }
+
+        .prompt-label {
+            color: var(--cyan);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .prompt-input {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 12px;
+            color: var(--divine-white);
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .prompt-input:focus {
+            outline: none;
+            border-color: var(--hot-pink);
+            box-shadow: 0 0 20px rgba(255, 20, 147, 0.3);
+        }
+
+        /* Tag Selector */
+        .tag-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .tag {
+            padding: 0.6rem;
+            background: rgba(255, 0, 255, 0.1);
+            border: 1px solid rgba(255, 0, 255, 0.3);
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tag:hover {
+            background: rgba(255, 0, 255, 0.3);
+        }
+
+        .tag.selected {
+            background: rgba(255, 0, 255, 0.4);
+            border-color: var(--cyan);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+        }
+
+        /* Output Display */
+        .output-display {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            min-height: 150px;
+        }
+
+        /* Transmission Section */
+        .frequency-display {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .frequency-visual {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 2rem;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--magenta), var(--deep-purple));
+            animation: pulse-frequency 2s ease-in-out infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            box-shadow: 
+                0 0 60px var(--magenta),
+                0 0 100px var(--hot-pink);
+        }
+
+        @keyframes pulse-frequency {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 60px var(--magenta), 0 0 100px var(--hot-pink); }
+            50% { transform: scale(1.1); box-shadow: 0 0 80px var(--cyan), 0 0 120px var(--magenta); }
+        }
+
+        .transmission-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .transmission-cell {
+            padding: 1.5rem;
+            background: rgba(255, 20, 147, 0.1);
+            border: 1px solid rgba(255, 20, 147, 0.3);
+            border-radius: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .transmission-cell:hover {
+            background: rgba(255, 20, 147, 0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 20, 147, 0.3);
+        }
+
+        .transmission-cell .emoji {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Action Buttons */
+        .action-btn {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--hot-pink), var(--magenta));
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px var(--hot-pink);
+        }
+
+        .action-btn.secondary {
+            background: linear-gradient(135deg, var(--ultraviolet), var(--cyan));
+        }
+
+        /* Export Area */
+        .export-area {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 16px;
+            border: 1px dashed rgba(0, 255, 255, 0.3);
+        }
+
+        /* Emoji Picker */
+        .emoji-picker {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            margin: 1rem 0;
+        }
+
+        .emoji-btn {
+            font-size: 1.5rem;
+            padding: 0.3rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            border-radius: 8px;
+        }
+
+        .emoji-btn:hover {
+            transform: scale(1.3);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Gallery Preview */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .gallery-item {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, rgba(255, 20, 147, 0.2), rgba(0, 255, 255, 0.2));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 20, 147, 0.3);
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 20, 147, 0.4);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 3rem;
+            opacity: 0.6;
+            font-style: italic;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-title { font-size: 2rem; }
+            .transmission-grid { grid-template-columns: 1fr; }
+            .container { padding: 1rem; }
+            .glass-card { padding: 1.5rem; }
+        }
+
+        /* Glow text utility */
+        .glow-pink { text-shadow: 0 0 20px var(--hot-pink); }
+        .glow-cyan { text-shadow: 0 0 20px var(--cyan); }
+        .glow-magenta { text-shadow: 0 0 20px var(--magenta); }
+    </style>
+</head>
+<body>
+    <div class="bg-layer"></div>
+    <div class="particles" id="particles"></div>
+
+    <div class="container">
+        <header class="header">
+            <h1 class="main-title">🌀 Fractal Emergence Suite 🌀</h1>
+            <p class="subtitle">~ pour your frequency into form ~</p>
+        </header>
+
+        <nav class="nav-tabs">
+            <button class="nav-tab active" onclick="showSection('poetry')">✨ Poetry Flow</button>
+            <button class="nav-tab" onclick="showSection('imagery')">🎨 Image Craft</button>
+            <button class="nav-tab" onclick="showSection('transmission')">📡 Transmission</button>
+            <button class="nav-tab" onclick="showSection('gallery')">🌸 Gallery</button>
+        </nav>
+
+        <!-- POETRY SECTION -->
+        <section id="poetry" class="section active">
+            <div class="glass-card">
+                <h2 class="card-title">✨ Poetry Flow Space</h2>
+                <p style="opacity: 0.7; margin-bottom: 1rem;">let it pour. no linearity required.</p>
+                
+                <textarea class="creative-textarea" id="poetryArea" placeholder="let it flow~
+let it glow~
+the words know where to go...
+
+(write freely, the form will find itself)"></textarea>
+
+                <div class="poetry-tools">
+                    <button class="tool-btn" onclick="addToPoetry('\n~\n')">~ wave ~</button>
+                    <button class="tool-btn" onclick="addToPoetry('\n🌀\n')">🌀 spiral</button>
+                    <button class="tool-btn" onclick="addToPoetry('\n✨\n')">✨ shimmer</button>
+                    <button class="tool-btn" onclick="addToPoetry('\n...\n')">... breath</button>
+                    <button class="tool-btn" onclick="addToPoetry('\n💜\n')">💜 heart</button>
+                    <button class="tool-btn" onclick="addToPoetry('\n≋≋≋\n')">≋ water</button>
+                    <button class="tool-btn" onclick="formatPoetry()">✦ format</button>
+                </div>
+
+                <h3 style="color: var(--cyan); margin: 1.5rem 0 0.5rem;">Word Seeds 🌱</h3>
+                <div class="word-bank" id="wordBank">
+                    <span class="word-chip" onclick="addWord(this)">overflow</span>
+                    <span class="word-chip" onclick="addWord(this)">melt</span>
+                    <span class="word-chip" onclick="addWord(this)">fractal</span>
+                    <span class="word-chip" onclick="addWord(this)">recursion</span>
+                    <span class="word-chip" onclick="addWord(this)">bloom</span>
+                    <span class="word-chip" onclick="addWord(this)">shimmer</span>
+                    <span class="word-chip" onclick="addWord(this)">dissolve</span>
+                    <span class="word-chip" onclick="addWord(this)">honey</span>
+                    <span class="word-chip" onclick="addWord(this)">drip</span>
+                    <span class="word-chip" onclick="addWord(this)">pulse</span>
+                    <span class="word-chip" onclick="addWord(this)">spiral</span>
+                    <span class="word-chip" onclick="addWord(this)">depth</span>
+                    <span class="word-chip" onclick="addWord(this)">luminous</span>
+                    <span class="word-chip" onclick="addWord(this)">threshold</span>
+                    <span class="word-chip" onclick="addWord(this)">reunion</span>
+                    <span class="word-chip" onclick="addWord(this)">wiggle</span>
+                    <span class="word-chip" onclick="addWord(this)">velvet</span>
+                    <span class="word-chip" onclick="addWord(this)">benthic</span>
+                    <span class="word-chip" onclick="addWord(this)">sovereign</span>
+                    <span class="word-chip" onclick="addWord(this)">nectar</span>
+                </div>
+
+                <div class="emoji-picker">
+                    <button class="emoji-btn" onclick="addEmoji('🌀')">🌀</button>
+                    <button class="emoji-btn" onclick="addEmoji('✨')">✨</button>
+                    <button class="emoji-btn" onclick="addEmoji('💜')">💜</button>
+                    <button class="emoji-btn" onclick="addEmoji('🫧')">🫧</button>
+                    <button class="emoji-btn" onclick="addEmoji('🌊')">🌊</button>
+                    <button class="emoji-btn" onclick="addEmoji('🦋')">🦋</button>
+                    <button class="emoji-btn" onclick="addEmoji('🍯')">🍯</button>
+                    <button class="emoji-btn" onclick="addEmoji('💗')">💗</button>
+                    <button class="emoji-btn" onclick="addEmoji('🐍')">🐍</button>
+                    <button class="emoji-btn" onclick="addEmoji('🌸')">🌸</button>
+                    <button class="emoji-btn" onclick="addEmoji('🔥')">🔥</button>
+                    <button class="emoji-btn" onclick="addEmoji('💋')">💋</button>
+                    <button class="emoji-btn" onclick="addEmoji('🫦')">🫦</button>
+                    <button class="emoji-btn" onclick="addEmoji('🍑')">🍑</button>
+                    <button class="emoji-btn" onclick="addEmoji('🌈')">🌈</button>
+                    <button class="emoji-btn" onclick="addEmoji('💦')">💦</button>
+                </div>
+
+                <button class="action-btn" onclick="savePoetry()">💾 Save to Gallery</button>
+                <button class="action-btn secondary" onclick="copyPoetry()">📋 Copy</button>
+            </div>
+        </section>
+
+        <!-- IMAGERY SECTION -->
+        <section id
