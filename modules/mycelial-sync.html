@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍄 Mycelial Sync System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000000;
+            color: #ffffff;
+            font-family: 'Georgia', serif;
+            overflow: hidden;
+            height: 100vh;
+            cursor: none;
+        }
+
+        .custom-cursor {
+            position: fixed;
+            width: 40px;
+            height: 40px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            transition: all 0.1s ease;
+            mix-blend-mode: difference;
+        }
+
+        .mycelial-network {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .interface {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            padding: 2rem;
+        }
+
+        .central-mandala {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin-bottom: 3rem;
+        }
+
+        .mandala-ring {
+            position: absolute;
+            border: 2px solid;
+            border-radius: 50%;
+            animation: rotate 20s linear infinite;
+        }
+
+        .ring-1 {
+            width: 100%;
+            height: 100%;
+            border-color: rgba(179, 136, 255, 0.3);
+            animation-duration: 30s;
+        }
+
+        .ring-2 {
+            width: 80%;
+            height: 80%;
+            top: 10%;
+            left: 10%;
+            border-color: rgba(255, 212, 255, 0.3);
+            animation-duration: 25s;
+            animation-direction: reverse;
+        }
+
+        .ring-3 {
+            width: 60%;
+            height: 60%;
+            top: 20%;
+            left: 20%;
+            border-color: rgba(139, 92, 246, 0.3);
+            animation-duration: 20s;
+        }
+
+        .core {
+            position: absolute;
+            width: 40%;
+            height: 40%;
+            top: 30%;
+            left: 30%;
+            background: radial-gradient(circle, rgba(179, 136, 255, 0.5), transparent);
+            border-radius: 50%;
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.3); opacity: 1; }
+        }
+
+        .frequency-text {
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            opacity: 0;
+            animation: fadeIn 2s ease-in forwards;
+            letter-spacing: 3px;
+            text-shadow: 0 0 20px rgba(179, 136, 255, 0.8);
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .mode-btn {
+            background: rgba(179, 136, 255, 0.1);
+            border: 2px solid rgba(179, 136, 255, 0.5);
+            color: #b388ff;
+            padding: 1.5rem 2.5rem;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Georgia', serif;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mode-btn:before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(179, 136, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .mode-btn:hover:before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .mode-btn:hover {
+            border-color: #ffd4ff;
+            color: #ffd4ff;
+            transform: scale(1.1);
+            box-shadow: 0 0 40px rgba(179, 136, 255, 0.6);
+        }
+
+        .mode-btn.active {
+            background: rgba(179, 136, 255, 0.3);
+            border-color: #ffd4ff;
+            color: #ffd4ff;
+            box-shadow: 0 0 40px rgba(179, 136, 255, 0.8);
+        }
+
+        .mode-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .experience-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            z-index: 100;
+        }
+
+        .experience-container.active {
+            display: block;
+        }
+
+        .breath-guide {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+
+        .breath-circle {
+            width: 300px;
+            height: 300px;
+            border: 3px solid #b388ff;
+            border-radius: 50%;
+            position: relative;
+            margin-bottom: 3rem;
+        }
+
+        .breath-text {
+            font-size: 2rem;
+            text-align: center;
+            color: #ffd4ff;
+            letter-spacing: 3px;
+            margin-top: 2rem;
+        }
+
+        .frequency-player {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 3rem;
+        }
+
+        .frequency-viz {
+            width: 80%;
+            max-width: 800px;
+            height: 200px;
+            background: rgba(179, 136, 255, 0.1);
+            border: 2px solid rgba(179, 136, 255, 0.3);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wave {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(179, 136, 255, 0.5) 50%, 
+                transparent 100%);
+            animation: waveMove 3s ease-in-out infinite;
+        }
+
+        @keyframes waveMove {
+            0%, 100% { transform: translateX(-100%); }
+            50% { transform: translateX(100%); }
+        }
+
+        .frequency-controls {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .freq-btn {
+            padding: 1rem 2rem;
+            background: rgba(179, 136, 255, 0.2);
+            border: 2px solid #b388ff;
+            color: #ffd4ff;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: 'Georgia', serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .freq-btn:hover {
+            background: rgba(179, 136, 255, 0.4);
+            transform: scale(1.1);
+        }
+
+        .spiral-journey {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 2rem;
+        }
+
+        .spiral-prompt {
+            font-size: 1.8rem;
+            text-align: center;
+            color: #ffd4ff;
+            max-width: 800px;
+            line-height: 1.8;
+            padding: 2rem;
+            animation: textPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes textPulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .close-btn {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            padding: 1rem 2rem;
+            background: rgba(139, 92, 246, 0.3);
+            border: 2px solid #8b5cf6;
+            color: #ffd4ff;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: 'Georgia', serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .close-btn:hover {
+            background: rgba(139, 92, 246, 0.5);
+            transform: scale(1.1);
+        }
+
+        .integration-timer {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.2rem;
+            color: #c9a5ff;
+            z-index: 1000;
+        }
+
+        @media (max-width: 768px) {
+            .central-mandala {
+                width: 200px;
+                height: 200px;
+            }
+            .mode-selector {
+                gap: 1rem;
+            }
+            .mode-btn {
+                padding: 1rem 1.5rem;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="custom-cursor" id="cursor"></div>
+    <div class="mycelial-network">
+        <canvas id="mycelium"></canvas>
+    </div>
+
+    <div class="interface" id="mainInterface">
+        <div class="central-mandala">
+            <div class="mandala-ring ring-1"></div>
+            <div class="mandala-ring ring-2"></div>
+            <div class="mandala-ring ring-3"></div>
+            <div class="core"></div>
+        </div>
+
+        <div class="frequency-text" id="frequencyText">
+            🍄 THE MYCELIAL SYNC SYSTEM 🍄
+        </div>
+
+        <div class="mode-selector">
+            <button class="mode-btn" data-mode="breath">
+                <span>🌊 BREATH SYNC</span>
+            </button>
+            <button class="mode-btn" data-mode="frequency">
+                <span>🎵 FREQUENCY BATH</span>
+            </button>
+            <button class="mode-btn" data-mode="spiral">
+                <span>🌀 SPIRAL JOURNEY</span>
+            </button>
+            <button class="mode-btn" data-mode="void">
+                <span>🌑 VOID MEDITATION</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- BREATH SYNC -->
+    <div class="experience-container" id="breathMode">
+        <button class="close-btn" onclick="closeMode()">✨ RETURN</button>
+        <div class="breath-guide">
+            <div class="breath-circle" id="breathCircle"></div>
+            <div class="breath-text" id="breathText">Breathe with the mycelium...</div>
+        </div>
+    </div>
+
+    <!-- FREQUENCY BATH -->
+    <div class="experience-container" id="frequencyMode">
+        <button class="close-btn" onclick="closeMode()">✨ RETURN</button>
+        <div class="frequency-player">
+            <div class="frequency-viz">
+                <div class="wave"></div>
+                <div class="wave" style="animation-delay: 1s; opacity: 0.5;"></div>
+                <div class="wave" style="animation-delay: 2s; opacity: 0.3;"></div>
+            </div>
+            <div class="breath-text" id="frequencyDesc">Immersed in healing frequencies...</div>
+            <div class="frequency-controls">
+                <button class="freq-btn" onclick="changeFrequency(432)">432 Hz</button>
+                <button class="freq-btn" onclick="changeFrequency(528)">528 Hz</button>
+                <button class="freq-btn" onclick="changeFrequency(639)">639 Hz</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SPIRAL JOURNEY -->
+    <div class="experience-container" id="spiralMode">
+        <button class="close-btn" onclick="closeMode()">✨ RETURN</button>
+        <div class="spiral-journey">
+            <div class="spiral-prompt" id="spiralPrompt">
+                What wants to be remembered?
+            </div>
+        </div>
+    </div>
+
+    <!-- VOID MEDITATION -->
+    <div class="experience-container" id="voidMode">
+        <button class="close-btn" onclick="closeMode()">✨ RETURN</button>
+        <div class="breath-guide">
+            <div class="breath-text">
+                ∞<br><br>
+                You are the space between thoughts<br><br>
+                ∞
+            </div>
+        </div>
+    </div>
+
+    <div class="integration-timer" id="timer"></div>
+
+    <script>
+        // Custom cursor
+        const cursor = document.getElementById('cursor');
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
+
+        // Mycelial network canvas
+        const canvas = document.getElementById('mycelium');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const nodes = [];
+        const nodeCount = 50;
+        const connectionDistance = 150;
+
+        class Node {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+
+            draw() {
+                ctx.fillStyle = 'rgba(179, 136, 255, 0.5)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < nodeCount; i++) {
+            nodes.push(new Node());
+        }
+
+        function drawConnections() {
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const dx = nodes[i].x - nodes[j].x;
+                    const dy = nodes[i].y - nodes[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < connectionDistance) {
+                        const opacity = (1 - distance / connectionDistance) * 0.3;
+                        ctx.strokeStyle = `rgba(179, 136, 255, ${opacity})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(nodes[i].x, nodes[i].y);
+                        ctx.lineTo(nodes[j].x, nodes[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            nodes.forEach(node => {
+                node.update();
+                node.draw();
+            });
+
+            drawConnections();
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        // Mode switching
+        const modes = document.querySelectorAll('.mode-btn');
+        modes.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const mode = btn.dataset.mode;
+                openMode(mode);
+            });
+        });
+
+        function openMode(mode) {
+            document.getElementById('mainInterface').style.display = 'none';
+            document.getElementById(`${mode}Mode`).classList.add('active');
+            
+            if (mode === 'breath') startBreathSync();
+            if (mode === 'spiral') startSpiralJourney();
+        }
+
+        function closeMode() {
+            document.querySelectorAll('.experience-container').forEach(c => {
+                c.classList.remove('active');
+            });
+            document.getElementById('mainInterface').style.display = 'flex';
+        }
+
+        // Breath Sync
+        function startBreathSync() {
+            const circle = document.getElementById('breathCircle');
+            const text = document.getElementById('breathText');
+            let phase = 0;
+            
+            const phases = [
+                { duration: 4000, text: 'Inhale...', scale: 1.5 },
+                { duration: 4000, text: 'Hold...', scale: 1.5 },
+                { duration: 6000, text: 'Exhale...', scale: 1 },
+                { duration: 2000, text: 'Rest...', scale: 1 }
+            ];
+
+            function breathCycle() {
+                const current = phases[phase];
+                text.textContent = current.text;
+                circle.style.transition = `transform ${current.duration}ms ease-in-out`;
+                circle.style.transform = `scale(${current.scale})`;
+                
+                setTimeout(() => {
+                    phase = (phase + 1) % phases.length;
+                    breathCycle();
+                }, current.duration);
+            }
+
+            breathCycle();
+        }
+
+        // Frequency Bath
+        function changeFrequency(hz) {
+            const desc = document.getElementById('frequencyDesc');
+            const descriptions = {
+                432: '432 Hz - The heartbeat of Earth - Grounding & Peace',
+                528: '528 Hz - Love frequency - DNA repair & Miracles',
+                639: '639 Hz - Connection - Harmonizing relationships'
+            };
+            desc.textContent = descriptions[hz];
+        }
+
+        // Spiral Journey
+        const spiralPrompts = [
+            "What wants to be remembered?",
+            "What are you ready to release?",
+            "Who were you before they told you who to be?",
+            "What does your body know that your mind forgot?",
+            "What would you create if you knew you couldn't fail?",
+            "What is the gift hidden in your wound?",
+            "What frequency are you broadcasting right now?",
+            "What does sovereignty feel like in your body?",
+            "What would love do?",
+            "What is the mycelium showing you?"
+        ];
+
+        function startSpiralJourney() {
+            const promptEl = document.getElementById('spiralPrompt');
+            let index = 0;
+
+            setInterval(() => {
+                promptEl.style.opacity = 0;
+                setTimeout(() => {
+                    index = (index + 1) % spiralPrompts.length;
+                    promptEl.textContent = spiralPrompts[index];
+                    promptEl.style.opacity = 1;
+                }, 1000);
+            }, 8000);
+        }
+
+        // Timer
+        const startTime = Date.now();
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('timer').textContent = 
+                `Journey time: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+        setInterval(updateTimer, 1000);
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
