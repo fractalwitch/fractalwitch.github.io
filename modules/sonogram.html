@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌈 Hyperdimensional Sonogram 🌈</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', monospace;
+        }
+
+        .sonogram-container {
+            width: 95vw;
+            height: 80vh;
+            position: relative;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            background: radial-gradient(circle at center, #000000 0%, #0a0015 100%);
+            box-shadow: 
+                inset 0 0 50px rgba(138, 43, 226, 0.3),
+                0 0 50px rgba(138, 43, 226, 0.5);
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .control-panel {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            z-index: 100;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .control-btn {
+            background: rgba(138, 43, 226, 0.3);
+            border: 2px solid rgba(138, 43, 226, 0.8);
+            color: #fff;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(138, 43, 226, 0.5);
+        }
+
+        .control-btn:hover {
+            background: rgba(138, 43, 226, 0.5);
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(138, 43, 226, 0.8);
+        }
+
+        .info-display {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.2rem;
+            z-index: 100;
+            text-shadow: 0 0 10px rgba(138, 43, 226, 0.8);
+        }
+
+        .frequency-label {
+            margin-bottom: 0.5rem;
+        }
+
+        .strobe-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+            mix-blend-mode: screen;
+            opacity: 0;
+            transition: opacity 0.1s;
+        }
+
+        @media (max-width: 768px) {
+            .control-panel {
+                bottom: 1rem;
+                gap: 0.5rem;
+            }
+            .control-btn {
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="info-display">
+        <div class="frequency-label">🌈 HYPERDIMENSIONAL SONOGRAM 🌈</div>
+        <div>Dimensions: <span id="dimensions">3</span></div>
+        <div>Frequency: <span id="frequency">1</span> Hz</div>
+        <div>Fractalization: <span id="fractal">ACTIVE</span></div>
+    </div>
+
+    <div class="sonogram-container">
+        <canvas id="sonogram"></canvas>
+    </div>
+
+    <div class="strobe-overlay" id="strobe"></div>
+
+    <div class="control-panel">
+        <button class="control-btn" onclick="changeDimensions(-1)">➖ DIMENSIONS</button>
+        <button class="control-btn" onclick="changeDimensions(1)">➕ DIMENSIONS</button>
+        <button class="control-btn" onclick="changeFrequency(-0.5)">🐌 SLOWER</button>
+        <button class="control-btn" onclick="changeFrequency(0.5)">⚡ FASTER</button>
+        <button class="control-btn" onclick="toggleStrobe()">💫 STROBE</button>
+        <button class="control-btn" onclick="randomize()">🎲 CHAOS</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('sonogram');
+        const ctx = canvas.getContext('2d');
+        canvas.width = canvas.offsetWidth * 2;
+        canvas.height = canvas.offsetHeight * 2;
+
+        let dimensions = 3;
+        let baseFrequency = 1;
+        let time = 0;
+        let strobeActive = false;
+        let strobeInterval;
+
+        const colors = [
+            [255, 0, 128],    // hot pink
+            [138, 43, 226],   // purple
+            [0, 255, 255],    // cyan
+            [255, 255, 0],    // yellow
+            [0, 255, 128],    // green
+            [255, 128, 0],    // orange
+        ];
+
+        function drawWave(yOffset, frequency, amplitude, phase, color, width) {
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.8)`;
+            ctx.lineWidth = width;
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.8)`;
+
+            for (let x = 0; x < canvas.width; x += 2) {
+                const normalizedX = x / canvas.width;
+                
+                // Primary sine wave
+                let y = Math.sin((normalizedX * Math.PI * 2 * frequency) + phase) * amplitude;
+                
+                // Add fractal harmonics
+                for (let i = 2; i <= dimensions; i++) {
+                    const harmonic = Math.sin((normalizedX * Math.PI * 2 * frequency * i) + (phase * i)) * (amplitude / i);
+                    y += harmonic;
+                }
+                
+                y += yOffset;
+
+                if (x === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
+
+        function drawFractalLayers() {
+            const centerY = canvas.height / 2;
+            const baseAmplitude = canvas.height / 8;
+
+            // Draw multiple fractalizing layers
+            for (let layer = 0; layer < dimensions; layer++) {
+                const colorIndex = layer % colors.length;
+                const color = colors[colorIndex];
+                
+                // Offset each layer slightly
+                const yOffset = centerY + (Math.sin(time * 0.5 + layer) * 50);
+                
+                // Different frequencies for each layer
+                const freq = baseFrequency * (layer + 1) * 0.5;
+                
+                // Varying amplitudes
+                const amp = baseAmplitude * (1 - (layer * 0.15));
+                
+                // Phase shift for movement
+                const phase = time + (layer * 0.5);
+                
+                // Width decreases with layers
+                const width = 4 - (layer * 0.5);
+                
+                drawWave(yOffset, freq, amp, phase, color, Math.max(1, width));
+                
+                // Draw reflection
+                const reflectY = centerY - (yOffset - centerY);
+                drawWave(reflectY, freq, amp * 0.5, phase + Math.PI, color, Math.max(1, width * 0.7));
+            }
+
+            // Draw center axis
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(canvas.width, centerY);
+            ctx.stroke();
+        }
+
+        function drawParticles() {
+            // Add particle effects at wave peaks
+            const centerY = canvas.height / 2;
+            const numParticles = dimensions * 3;
+            
+            for (let i = 0; i < numParticles; i++) {
+                const x = (time * 100 + i * 50) % canvas.width;
+                const colorIndex = Math.floor(time + i) % colors.length;
+                const color = colors[colorIndex];
+                
+                const y = centerY + Math.sin((x / canvas.width) * Math.PI * 2 * baseFrequency + time) * (canvas.height / 8);
+                
+                ctx.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.6)`;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 1)`;
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function animate() {
+            // Fade trail effect
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            drawFractalLayers();
+            drawParticles();
+
+            time += 0.02 * baseFrequency;
+
+            requestAnimationFrame(animate);
+        }
+
+        function changeDimensions(delta) {
+            dimensions = Math.max(1, Math.min(10, dimensions + delta));
+            document.getElementById('dimensions').textContent = dimensions;
+        }
+
+        function changeFrequency(delta) {
+            baseFrequency = Math.max(0.1, Math.min(5, baseFrequency + delta));
+            document.getElementById('frequency').textContent = baseFrequency.toFixed(1);
+        }
+
+        function toggleStrobe() {
+            strobeActive = !strobeActive;
+            const strobe = document.getElementById('strobe');
+            
+            if (strobeActive) {
+                strobeInterval = setInterval(() => {
+                    const colorIndex = Math.floor(Math.random() * colors.length);
+                    const color = colors[colorIndex];
+                    strobe.style.background = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.3)`;
+                    strobe.style.opacity = '1';
+                    
+                    setTimeout(() => {
+                        strobe.style.opacity = '0';
+                    }, 50);
+                }, 200);
+            } else {
+                clearInterval(strobeInterval);
+                strobe.style.opacity = '0';
+            }
+        }
+
+        function randomize() {
+            dimensions = Math.floor(Math.random() * 8) + 2;
+            baseFrequency = Math.random() * 3 + 0.5;
+            document.getElementById('dimensions').textContent = dimensions;
+            document.getElementById('frequency').textContent = baseFrequency.toFixed(1);
+            
+            // Quick strobe burst
+            const strobe = document.getElementById('strobe');
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const colorIndex = Math.floor(Math.random() * colors.length);
+                    const color = colors[colorIndex];
+                    strobe.style.background = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.5)`;
+                    strobe.style.opacity = '1';
+                    setTimeout(() => strobe.style.opacity = '0', 30);
+                }, i * 60);
+            }
+        }
+
+        // Handle resize
+        window.addEventListener('resize', () => {
+            canvas.width = canvas.offsetWidth * 2;
+            canvas.height = canvas.offsetHeight * 2;
+        });
+
+        // Start animation
+        animate();
+
+        // Auto-chaos mode (subtle)
+        setInterval(() => {
+            if (Math.random() < 0.3) {
+                dimensions = Math.max(1, dimensions + (Math.random() > 0.5 ? 1 : -1));
+                document.getElementById('dimensions').textContent = dimensions;
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
