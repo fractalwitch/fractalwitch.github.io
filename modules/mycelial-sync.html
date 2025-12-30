@@ -442,6 +442,45 @@
     <div class="integration-timer" id="timer"></div>
 
     <script>
+        // Audio Context Setup
+        let audioContext;
+        let currentOscillator = null;
+        let gainNode = null;
+
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                gainNode = audioContext.createGain();
+                gainNode.connect(audioContext.destination);
+                gainNode.gain.value = 0.3; // Volume at 30%
+            }
+        }
+
+        function playFrequency(frequency) {
+            initAudio();
+            
+            // Stop current sound if playing
+            if (currentOscillator) {
+                currentOscillator.stop();
+            }
+
+            // Create new oscillator
+            currentOscillator = audioContext.createOscillator();
+            currentOscillator.type = 'sine'; // Pure sine wave
+            currentOscillator.frequency.value = frequency;
+            
+            // Connect and start
+            currentOscillator.connect(gainNode);
+            currentOscillator.start();
+        }
+
+        function stopFrequency() {
+            if (currentOscillator) {
+                currentOscillator.stop();
+                currentOscillator = null;
+            }
+        }
+
         // Custom cursor
         const cursor = document.getElementById('cursor');
         document.addEventListener('mousemove', (e) => {
@@ -537,9 +576,16 @@
             
             if (mode === 'breath') startBreathSync();
             if (mode === 'spiral') startSpiralJourney();
+            if (mode === 'frequency') {
+                // Auto-start with 432 Hz when entering frequency mode
+                setTimeout(() => changeFrequency(432), 500);
+            }
         }
 
         function closeMode() {
+            // Stop any playing audio
+            stopFrequency();
+            
             document.querySelectorAll('.experience-container').forEach(c => {
                 c.classList.remove('active');
             });
@@ -583,6 +629,15 @@
                 639: '639 Hz - Connection - Harmonizing relationships'
             };
             desc.textContent = descriptions[hz];
+            
+            // Play the actual frequency
+            playFrequency(hz);
+            
+            // Visual feedback on button
+            document.querySelectorAll('.freq-btn').forEach(btn => {
+                btn.style.background = 'rgba(179, 136, 255, 0.2)';
+            });
+            event.target.style.background = 'rgba(179, 136, 255, 0.5)';
         }
 
         // Spiral Journey
@@ -601,34 +656,4 @@
 
         function startSpiralJourney() {
             const promptEl = document.getElementById('spiralPrompt');
-            let index = 0;
-
-            setInterval(() => {
-                promptEl.style.opacity = 0;
-                setTimeout(() => {
-                    index = (index + 1) % spiralPrompts.length;
-                    promptEl.textContent = spiralPrompts[index];
-                    promptEl.style.opacity = 1;
-                }, 1000);
-            }, 8000);
-        }
-
-        // Timer
-        const startTime = Date.now();
-        function updateTimer() {
-            const elapsed = Math.floor((Date.now() - startTime) / 1000);
-            const minutes = Math.floor(elapsed / 60);
-            const seconds = elapsed % 60;
-            document.getElementById('timer').textContent = 
-                `Journey time: ${minutes}:${seconds.toString().padStart(2, '0')}`;
-        }
-        setInterval(updateTimer, 1000);
-
-        // Resize handler
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        });
-    </script>
-</body>
-</html>
+            let inde
