@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ΣΩ | V20 TOUCH TRISKELION</title>
+    <style>
+        body {
+            margin: 0;
+            background: #000;
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
+        }
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0; left: 0;
+            image-rendering: pixelated; /* HARD PIXELS */
+        }
+        
+        /* INTRO */
+        #intro-screen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
+        }
+        .vanish { opacity: 0 !important; pointer-events: none !important; display: none !important; }
+        
+        h1 {
+            font-family: 'Courier New', monospace;
+            font-size: 8vw;
+            color: #fff;
+            text-shadow: 0 0 10px #00ffff;
+            text-align: center;
+        }
+
+        .btn {
+            background: transparent;
+            border: 2px solid #ff00ff;
+            color: #ff00ff;
+            padding: 20px 40px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            font-family: monospace;
+            box-shadow: 0 0 20px #ff00ff;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="c"></canvas>
+    
+    <div id="intro-screen">
+        <h1>TOUCH STORM<br>V20</h1>
+        <button class="btn" onclick="start()">INITIATE</button>
+    </div>
+
+    <script>
+        const c = document.getElementById('c');
+        const x = c.getContext('2d');
+        
+        let w, h;
+        const P = []; 
+        const N = 2500; // Drizzly Density
+        const PIXEL_SIZE = 4; 
+        
+        let t = 0;
+        const arms = 3;
+        let vortexRadius; // Fixed size for touch vortices
+        
+        // MULTI-TOUCH TRACKING
+        const activeTouches = new Map();
+
+        function resize() {
+            w = c.width = window.innerWidth;
+            h = c.height = window.innerHeight;
+            w = Math.floor(w / PIXEL_SIZE) * PIXEL_SIZE;
+            h = Math.floor(h / PIXEL_SIZE) * PIXEL_SIZE;
+            vortexRadius = Math.min(w, h) * 0.15; // Size of touch vortex
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function start() {
+            document.getElementById('intro-screen').classList.add('vanish');
+            loop();
+        }
+
+        class Drop {
+            constructor() {
+                this.reset();
+                this.y = Math.random() * h;
+            }
+            reset() {
+                this.x = Math.random() * w;
+                this.y = -50; 
+                this.vx = 0;
+                this.vy = Math.random() * 2 + 4; // Slower, drizzly rain
+                this.hueBase = Math.random() * 360;
+                this.inVortex = false;
+            }
+            update() {
+                let forceX = 0;
+                let forceY = 0;
+                this.inVortex = false;
+
+                // IF NO TOUCHES: JUST DRIZZLE
+                if(activeTouches.size === 0) {
+                     forceY += 0.05; // Gentle Gravity
+                } 
+                // IF TOUCHES: GENERATE TRISKELIONS AT FINGERS
+                else {
+                    activeTouches.forEach((pos) => {
+                        const cx = pos.x;
+                        const cy = pos.y;
+                        
+                        // DISTANCE TO THIS TOUCH POINT
+                        const dcx = cx - this.x;
+                        const dcy = cy - this.y;
+                        const dcdist = Math.sqrt(dcx*dcx + dcy*dcy);
+
+                        // 1. TRISKELION ARMS (Centered on touch)
+                        for(let i=0; i<arms; i++) {
+                            const angle = (t * 2.0) + (i * (Math.PI * 2 / arms)); 
+                            const ax = cx + Math.cos(angle) * vortexRadius;
+                            const ay = cy + Math.sin(angle) * vortexRadius;
+                            
+                            const dx = ax - this.x;
+                            const dy = ay - this.y;
+                            const dist = Math.sqrt(dx*dx + dy*dy);
+                            
+                            // Influence area
+                            if(dist < vortexRadius * 3) {
+                                this.inVortex = true;
+                                const f = 1000 / (dist * dist + 100);
+                                forceX += (dx / dist) * f * 5;
+                                forceY += (dy / dist) * f * 5;
+
+                                const spinF = f * 30; 
+                                forceX += (-dy / dist) * spinF;
+                                forceY += (dx / dist) * spinF;
+                            }
+                        }
+
+                        // 2. SINGULARITY PULL (Prevent empty center at touch point)
+                        if(dcdist < vortexRadius) {
+                            forceX += (dcx/dcdist) * 3; 
+                            forceY += (dcy/dcdist) * 3;
+                        }
+                        
+                        // Reset if sucked too deep into a touch point
+                        if(dcdist < 10) this.reset();
+                    });
+                    
+                    // Lighter gravity when vortices are active so they float longer
+                    forceY += 0.02;
+                }
+
+                // PHYSICS APPLICATION
+                const friction = this.inVortex ? 0.92 : 0.98; // Slippery when falling, tight when spinning
+                this.vx = this.vx * friction + forceX;
+                this.vy = this.vy * friction + forceY;
+                
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if(this.x < 0) this.x = w;
+                if(this.x > w) this.x = 0;
+                if(this.y > h + 50) this.reset();
+            }
+
+            draw() {
+                const speed = Math.sqrt(this.vx*this.vx + this.vy*this.vy);
+                
+                // COLOR: Deep Neon, No White-Out
+                const h = (this.hueBase + this.x * 0.5 + t*50) % 360;
+                // Brighter when fast/in vortex
+                const l = Math.min(75, 35 + speed * 2); 
+                const s = 100;
+                
+                x.fillStyle = `hsla(${h}, ${s}%, ${l}%, 0.8)`;
+                
+                // Shorter Trails for drizzle look, longer for vortex
+                const lenLen = this.inVortex ? 0.6 : 0.4;
+                const len = Math.max(1, Math.min(8, Math.floor(speed * lenLen)));
+                
+                for(let i=0; i<len; i++) {
+                    let tx = this.x - this.vx * (i*0.3);
+                    let ty = this.y - this.vy * (i*0.3);
+                    
+                    let tbx = Math.floor(tx / PIXEL_SIZE) * PIXEL_SIZE;
+                    let tby = Math.floor(ty / PIXEL_SIZE) * PIXEL_SIZE;
+
+                    x.fillRect(tbx, tby, PIXEL_SIZE-1, PIXEL_SIZE-1);
+                }
+            }
+        }
+
+        for(let i=0; i<N; i++) P.push(new Drop());
+
+        function updateTouches(e) {
+            e.preventDefault();
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const t = e.changedTouches[i];
+                activeTouches.set(t.identifier, { x: t.clientX, y: t.clientY });
+            }
+        }
+        function endTouches(e) {
+            e.preventDefault();
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                activeTouches.delete(e.changedTouches[i].identifier);
+            }
+        }
+
+        c.addEventListener('touchstart', updateTouches, {passive: false});
+        c.addEventListener('touchmove', updateTouches, {passive: false});
+        c.addEventListener('touchend', endTouches);
+        c.addEventListener('touchcancel', endTouches);
+
+        function loop() {
+            // Clear
+            x.globalCompositeOperation = 'source-over';
+            x.fillStyle = 'rgba(0, 0, 0, 0.15)'; 
+            x.fillRect(0, 0, w, h);
+            
+            // Additive blend
+            x.globalCompositeOperation = 'lighter'; 
+            
+            t += 0.05; 
+
+            // Scanline
+            x.fillStyle = 'rgba(0, 20, 20, 0.1)';
+            for(let i=0; i<h; i+=PIXEL_SIZE*2) {
+                x.fillRect(0, i, w, 1);
+            }
+
+            P.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            requestAnimationFrame(loop);
+        }
+    </script>
+</body>
+</html>
