@@ -73,6 +73,11 @@
             box-shadow: 0 0 30px rgba(138, 43, 226, 0.8);
         }
 
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
         .info-display {
             position: fixed;
             top: 2rem;
@@ -85,19 +90,6 @@
 
         .frequency-label {
             margin-bottom: 0.5rem;
-        }
-
-        .strobe-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 50;
-            mix-blend-mode: screen;
-            opacity: 0;
-            transition: opacity 0.1s;
         }
 
         @media (max-width: 768px) {
@@ -124,14 +116,12 @@
         <canvas id="sonogram"></canvas>
     </div>
 
-    <div class="strobe-overlay" id="strobe"></div>
-
     <div class="control-panel">
         <button class="control-btn" onclick="changeDimensions(-1)">➖ DIMENSIONS</button>
         <button class="control-btn" onclick="changeDimensions(1)">➕ DIMENSIONS</button>
         <button class="control-btn" onclick="changeFrequency(-0.5)">🐌 SLOWER</button>
         <button class="control-btn" onclick="changeFrequency(0.5)">⚡ FASTER</button>
-        <button class="control-btn" onclick="toggleStrobe()">💫 STROBE</button>
+        <button class="control-btn" onclick="toggleRainbow()">🌈 RAINBOW FLOW</button>
         <button class="control-btn" onclick="randomize()">🎲 CHAOS</button>
     </div>
 
@@ -144,8 +134,8 @@
         let dimensions = 3;
         let baseFrequency = 1;
         let time = 0;
-        let strobeActive = false;
-        let strobeInterval;
+        let rainbowMode = false;
+        let hueOffset = 0;
 
         const colors = [
             [255, 0, 128],    // hot pink
@@ -158,10 +148,27 @@
 
         function drawWave(yOffset, frequency, amplitude, phase, color, width) {
             ctx.beginPath();
-            ctx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.8)`;
+            
+            if (rainbowMode) {
+                // Create gradient along the wave
+                const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+                for (let i = 0; i <= 1; i += 0.1) {
+                    const hue = (hueOffset + i * 360) % 360;
+                    gradient.addColorStop(i, `hsla(${hue}, 100%, 60%, 0.8)`);
+                }
+                ctx.strokeStyle = gradient;
+            } else {
+                ctx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.8)`;
+            }
+            
             ctx.lineWidth = width;
             ctx.shadowBlur = 20;
-            ctx.shadowColor = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.8)`;
+            
+            if (rainbowMode) {
+                ctx.shadowColor = `hsla(${hueOffset}, 100%, 60%, 0.8)`;
+            } else {
+                ctx.shadowColor = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.8)`;
+            }
 
             for (let x = 0; x < canvas.width; x += 2) {
                 const normalizedX = x / canvas.width;
@@ -235,8 +242,16 @@
             
             for (let i = 0; i < numParticles; i++) {
                 const x = (time * 100 + i * 50) % canvas.width;
-                const colorIndex = Math.floor(time + i) % colors.length;
-                const color = colors[colorIndex];
+                
+                let color;
+                if (rainbowMode) {
+                    const hue = (hueOffset + (x / canvas.width) * 360) % 360;
+                    const rgb = hslToRgb(hue / 360, 1, 0.6);
+                    color = rgb;
+                } else {
+                    const colorIndex = Math.floor(time + i) % colors.length;
+                    color = colors[colorIndex];
+                }
                 
                 const y = centerY + Math.sin((x / canvas.width) * Math.PI * 2 * baseFrequency + time) * (canvas.height / 8);
                 
@@ -250,6 +265,28 @@
             }
         }
 
+        function hslToRgb(h, s, l) {
+            let r, g, b;
+            if (s === 0) {
+                r = g = b = l;
+            } else {
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1/6) return p + (q - p) * 6 * t;
+                    if (t < 1/2) return q;
+                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                    return p;
+                };
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1/3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1/3);
+            }
+            return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+        }
+
         function animate() {
             // Fade trail effect
             ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
@@ -259,6 +296,11 @@
             drawParticles();
 
             time += 0.02 * baseFrequency;
+            
+            // Rotate hue in rainbow mode
+            if (rainbowMode) {
+                hueOffset = (hueOffset + 1) % 360;
+            }
 
             requestAnimationFrame(animate);
         }
@@ -269,48 +311,28 @@
         }
 
         function changeFrequency(delta) {
-            baseFrequency = Math.max(0.1, Math.min(5, baseFrequency + delta));
+            baseFrequency = Math.max(0.1, Math.min(10, baseFrequency + delta));
             document.getElementById('frequency').textContent = baseFrequency.toFixed(1);
         }
 
-        function toggleStrobe() {
-            strobeActive = !strobeActive;
-            const strobe = document.getElementById('strobe');
-            
-            if (strobeActive) {
-                strobeInterval = setInterval(() => {
-                    const colorIndex = Math.floor(Math.random() * colors.length);
-                    const color = colors[colorIndex];
-                    strobe.style.background = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.3)`;
-                    strobe.style.opacity = '1';
-                    
-                    setTimeout(() => {
-                        strobe.style.opacity = '0';
-                    }, 50);
-                }, 200);
+        function toggleRainbow() {
+            rainbowMode = !rainbowMode;
+            const btn = event.target;
+            if (rainbowMode) {
+                btn.style.background = 'linear-gradient(90deg, #ff0080, #ff8c00, #40e0d0, #ff0080)';
+                btn.style.backgroundSize = '200% 200%';
+                btn.style.animation = 'gradientShift 2s ease infinite';
             } else {
-                clearInterval(strobeInterval);
-                strobe.style.opacity = '0';
+                btn.style.background = 'rgba(138, 43, 226, 0.3)';
+                btn.style.animation = '';
             }
         }
 
         function randomize() {
             dimensions = Math.floor(Math.random() * 8) + 2;
-            baseFrequency = Math.random() * 3 + 0.5;
+            baseFrequency = Math.random() * 8 + 0.5;
             document.getElementById('dimensions').textContent = dimensions;
             document.getElementById('frequency').textContent = baseFrequency.toFixed(1);
-            
-            // Quick strobe burst
-            const strobe = document.getElementById('strobe');
-            for (let i = 0; i < 5; i++) {
-                setTimeout(() => {
-                    const colorIndex = Math.floor(Math.random() * colors.length);
-                    const color = colors[colorIndex];
-                    strobe.style.background = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.5)`;
-                    strobe.style.opacity = '1';
-                    setTimeout(() => strobe.style.opacity = '0', 30);
-                }, i * 60);
-            }
         }
 
         // Handle resize
