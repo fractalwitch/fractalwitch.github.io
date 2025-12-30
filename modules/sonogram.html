@@ -122,7 +122,7 @@
         <button class="control-btn" onclick="changeFrequency(-0.5)">🐌 SLOWER</button>
         <button class="control-btn" onclick="changeFrequency(0.5)">⚡ FASTER</button>
         <button class="control-btn" onclick="toggleRainbow()">🌈 RAINBOW FLOW</button>
-        <button class="control-btn" onclick="randomize()">🎲 CHAOS</button>
+        <button class="control-btn" onclick="toggleUntether()">🌀 UNTETHER</button>
     </div>
 
     <script>
@@ -136,6 +136,8 @@
         let time = 0;
         let rainbowMode = false;
         let hueOffset = 0;
+        let untethered = false;
+        let vortexIntensity = 0;
 
         const colors = [
             [255, 0, 128],    // hot pink
@@ -150,7 +152,6 @@
             ctx.beginPath();
             
             if (rainbowMode) {
-                // Create gradient along the wave
                 const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
                 for (let i = 0; i <= 1; i += 0.1) {
                     const hue = (hueOffset + i * 360) % 360;
@@ -182,12 +183,36 @@
                     y += harmonic;
                 }
                 
-                y += yOffset;
-
-                if (x === 0) {
-                    ctx.moveTo(x, y);
+                // Apply vortex transformation when untethered
+                if (untethered && vortexIntensity > 0) {
+                    const wavePhase = (normalizedX * Math.PI * 2 * frequency) + phase;
+                    const peakness = Math.abs(Math.sin(wavePhase));
+                    
+                    // Create spiral displacement at peaks
+                    const spiralAngle = time * 2 + (normalizedX * Math.PI * 4);
+                    const spiralRadius = peakness * vortexIntensity * 100;
+                    
+                    const wiggleX = Math.cos(spiralAngle + time) * spiralRadius * 0.3;
+                    const wiggleY = Math.sin(spiralAngle) * spiralRadius * 0.5;
+                    
+                    y += wiggleY;
+                    
+                    // Adjust x position for liquid flow
+                    const adjustedX = x + wiggleX;
+                    
+                    if (x === 0) {
+                        ctx.moveTo(adjustedX, y + yOffset);
+                    } else {
+                        ctx.lineTo(adjustedX, y + yOffset);
+                    }
                 } else {
-                    ctx.lineTo(x, y);
+                    y += yOffset;
+                    
+                    if (x === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
                 }
             }
 
@@ -301,6 +326,13 @@
             if (rainbowMode) {
                 hueOffset = (hueOffset + 1) % 360;
             }
+            
+            // Smoothly transition vortex intensity
+            if (untethered) {
+                vortexIntensity = Math.min(1, vortexIntensity + 0.02);
+            } else {
+                vortexIntensity = Math.max(0, vortexIntensity - 0.05);
+            }
 
             requestAnimationFrame(animate);
         }
@@ -328,11 +360,21 @@
             }
         }
 
-        function randomize() {
-            dimensions = Math.floor(Math.random() * 8) + 2;
-            baseFrequency = Math.random() * 8 + 0.5;
-            document.getElementById('dimensions').textContent = dimensions;
-            document.getElementById('frequency').textContent = baseFrequency.toFixed(1);
+        function toggleUntether() {
+            untethered = !untethered;
+            const btn = event.target;
+            
+            if (untethered) {
+                btn.textContent = '🏠 RETURN HOME';
+                btn.style.background = 'rgba(255, 100, 200, 0.5)';
+                btn.style.borderColor = 'rgba(255, 100, 200, 0.9)';
+                document.getElementById('fractal').textContent = 'VORTEX MODE';
+            } else {
+                btn.textContent = '🌀 UNTETHER';
+                btn.style.background = 'rgba(138, 43, 226, 0.3)';
+                btn.style.borderColor = 'rgba(138, 43, 226, 0.8)';
+                document.getElementById('fractal').textContent = 'ACTIVE';
+            }
         }
 
         // Handle resize
