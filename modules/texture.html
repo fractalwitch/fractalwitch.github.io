@@ -15,8 +15,19 @@
             overflow: hidden;
             height: 100vh;
             font-family: 'Georgia', serif;
-            background: #1a1a2e;
+            background: #000;
             touch-action: none;
+            position: relative;
+        }
+
+        .texture-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            transition: all 0.5s ease;
         }
 
         canvas {
@@ -24,19 +35,22 @@
             width: 100%;
             height: 100%;
             cursor: none;
+            position: relative;
+            z-index: 1;
         }
 
         .texture-menu {
             position: fixed;
-            bottom: 3rem;
+            top: 1rem;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 1rem;
+            gap: 0.5rem;
             z-index: 100;
-            flex-wrap: wrap;
-            justify-content: center;
-            padding: 1rem;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
         }
 
         .texture-btn {
@@ -44,34 +58,39 @@
             backdrop-filter: blur(10px);
             border: 2px solid rgba(255, 255, 255, 0.3);
             color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 30px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
             cursor: pointer;
-            font-family: 'Georgia', serif;
-            font-size: 1.1rem;
+            font-size: 1.5rem;
             transition: all 0.3s ease;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
         }
 
         .texture-btn:hover {
-            transform: scale(1.1);
+            transform: scale(1.2);
             background: rgba(255, 255, 255, 0.2);
             box-shadow: 0 6px 30px rgba(255, 255, 255, 0.3);
         }
 
         .texture-btn.active {
-            background: rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.8);
-            box-shadow: 0 6px 30px rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.4);
+            border-color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 6px 30px rgba(255, 255, 255, 0.6);
+            transform: scale(1.3);
         }
 
         .instruction {
             position: fixed;
-            top: 2rem;
+            bottom: 2rem;
             left: 50%;
             transform: translateX(-50%);
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 1.5rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.2rem;
             z-index: 100;
             text-align: center;
             text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
@@ -80,60 +99,84 @@
 
         .custom-cursor {
             position: fixed;
-            width: 40px;
-            height: 40px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             pointer-events: none;
             z-index: 1000;
             transition: all 0.1s ease;
             mix-blend-mode: screen;
+            filter: blur(5px);
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes holographicShift {
+            0% { filter: hue-rotate(0deg) blur(5px); }
+            100% { filter: hue-rotate(360deg) blur(5px); }
+        }
+
+        @keyframes silkFlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes furPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes waterRipple {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
+        }
+
+        @keyframes cloudDrift {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 0%; }
         }
 
         @media (max-width: 768px) {
             .texture-menu {
-                bottom: 1rem;
-                gap: 0.5rem;
+                gap: 0.3rem;
+                padding: 0.3rem;
             }
             .texture-btn {
-                padding: 0.8rem 1.2rem;
-                font-size: 1rem;
+                width: 45px;
+                height: 45px;
+                font-size: 1.3rem;
             }
         }
     </style>
 </head>
 <body>
+    <div class="texture-background" id="textureBackground"></div>
     <canvas id="canvas"></canvas>
     
     <div class="custom-cursor" id="cursor"></div>
     
     <div class="instruction">
-        ✨ Touch & drag to feel ✨
+        multi-touch for cascades ✨
     </div>
     
     <div class="texture-menu">
-        <button class="texture-btn active" data-texture="silk" onclick="changeTexture('silk')">
-            🌸 Silk
-        </button>
-        <button class="texture-btn" data-texture="fur" onclick="changeTexture('fur')">
-            🐻 Soft Fur
-        </button>
-        <button class="texture-btn" data-texture="honey" onclick="changeTexture('honey')">
-            🍯 Warm Honey
-        </button>
-        <button class="texture-btn" data-texture="water" onclick="changeTexture('water')">
-            💧 Cool Water
-        </button>
-        <button class="texture-btn" data-texture="velvet" onclick="changeTexture('velvet')">
-            💜 Velvet
-        </button>
-        <button class="texture-btn" data-texture="clouds" onclick="changeTexture('clouds')">
-            ☁️ Soft Clouds
-        </button>
+        <button class="texture-btn active" data-texture="silk" onclick="changeTexture('silk')">🌸</button>
+        <button class="texture-btn" data-texture="fur" onclick="changeTexture('fur')">🐻</button>
+        <button class="texture-btn" data-texture="honey" onclick="changeTexture('honey')">🍯</button>
+        <button class="texture-btn" data-texture="water" onclick="changeTexture('water')">💧</button>
+        <button class="texture-btn" data-texture="velvet" onclick="changeTexture('velvet')">💜</button>
+        <button class="texture-btn" data-texture="clouds" onclick="changeTexture('clouds')">☁️</button>
+        <button class="texture-btn" data-texture="holographic" onclick="changeTexture('holographic')">🌈</button>
     </div>
 
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
+        const background = document.getElementById('textureBackground');
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
@@ -146,58 +189,116 @@
 
         const textures = {
             silk: {
-                color: ['#ffc0cb', '#ffb6c1', '#ffd4ff'],
-                particleSize: [2, 4],
-                particleLife: 80,
-                spread: 30,
-                trail: true,
-                flowSpeed: 2,
-                sound: 'silk'
-            },
-            fur: {
-                color: ['#d4a574', '#c19a6b', '#e6c9a8'],
-                particleSize: [3, 6],
-                particleLife: 100,
+                color: ['#ffc0cb', '#ffb6c1', '#ffd4ff', '#ffe4f0', '#ff69b4'],
+                particleSize: [3, 8],
+                particleLife: 120,
                 spread: 40,
                 trail: true,
+                flowSpeed: 2,
+                sound: 'silk',
+                background: `
+                    radial-gradient(ellipse at 20% 30%, rgba(255, 182, 193, 0.6) 0%, transparent 50%),
+                    radial-gradient(ellipse at 80% 70%, rgba(255, 212, 255, 0.5) 0%, transparent 50%),
+                    linear-gradient(135deg, #fff0f5 0%, #ffe4f0 25%, #ffd4e8 50%, #ffb6c1 75%, #ffc0cb 100%)
+                `,
+                physics: 'flow',
+                animation: 'silkFlow 8s ease-in-out infinite'
+            },
+            fur: {
+                color: ['#d4a574', '#c19a6b', '#e6c9a8', '#f5deb3', '#daa520', '#cd853f'],
+                particleSize: [4, 10],
+                particleLife: 140,
+                spread: 50,
+                trail: true,
                 flowSpeed: 1,
-                sound: 'fur'
+                sound: 'fur',
+                background: `
+                    radial-gradient(circle at 30% 40%, rgba(245, 222, 179, 0.8) 0%, transparent 60%),
+                    radial-gradient(circle at 70% 60%, rgba(218, 165, 32, 0.4) 0%, transparent 60%),
+                    radial-gradient(circle at 40% 40%, #f5deb3 0%, #e6c9a8 30%, #daa520 60%, #d4a574 100%)
+                `,
+                physics: 'fuzzy',
+                animation: 'furPulse 4s ease-in-out infinite'
             },
             honey: {
-                color: ['#ffaa00', '#ff8800', '#ffcc66'],
-                particleSize: [4, 8],
-                particleLife: 120,
-                spread: 20,
-                trail: true,
-                flowSpeed: 0.5,
-                sound: 'honey'
-            },
-            water: {
-                color: ['#4dd0e1', '#00bcd4', '#b2ebf2'],
-                particleSize: [2, 5],
-                particleLife: 60,
-                spread: 50,
-                trail: false,
-                flowSpeed: 3,
-                sound: 'water'
-            },
-            velvet: {
-                color: ['#8b4789', '#9b59b6', '#c39bd3'],
-                particleSize: [3, 5],
-                particleLife: 90,
+                color: ['#ffaa00', '#ff8800', '#ffcc66', '#ffd700', '#ffb347', '#ff9500'],
+                particleSize: [6, 14],
+                particleLife: 180,
                 spread: 25,
                 trail: true,
-                flowSpeed: 1.5,
-                sound: 'velvet'
+                flowSpeed: 0.3,
+                sound: 'honey',
+                background: `
+                    radial-gradient(circle at 40% 30%, rgba(255, 215, 0, 0.6) 0%, transparent 50%),
+                    radial-gradient(ellipse at 60% 70%, rgba(255, 140, 0, 0.5) 0%, transparent 60%),
+                    radial-gradient(ellipse at 50% 60%, #ffe4b5 0%, #ffd700 40%, #ffaa00 70%, #ff8800 100%)
+                `,
+                physics: 'mosh',
+                animation: 'none'
+            },
+            water: {
+                color: ['#4dd0e1', '#00bcd4', '#b2ebf2', '#80deea', '#26c6da', '#00acc1'],
+                particleSize: [2, 6],
+                particleLife: 60,
+                spread: 70,
+                trail: false,
+                flowSpeed: 4,
+                sound: 'water',
+                background: `
+                    radial-gradient(circle at 30% 20%, rgba(178, 235, 242, 0.7) 0%, transparent 50%),
+                    radial-gradient(circle at 70% 80%, rgba(0, 188, 212, 0.5) 0%, transparent 50%),
+                    linear-gradient(180deg, #e0f7fa 0%, #b2ebf2 30%, #80deea 60%, #00bcd4 100%)
+                `,
+                physics: 'splash',
+                animation: 'waterRipple 6s linear infinite'
+            },
+            velvet: {
+                color: ['#8b4789', '#9b59b6', '#c39bd3', '#d7bde2', '#e8daef', '#ba68c8'],
+                particleSize: [5, 11],
+                particleLife: 130,
+                spread: 35,
+                trail: true,
+                flowSpeed: 1.2,
+                sound: 'velvet',
+                background: `
+                    radial-gradient(ellipse at 25% 30%, rgba(232, 218, 239, 0.6) 0%, transparent 50%),
+                    radial-gradient(circle at 75% 70%, rgba(155, 89, 182, 0.5) 0%, transparent 60%),
+                    radial-gradient(circle at 30% 60%, #e8daef 0%, #d7bde2 30%, #c39bd3 60%, #9b59b6 85%, #8b4789 100%)
+                `,
+                physics: 'plush',
+                animation: 'none'
             },
             clouds: {
-                color: ['#ffffff', '#f0f0f0', '#e8e8e8'],
-                particleSize: [5, 10],
-                particleLife: 110,
-                spread: 60,
+                color: ['#ffffff', '#f0f0f0', '#e8e8e8', '#f8f8ff', '#fffafa', '#f5f5f5'],
+                particleSize: [8, 16],
+                particleLife: 150,
+                spread: 80,
                 trail: true,
-                flowSpeed: 0.8,
-                sound: 'clouds'
+                flowSpeed: 0.6,
+                sound: 'clouds',
+                background: `
+                    radial-gradient(ellipse at 20% 40%, rgba(255, 255, 255, 0.9) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 60%, rgba(248, 248, 255, 0.7) 0%, transparent 50%),
+                    linear-gradient(160deg, #ffffff 0%, #f8f8ff 30%, #f0f0f0 60%, #e8e8e8 100%)
+                `,
+                physics: 'float',
+                animation: 'cloudDrift 20s linear infinite'
+            },
+            holographic: {
+                color: ['#ff00ff', '#00ffff', '#ffff00', '#ff0080', '#00ff80', '#8000ff', '#ff0040', '#40ff00'],
+                particleSize: [4, 10],
+                particleLife: 100,
+                spread: 50,
+                trail: true,
+                flowSpeed: 2.5,
+                sound: 'holographic',
+                background: `
+                    radial-gradient(circle at 30% 30%, rgba(255, 0, 255, 0.4) 0%, transparent 50%),
+                    radial-gradient(circle at 70% 70%, rgba(0, 255, 255, 0.4) 0%, transparent 50%),
+                    linear-gradient(45deg, #ff00ff 0%, #00ffff 14%, #ffff00 28%, #ff0080 42%, #00ff80 57%, #8000ff 71%, #ff00ff 85%, #00ffff 100%)
+                `,
+                physics: 'prismatic',
+                animation: 'shimmer 3s ease infinite'
             }
         };
 
@@ -228,7 +329,8 @@
                 honey: { freq: 150, type: 'sine' },
                 water: { freq: 1200, type: 'sine' },
                 velvet: { freq: 400, type: 'triangle' },
-                clouds: { freq: 600, type: 'sine' }
+                clouds: { freq: 600, type: 'sine' },
+                holographic: { freq: 1000, type: 'square' }
             };
 
             const sound = sounds[texture];
@@ -259,25 +361,130 @@
                 this.size = Math.random() * (tex.particleSize[1] - tex.particleSize[0]) + tex.particleSize[0];
                 this.life = tex.particleLife;
                 this.maxLife = tex.particleLife;
-                this.vx = (Math.random() - 0.5) * tex.flowSpeed;
-                this.vy = (Math.random() - 0.5) * tex.flowSpeed;
                 this.texture = texture;
+                this.physics = tex.physics;
+                
+                // Physics-specific initialization
+                switch(this.physics) {
+                    case 'flow': // silk
+                        this.vx = (Math.random() - 0.5) * 2;
+                        this.vy = Math.sin(Date.now() * 0.001) * 0.5;
+                        this.sway = Math.random() * Math.PI * 2;
+                        break;
+                    case 'fuzzy': // fur
+                        this.vx = (Math.random() - 0.5) * 0.5;
+                        this.vy = (Math.random() - 0.5) * 0.5;
+                        this.bounce = Math.random() * 0.02;
+                        break;
+                    case 'mosh': // honey
+                        this.vx = (Math.random() - 0.5) * 0.2;
+                        this.vy = (Math.random() - 0.5) * 0.2;
+                        this.cluster = Math.random() * Math.PI * 2;
+                        this.moshSpeed = 0.05;
+                        break;
+                    case 'splash': // water
+                        const angle = Math.random() * Math.PI * 2;
+                        const speed = Math.random() * 5 + 3;
+                        this.vx = Math.cos(angle) * speed;
+                        this.vy = Math.sin(angle) * speed;
+                        break;
+                    case 'plush': // velvet
+                        this.vx = (Math.random() - 0.5) * 1.5;
+                        this.vy = 0.3;
+                        this.spread = Math.random() * 0.1;
+                        break;
+                    case 'float': // clouds
+                        this.vx = (Math.random() - 0.5) * 0.8;
+                        this.vy = -(Math.random() * 0.5 + 0.3); // upward
+                        this.drift = Math.random() * Math.PI * 2;
+                        break;
+                    case 'prismatic': // holographic
+                        const pAngle = Math.random() * Math.PI * 2;
+                        this.vx = Math.cos(pAngle) * 2;
+                        this.vy = Math.sin(pAngle) * 2;
+                        this.hueShift = Math.random() * 360;
+                        this.spiral = 0;
+                        break;
+                }
             }
 
             update() {
-                this.x += this.vx;
-                this.y += this.vy;
                 this.life--;
-                this.vy += 0.05; // gravity
+                
+                switch(this.physics) {
+                    case 'flow': // silk - sways side to side, gentle fall
+                        this.sway += 0.05;
+                        this.vx = Math.sin(this.sway) * 1.5;
+                        this.vy = 0.3;
+                        this.x += this.vx;
+                        this.y += this.vy;
+                        break;
+                        
+                    case 'fuzzy': // fur - bounces softly, no gravity
+                        this.vx *= 0.98;
+                        this.vy *= 0.98;
+                        this.vy += Math.sin(Date.now() * 0.01) * this.bounce;
+                        this.x += this.vx;
+                        this.y += this.vy;
+                        break;
+                        
+                    case 'mosh': // honey - THICK, SLOW, clusters, barely moves
+                        this.cluster += this.moshSpeed;
+                        this.vx = Math.cos(this.cluster) * 0.3;
+                        this.vy = Math.sin(this.cluster) * 0.3;
+                        this.x += this.vx;
+                        this.y += this.vy;
+                        // honey sticks around, moves in tight circles
+                        break;
+                        
+                    case 'splash': // water - fast, outward, falls quick
+                        this.vx *= 0.95;
+                        this.vy *= 0.95;
+                        this.vy += 0.3; // gravity
+                        this.x += this.vx;
+                        this.y += this.vy;
+                        break;
+                        
+                    case 'plush': // velvet - slow fall, spreads horizontally
+                        this.vx += (Math.random() - 0.5) * this.spread;
+                        this.x += this.vx;
+                        this.y += this.vy;
+                        this.vx *= 0.99;
+                        break;
+                        
+                    case 'float': // clouds - drifts upward, floats
+                        this.drift += 0.03;
+                        this.vx = Math.sin(this.drift) * 0.5;
+                        this.x += this.vx;
+                        this.y += this.vy; // moves up!
+                        break;
+                        
+                    case 'prismatic': // holographic - spirals, hue shifts
+                        this.spiral += 0.1;
+                        this.hueShift = (this.hueShift + 5) % 360;
+                        const spiralX = Math.cos(this.spiral) * 2;
+                        const spiralY = Math.sin(this.spiral) * 2;
+                        this.x += this.vx + spiralX;
+                        this.y += this.vy + spiralY;
+                        this.vx *= 0.98;
+                        this.vy *= 0.98;
+                        break;
+                }
             }
 
             draw() {
                 const alpha = this.life / this.maxLife;
-                ctx.fillStyle = this.color;
+                
+                if (this.physics === 'prismatic') {
+                    ctx.fillStyle = `hsl(${this.hueShift}, 100%, 60%)`;
+                } else {
+                    ctx.fillStyle = this.color;
+                }
+                
                 ctx.globalAlpha = alpha;
                 
                 if (textures[this.texture].trail) {
-                    ctx.shadowBlur = 15;
+                    ctx.shadowBlur = 20;
                     ctx.shadowColor = this.color;
                 }
                 
@@ -292,7 +499,7 @@
 
         function createParticles(x, y) {
             const tex = textures[currentTexture];
-            const count = Math.floor(Math.random() * 3) + 2;
+            const count = Math.floor(Math.random() * 20) + 15; // 15-35 particles per touch!
             
             for (let i = 0; i < count; i++) {
                 const offsetX = (Math.random() - 0.5) * tex.spread;
@@ -302,90 +509,6 @@
         }
 
         function animate() {
-            ctx.fillStyle = 'rgba(26, 26, 46, 0.1)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            particles = particles.filter(p => p.life > 0);
-            particles.forEach(p => {
-                p.update();
-                p.draw();
-            });
-
-            requestAnimationFrame(animate);
-        }
-
-        // Mouse/touch events
-        function startDrawing(e) {
-            isDrawing = true;
-            const rect = canvas.getBoundingClientRect();
-            mouseX = (e.clientX || e.touches[0].clientX) - rect.left;
-            mouseY = (e.clientY || e.touches[0].clientY) - rect.top;
-            createParticles(mouseX, mouseY);
-            playTextureSound(currentTexture);
-        }
-
-        function draw(e) {
-            if (!isDrawing) return;
-            
-            const rect = canvas.getBoundingClientRect();
-            mouseX = (e.clientX || e.touches[0].clientX) - rect.left;
-            mouseY = (e.clientY || e.touches[0].clientY) - rect.top;
-            
-            createParticles(mouseX, mouseY);
-        }
-
-        function stopDrawing() {
-            isDrawing = false;
-        }
-
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mouseleave', stopDrawing);
-
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            startDrawing(e);
-        });
-        canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            draw(e);
-        });
-        canvas.addEventListener('touchend', stopDrawing);
-
-        // Cursor follow
-        document.addEventListener('mousemove', (e) => {
-            cursor.style.left = e.clientX + 'px';
-            cursor.style.top = e.clientY + 'px';
-            
-            const tex = textures[currentTexture];
-            cursor.style.background = `radial-gradient(circle, ${tex.color[0]}, transparent)`;
-        });
-
-        function changeTexture(texture) {
-            currentTexture = texture;
-            
-            document.querySelectorAll('.texture-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            const tex = textures[texture];
-            cursor.style.background = `radial-gradient(circle, ${tex.color[0]}, transparent)`;
-        }
-
-        // Resize
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        });
-
-        // Start
-        animate();
-        
-        // Initialize cursor color
-        const tex = textures[currentTexture];
-        cursor.style.background = `radial-gradient(circle, ${tex.color[0]}, transparent)`;
-    </script>
-</body>
-</html>
+            particles 
