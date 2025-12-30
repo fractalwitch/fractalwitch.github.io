@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ u r safe ✨</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(180deg, 
+                #ffd4ff 0%, 
+                #ffe4f5 50%, 
+                #fff5ff 100%);
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top visualizer */
+        .visualizer {
+            height: 35vh;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(180deg, 
+                rgba(255, 212, 255, 0.8) 0%, 
+                rgba(255, 228, 245, 0.6) 100%);
+            border-bottom: 3px solid #ff69b4;
+        }
+
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, 
+                rgba(255, 255, 255, 0.8), 
+                rgba(255, 182, 193, 0.4));
+            animation: rise 8s infinite ease-in-out;
+            box-shadow: 0 0 20px rgba(255, 105, 180, 0.3);
+        }
+
+        @keyframes rise {
+            0% {
+                transform: translateY(100vh) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-20vh) scale(1);
+                opacity: 0;
+            }
+        }
+
+        .rainbow {
+            position: absolute;
+            height: 40px;
+            width: 200px;
+            border-radius: 100px 100px 0 0;
+            background: linear-gradient(90deg,
+                #ff6b9d 0%,
+                #ffc6ff 20%,
+                #c8b6ff 40%,
+                #b8e0ff 60%,
+                #ffd4ff 80%,
+                #ff6b9d 100%);
+            opacity: 0.6;
+            animation: rainbowFloat 15s infinite ease-in-out;
+        }
+
+        @keyframes rainbowFloat {
+            0%, 100% {
+                transform: translateX(-50px) translateY(0) rotate(-10deg);
+            }
+            50% {
+                transform: translateX(calc(100vw - 150px)) translateY(-20px) rotate(10deg);
+            }
+        }
+
+        .sparkle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 2s infinite;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+
+        @keyframes twinkle {
+            0%, 100% {
+                opacity: 0;
+                transform: scale(0);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.5);
+            }
+        }
+
+        /* Middle beeper section */
+        .beeper {
+            height: 30vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%);
+            border-top: 2px solid #ff85c1;
+            border-bottom: 2px solid #ff1493;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .beeper-screen {
+            background: #c8ffc8;
+            border: 4px solid #333;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 600px;
+            height: 80%;
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            box-shadow: 
+                inset 0 2px 5px rgba(0, 0, 0, 0.3),
+                0 4px 10px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .beeper-screen:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.03) 2px,
+                rgba(0, 0, 0, 0.03) 4px
+            );
+            pointer-events: none;
+        }
+
+        .message {
+            font-size: 2rem;
+            color: #000;
+            font-weight: bold;
+            white-space: nowrap;
+            animation: scroll 12s linear infinite;
+            text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes scroll {
+            0% {
+                transform: translateX(100%);
+            }
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        /* Bottom glitter section */
+        .glitter-zone {
+            height: 35vh;
+            position: relative;
+            background: linear-gradient(0deg, 
+                #ffe4f5 0%, 
+                #fff5ff 100%);
+            overflow: hidden;
+            border-top: 3px solid #ff69b4;
+        }
+
+        .glitter {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: linear-gradient(45deg, 
+                #ff69b4, 
+                #ffd700, 
+                #ff1493, 
+                #ff69b4);
+            border-radius: 50%;
+            animation: glitterFall 4s infinite ease-in;
+            opacity: 0;
+        }
+
+        @keyframes glitterFall {
+            0% {
+                transform: translateY(-20px) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(calc(35vh + 20px)) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .heart-float {
+            position: absolute;
+            font-size: 2rem;
+            animation: heartRise 6s infinite ease-in-out;
+            opacity: 0;
+        }
+
+        @keyframes heartRise {
+            0% {
+                transform: translateY(35vh) scale(0.5);
+                opacity: 0;
+            }
+            20% {
+                opacity: 0.8;
+            }
+            80% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-50px) scale(1.2);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .message {
+                font-size: 1.5rem;
+            }
+            .beeper-screen {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top visualizer -->
+    <div class="visualizer" id="visualizer"></div>
+
+    <!-- Middle beeper -->
+    <div class="beeper">
+        <div class="beeper-screen">
+            <div class="message" id="message">✨ u r safe ✨</div>
+        </div>
+    </div>
+
+    <!-- Bottom glitter -->
+    <div class="glitter-zone" id="glitterZone"></div>
+
+    <script>
+        // Messages that scroll
+        const messages = [
+            '✨ u r safe ✨',
+            '💕 u r loved 💕',
+            '🌸 this will pass 🌸',
+            '💝 breathe with me 💝',
+            '✨ u r doing great ✨',
+            '🫂 ur not alone 🫂',
+            '🌈 trust the process 🌈',
+            '💖 ur body knows 💖',
+            '🌟 ur held 🌟',
+            '💕 ur gonna be ok 💕'
+        ];
+
+        let messageIndex = 0;
+        const messageEl = document.getElementById('message');
+
+        setInterval(() => {
+            messageIndex = (messageIndex + 1) % messages.length;
+            messageEl.textContent = messages[messageIndex];
+        }, 12000);
+
+        // Generate bubbles for visualizer
+        const visualizer = document.getElementById('visualizer');
+        for (let i = 0; i < 15; i++) {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            const size = Math.random() * 60 + 40;
+            bubble.style.width = size + 'px';
+            bubble.style.height = size + 'px';
+            bubble.style.left = Math.random() * 100 + '%';
+            bubble.style.animationDelay = Math.random() * 8 + 's';
+            bubble.style.animationDuration = (Math.random() * 4 + 6) + 's';
+            visualizer.appendChild(bubble);
+        }
+
+        // Generate rainbows
+        for (let i = 0; i < 3; i++) {
+            const rainbow = document.createElement('div');
+            rainbow.className = 'rainbow';
+            rainbow.style.top = (Math.random() * 60 + 10) + '%';
+            rainbow.style.left = (Math.random() * 80) + '%';
+            rainbow.style.animationDelay = (i * 5) + 's';
+            rainbow.style.animationDuration = (Math.random() * 5 + 12) + 's';
+            visualizer.appendChild(rainbow);
+        }
+
+        // Generate sparkles
+        for (let i = 0; i < 30; i++) {
+            const sparkle = document.createElement('div');
+            sparkle.className = 'sparkle';
+            sparkle.style.left = Math.random() * 100 + '%';
+            sparkle.style.top = Math.random() * 100 + '%';
+            sparkle.style.animationDelay = Math.random() * 2 + 's';
+            sparkle.style.animationDuration = (Math.random() * 1 + 1.5) + 's';
+            visualizer.appendChild(sparkle);
+        }
+
+        // Generate glitter
+        const glitterZone = document.getElementById('glitterZone');
+        setInterval(() => {
+            const glitter = document.createElement('div');
+            glitter.className = 'glitter';
+            glitter.style.left = Math.random() * 100 + '%';
+            glitter.style.animationDuration = (Math.random() * 2 + 3) + 's';
+            glitterZone.appendChild(glitter);
+
+            setTimeout(() => glitter.remove(), 4500);
+        }, 200);
+
+        // Generate floating hearts
+        setInterval(() => {
+            const heart = document.createElement('div');
+            heart.className = 'heart-float';
+            heart.textContent = ['💕', '💖', '💝', '✨', '🌸'][Math.floor(Math.random() * 5)];
+            heart.style.left = Math.random() * 100 + '%';
+            heart.style.animationDuration = (Math.random() * 2 + 5) + 's';
+            glitterZone.appendChild(heart);
+
+            setTimeout(() => heart.remove(), 6500);
+        }, 800);
+    </script>
+</body>
+</html>
