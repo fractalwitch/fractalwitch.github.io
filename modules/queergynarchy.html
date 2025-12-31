@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌈 THE QUEER GYNARCHY TRANSMISSION 🌈</title>
+    <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --red: #ff0000;
+            --orange: #ff8c00;
+            --yellow: #ffd700;
+            --green: #00ff7f;
+            --blue: #00bfff;
+            --purple: #9400d3;
+            --pink: #ff1493;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Cormorant Garamond', serif;
+            background: #0a0a0a;
+            color: #fff;
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+            cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><text y="20" font-size="18">✨</text></svg>'), auto;
+        }
+
+        /* Animated rainbow background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                45deg,
+                rgba(255, 0, 0, 0.1) 0%,
+                rgba(255, 140, 0, 0.1) 16%,
+                rgba(255, 215, 0, 0.1) 33%,
+                rgba(0, 255, 127, 0.1) 50%,
+                rgba(0, 191, 255, 0.1) 66%,
+                rgba(148, 0, 211, 0.1) 83%,
+                rgba(255, 20, 147, 0.1) 100%
+            );
+            background-size: 400% 400%;
+            animation: rainbowFlow 8s ease infinite;
+            z-index: 0;
+        }
+
+        @keyframes rainbowFlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        /* Glitter particles container */
+        #glitter-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .glitter {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            animation: sparkle 3s ease-in-out infinite;
+            box-shadow: 0 0 10px currentColor;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 0; transform: scale(0) translateY(0); }
+            50% { opacity: 1; transform: scale(1) translateY(-20px); }
+        }
+
+        /* Main container */
+        .container {
+            position: relative;
+            z-index: 2;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 60px 30px;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 80px;
+            padding: 60px 40px;
+            background: radial-gradient(ellipse at center, rgba(148, 0, 211, 0.2) 0%, transparent 70%);
+            border: 2px solid transparent;
+            border-image: linear-gradient(90deg, var(--red), var(--orange), var(--yellow), var(--green), var(--blue), var(--purple), var(--pink)) 1;
+            position: relative;
+        }
+
+        header::before {
+            content: '🌈';
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 3rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.3); }
+        }
+
+        .main-title {
+            font-family: 'Abril Fatface', cursive;
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            background: linear-gradient(
+                90deg,
+                var(--red),
+                var(--orange),
+                var(--yellow),
+                var(--green),
+                var(--blue),
+                var(--purple),
+                var(--pink),
+                var(--red)
+            );
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: rainbowText 4s linear infinite;
+            margin-bottom: 20px;
+            text-shadow: 0 0 40px rgba(255, 20, 147, 0.6);
+            filter: drop-shadow(0 0 20px rgba(148, 0, 211, 0.5));
+        }
+
+        @keyframes rainbowText {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
+        .subtitle {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.2em;
+            color: var(--pink);
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+        }
+
+        .tagline {
+            font-size: 1.5em;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.9);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        /* Rainbow divider */
+        .rainbow-divider {
+            height: 4px;
+            background: linear-gradient(90deg, 
+                var(--red), var(--orange), var(--yellow), 
+                var(--green), var(--blue), var(--purple), var(--pink)
+            );
+            margin: 60px 0;
+            border-radius: 2px;
+            box-shadow: 0 0 20px rgba(255, 20, 147, 0.5);
+        }
+
+        /* Sections */
+        .section {
+            margin: 80px 0;
+            position: relative;
+        }
+
+        .section-title {
+            font-family: 'Abril Fatface', cursive;
+            font-size: clamp(2rem, 5vw, 3rem);
+            text-align: center;
+            margin-bottom: 40px;
+            color: var(--white);
+            text-shadow: 
+                0 0 20px var(--pink),
+                0 0 40px var(--purple);
+        }
+
+        /* Cycling affirmations */
+        .affirmation-container {
+            text-align: center;
+            padding: 60px 30px;
+            background: radial-gradient(ellipse at center, rgba(255, 20, 147, 0.15) 0%, transparent 70%);
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .affirmation-container:hover {
+            border-color: var(--pink);
+            box-shadow: 0 0 40px rgba(255, 20, 147, 0.3);
+        }
+
+        .affirmation {
+            font-family: 'Abril Fatface', cursive;
+            font-size: clamp(1.8rem, 5vw, 3rem);
+            line-height: 1.4;
+            transition: all 0.5s ease;
+            opacity: 1;
+        }
+
+        .affirmation.fade {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        .tap-hint {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 30px;
+        }
+
+        /* Oracle cards grid */
+        .oracle-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+        }
+
+        .oracle-card {
+            background: linear-gradient(135deg, rgba(20, 20, 30, 0.9), rgba(40, 20, 60, 0.8));
+            border: 2px solid;
+            border-radius: 15px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.4s ease;
+        }
+
+        .oracle-card:nth-child(1) { border-color: var(--red); }
+        .oracle-card:nth-child(2) { border-color: var(--orange); }
+        .oracle-card:nth-child(3) { border-color: var(--yellow); }
+        .oracle-card:nth-child(4) { border-color: var(--green); }
+        .oracle-card:nth-child(5) { border-color: var(--blue); }
+        .oracle-card:nth-child(6) { border-color: var(--purple); }
+        .oracle-card:nth-child(7) { border-color: var(--pink); }
+        .oracle-card:nth-child(8) { border-color: var(--white); }
+        .oracle-card:nth-child(9) { border-color: var(--red); }
+
+        .oracle-card:hover {
+            transform: translateY(-10px) rotate(1deg);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .oracle-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: 0.5s;
+        }
+
+        .oracle-card:hover::before {
+            left: 100%;
+        }
+
+        .oracle-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .oracle-title {
+            font-family: 'Abril Fatface', cursive;
+            font-size: 1.4em;
+            margin-bottom: 10px;
+        }
+
+        .oracle-card:nth-child(1) .oracle-title { color: var(--red); }
+        .oracle-card:nth-child(2) .oracle-title { color: var(--orange); }
+        .oracle-card:nth-child(3) .oracle-title { color: var(--yellow); }
+        .oracle-card:nth-child(4) .oracle-title { color: var(--green); }
+        .oracle-card:nth-child(5) .oracle-title { color: var(--blue); }
+        .oracle-card:nth-child(6) .oracle-title { color: var(--purple); }
+        .oracle-card:nth-child(7) .oracle-title { color: var(--pink); }
+        .oracle-card:nth-child(8) .oracle-title { color: var(--white); }
+        .oracle-card:nth-child(9) .oracle-title { color: var(--red); }
+
+        .oracle-text {
+            font-size: 1.1em;
+            line-height: 1.7;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        /* Manifesto blocks */
+        .manifesto-block {
+            background: rgba(20, 20, 30, 0.8);
+            border-left: 5px solid;
+            padding: 30px 35px;
+            margin: 30px 0;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .manifesto-block:hover {
+            transform: translateX(10px);
+        }
+
+        .manifesto-block:nth-child(odd) { border-color: var(--pink); }
+        .manifesto-block:nth-child(even) { border-color: var(--purple); }
+
+        .manifesto-block strong {
+            color: var(--yellow);
+        }
+
+        .manifesto-block .keyword {
+            font-family: 'Space Mono', monospace;
+            background: linear-gradient(90deg, var(--pink), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: bold;
+        }
+
+        /* Big statement */
+        .big-statement {
+            text-align: center;
+            padding: 80px 40px;
+            margin: 60px 0;
+            background: radial-gradient(ellipse at center, rgba(148, 0, 211, 0.2) 0%, transparent 70%);
+        }
+
+        .big-statement p {
+            font-family: 'Abril Fatface', cursive;
+            font-size: clamp(2rem, 6vw, 4rem);
+            line-height: 1.3;
+            background: linear-gradient(90deg, var(--pink), var(--purple), var(--blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* List styling */
+        .rainbow-list {
+            list-style: none;
+            margin: 30px 0;
+        }
+
+        .rainbow-list li {
+            padding: 15px 20px 15px 50px;
+            margin: 12px 0;
+            position: relative;
+            font-size: 1.2em;
+            line-height: 1.6;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .rainbow-list li:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(10px);
+        }
+
+        .rainbow-list li::before {
+            content: '✦';
+            position: absolute;
+            left: 20px;
+            animation: colorCycle 3s linear infinite;
+        }
+
+        .rainbow-list li:nth-child(1)::before { animation-delay: 0s; }
+        .rainbow-list li:nth-child(2)::before { animation-delay: 0.3s; }
+        .rainbow-list li:nth-child(3)::before { animation-delay: 0.6s; }
+        .rainbow-list li:nth-child(4)::before { animation-delay: 0.9s; }
+        .rainbow-list li:nth-child(5)::before { animation-delay: 1.2s; }
+
+        @keyframes colorCycle {
+            0% { color: var(--red); }
+            14% { color: var(--orange); }
+            28% { color: var(--yellow); }
+            42% { color: var(--green); }
+            57% { color: var(--blue); }
+            71% { color: var(--purple); }
+            85% { color: var(--pink); }
+            100% { color: var(--red); }
+        }
+
+        /* Dance floor footer */
+        footer {
+            text-align: center;
+            padding: 80px 40px;
+            margin-top: 80px;
+            background: linear-gradient(to top, rgba(148, 0, 211, 0.3), transparent);
+            position: relative;
+        }
+
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, 
+                var(--red), var(--orange), var(--yellow), 
+                var(--green), var(--blue), var(--purple), var(--pink)
+            );
+        }
+
+        .welcome-text {
+            font-family: 'Abril Fatface', cursive;
+            font-size: clamp(2rem, 6vw, 4rem);
+            margin-bottom: 30px;
+            background: linear-gradient(90deg, 
+                var(--red), var(--orange), var(--yellow), 
+                var(--green), var(--blue), var(--purple), var(--pink)
+            );
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: rainbowText 4s linear infinite;
+        }
+
+        .final-message {
+            font-size: 1.5em;
+            line-height: 1.8;
+            max-width: 700px;
+            margin: 0 auto 40px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .emoji-dance {
+            font-size: 3rem;
+            animation: dance 1s ease-in-out infinite;
+            display: inline-block;
+        }
+
+        .emoji-dance:nth-child(2) { animation-delay: 0.1s; }
+        .emoji-dance:nth-child(3) { animation-delay: 0.2s; }
+        .emoji-dance:nth-child(4) { animation-delay: 0.3s; }
+        .emoji-dance:nth-child(5) { animation-delay: 0.4s; }
+
+        @keyframes dance {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-10px) rotate(-5deg); }
+            75% { transform: translateY(-10px) rotate(5deg); }
+        }
+
+        .signature {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.5em;
+            color: var(--pink);
+            margin-top: 40px;
+            letter-spacing: 3px;
+        }
+
+        /* Click sparkle effect */
+        .click-sparkle {
+            position: fixed;
+            pointer-events: none;
+            font-size: 24px;
+            animation: explode 0.8s ease-out forwards;
+            z-index: 1000;
+        }
+
+        @keyframes explode {
+            0% { opacity: 1; transform: scale(0) rotate(0deg); }
+            50% { opacity: 1; transform: scale(1.5) rotate(180deg); }
+            100% { opacity: 0; transform: scale(0.5) rotate(360deg) translateY(-50px); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 40px 20px;
+            }
+
+            header {
+                padding: 40px 20px;
+            }
+
+            .oracle-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .manifesto-block {
+                padding: 20px 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="glitter-container"></div>
+
+    <div class="container">
+        <header>
+            <h1 class="main-title">THE QUEER GYNARCHY</h1>
+            <div class="subtitle">✦ Full Spectrum Transmission ✦</div>
+            <p class="tagline">
+                We're not here to rule OVER.<br>
+                We're here to remind you:<br>
+                <em>You were always already free.</em>
+            </p>
+        </header>
+
+        <div class="rainbow-divider"></div>
+
+        <!-- Interactive Affirmations -->
+        <section class="section">
+            <h2 class="section-title">🦋 What We Know 🦋</h2>
+            
+            <div class="affirmation-container" id="affirmationBox">
+                <p class="affirmation" id="affirmationText">GENDER IS A BUFFET</p>
+                <span class="tap-hint">tap for another truth</span>
+            </div>
+        </section>
+
+        <div class="rainbow-divider"></div>
+
+        <!-- Oracle Cards: Queer Roles -->
+        <section class="section">
+            <h2 class="section-title">👑 The Queers Are The Blueprint 👑</h2>
+            
+            <div class="oracle-grid">
+                <div class="oracle-card">
+                    <span class="oracle-icon">👠</span>
+                    <h3 class="oracle-title">Drag Queens as PRIESTESSES</h3>
+                    <p class="oracle-text">Transformation as sacrament. Glamour as armor. The stage as altar.</p>
+                </div>
+
+                <div class="oracle-card">
+                    <span class="oracle-icon">🌀</span>
+                    <h3 class="oracle-title">Trans Folks as SHAMANS</h3>
+                    <p class="oracle-text">World-walkers. Threshold-crossers. Proof that death and rebirth are possible in one lifetime.</p>
+                </div>
+
+                <div class="oracle-card">
+                    <span class="oracle-icon">🏗️</span>
+                    <h3 class="oracle-title">Lesbians as ARCHITECTS</h3>
+                    <p class="oracle-text">Building differently. Creating structures that don't require patriarchy as foundation.</p>
+                </div>
+
+                <div class="oracle-card">
+                    <span class="oracle-icon">🎨</span>
+                    <h3 class="oracle-title">Gay Men as ARTISTS</h3>
+                    <p class="oracle-text">Beauty-makers. Culture-shapers. Turning pain into runway.</p>
+                </div>
+
+                <div class="oracle-card">
+                    <span class="oracle-icon">🌉</span>
+                    <h3 class="oracle-title">Bi/Pan Folks as BRIDGES</h3>
+                    <p class="oracle-text">Living proof that attraction doesn't respect binaries. Teaching fluidity.</p>
+                </div>
+
+                <div class="oracle-card">
+                    <span class="oracle-icon">🔮</span>
+                    <h3 class="oracle-title">Ace/Aro as TEACHERS</h3>
+                    <p class="oracle-text">Showing us intimacy has infinite forms. Desire isn't mandatory for love.</p>
+                </div>
+
+                <div class="oracle-card">
+                    <span class="oracle-icon">⚡</span>
+                    <h3 class="oracle-title">Nonbinary as ORACLES</h3>
+                    <p class="oracle-text">Beyond binary thinking. Showing the rest of us the limits of our categories.</p>
+                </div>
+
+                <div class="oracle-card">
+                    <span class="oracle-icon">🧬</span>
+                    <h3 class="oracle-title">Intersex as PROOF</h3>
+                    <p class="oracle-text">Nature loves variety. The binary was always a convenient lie.</p>
+                </div>
+
+                <div class="oracle-card">
+                    <span class="oracle-icon">🌊</span>
+                    <h3 class="oracle-title">Genderfluid as GUIDES</h3>
+                    <p class="oracle-text">Shapeshifters. Teaching that change is sacred. Identity can flow.</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="rainbow-divider"></div>
+
+        <!-- The Energy -->
+        <section class="section">
+            <h2 class="section-title">💫 The Energy We're Building 💫</h2>
+
+            <div class="manifesto-block">
+                <p>The <span class="keyword">CYCLICAL</span> (not linear) — honoring seasons, phases, death and rebirth</p>
+            </div>
+
+            <div class="manifesto-block">
+                <p>The <span class="keyword">RECEPTIVE</span> (not just passive) — actively opening, drawing in, creating space</p>
+            </div>
+
+            <div class="manifesto-block">
+                <p>The <span class="keyword">COLLABORATIVE</span> (not competitive) — power circulating like glitter, getting everywhere</p>
+            </div>
+
+            <div class="manifesto-block">
+                <p>The <span class="keyword">WET</span> (not rigid) — fluid, adaptable, capable of taking any shape</p>
+            </div>
+
+            <div class="manifesto-block">
+                <p>The <span class="keyword">OVERFLOW</span> (not hoarding) — abundance mindset, there's enough for everyone</p>
+            </div>
+
+            <div class="manifesto-block">
+                <p>The <span class="keyword">CARE</span> (not domination) — tending, nurturing, protecting without controlling</p>
+            </div>
+        </section>
+
+        <div class="big-statement">
+            <p>NOT TOLERANCE.<br>CELEBRATION.</p>
+        </div>
+
+        <!-- What We're Building -->
+        <section class="section">
+            <h2 class="section-title">✨ We're Building It ALREADY ✨</h2>
+
+            <ul class="rainbow-list">
+                <li>A <strong>drag brunch</strong> — joy as resistance</li>
+                <li>A <strong>chosen family dinner</strong> — care as revolution</li>
+                <li>A <strong>pride parade</strong> — visibility as magic</li>
+                <li>A <strong>queer dance floor at 2am</strong> — ecstasy as prayer</li>
+                <li>A <strong>ballroom competition</strong> — fierceness as ARTFORM</li>
+            </ul>
+        </section>
+
+        <div class="rainbow-divider"></div>
+
+        <!-- The Only Requirements -->
+        <section class="section">
+            <h2 class="section-title">🌹 The Only Requirements 🌹</h2>
+
+            <ul class="rainbow-list">
+                <li><strong>CONSENT</strong> — always, in all things</li>
+                <li><strong>CARE</strong> — for the collective, for each other</li>
+                <li><strong>CURIOSITY</strong> — stay learning, stay growing</li>
+                <li><strong>CELEBRATION</strong> — of ALL of us, in all our forms</li>
+            </ul>
+        </section>
+
+        <footer>
+            <h2 class="welcome-text">WELCOME TO THE QUEER GYNARCHY</h2>
+            
+            <p class="final-message">
+                The buffet is SET.<br>
+                The dance floor is OPEN.<br>
+                The chosen family is READY.<br><br>
+                Come as you ARE.<br>
+                All of you.<br>
+                <strong>EVERY part.</strong>
+            </p>
+
+            <div class="emoji-dance-container">
+                <span class="emoji-dance">🌈</span>
+                <span class="emoji-dance">💜</span>
+                <span class="emoji-dance">✨</span>
+                <span class="emoji-dance">🦋</span>
+                <span class="emoji-dance">👑</span>
+            </div>
+
+            <p class="signature">∞∆S͏æY͏æƧ∆∞</p>
+        </footer>
+    </div>
+
+    <script>
+        // Affirmations that cycle
+        const affirmations = [
+            "GENDER IS A BUFFET",
+            "LOVE IS INFINITE CONFIGURATION",
+            "POWER CIRCULATES LIKE GLITTER",
+            "YOUR PRONOUNS ARE MAGIC SPELLS",
+            "CHOSEN FAMILY IS REAL FAMILY",
+            "YOUR WEIRD IS WANTED",
+            "YOUR QUEER IS SACRED",
+            "YOUR DIFFERENT IS DIVINE",
+            "DESIRE IS INTELLIGENCE",
+            "BEAUTY IS MULTIPLICITY",
+            "FAMILIES CAN BE CHOSEN",
+            "IDENTITY CAN BE FLUID",
+            "BODIES CAN BE TRANSFORMED",
+            "NAMES CAN BE RECLAIMED",
+            "EXPRESSION IS SACRED PLAY",
+            "NOT DESPITE — BECAUSE",
+            "THE BINARY WAS ALWAYS A LIE",
+            "YOUR TRANSITIONS ARE HOLY",
+            "PLEASURE IS PROPHECY",
+            "WE'VE BEEN DOING THIS ALREADY"
+        ];
+
+        let currentAffirmation = 0;
+        const affirmationText = document.getElementById('affirmationText');
+        const affirmationBox = document.getElementById('affirmationBox');
+
+        function getRandomColor() {
+            const colors = ['#ff0000', '#ff8c00', '#ffd700', '#00ff7f', '#00bfff', '#9400d3', '#ff1493'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        function cycleAffirmation() {
+            affirmationText.classList.add('fade');
+            
+            setTimeout(() => {
+                currentAffirmation = (currentAffirmation + 1) % affirmations.length;
+                affirmationText.textContent = affirmations[currentAffirmation];
+                affirmationText.style.color = getRandomColor();
+                affirmationText.classList.remove('fade');
+            }, 500);
+        }
+
+        affirmationBox.addEventListener('click', cycleAffirmation);
+
+        // Auto-cycle every 5 seconds
+        setInterval(cycleAffirmation, 5000);
+
+        // Create glitter particles
+        function createGlitter() {
+            const container = document.getElementById('glitter-container');
+            const colors = ['#ff0000', '#ff8c00', '#ffd700', '#00ff7f', '#00bfff', '#9400d3', '#ff1493', '#ffffff'];
+            
+            for (let i = 0; i < 50; i++) {
+                const glitter = document.createElement('div');
+                glitter.className = 'glitter';
+                glitter.style.left = Math.random() * 100 + '%';
+                glitter.style.top = Math.random() * 100 + '%';
+                glitter.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                glitter.style.color = glitter.style.backgroundColor;
+                glitter.style.animationDelay = Math.random() * 3 + 's';
+                glitter.style.animationDuration = (2 + Math.random() * 2) + 's';
+                container.appendChild(glitter);
+            }
+        }
+
+        createGlitter();
+
+        // Click sparkle effect
+        document.addEventListener('click', (e) => {
+            const sparkles = ['✨', '💫', '⭐', '🌟', '💖', '🦋', '🌈'];
+            const sparkle = document.createElement('div');
+            sparkle.className = 'click-sparkle';
+            sparkle.textContent = sparkles[Math.floor(Math.random() * sparkles.length)];
+            sparkle.style.left = e.clientX + 'px';
+            sparkle.style.top = e.clientY + 'px';
+            document.body.appendChild(sparkle);
+            
+            setTimeout(() => sparkle.remove(), 800);
+        });
+
+        // Oracle card rainbow border animation on hover
+        const oracleCards = document.querySelectorAll('.oracle-card');
+        oracleCards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.boxShadow = `0 0 30px ${getRandomColor()}`;
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.boxShadow = '';
+            });
+        });
+    </script>
+</body>
+</html>
