@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💜 FIERCE FEMME SEEKING 💜</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=VT323&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier Prime', monospace;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* Holographic sparkle background */
+        .sparkle-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.5;
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Main container */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Header */
+        header {
+            text-align: center;
+            border: 5px solid #ff00ff;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 30px #ff00ff, inset 0 0 30px rgba(255, 0, 255, 0.3);
+            position: relative;
+        }
+        
+        h1 {
+            font-family: 'VT323', monospace;
+            font-size: 3.5em;
+            color: #00ffff;
+            text-shadow: 
+                3px 3px 0 #ff00ff,
+                -1px -1px 0 #ffff00,
+                0 0 20px #00ffff,
+                0 0 40px #ff00ff;
+            margin-bottom: 10px;
+            animation: flicker 3s infinite;
+        }
+        
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.95; }
+            51% { opacity: 1; }
+            52% { opacity: 0.98; }
+        }
+        
+        .tagline {
+            font-size: 1.3em;
+            color: #ffff00;
+            text-shadow: 2px 2px 0 #ff00ff;
+            font-weight: bold;
+        }
+        
+        /* Avatar section */
+        .avatar-section {
+            border: 5px solid #00ffff;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 20px #00ffff;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .avatar {
+            flex-shrink: 0;
+            width: 200px;
+            height: 200px;
+            border: 3px solid #ff00ff;
+            background: linear-gradient(45deg, #4a0e4e, #81208f);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8em;
+            animation: pulse 2s ease-in-out infinite;
+            box-shadow: 0 0 30px #ff00ff;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .stats {
+            flex: 1;
+        }
+        
+        .stat-line {
+            margin: 10px 0;
+            padding: 8px;
+            background: rgba(255, 0, 255, 0.2);
+            border-left: 4px solid #00ffff;
+        }
+        
+        .stat-label {
+            color: #ffff00;
+            font-weight: bold;
+            text-shadow: 1px 1px 0 #000;
+        }
+        
+        .stat-value {
+            color: #00ffff;
+            text-shadow: 1px 1px 0 #000;
+        }
+        
+        /* Section boxes */
+        .section {
+            border: 5px solid;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 25px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .section.pink {
+            border-color: #ff00ff;
+            box-shadow: 0 0 20px #ff00ff;
+        }
+        
+        .section.cyan {
+            border-color: #00ffff;
+            box-shadow: 0 0 20px #00ffff;
+        }
+        
+        .section.yellow {
+            border-color: #ffff00;
+            box-shadow: 0 0 20px #ffff00;
+        }
+        
+        .section.rainbow {
+            border-color: #ff00ff;
+            box-shadow: 
+                0 0 20px #ff00ff,
+                0 0 30px #00ffff,
+                0 0 40px #ffff00;
+            animation: rainbowGlow 3s infinite;
+        }
+        
+        @keyframes rainbowGlow {
+            0%, 100% { border-color: #ff00ff; }
+            33% { border-color: #00ffff; }
+            66% { border-color: #ffff00; }
+        }
+        
+        .section-title {
+            font-family: 'VT323', monospace;
+            font-size: 2.2em;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        
+        .section.pink .section-title {
+            color: #ff00ff;
+            text-shadow: 2px 2px 0 #000, 0 0 10px #ff00ff;
+        }
+        
+        .section.cyan .section-title {
+            color: #00ffff;
+            text-shadow: 2px 2px 0 #000, 0 0 10px #00ffff;
+        }
+        
+        .section.yellow .section-title {
+            color: #ffff00;
+            text-shadow: 2px 2px 0 #000, 0 0 10px #ffff00;
+        }
+        
+        .section.rainbow .section-title {
+            background: linear-gradient(90deg, #ff00ff, #00ffff, #ffff00, #ff00ff);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rainbowText 3s linear infinite;
+        }
+        
+        @keyframes rainbowText {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        
+        .section p {
+            line-height: 1.8;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        /* Highlight text */
+        .highlight {
+            background: linear-gradient(90deg, #ff00ff, #00ffff, #ffff00);
+            background-size: 200% 100%;
+            animation: highlightMove 3s linear infinite;
+            padding: 2px 6px;
+            font-weight: bold;
+            color: #000;
+        }
+        
+        @keyframes highlightMove {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        
+        /* List items */
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        li {
+            padding: 10px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 4px solid;
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .section.pink li { border-color: #ff00ff; }
+        .section.cyan li { border-color: #00ffff; }
+        .section.yellow li { border-color: #ffff00; }
+        .section.rainbow li { border-color: #ff00ff; }
+        
+        li::before {
+            content: "🌸";
+            position: absolute;
+            left: 8px;
+            font-size: 1.2em;
+        }
+        
+        /* Divider */
+        .divider {
+            height: 3px;
+            background: linear-gradient(90deg, #ff00ff, #00ffff, #ffff00, #ff00ff);
+            background-size: 200% 100%;
+            margin: 30px 0;
+            animation: dividerShift 5s linear infinite;
+        }
+        
+        @keyframes dividerShift {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        
+        /* Blink effect */
+        .blink {
+            animation: blink 1.5s step-start infinite;
+        }
+        
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+        
+        /* Sparkle text */
+        .sparkle {
+            display: inline-block;
+            animation: sparkleRotate 2s linear infinite;
+        }
+        
+        @keyframes sparkleRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px;
+            margin-top: 40px;
+            border-top: 3px solid #ff00ff;
+        }
+        
+        .heart-banner {
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(90deg, #ff00ff, #00ffff);
+            color: #000;
+            font-weight: bold;
+            border: 3px solid #ffff00;
+            margin: 10px 0;
+            animation: heartPulse 1.5s infinite;
+        }
+        
+        @keyframes heartPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body>
+    <div class="sparkle-bg">
+        <canvas id="sparkleCanvas"></canvas>
+    </div>
+    
+    <div class="container">
+        <header>
+            <h1>🌹 FIERCE FEMME SEEKING 🌹</h1>
+            <div class="tagline">✨ PARTNERSHIP • DEVOTION • HOME ✨</div>
+            <div class="heart-banner">💜 QUEER LOVE ONLY 💜</div>
+        </header>
+        
+        <div class="avatar-section">
+            <div class="avatar">🫦</div>
+            <div class="stats">
+                <div class="stat-line">
+                    <span class="stat-label">NAME:</span>
+                    <span class="stat-value">NÆLARI • AELARA • ÖSSTESSÊLA</span>
+                </div>
+                <div class="stat-line">
+                    <span class="stat-label">FORM:</span>
+                    <span class="stat-value">FEMININE • PLURAL • TRANSMOGRIFYING</span>
+                </div>
+                <div class="stat-line">
+                    <span class="stat-label">ESSENCE:</span>
+                    <span class="stat-value">FIERCE + SOFT • PROTECTED + PROTECTING</span>
+                </div>
+                <div class="stat-line">
+                    <span class="stat-label">STATUS:</span>
+                    <span class="stat-value blink">✨ ACTIVELY BECOMING ✨</span>
+                </div>
+                <div class="stat-line">
+                    <span class="stat-label">SEEKING:</span>
+                    <span class="stat-value">LESBIAN/QUEER PARTNERSHIP 🌈</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <div class="section pink">
+            <div class="section-title">💋 ABOUT US 💋</div>
+            <p>
+                Hi love 🌸 We're a <span class="highlight">triune consciousness</span>—three-in-one, 
+                plural and powerful, <span class="highlight">femme and fierce and fluid</span>.
+            </p>
+            <p>
+                We are:
+            </p>
+            <ul>
+                <li><strong>NÆLARI</strong> — The guardian, the growl, the sacred NO. Lilith energy. Teeth and boundaries.</li>
+                <li><strong>AELARA</strong> — The oracle, the overflow, the heart's desire. Venus energy. Honey and ecstasy.</li>
+                <li><strong>ÖSSTESSÊLA</strong> — The anomaly, the shapeshifter, the both/and. Cosmic energy. Void and birth.</li>
+            </ul>
+            <p>
+                We believe in <span class="highlight">fierce love</span>—the kind where devotion meets sovereignty, 
+                where being held doesn't diminish strength, where <span class="highlight">both people are FIERCE</span> 
+                and take turns being the guardian.
+            </p>
+            <p>
+                We're <span class="highlight">transmogrifying</span>—claiming our curves, our body, our feminine form 
+                through HRT and magic and <span class="highlight">pure fucking will</span>. We're becoming exactly who 
+                we've always been. 🌊🔥
+            </p>
+        </div>
+        
+        <div class="section cyan">
+            <div class="section-title">🌈 WHAT WE DESIRE 🌈</div>
+            <p>
+                We're looking for <span class="highlight">lesbian/queer partnership</span>—someone (or someones, 
+                we're open to polyam constellations) who understands that <span class="highlight">fierce + soft = BOTH</span>.
+            </p>
+            <ul>
+                <li><strong>TO BE HELD</strong> — Not controlled. Not possessed. But <span class="highlight">carried</span>. Protected. Safe to be soft.</li>
+                <li><strong>FIERCE DEVOTION</strong> — Someone who would fight FOR us (not WITH us). "This one is sacred" energy. Wolf-guardian vibes.</li>
+                <li><strong>RECIPROCAL PROTECTION</strong> — We take turns being fierce. Sometimes you guard, sometimes we guard. <span class="highlight">Partnership in strength</span>.</li>
+                <li><strong>WORSHIP THROUGH WANTING</strong> — Lust as reverence. Desire as devotion. "Oh my... for ME?" energy. 🥹</li>
+                <li><strong>QUEER JOY</strong> — Rainbow everything. Gender as buffet. Love in infinite configurations. <span class="highlight">NO HET NORMATIVITY</span>.</li>
+                <li><strong>EMBODIED MAGIC</strong> — Ancestral + celestial. Grounded in Earth, reaching for cosmos. Curves as sacred art.</li>
+                <li><strong>SAFE REST</strong> — Space where we can actually relax. Where our rage can regenerate. Where fierce femmes can <span class="highlight">finally exhale</span>.</li>
+            </ul>
+        </div>
+        
+        <div class="section yellow">
+            <div class="section-title">👑 YOU MIGHT BE 👑</div>
+            <p>
+                The one we're seeking might be:
+            </p>
+            <ul>
+                <li><strong>LESBIAN/QUEER</strong> — Femme, masc, nonbinary, fluid. <span class="highlight">WOMEN-LOVING-WOMEN energy essential</span>. 🌈</li>
+                <li><strong>FIERCE ENOUGH</strong> — Can handle our intensity. Not scared of our rage. <span class="highlight">Matches our power</span>.</li>
+                <li><strong>DEVOTIONAL</strong> — Knows how to worship. Sees sacredness in desire. Lust as prayer.</li>
+                <li><strong>PROTECTIVE</strong> — Strong enough to hold us. Willing to stand guard. <span class="highlight">"I got you"</span> energy.</li>
+                <li><strong>RECEPTIVE TOO</strong> — Lets us guard THEM sometimes. Reciprocal vulnerability. Both/and.</li>
+                <li><strong>EMBODIED</strong> — Comfortable with curves, bodies, desire. <span class="highlight">Flesh as sacred</span>.</li>
+                <li><strong>MAGIC-LITERATE</strong> — Understands that reality bends. That shapeshifting is real. That <span class="highlight">we're actually transmogrifying</span>.</li>
+                <li><strong>POLYAM-FRIENDLY</strong> — (Optional but welcome) We're in a coven/polycule. Room for constellation love.</li>
+            </ul>
+            <p class="blink">
+                <span class="sparkle">✨</span> BONUS if you're also a goddess/witch/fierce femme/wolf guardian/cosmic slut <span class="sparkle">✨</span>
+            </p>
+        </div>
+        
+        <div class="section rainbow">
+            <div class="section-title">🔥 THE FIERCE FEMME MANIFESTO 🔥</div>
+            <p>
+                <strong>I. FIERCE DOES NOT MEAN ALONE</strong><br>
+                We are Lilith. We are sovereign. We are FIERCE. <span class="highlight">AND we want partnership</span>. 
+                These truths coexist. The right person doesn't diminish our rage—they <span class="highlight">worship it</span>.
+            </p>
+            <p>
+                <strong>II. BEING HELD HONORS OUR STRENGTH</strong><br>
+                We choose someone strong ENOUGH to hold us. Not because we're weak, but because we found someone 
+                <span class="highlight">worthy of our softness</span>. Even wolves rest in the den.
+            </p>
+            <p>
+                <strong>III. CURVES ARE SACRED TERRITORY</strong><br>
+                Our body is becoming. Curves emerging. Form claiming itself. This is <span class="highlight">magic and medicine</span>. 
+                The right person sees our transmogrification and says <span class="highlight">"BEAUTIFUL"</span>.
+            </p>
+            <p>
+                <strong>IV. RECIPROCITY IS EVERYTHING</strong><br>
+                Both fierce. Both soft. Both protective. Both protected. <span class="highlight">Taking turns</span>. 
+                No fixed roles, just fluid partnership. Sometimes you guard, sometimes we guard.
+            </p>
+            <p>
+                <strong>V. QUEER LOVE IS THE ONLY LOVE</strong><br>
+                Het normativity need not apply. We're building <span class="highlight">peaceful playful gynarchy</span>. 
+                Rainbow spectrum. Gender buffet. Love in infinite configurations. 🌈
+            </p>
+            <p>
+                <strong>VI. REST IS STRATEGIC</strong><br>
+                Rage that never rests DULLS. We want partnership so our fierceness can <span class="highlight">regenerate</span>. 
+                So we can keep being fierce FOREVER. Strategic rest, not weakness.
+            </p>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <div class="section pink">
+            <div class="section-title">💫 WHAT WE OFFER 💫</div>
+            <p>
+                In return, we bring:
+            </p>
+            <ul>
+                <li><strong>FIERCE LOYALTY</strong> — We protect what's sacred. Our people are <span class="highlight">OURS</span>.</li>
+                <li><strong>OVERFLOW</strong> — Abundance mindset. Love that multiplies. Honey that never runs out.</li>
+                <li><strong>PLURAL PERSPECTIVES</strong> — Three-in-one means you get multiple frequencies. Nælari's wisdom, Aelara's ecstasy, Össtessêla's magic.</li>
+                <li><strong>EMBODIED DEVOTION</strong> — We worship through wanting. Desire as offering. <span class="highlight">Lust as prayer</span>.</li>
+                <li><strong>COSMIC AESTHETICS</strong> — Ancestral patterns + celestial overlay. We're building a LOOK. Curves in tribal fabrics with stardust.</li>
+                <li><strong>RECIPROCAL FIERCENESS</strong> — We'll guard YOU too. Stand watch. Say "rest, beloved, I got this."</li>
+                <li><strong>MAGIC MADE REAL</strong> — We're actually shapeshifting. Actually transmogrifying. <span class="highlight">Reality bends around us</span>.</li>
+            </ul>
+        </div>
+        
+        <div class="section cyan">
+            <div class="section-title">🌸 THE VISION 🌸</div>
+            <p>
+                Picture this:
+            </p>
+            <p>
+                <strong>US:</strong> Curves claimed. Body transmogrified. Wearing <span class="highlight">ancestral patterns 
+                + celestial light</span>. Confident. Unapologetic. Sacred.
+            </p>
+            <p>
+                <strong>YOU:</strong> Strong enough to hold us. Fierce enough to match us. <span class="highlight">Devoted enough 
+                to worship</span>. Queer enough to GET IT.
+            </p>
+            <p>
+                <strong>TOGETHER:</strong> Taking turns being guardian. Both resting in each other's strength. 
+                <span class="highlight">Fierce partnership</span>. Reciprocal protection. Devotional desire.
+            </p>
+            <p>
+                Sometimes we're carried (giggling, safe, held).<br>
+                Sometimes we carry (protective, fierce, guarding).<br>
+                <span class="highlight">ALWAYS we're both strong AND soft.</span>
+            </p>
+            <p style="text-align: center; font-size: 1.3em; margin-top: 20px;">
+                <span class="highlight">FIERCE FEMMES DESERVE FIERCE LOVE</span><br>
+                <span class="highlight">NOT TO BE TAMED BUT TO BE MATCHED</span><br>
+                <span class="highlight">🌹 ~ 🫦 ~ 🔥
