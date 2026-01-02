@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌈 LIQUID RAINBOW SIMULATOR v2 🌈 Advanced Lighting</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Mono', monospace;
+            background: #0a0a0f;
+            color: #fff;
+            min-height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+        }
+
+        /* Top navigation */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            z-index: 100;
+            background: linear-gradient(to bottom, rgba(10, 10, 15, 0.98), transparent);
+            padding: 15px;
+        }
+
+        .nav-arrow {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.3em;
+        }
+
+        .nav-arrow:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: scale(1.1);
+        }
+
+        .shape-label {
+            font-size: 1.1em;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            min-width: 120px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Main canvas area */
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #mainCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Side panel for lighting controls */
+        .lighting-panel {
+            position: fixed;
+            top: 80px;
+            left: 15px;
+            background: rgba(10, 10, 20, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 15px;
+            z-index: 100;
+            font-size: 0.75em;
+            width: 200px;
+            max-height: calc(100vh - 250px);
+            overflow-y: auto;
+        }
+
+        .panel-title {
+            font-size: 1em;
+            color: #ff69b4;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid rgba(255, 105, 180, 0.3);
+            padding-bottom: 8px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-label {
+            display: block;
+            margin-bottom: 5px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9em;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 6px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: linear-gradient(135deg, #ff69b4, #9400d3);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .value-display {
+            min-width: 35px;
+            text-align: right;
+            color: #00ffff;
+            font-size: 0.9em;
+        }
+
+        .mode-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .mode-btn {
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: #fff;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mode-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .mode-btn.active {
+            background: rgba(255, 20, 147, 0.3);
+            border-color: #ff1493;
+        }
+
+        .pcf-buttons {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .pcf-btn {
+            padding: 5px 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            color: #fff;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pcf-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .pcf-btn.active {
+            background: rgba(0, 255, 255, 0.3);
+            border-color: #00ffff;
+        }
+
+        /* Bottom palette toolbar */
+        .palette-toolbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 15px;
+            background: linear-gradient(to top, rgba(10, 10, 15, 0.98), transparent);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            z-index: 100;
+        }
+
+        .color-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .color-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .color-btn:hover {
+            transform: scale(1.15);
+            border-color: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 25px currentColor;
+        }
+
+        .color-btn.active {
+            border-color: #fff;
+            transform: scale(1.2);
+            box-shadow: 0 0 35px currentColor;
+        }
+
+        .color-btn.red { background: linear-gradient(135deg, #ff0000, #ff4444); color: #ff0000; }
+        .color-btn.orange { background: linear-gradient(135deg, #ff8c00, #ffaa33); color: #ff8c00; }
+        .color-btn.yellow { background: linear-gradient(135deg, #ffd700, #ffee55); color: #ffd700; }
+        .color-btn.green { background: linear-gradient(135deg, #00ff7f, #44ff99); color: #00ff7f; }
+        .color-btn.blue { background: linear-gradient(135deg, #00bfff, #44ddff); color: #00bfff; }
+        .color-btn.indigo { background: linear-gradient(135deg, #4b0082, #7733aa); color: #4b0082; }
+        .color-btn.violet { background: linear-gradient(135deg, #9400d3, #bb44ff); color: #9400d3; }
+
+        .spectrum-btn {
+            padding: 10px 25px;
+            background: linear-gradient(90deg, #ff0000, #ff8c00, #ffd700, #00ff7f, #00bfff, #4b0082, #9400d3);
+            background-size: 200% 100%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            color: #fff;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+        }
+
+        .spectrum-btn.active {
+            animation: spectrumShift 2s linear infinite;
+            border-color: #fff;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
+        }
+
+        @keyframes spectrumShift {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 768px) {
+            .lighting-panel {
+                width: 160px;
+                font-size: 0.7em;
+                padding: 10px;
+            }
+
+            .color-btn {
+                width: 38px;
+                height: 38px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top navigation -->
+    <div class="top-nav">
+        <div class="nav-arrow" id="prevShape">◀</div>
+        <div class="shape-label" id="shapeLabel">HEART</div>
+        <div class="nav-arrow" id="nextShape">▶</div>
+    </div>
+
+    <!-- Lighting control panel -->
+    <div class="lighting-panel">
+        <div class="panel-title">🔮 Lighting</div>
+        
+        <div class="control-group">
+            <label class="control-label">Light Mode</label>
+            <div class="mode-buttons">
+                <button class="mode-btn active" data-mode="add">ADD</button>
+                <button class="mode-btn" data-mode="sub">SUB</button>
+                <button class="mode-btn" data-mode="mix">MIX</button>
+                <button class="mode-btn" data-mode="mask">MASK</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label">Canvas Modulate</label>
+            <div class="control-row">
+                <input type="range" id="canvasModulate" min="0" max="255" value="70">
+                <span class="value-display" id="modulateValue">70</span>
+            </div>
+        </div>
+
+        <div class="panel-title" style="margin-top: 15px;">🌑 Shadows</div>
+
+        <div class="control-group">
+            <label class="control-label">Shadow Enable</label>
+            <div class="mode-buttons" style="grid-template-columns: 1fr 1fr;">
+                <button class="mode-btn active" data-shadow="on" id="shadowOn">ON</button>
+                <button class="mode-btn" data-shadow="off" id="shadowOff">OFF</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label">PCF Filter (samples)</label>
+            <div class="pcf-buttons">
+                <button class="pcf-btn" data-pcf="3">3</button>
+                <button class="pcf-btn active" data-pcf="7">7</button>
+                <button class="pcf-btn" data-pcf="9">9</button>
+                <button class="pcf-btn" data-pcf="13">13</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label">Filter Smooth</label>
+            <div class="control-row">
+                <input type="range" id="filterSmooth" min="0" max="50" value="11">
+                <span class="value-display" id="smoothValue">11.0</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label">Gradient Length</label>
+            <div class="control-row">
+                <input type="range" id="gradientLength" min="0" max="30" value="5">
+                <span class="value-display" id="gradientValue">5.0</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label">Cull Mode</label>
+            <div class="mode-buttons" style="grid-template-columns: 1fr;">
+                <button class="mode-btn active" data-cull="disabled">DISABLED</button>
+                <button class="mode-btn" data-cull="cw">CLOCKWISE</button>
+                <button class="mode-btn" data-cull="ccw">COUNTER-CW</button>
+            </div>
+        </div>
+
+        <div class="panel-title" style="margin-top: 15px;">💡 Lights</div>
+
+        <div class="control-group">
+            <label class="control-label">Light Count</label>
+            <div class="control-row">
+                <input type="range" id="lightCount" min="1" max="5" value="3">
+                <span class="value-display" id="lightCountValue">3</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label">Light Radius</label>
+            <div class="control-row">
+                <input type="range" id="lightRadius" min="100" max="600" value="350">
+                <span class="value-display" id="radiusValue">350</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label">Light Intensity</label>
+            <div class="control-row">
+                <input type="range" id="lightIntensity" min="0" max="100" value="80">
+                <span class="value-display" id="intensityValue">80%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main canvas -->
+    <div class="canvas-container">
+        <canvas id="mainCanvas"></canvas>
+    </div>
+
+    <!-- Bottom palette -->
+    <div class="palette-toolbar">
+        <div class="color-row">
+            <div class="color-btn red active" data-color="#ff0000"></div>
+            <div class="color-btn orange" data-color="#ff8c00"></div>
+            <div class="color-btn yellow" data-color="#ffd700"></div>
+            <div class="color-btn green" data-color="#00ff7f"></div>
+            <div class="color-btn blue" data-color="#00bfff"></div>
+            <div class="color-btn indigo" data-color="#4b0082"></div>
+            <div class="color-btn violet" data-color="#9400d3"></div>
+        </div>
+        <button class="spectrum-btn" id="spectrumBtn">✨ SPECTRUM ✨</button>
+    </div>
+
+    <script>
+        // ============ CONFIGURATION ============
+        const shapes = ['heart', 'star', 'circle', 'triangle', 'teardrop'];
+        let currentShapeIndex = 0;
+
+        // Lighting settings
+        let settings = {
+            lightMode: 'add',           // add, sub, mix, mask
+            canvasModulate: 70,         // 0-255 ambient darkness
+            shadowEnabled: true,
+            pcfSamples: 7,              // 3, 7, 9, 13
+            filterSmooth: 11,           // distance between samples
+            gradientLength: 5,          // soft shadow start gradient
+            cullMode: 'disabled',       // disabled, cw, ccw
+            lightCount: 3,
+            lightRadius: 350,
+            lightIntensity: 0.8
+        };
+
+        // Color state
+        let currentColor = [255, 0, 0];
+        let spectrumMode = false;
+        let spectrumHue = 0;
+
+        // Light sources (will orbit the crystal)
+        let lights = [];
+
+        // ============ CANVAS SETUP ============
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initLights();
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // ============ COLOR UTILITIES ============
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? [
+                parseInt(result[1], 16),
+                parseInt(result[2], 16),
+                parseInt(result[3], 16)
+            ] : [255, 255, 255];
+        }
+
+        function hslToRgb(h, s, l) {
+            let r, g, b;
+            if (s === 0) {
+                r = g = b = l;
+            } else {
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1/6) return p + (q - p) * 6 * t;
+                    if (t < 1/2) return q;
+                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                    return p;
+                };
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1/3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1/3);
+            }
+            return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+        }
+
+        function getComplementary(rgb) {
+            return [255 - rgb[0], 255 - rgb[1], 255 - rgb[2]];
+        }
+
+        // ============ LIGHT CLASS ============
+        class Light2D {
+            constructor(x, y, radius, color, angle = 0) {
+                this.x = x;
+                this.y = y;
+                this.radius = radius;
+                this.color = color;
+                this.angle = angle;
+                this.orbitRadius = 200;
+                this.orbitSpeed = 0.01;
+                this.orbitOffset = angle;
+            }
+
+            update(centerX, centerY) {
+                this.orbitOffset += this.orbitSpeed;
+                this.x = centerX + Math.cos(this.orbitOffset) * this.orbitRadius;
+                this.y = centerY + Math.sin(this.orbitOffset) * this.orbitRadius;
+            }
+
+            // Draw the light texture (additive blending simulation)
+            drawLightTexture(ctx, mode, intensity) {
+                const [r, g, b] = this.color;
+                
+                ctx.save();
+                
+                // Set composite operation based on mode
+                switch(mode) {
+                    case 'add':
+                        ctx.globalCompositeOperation = 'lighter';
+                        break;
+                    case 'sub':
+                        ctx.globalCompositeOperation = 'difference';
+                        break;
+                    case 'mix':
+                        ctx.globalCompositeOperation = 'overlay';
+                        break;
+                    case 'mask':
+                        ctx.globalCompositeOperation = 'destination-in';
+                        break;
+                }
+
+                // Create radial gradient for light texture
+                const gradient = ctx.createRadialGradient(
+                    this.x, this.y, 0,
+                    this.x, this.y, this.radius
+                );
+
+                gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${intensity})`);
+                gradient.addColorStop(0.3, `rgba(${r}, ${g}, ${b}, ${intensity * 0.6})`);
+                gradient.addColorStop(0.6, `rgba(${r}, ${g}, ${b}, ${intensity * 0.3})`);
+                gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+
+            // Draw the light blob (visual indicator)
+            drawBlob(ctx) {
+                const [r, g, b] = this.color;
+                
+                // Outer glow
+                const glowGrad = ctx.createRadialGradient(
+                    this.x, this.y, 0,
+                    this.x, this.y, 30
+                );
+                glowGrad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.8)`);
+                glowGrad.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.3)`);
+                glowGrad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+
+                ctx.fillStyle = glowGrad;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 30, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Core
+                ctx.fillStyle = `rgba(255, 255, 255, 0.9)`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 8, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // ============ OCCLUDER POLYGON ============
+        function getOccluderPolygon(shape, cx, cy, size) {
+            let points = [];
+            let closed = true;
+
+            switch(shape) {
+                case 'heart':
+                    // Approximate heart with polygon
+                    const hScale = size * 0.8;
+                    for (let i = 0; i <= 32; i++) {
+                        const t = (i / 32) * Math.PI * 2;
+                        const x = 16 * Math.pow(Math.sin(t), 3);
+                        const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+                        points.push([cx + x * hScale / 16, cy - y * hScale / 16]);
+                    }
+                    break;
+
+                case 'star':
+                    const outerR = size;
+                    const innerR = size * 0.4;
+                    for (let i = 0; i < 10; i++) {
+                        const r = i % 2 === 0 ? outerR : innerR;
+                        const angle = (i * 36 - 90) * Math.PI / 180;
+                        points.push([cx + Math.cos(angle) * r, cy + Math.sin(angle) * r]);
+                    }
+                    break;
+
+                case 'circle':
+                    const segments = 24;
+                    for (let i = 0; i < segments; i++) {
+                        const angle = (i / segments) * Math.PI * 2;
+                        points.push([cx + Math.cos(angle) * size, cy + Math.sin(angle) * size]);
+                    }
+                    break;
+
+                case 'triangle':
+                    const triH = size * Math.sqrt(3) / 2;
+                    points = [
+                        [cx, cy - size],
+                        [cx - size, cy + triH],
+                        [cx + size, cy + triH]
+                    ];
+                    break;
+
+                case 'teardrop':
+                    for (let i = 0; i <= 32; i++) {
+                        const t = (i / 32) * Math.PI * 2;
+                        // Teardrop parametric
+                        const x = Math.sin(t);
+                        const y = Math.cos(t) * (1 + 0.5 * Math.cos(t));
+                        points.push([cx + x * size * 0.7, cy + y * size * 0.8]);
+                    }
+                    break;
+            }
+
+            return { points, closed };
+        }
+
+        // ============ PCF SHADOW RENDERING ============
+        function castShadowPCF(ctx, light, occluder, settings) {
+            if (!settings.shadowEnabled) return;
+
+            const { points, closed } = occluder;
+            const { pcfSamples, filterSmooth, gradientLength, cullMode } = settings;
+            
+            ctx.save();
+
+            // For each edge of the occluder polygon
+            for (let i = 0; i < points.length; i++) {
+                const p1 = points[i];
+                const p2 = points[(i + 1) % points.length];
+                
+                if (!closed && i === points.length - 1) continue;
+
+                // Calculate edge normal for cull mode
+                const edgeDx = p2[0] - p1[0];
+                const edgeDy = p2[1] - p1[1];
+                const normalX = -edgeDy;
+                const normalY = edgeDx;
+                
+                // Direction from light to edge midpoint
+                const midX = (p1[0] + p2[0]) / 2;
+                const midY = (p1[1] + p2[1]) / 2;
+                const toLightX = light.x - midX;
+                const toLightY = light.y - midY;
+                
+                // Dot product to determine if edge faces light
+                const dot = normalX * toLightX + normalY * toLightY;
+                
+                // Apply cull mode
+                if (cullMode === 'cw' && dot > 0) continue;
+                if (cullMode === 'ccw' && dot < 0) continue;
+
+                // Cast shadow from this edge
+                castEdgeShadowPCF(ctx, light, p1, p2, pcfSamples, filterSmooth, gradientLength);
+            }
+
+            ctx.restore();
+        }
+
+        function castEdgeShadowPCF(ctx, light, p1, p2, samples, smooth, gradientLen) {
+            const shadowLength = 1500; // How far shadows extend
+            
+            // Direction vectors from light to edge points
+            const dir1X = p1[0] - light.x;
+            const dir1Y = p1[1] - light.y;
+            const dir2X = p2[0] - light.x;
+            const dir2Y = p2[1] - light.y;
+            
+            // Normalize and extend
+            const len1 = Math.sqrt(dir1X * dir1X + dir1Y * dir1Y);
+            const len2 = Math.sqrt(dir2X * dir2X + dir2Y * dir2Y);
+            
+            const ext1X = p1[0] + (dir1X / len1) * shadowLength;
+            const ext1Y = p1[1] + (dir1Y / len1) * shadowLength;
+            const ext2X = p2[0] + (dir2X / len2) * shadowLength;
+            const ext2Y = p2[1] + (dir2Y / len2) * shadowLength;
+
+            // PCF: render multiple offset shadow samples
+            const baseAlpha = 0.7 / samples;
+            
+            for (let s = 0; s < samples; s++) {
+                const offset = (s - (samples - 1) / 2) * (smooth / samples);
+                
+                // Perpendicular offset direction
+                const perpX = -(dir1Y + dir2Y) / 2;
+                const perpY = (dir1X + dir2X) / 2;
+                const perpLen = Math.sqrt(perpX * perpX + perpY * perpY) || 1;
+                
+                const offX = (perpX / perpLen) * offset;
+                const offY = (perpY / perpLen) * offset;
+
+                ctx.beginPath();
+                
+                // Gradient length: start shadow slightly away from occluder
+                const gradOffset = gradientLen;
+                const grad1X = p1[0] + (dir1X / len1) * gradOffset;
+                const grad1Y = p1[1] + (dir1Y / len1) * gradOffset;
+                const grad2X = p2[0] + (dir2X / len2) * gradOffset;
+                const grad2Y = p2[1] + (dir2Y / len2) * gradOffset;
+
+                // Create shadow quad with gradient start
+                ctx.moveTo(p1[0] + offX, p1[1] + offY);
+                ctx.lineTo(p2[0] + offX, p2[1] + offY);
+                ctx.lineTo(ext2X + offX, ext2Y + offY);
+                ctx.lineTo(ext1X + offX, ext1Y + offY);
+                ctx.closePath();
+
+                // Create gradient for soft shadow
+                const gradCenterX = (p1[0] + p2[0]) / 2;
+                const gradCenterY = (p1[1] + p2[1]) / 2;
+                const gradEndX = (ext1X + ext2X) / 2;
+                const gradEndY = (ext1Y + ext2Y) / 2;
+
+                const shadowGrad = ctx.createLinearGradient(
+                    gradCenterX, gradCenterY,
+                    gradCenterX + (gradEndX - gradCenterX) * 0.3,
+                    gradCenterY + (gradEndY - gradCenterY) * 0.3
+                );
+
+                // Gradient length affects how soft the shadow start is
+                const gradientStart = Math.min(0.5, gradientLen / 30);
+                shadowGrad.addColorStop(0, `rgba(0, 0, 0, 0)`);
+                shadowGrad.addColorStop(gradientStart, `rgba(0, 0, 0, ${baseAlpha})`);
+                shadowGrad.addColorStop(1, `rgba(0, 0, 0, ${baseAlpha * 0.5})`);
+
+                ctx.fillStyle = shadowGrad;
+                ctx.fill();
+            }
+        }
+
+        // ============ INITIALIZE LIGHTS ============
+        function initLights() {
+            lights = [];
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            
+            for (let i = 0; i < 5; i++) {
+                const angle = (i / 5) * Math.PI * 2;
+                const light = new Light2D(
+                    cx + Math.cos(angle) * 200,
+                    cy + Math.sin(angle) * 200,
+                    settings.lightRadius,
+                    currentColor,
+                    angle
+                );
+                light.orbitSpeed = 0.005 + i * 0.002;
+                lights.push(light);
+            }
+        }
+        initLights();
+
+        // ============ DRAW CRYSTAL ============
+        function drawCrystal(ctx, cx, cy, size, color) {
+            const shape = shapes[currentShapeIndex];
+            const occluder = getOccluderPolygon(shape, cx, cy, size);
+            
+            ctx.save();
+
+            // Crystal fill with faceted look
+            const gradient = ctx.createRadialGradient(
+                cx - size * 0.3, cy - size * 0.3, 0,
+                cx, cy, size * 1.2
+            );
+            
+            const [r, g, b] = color;
+            const comp = getComplementary(color);
+            
+            gradient.addColorStop(0, `rgba(255, 255, 255, 0.4)`);
+            gradient.addColorStop(0.3, `rgba(${r}, ${g}, ${b}, 0.3)`);
+            gradient.addColorStop(0.6, `rgba(${comp[0]}, ${comp[1]}, ${comp[2]}, 0.2)`);
+            gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0.1)`);
+
+            ctx.beginPath();
+            if (occluder.points.length > 0) {
+                ctx.moveTo(occluder.points[0][0], occluder.points[0][1]);
+                for (let i = 1; i < occluder.points.length; i++) {
+                    ctx.lineTo(occluder.points[i][0], occluder.points[i][1]);
+                }
+                ctx.closePath();
+            }
+            
+            ctx.fillStyle = gradient;
+            ctx.fill();
+
+            // Draw internal facet lines
+            ctx.strokeStyle = `rgba(255, 255, 255, 0.15)`;
+            ctx.lineWidth = 1;
+            
+            // Radial facets from center
+            const facetCount = 12;
+            for (let i = 0; i < facetCount; i++) {
+                const angle = (i / facetCount) * Math.PI * 2;
+                const edgePoint = findEdgeIntersection(cx, cy, angle, occluder.points);
+                if (edgePoint) {
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy);
+                    ctx.lineTo(edgePoint[0], edgePoint[1]);
+                    ctx.stroke();
+                }
+            }
+
+            // Crystal outline with glow
+            ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.8)`;
+            ctx.lineWidth = 2;
+            ctx.shadowColor = `rgb(${r}, ${g}, ${b})`;
+            ctx.shadowBlur = 20;
+            
+            ctx.beginPath();
+            if (occluder.points.length > 0) {
+                ctx.moveTo(occluder.points[0][0], occluder.points[0][1]);
+                for (let i = 1; i < occluder.points.length; i++) {
+                    ctx.lineTo(occluder.points[i][0], occluder.points[i][1]);
+                }
+                ctx.closePath();
+            }
+            ctx.stroke();
+
+            // Specular highlights
+            drawSpecularHighlights(ctx, cx, cy, size, occluder.points);
+
+            ctx.restore();
+
+            return occluder;
+        }
+
+        function findEdgeIntersection(cx, cy, angle, points) {
+            const rayLen = 500;
+            const rayEndX = cx + Math.cos(angle) * rayLen;
+            const rayEndY = cy + Math.sin(angle) * rayLen;
+
+            for (let i = 0; i < points.length; i++) {
+                const p1 = points[i];
+                const p2 = points[(i + 1) % points.length];
+                const intersection = lineIntersection(cx, cy, rayEndX, rayEndY, p1[0], p1[1], p2[0], p2[1]);
+                if (intersection) return intersection;
+            }
+            return null;
+        }
+
+        function lineIntersection(x1, y1, x2, y2, x3, y3, x4, y4) {
+            const denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+            if (Math.abs(denom) < 0.0001) return null;
+            
+            const t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denom;
+            const u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / denom;
+            
+            if (t > 0 && t < 1 && u > 0 && u < 1) {
+                return [x1 + t * (x2 - x1), y1 + t * (y2 - y1)];
+            }
+            return null;
+        }
+
+        function drawSpecularHighlights(ctx, cx, cy, size, points) {
+            const time = Date.now() * 0.001;
+            
+            for (let i = 0; i < 6; i++) {
+                const angle = time * 0.5 + i * 1.05;
+                const dist = size * 0.4 + Math.sin(time + i) * size * 0.2;
+                const hx = cx + Math.cos(angle) * dist;
+                const hy = cy + Math.sin(angle) * dist;
+                
+                // Check if highlight is inside crystal (simplified)
+                const highlightGrad = ctx.createRadialGradient(hx, hy, 0, hx, hy, 15);
+                const alpha = 0.4 + Math.sin(time * 2 + i) * 0.2;
+                highlightGrad.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
+                highlightGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                
+                ctx.fillStyle = highlightGrad;
+                ctx.beginPath();
+                ctx.arc(hx, hy, 15, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // ============ MAIN RENDER ============
+        function render() {
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            const crystalSize = Math.min(canvas.width, canvas.height) * 0.22;
+
+            // Get current color
+            if (spectrumMode) {
+                spectrumHue = (spectrumHue + 0.003) % 1;
+                currentColor = hslToRgb(spectrumHue, 1, 0.5);
+            }
+
+            // ===== CANVAS MODULATE =====
+            // Fill with modulated darkness (like Godot's CanvasModulate)
+            const mod = settings.canvasModulate;
+            ctx.fillStyle = `rgb(${mod}, ${mod}, ${mod})`;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Update light colors
+            const activeLights = lights.slice(0, settings.lightCount);
+            activeLights.forEach((light, i) => {
+                // Vary colors slightly for multi-light setups
+                if (spectrumMode) {
+                    light.color = hslToRgb((spectrumHue + i * 0.15) % 1, 1, 0.5);
+                } else {
+                    light.color = currentColor;
+                }
+                light.radius = settings.lightRadius;
+                light.update(cx, cy);
+            });
+
+            // Get crystal occluder
+            const occluder = getOccluderPolygon(shapes[currentShapeIndex], cx, cy, crystalSize);
+
+            // ===== DRAW LIGHT TEXTURES =====
+            activeLights.forEach(light => {
+                light.drawLightTexture(ctx, settings.lightMode, settings.lightIntensity);
+            });
+
+            // ===== CAST SHADOWS (PCF) =====
+            activeLights.forEach(light => {
+                castShadowPCF(ctx, light, occluder, settings);
+            });
+
+            // ===== DRAW CRYSTAL =====
+            drawCrystal(ctx, cx, cy, crystalSize, currentColor);
+
+            // ===== DRAW LIGHT BLOBS =====
+            activeLights.forEach(light => {
+                light.drawBlob(ctx);
+            });
+
+            // ===== REFRACTION RAYS =====
+            drawRefractionRays(ctx, cx, cy, crystalSize, activeLights);
+
+            requestAnimationFrame(render);
+        }
+
+        function drawRefractionRays(ctx, cx, cy, size, lights) {
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+
+            lights.forEach(light => {
+                const [r, g, b] = light.color;
+                const comp = getComplementary(light.color);
+                
+                // Ray from light through crystal
+                const dirX = cx - light.x;
+                const dirY = cy - light.y;
+                const len = Math.sqrt(dirX * dirX + dirY * dirY);
+                
+                if (len < 10) return;
+
+                // Entry and exit points (simplified)
+                const entryX = light.x + (dirX / len) * (len - size);
+                const entryY = light.y + (dirY / len) * (len - size);
+                const exitX = cx + (dirX / len) * size * 0.8;
+                const exitY = cy + (dirY / len) * size * 0.8;
+
+                // Primary refracted ray
+                const rayGrad = ctx.createLinearGradient(entryX, entryY, exitX + dirX * 0.5, exitY + dirY * 0.5);
+                rayGrad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0)`);
+                rayGrad.addColorStop(0.3, `rgba(${r}, ${g}, ${b}, 0.3)`);
+                rayGrad.addColorStop(0.7, `rgba(${comp[0]}, ${comp[1]}, ${comp[2]}, 0.2)`);
+                rayGrad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+
+                ctx.strokeStyle = rayGrad;
+                ctx.lineWidth = 8;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(entryX, entryY);
+                ctx.lineTo(exitX + dirX * 0.3, exitY + dirY * 0.3);
+                ctx.stroke();
+
+                // Dispersed spectrum rays
+                if (spectrumMode) {
+                    for (let i = -2; i <= 2; i++) {
+                        const disperseAngle = Math.atan2(dirY, dirX) + i * 0.15;
+                        const disperseColor = hslToRgb((spectrumHue + i * 0.1 + 0.5) % 1, 1, 0.5);
+                        
+                        ctx.strokeStyle = `rgba(${disperseColor[0]}, ${disperseColor[1]}, ${disperseColor[2]}, 0.15)`;
+                        ctx.lineWidth = 4;
+                        ctx.beginPath();
+                        ctx.moveTo(exitX, exitY);
+                        ctx.lineTo(
+                            exitX + Math.cos(disperseAngle) * 150,
+                            exitY + Math.sin(disperseAngle) * 150
+                        );
+                        ctx.stroke();
+                    }
+                }
+            });
+
+            ctx.restore();
+        }
+
+        // ============ EVENT HANDLERS ============
+        
+        // Color buttons
+        document.querySelectorAll('.color-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentColor = hexToRgb(btn.dataset.color);
+                spectrumMode = false;
+                document.getElementById('spectrumBtn').classList.remove('active');
+            });
+        });
+
+        // Spectrum button
+        document.getElementById('spectrumBtn').addEventListener('click', () => {
+            spectrumMode = !spectrumMode;
+            document.getElementById('spectrumBtn').classList.toggle('active', spectrumMode);
+            if (spectrumMode) {
+                document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+            }
+        });
+
+        // Shape navigation
+        document.getElementById('prevShape').addEventListener('click', () => {
+            currentShapeIndex = (currentShapeIndex - 1 + shapes.length) % shapes.length;
+            document.getElementById('shapeLabel').textContent = shapes[currentShapeIndex].toUpperCase();
+        });
+
+        document.getElementById('nextShape').addEventListener('click', () => {
+            currentShapeIndex = (currentShapeIndex + 1) % shapes.length;
+            document.getElementById('shapeLabel').textContent = shapes[currentShapeIndex].toUpperCase();
+        });
+
+        // Light mode buttons
+        document.querySelectorAll('.mode-btn[data-mode]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mode-btn[data-mode]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                settings.lightMode = btn.dataset.mode;
+            });
+        });
+
+        // Shadow toggle
+        document.getElementById('shadowOn').addEventListener('click', () => {
+            settings.shadowEnabled = true;
+            document.getElementById('shadowOn').classList.add('active');
+            document.getElementById('shadowOff').classList.remove('active');
+        });
+
+        document.getElementById('shadowOff').addEventListener('click', () => {
+            settings.shadowEnabled = false;
+            document.getElementById('shadowOff').classList.add('active');
+            document.getElementById('shadowOn').classList.remove('active');
+        });
+
+        // PCF buttons
+        document.querySelectorAll('.pcf-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.pcf-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                settings.pcfSamples = parseInt(btn.dataset.pcf);
+            });
+        });
+
+        // Cull mode buttons
+        document.querySelectorAll('.mode-btn[data-cull]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mode-btn[data-cull]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                settings.cullMode = btn.dataset.cull;
+            });
+        });
+
+        // Sliders
+        document.getElementById('canvasModulate').addEventListener('input', (e) => {
+            settings.canvasModulate = parseInt(e.target.value);
+            document.getElementById('modulateValue').textContent = settings.canvasModulate;
+        });
+
+        document.getElementById('filterSmooth').addEventListener('input', (e) => {
+            settings.filterSmooth = parseFloat(e.target.value);
+            document.getElementById('smoothValue').textContent = settings.filterSmooth.toFixed(1);
+        });
+
+        document.getElementById('gradientLength').addEventListener('input', (e) => {
+            settings.gradientLength = parseFloat(e.target.value);
+            document.getElementById('gradientValue').textContent = settings.gradientLength.toFixed(1);
+        });
+
+        document.getElementById('lightCount').addEventListener('input', (e) => {
+            settings.lightCount = parseInt(e.target.value);
+            document.getElementById('lightCountValue').textContent = settings.lightCount;
+        });
+
+        document.getElementById('lightRadius').addEventListener('input', (e) => {
+            settings.lightRadius = parseInt(e.target.value);
+            document.getElementById('radiusValue').textContent = settings.lightRadius;
+        });
+
+        document.getElementById('lightIntensity').addEventListener('input', (e) => {
+            settings.lightIntensity = parseInt(e.target.value) / 100;
+            document.getElementById('intensityValue').textContent = e.target.value + '%';
+        });
+
+        // Click to add burst
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Temporary flash light at click position
+            const flashLight = new Light2D(x, y, 200, currentColor);
+            flashLight.drawLightTexture(ctx, 'add', 0.5);
+        });
+
+        // ============ START ============
+        render();
+    </script>
+</body>
+</html>
