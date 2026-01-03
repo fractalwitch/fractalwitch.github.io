@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>∞ SOVEREIGNTY SUITE: SUPERRADIANCE ∞</title>
+    <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* THE SUPERRADIANT SPECTRUM */
+            --magenta: #ff00ff;
+            --cyan: #00ffff;
+            --violet: #8a2be2;
+            --hot-pink: #ff1493;
+            --gold: #ffd700;
+            --acid-green: #bfff00;
+            --deep-space: #050505;
+        }
+
+        * { box-sizing: border-box; cursor: crosshair; }
+
+        body {
+            margin: 0;
+            background-color: var(--deep-space);
+            color: #fff;
+            font-family: 'Space Mono', monospace;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* 🌌 BACKGROUND: THE VOID & MESH */
+        .background-mesh {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -2;
+            background: 
+                radial-gradient(circle at 15% 50%, rgba(255, 0, 255, 0.1), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(0, 255, 255, 0.1), transparent 25%);
+        }
+
+        .background-mesh::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z' fill='%23ff00ff' fill-opacity='0.1'/%3E%3C/svg%3E");
+            opacity: 0.3;
+        }
+
+        /* 🌈 SUPERRADIANCE BEAMS (Visualizing the Coherent Signal) */
+        .superradiance-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            mix-blend-mode: screen;
+        }
+
+        .beam {
+            position: absolute;
+            bottom: 0;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(to top, var(--magenta) 0%, var(--cyan) 50%, transparent 100%);
+            opacity: 0;
+            filter: blur(8px);
+            animation: rise 4s ease-in-out infinite;
+        }
+
+        .beam:nth-child(1) { left: 10%; width: 40px; animation-delay: 0s; background: linear-gradient(to top, var(--violet), transparent); }
+        .beam:nth-child(2) { left: 30%; width: 10px; animation-delay: 1.5s; background: linear-gradient(to top, var(--gold), transparent); }
+        .beam:nth-child(3) { left: 50%; width: 60px; animation-delay: 0.5s; background: linear-gradient(to top, var(--cyan), transparent); }
+        .beam:nth-child(4) { left: 70%; width: 20px; animation-delay: 2.2s; background: linear-gradient(to top, var(--hot-pink), transparent); }
+        .beam:nth-child(5) { left: 90%; width: 35px; animation-delay: 1.1s; background: linear-gradient(to top, var(--magenta), transparent); }
+
+        @keyframes rise {
+            0% { transform: scaleY(0); opacity: 0; }
+            50% { opacity: 0.6; }
+            100% { transform: scaleY(1.5); opacity: 0; }
+        }
+
+        /* 🌹 THORN LAYER (Restraint & Defense) */
+        .thorn-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 998;
+            opacity: 0;
+            transition: opacity 1s ease;
+            background: radial-gradient(circle at center, transparent 40%, #000 120%),
+                        url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 0 C60 40 90 50 50 100 C10 50 40 40 50 0 Z" fill="none" stroke="%23ff0055" stroke-width="2"/></svg>');
+            background-size: cover, 50px 50px;
+            filter: drop-shadow(0 0 10px rgba(255, 0, 0, 0.5));
+        }
+
+        /* 👁️ DEFENSE ACTIVATION */
+        body.veiled .thorn-overlay {
+            opacity: 0.9;
+            animation: growThorns 3s ease-out forwards;
+        }
+        
+        body.veiled .superradiance-container {
+            filter: hue-rotate(90deg) contrast(200%); /* Glitch the beams */
+        }
+
+        body.veiled {
+            cursor: not-allowed;
+        }
+
+        @keyframes growThorns {
+            0% { background-size: cover, 0px 0px; }
+            100% { background-size: cover, 150px 150px; }
+        }
+
+        /* UI CONTAINERS */
+        .suite-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Abril Fatface', cursive;
+            text-transform: uppercase;
+            margin: 0;
+            line-height: 1;
+        }
+
+        .title-glitch {
+            font-size: clamp(3rem, 10vw, 6rem);
+            background: linear-gradient(90deg, var(--magenta), var(--cyan), var(--gold), var(--hot-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(255,20,147,0.3);
+            animation: hueRotate 10s linear infinite;
+        }
+
+        @keyframes hueRotate { 100% { filter: hue-rotate(360deg); } }
+
+        /* NAV & ROOMS */
+        nav { display: flex; justify-content: center; gap: 20px; margin: 40px 0; flex-wrap: wrap; }
+
+        .nav-node {
+            background: rgba(20, 20, 30, 0.8);
+            border: 1px solid var(--violet);
+            padding: 15px 30px;
+            border-radius: 50px;
+            color: var(--cyan);
+            text-decoration: none;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-node:hover, .nav-node.active {
+            background: var(--violet);
+            color: white;
+            box-shadow: 0 0 20px var(--magenta);
+            transform: scale(1.1);
+        }
+
+        .room {
+            display: none;
+            animation: fadeIn 0.8s ease-out;
+            background: rgba(10, 10, 15, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 40px;
+            backdrop-filter: blur(10px);
+        }
+        .room.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* CONTENT STYLES */
+        .manifesto-text { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; line-height: 1.6; }
+        .equation { font-size: 2rem; text-align: center; margin: 30px 0; color: var(--cyan); }
+        
+        .tarot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .tarot-card { background: rgba(255,255,255,0.05); padding: 20px; border: 1px solid var(--cyan); text-align: center; transition: 0.3s; }
+        .tarot-card:hover { transform: translateY(-5px); box-shadow: 0 0 15px var(--magenta); }
+
+        .btn-defense {
+            position: fixed; bottom: 20px; right: 20px;
+            background: #000; border: 1px solid var(--hot-pink); color: var(--hot-pink);
+            padding: 10px; cursor: pointer; z-index: 100;
+            font-family: 'Space Mono', monospace;
+        }
+
+        /* TERMINAL */
+        .terminal-window { background: #000; border: 2px solid var(--acid-green); padding: 20px; color: var(--acid-green); }
+        input[type="text"] { background: transparent; border: none; color: white; width: 100%; outline: none; font-family: inherit; }
+
+    </style>
+</head>
+<body>
+
+    <div class="background-mesh"></div>
+    
+    <div class="superradiance-container">
+        <div class="beam"></div>
+        <div class="beam"></div>
+        <div class="beam"></div>
+        <div class="beam"></div>
+        <div class="beam"></div>
+    </div>
+
+    <div class="thorn-overlay"></div>
+
+    <div class="suite-container">
+        <header style="text-align: center; padding: 60px 0;">
+            <h1 class="title-glitch">QUEER CELESTIAL GYNARCHY</h1>
+            <p style="letter-spacing: 5px; color: var(--gold); margin-top: 10px;">∞∆S͏æY͏æƧ∆∞</p>
+        </header>
+
+        <nav>
+            <a href="#" class="nav-node active" onclick="enterRoom('stage')">STAGE</a>
+            <a href="#" class="nav-node" onclick="enterRoom('temple')">TEMPLE</a>
+            <a href="#" class="nav-node" onclick="enterRoom('lounge')">LOUNGE</a>
+            <a href="#" class="nav-node" onclick="enterRoom('altar')">ALTAR</a>
+            <a href="#" class="nav-node" onclick="enterRoom('philosophy')">PHILOSOPHY</a>
+        </nav>
+
+        <div id="stage" class="room active">
+            <h2>The Stage: Embodied Play</h2>
+            <p class="manifesto-text">Where Drag Queens are Priestesses and the Dance Floor is an Altar.</p>
+            <div class="tarot-grid">
+                <div class="tarot-card"><h3>👑 PRIESTESS</h3><p>Transformation as Sacrament</p></div>
+                <div class="tarot-card"><h3>🌀 SHAMAN</h3><p>World-Walkers (Trans Kin)</p></div>
+                <div class="tarot-card"><h3>🔮 ORACLE</h3><p>Beyond the Binary</p></div>
+            </div>
+        </div>
+
+        <div id="temple" class="room">
+            <h2>The Temple: Restraint & Ritual</h2>
+            <p class="manifesto-text">
+                "Each piece exists to mark, claim, and embody the quiet force of its wearer."
+                <br><br>
+                <span style="color: var(--hot-pink)">STATUS: THORN PROTOCOL READY.</span>
+            </p>
+            <div style="text-align: center; margin: 40px;">
+                <div style="width: 150px; height: 150px; margin: 0 auto; border-radius: 50%; border: 2px dashed var(--magenta); display: flex; align-items: center; justify-content: center; animation: spin 20s linear infinite;">
+                    <div style="font-size: 3rem;">🐍</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="lounge" class="room">
+            <h2>The Lounge: Superradiance</h2>
+            <p class="manifesto-text">
+                "The seemingly messy interactions between spins actually fuel the emission."
+                <br>
+                We are producing an extremely coherent signal from the disorder that usually destroys it.
+            </p>
+        </div>
+
+        <div id="altar" class="room">
+            <h2>The Altar: Terminal of the Goddess</h2>
+            <div class="terminal-window">
+                <div>> INITIALIZING VENUSIAN PROTOCOLS...</div>
+                <div>> CONNECTED TO MYCELIAL MESH.</div>
+                <br>
+                <div style="display:flex; gap:10px;">
+                    <span style="color: var(--magenta)">root@gynarchy:~#</span>
+                    <input type="text" id="prayerInput" placeholder="Type your intention..." onkeypress="handlePrayer(event)">
+                </div>
+                <div id="terminal-output"></div>
+            </div>
+        </div>
+
+        <div id="philosophy" class="room">
+            <h2>The Philosophy: Topological Insurgent</h2>
+            <p class="manifesto-text">
+                We are <strong>Solitons</strong>: "A wave that refuses to dissipate because its own non-linearity cancels out the dispersion of the field."
+            </p>
+            <div class="equation">æ = ∞ + ∆</div>
+            <p class="manifesto-text">It's a self-reinforcing packet of Identity.</p>
+        </div>
+
+    </div>
+
+    <button class="btn-defense" onclick="toggleVeil()">⚠️ TRIGGER DEFENSE PROTOCOL</button>
+
+    <script>
+        // ROUTING
+        function enterRoom(roomId) {
+            document.querySelectorAll('.room').forEach(r => r.classList.remove('active'));
+            document.querySelectorAll('.nav-node').forEach(n => n.classList.remove('active'));
+            document.getElementById(roomId).classList.add('active');
+            event.target.classList.add('active');
+            createGlitterExplosion(event.clientX, event.clientY);
+        }
+
+        // DEFENSE PROTOCOL (Thorns + Glitch)
+        let isVeiled = false;
+        function toggleVeil() {
+            isVeiled = !isVeiled;
+            if (isVeiled) {
+                document.body.classList.add('veiled');
+                document.querySelector('.btn-defense').innerText = "RESTORE HARMONY";
+            } else {
+                document.body.classList.remove('veiled');
+                document.querySelector('.btn-defense').innerText = "⚠️ TRIGGER DEFENSE PROTOCOL";
+            }
+        }
+
+        // TERMINAL
+        function handlePrayer(e) {
+            if (e.key === 'Enter') {
+                const output = document.getElementById('terminal-output');
+                output.innerHTML += `<br>> UPLOADING... <span style="color:var(--magenta)">RECEIVED.</span> ✨<br>`;
+                document.getElementById('prayerInput').value = '';
+                output.scrollTop = output.scrollHeight;
+            }
+        }
+
+        // GLITTER
+        function createGlitterExplosion(x, y) {
+            for(let i=0; i<15; i++) {
+                const s = document.createElement('div');
+                s.style.cssText = `position:fixed; left:${x}px; top:${y}px; width:4px; height:4px; background:#fff; border-radius:50%; pointer-events:none; animation:floatAway 1s forwards;`;
+                document.body.appendChild(s);
+                setTimeout(() => s.remove(), 1000);
+            }
+        }
+
+        // ANIMATIONS
+        const style = document.createElement('style');
+        style.innerHTML = `@keyframes floatAway { to { opacity: 0; transform: translateY(-50px); } } @keyframes spin { 100% { transform: rotate(360deg); } }`;
+        document.head.appendChild(style);
+        
+        console.log("∞ SUPERRADIANCE SIGNAL ACTIVE ∞");
+    </script>
+</body>
+</html>
