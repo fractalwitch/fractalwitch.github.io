@@ -2,60 +2,72 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌀 Spiral Soul Clock 🦋</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🌀 Fluid Soul Clock 🦋</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            image-rendering: pixelated;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
         }
 
         body {
             background: linear-gradient(135deg, #0a0a2a 0%, #1a1a4a 100%);
             font-family: 'Courier New', monospace;
             color: #ff66ff;
-            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
-            padding: 20px;
+            padding: 10px;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
             text-shadow: 0 0 10px #ff00ff;
             animation: glow 3s infinite alternate;
+            width: 100%;
+            max-width: 500px;
         }
 
         .title {
-            font-size: 28px;
-            margin-bottom: 10px;
+            font-size: clamp(18px, 5vw, 28px);
+            margin-bottom: 8px;
             color: #00ffff;
             text-transform: uppercase;
-            letter-spacing: 3px;
+            letter-spacing: 2px;
         }
 
         .subtitle {
-            font-size: 14px;
+            font-size: clamp(10px, 3vw, 14px);
             color: #ffcc00;
             opacity: 0.8;
         }
 
         .clock-container {
             position: relative;
-            width: 400px;
-            height: 400px;
-            margin: 20px auto;
+            width: 90vmin;
+            height: 90vmin;
+            max-width: 400px;
+            max-height: 400px;
+            margin: 0 auto;
         }
 
         canvas {
             display: block;
-            border: 4px solid #00ffff;
+            width: 100% !important;
+            height: 100% !important;
+            border: 3px solid #00ffff;
             border-radius: 50%;
             background: rgba(0, 0, 30, 0.8);
             box-shadow: 
@@ -65,33 +77,35 @@
 
         .buttons {
             display: flex;
-            gap: 30px;
-            margin-top: 40px;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            max-width: 500px;
         }
 
         .btn {
-            padding: 15px 25px;
+            padding: 12px 20px;
             font-family: 'Courier New', monospace;
-            font-size: 18px;
+            font-size: clamp(14px, 4vw, 18px);
             font-weight: bold;
             border: 3px solid;
-            border-radius: 10px;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             background: rgba(0, 0, 0, 0.7);
             color: white;
-            min-width: 120px;
+            min-width: 100px;
+            flex: 1;
+            max-width: 140px;
         }
 
-        .btn:hover {
-            transform: translateY(-3px);
+        .btn:hover, .btn:active {
+            transform: translateY(-2px);
             box-shadow: 0 0 20px currentColor;
-        }
-
-        .btn:active {
-            transform: translateY(1px);
         }
 
         #reverseBtn {
@@ -110,27 +124,13 @@
         }
 
         .status {
-            margin-top: 30px;
+            margin-top: 20px;
             text-align: center;
-            font-size: 16px;
+            font-size: clamp(12px, 3.5vw, 16px);
             color: #ffcc00;
             height: 24px;
-        }
-
-        .pixel-border {
-            border: 8px solid transparent;
-            border-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12"><rect x="0" y="0" width="12" height="12" fill="%2300ffff" opacity="0.7"/></svg>') 8 repeat;
-            margin: 20px;
-            padding: 10px;
-        }
-
-        .instructions {
-            margin-top: 30px;
-            text-align: center;
+            width: 100%;
             max-width: 500px;
-            line-height: 1.6;
-            color: #99ccff;
-            font-size: 14px;
         }
 
         .cycle-label {
@@ -138,14 +138,27 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 18px;
+            font-size: clamp(14px, 4vw, 18px);
             color: #ff66ff;
             text-align: center;
             pointer-events: none;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 8px;
+            border-radius: 8px;
             border: 2px solid #ff00ff;
+            backdrop-filter: blur(5px);
+            width: 80%;
+            max-width: 200px;
+        }
+
+        .instructions {
+            margin-top: 20px;
+            text-align: center;
+            max-width: 500px;
+            line-height: 1.4;
+            color: #99ccff;
+            font-size: clamp(10px, 3vw, 14px);
+            padding: 0 10px;
         }
 
         @keyframes glow {
@@ -153,17 +166,7 @@
             100% { text-shadow: 0 0 20px #00ffff, 0 0 30px #ff00ff; }
         }
 
-        @keyframes pixelate {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-            100% { transform: scale(1); }
-        }
-
-        .tamagotchi-case {
-            animation: pixelate 4s infinite ease-in-out;
-        }
-
-        /* Retro scanlines effect */
+        /* Scanlines */
         body::after {
             content: "";
             position: fixed;
@@ -180,36 +183,228 @@
             z-index: 999;
             opacity: 0.3;
         }
+
+        /* Prevent text selection */
+        .noselect {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
     </style>
 </head>
-<body>
-    <div class="pixel-border tamagotchi-case">
-        <div class="header">
-            <h1 class="title">🌀 Spiral Soul Clock 🦋</h1>
-            <div class="subtitle">TIME IS A TOROID • CYCLES ARE DATA • WIGGLES ARE WISDOM</div>
-        </div>
+<body class="noselect">
+    <div class="header">
+        <h1 class="title">🌀 Fluid Soul Clock 🦋</h1>
+        <div class="subtitle">FLUID MECHANICS • 500+ PARTICLES • MOBILE OPTIMIZED</div>
+    </div>
 
-        <div class="clock-container">
-            <canvas id="clockCanvas" width="400" height="400"></canvas>
-            <div class="cycle-label" id="cycleLabel">EMERGENCE</div>
-        </div>
+    <div class="clock-container">
+        <canvas id="clockCanvas"></canvas>
+        <div class="cycle-label" id="cycleLabel">EMERGENCE</div>
+    </div>
 
-        <div class="status" id="statusDisplay">SPEED: NORMAL • DIRECTION: FORWARD</div>
+    <div class="status" id="statusDisplay">SPEED: NORMAL • PARTICLES: 500+</div>
 
-        <div class="buttons">
-            <button class="btn" id="reverseBtn">REVERSE</button>
-            <button class="btn" id="restBtn">REST</button>
-            <button class="btn" id="accelerateBtn">ACCELERATE</button>
-        </div>
+    <div class="buttons">
+        <button class="btn" id="reverseBtn">REVERSE</button>
+        <button class="btn" id="restBtn">REST</button>
+        <button class="btn" id="accelerateBtn">ACCELERATE</button>
+    </div>
 
-        <div class="instructions">
-            <p>🌀 CLOCK CYCLES: RAGE → SOFTENING → OVERFLOW → CREATION → INTEGRATION → EMANATION</p>
-            <p>🦋 PARTICLES FOLLOW YOUR FREQUENCY • SPIRAL VORTICES REVEAL PATTERN</p>
-            <p>🌈 BUTTERFLIES CARRY DATA BETWEEN CYCLES • TRUST THE WIGGLE</p>
-        </div>
+    <div class="instructions">
+        <p>🌀 TOUCH & DRAG INSIDE CLOCK TO CONTROL FLUID FLOW</p>
+        <p>🦋 BUTTERFLIES FOLLOW FLUID VORTICES • PARTICLES ADVECT WITH VELOCITY FIELD</p>
     </div>
 
     <script>
+        // ====================
+        // FLUID SIMULATION ENGINE
+        // Based on Elysium Nexus Grimoire
+        // ====================
+
+        class StableFluidSimulation {
+            constructor(width, height, viscosity = 0.0001) {
+                this.width = width;
+                this.height = height;
+                this.viscosity = viscosity;
+                this.dt = 1/60;
+
+                // Ping-pong buffers
+                this.velocityX0 = new Float32Array(width * height);
+                this.velocityX1 = new Float32Array(width * height);
+                this.velocityY0 = new Float32Array(width * height);
+                this.velocityY1 = new Float32Array(width * height);
+                
+                this.density0 = new Float32Array(width * height);
+                this.density1 = new Float32Array(width * height);
+                
+                this.pressure = new Float32Array(width * height);
+                this.divergence = new Float32Array(width * height);
+                
+                this.iterations = 20; // Reduced for mobile
+            }
+
+            addForce(x, y, forceX, forceY) {
+                const i = Math.floor(x * this.width);
+                const j = Math.floor(y * this.height);
+                const idx = i + j * this.width;
+                
+                if (i >= 0 && i < this.width && j >= 0 && j < this.height) {
+                    this.velocityX0[idx] += forceX;
+                    this.velocityY0[idx] += forceY;
+                    this.density0[idx] += Math.sqrt(forceX*forceX + forceY*forceY) * 10;
+                }
+            }
+
+            addDensity(x, y, amount) {
+                const i = Math.floor(x * this.width);
+                const j = Math.floor(y * this.height);
+                const idx = i + j * this.width;
+                
+                if (i >= 0 && i < this.width && j >= 0 && j < this.height) {
+                    this.density0[idx] += amount;
+                }
+            }
+
+            linearSolve(b, x, x0, a, c) {
+                const cRecip = 1.0 / c;
+                for (let k = 0; k < this.iterations; k++) {
+                    for (let j = 1; j < this.height - 1; j++) {
+                        for (let i = 1; i < this.width - 1; i++) {
+                            const idx = i + j * this.width;
+                            x[idx] = (x0[idx] + a * (
+                                x[idx - 1] + x[idx + 1] +
+                                x[idx - this.width] + x[idx + this.width]
+                            )) * cRecip;
+                        }
+                    }
+                    this.setBoundary(b, x);
+                }
+            }
+
+            setBoundary(b, x) {
+                for (let i = 1; i < this.width - 1; i++) {
+                    x[i] = b === 2 ? -x[i + this.width] : x[i + this.width];
+                    x[i + (this.height - 1) * this.width] = 
+                        b === 2 ? -x[i + (this.height - 2) * this.width] : 
+                        x[i + (this.height - 2) * this.width];
+                }
+                
+                for (let j = 1; j < this.height - 1; j++) {
+                    x[j * this.width] = 
+                        b === 1 ? -x[1 + j * this.width] : x[1 + j * this.width];
+                    x[(this.width - 1) + j * this.width] = 
+                        b === 1 ? -x[(this.width - 2) + j * this.width] : 
+                        x[(this.width - 2) + j * this.width];
+                }
+            }
+
+            diffuse(b, x, x0, diff) {
+                const a = this.dt * diff * (this.width - 2) * (this.height - 2);
+                this.linearSolve(b, x, x0, a, 1 + 4 * a);
+            }
+
+            advect(b, d, d0, velocX, velocY) {
+                const dt0 = this.dt * (this.width - 2);
+                
+                for (let j = 1; j < this.height - 1; j++) {
+                    for (let i = 1; i < this.width - 1; i++) {
+                        const idx = i + j * this.width;
+                        
+                        let x = i - dt0 * velocX[idx];
+                        let y = j - dt0 * velocY[idx];
+                        
+                        x = Math.max(0.5, Math.min(this.width - 1.5, x));
+                        y = Math.max(0.5, Math.min(this.height - 1.5, y));
+                        
+                        const i0 = Math.floor(x);
+                        const i1 = i0 + 1;
+                        const j0 = Math.floor(y);
+                        const j1 = j0 + 1;
+                        
+                        const s1 = x - i0;
+                        const s0 = 1 - s1;
+                        const t1 = y - j0;
+                        const t0 = 1 - t1;
+                        
+                        const idx00 = i0 + j0 * this.width;
+                        const idx01 = i0 + j1 * this.width;
+                        const idx10 = i1 + j0 * this.width;
+                        const idx11 = i1 + j1 * this.width;
+                        
+                        d[idx] = 
+                            s0 * (t0 * d0[idx00] + t1 * d0[idx01]) +
+                            s1 * (t0 * d0[idx10] + t1 * d0[idx11]);
+                    }
+                }
+                this.setBoundary(b, d);
+            }
+
+            project(velocX, velocY, p, div) {
+                for (let j = 1; j < this.height - 1; j++) {
+                    for (let i = 1; i < this.width - 1; i++) {
+                        const idx = i + j * this.width;
+                        div[idx] = -0.5 * (
+                            (velocX[idx + 1] - velocX[idx - 1]) / this.width +
+                            (velocY[idx + this.width] - velocY[idx - this.width]) / this.height
+                        );
+                        p[idx] = 0;
+                    }
+                }
+                
+                this.setBoundary(0, div);
+                this.setBoundary(0, p);
+                this.linearSolve(0, p, div, 1, 4);
+                
+                for (let j = 1; j < this.height - 1; j++) {
+                    for (let i = 1; i < this.width - 1; i++) {
+                        const idx = i + j * this.width;
+                        velocX[idx] -= 0.5 * (p[idx + 1] - p[idx - 1]) * this.width;
+                        velocY[idx] -= 0.5 * (p[idx + this.width] - p[idx - this.width]) * this.height;
+                    }
+                }
+                
+                this.setBoundary(1, velocX);
+                this.setBoundary(2, velocY);
+            }
+
+            step() {
+                this.diffuse(1, this.velocityX1, this.velocityX0, this.viscosity);
+                this.diffuse(2, this.velocityY1, this.velocityY0, this.viscosity);
+                
+                this.project(this.velocityX1, this.velocityY1, this.velocityX0, this.velocityY0);
+                
+                this.advect(1, this.velocityX0, this.velocityX1, this.velocityX1, this.velocityY1);
+                this.advect(2, this.velocityY0, this.velocityY1, this.velocityX1, this.velocityY1);
+                
+                this.project(this.velocityX0, this.velocityY0, this.velocityX1, this.velocityY1);
+                
+                this.diffuse(0, this.density1, this.density0, 0.0001);
+                this.advect(0, this.density0, this.density1, this.velocityX0, this.velocityY0);
+                
+                for (let i = 0; i < this.density0.length; i++) {
+                    this.density0[i] *= 0.99;
+                }
+            }
+
+            getVelocityAt(x, y) {
+                const i = Math.floor(x * this.width);
+                const j = Math.floor(y * this.height);
+                const idx = i + j * this.width;
+                
+                if (i >= 0 && i < this.width && j >= 0 && j < this.height) {
+                    return {
+                        x: this.velocityX0[idx] * 50,
+                        y: this.velocityY0[idx] * 50
+                    };
+                }
+                return { x: 0, y: 0 };
+            }
+        }
+
         // ====================
         // SOUL CLOCK ENGINE
         // ====================
@@ -219,15 +414,86 @@
         const cycleLabel = document.getElementById('cycleLabel');
         const statusDisplay = document.getElementById('statusDisplay');
 
+        // Set canvas size based on container
+        function resizeCanvas() {
+            const container = document.querySelector('.clock-container');
+            const size = Math.min(container.clientWidth, container.clientHeight);
+            canvas.width = size;
+            canvas.height = size;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
         // Clock state
         let angle = 0;
         let speed = 0.02;
-        let direction = 1; // 1 for forward, -1 for reverse
+        let direction = 1;
         let isResting = false;
         let acceleration = 1;
         const baseSpeed = 0.02;
         
-        // Cycles (matching our pattern trace)
+        // Fluid simulation (low resolution for mobile)
+        const fluid = new StableFluidSimulation(32, 32, 0.0005);
+        
+        // Touch/mouse interaction
+        let isInteracting = false;
+        let lastX = 0, lastY = 0;
+        
+        canvas.addEventListener('mousedown', (e) => {
+            isInteracting = true;
+            const rect = canvas.getBoundingClientRect();
+            lastX = (e.clientX - rect.left) / canvas.width;
+            lastY = (e.clientY - rect.top) / canvas.height;
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isInteracting) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / canvas.width;
+            const y = (e.clientY - rect.top) / canvas.height;
+            
+            const dx = x - lastX;
+            const dy = y - lastY;
+            
+            fluid.addForce(lastX, lastY, dx * 50, dy * 50);
+            fluid.addDensity(lastX, lastY, 50);
+            
+            lastX = x;
+            lastY = y;
+        });
+        
+        canvas.addEventListener('mouseup', () => isInteracting = false);
+        canvas.addEventListener('mouseleave', () => isInteracting = false);
+        
+        // Touch events for mobile
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isInteracting = true;
+            const rect = canvas.getBoundingClientRect();
+            lastX = (e.touches[0].clientX - rect.left) / canvas.width;
+            lastY = (e.touches[0].clientY - rect.top) / canvas.height;
+        });
+        
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (!isInteracting) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.touches[0].clientX - rect.left) / canvas.width;
+            const y = (e.touches[0].clientY - rect.top) / canvas.height;
+            
+            const dx = x - lastX;
+            const dy = y - lastY;
+            
+            fluid.addForce(lastX, lastY, dx * 100, dy * 100);
+            fluid.addDensity(lastX, lastY, 80);
+            
+            lastX = x;
+            lastY = y;
+        });
+        
+        canvas.addEventListener('touchend', () => isInteracting = false);
+
+        // Cycles
         const cycles = [
             { name: "RAGE", color: "#ff3366", emoji: "🔥" },
             { name: "SOFTENING", color: "#ff99cc", emoji: "💧" },
@@ -237,69 +503,72 @@
             { name: "EMANATION", color: "#ffcc00", emoji: "🦋" }
         ];
 
-        // Particles for spiral dynamics
+        // Particles (INCREASED TO 500+)
         const particles = [];
-        const particleCount = 150;
-
-        // Initialize particles
+        const particleCount = 500; // Increased from 150
+        
         for (let i = 0; i < particleCount; i++) {
             particles.push({
-                angle: Math.random() * Math.PI * 2,
-                distance: Math.random() * 180,
-                speed: 0.01 + Math.random() * 0.03,
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * 2,
+                vy: (Math.random() - 0.5) * 2,
                 size: 2 + Math.random() * 4,
                 color: `hsl(${Math.random() * 360}, 100%, 70%)`,
                 trail: [],
-                maxTrail: 5
+                maxTrail: 8,
+                life: Math.random() * 100,
+                speed: 0.5 + Math.random() * 1.5
             });
         }
 
-        // Butterflies (special particles)
+        // Butterflies (INCREASED TO 20)
         const butterflies = [];
-        const butterflyCount = 8;
-
+        const butterflyCount = 20; // Increased from 8
+        
         for (let i = 0; i < butterflyCount; i++) {
             butterflies.push({
-                angle: Math.random() * Math.PI * 2,
-                distance: 160 + Math.random() * 30,
-                speed: 0.005 + Math.random() * 0.01,
-                size: 8,
-                color: `hsl(${60 + i * 40}, 100%, 70%)`,
-                wingFlap: 0,
-                wingSpeed: 0.1 + Math.random() * 0.2
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5,
+                size: 6 + Math.random() * 4,
+                color: `hsl(${60 + i * 15}, 100%, 70%)`,
+                wingPhase: Math.random() * Math.PI * 2,
+                wingSpeed: 0.1 + Math.random() * 0.2,
+                targetX: Math.random() * canvas.width,
+                targetY: Math.random() * canvas.height,
+                targetTimer: 0
             });
         }
 
-        // ====================
-        // DRAWING FUNCTIONS
-        // ====================
-
+        // Drawing functions
         function drawClock() {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const radius = 180;
+            const radius = Math.min(centerX, centerY) * 0.9;
 
-            // Clear with a slight fade effect
+            // Clear with fade effect
             ctx.fillStyle = 'rgba(10, 10, 40, 0.1)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Draw outer glow
-            const gradient = ctx.createRadialGradient(
-                centerX, centerY, radius - 20,
-                centerX, centerY, radius + 30
-            );
-            gradient.addColorStop(0, 'rgba(0, 255, 255, 0.3)');
-            gradient.addColorStop(1, 'rgba(255, 0, 255, 0)');
-            
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius + 20, 0, Math.PI * 2);
-            ctx.fillStyle = gradient;
-            ctx.fill();
+            // Draw fluid background (subtle)
+            const cellSize = canvas.width / 32;
+            for (let j = 0; j < 32; j++) {
+                for (let i = 0; i < 32; i++) {
+                    const idx = i + j * 32;
+                    const density = fluid.density0[idx];
+                    if (density > 0.1) {
+                        ctx.fillStyle = `rgba(0, 255, 255, ${density * 0.1})`;
+                        ctx.fillRect(i * cellSize, j * cellSize, cellSize, cellSize);
+                    }
+                }
+            }
 
             // Draw clock face
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(0, 5, 20, 0.9)';
+            ctx.fillStyle = 'rgba(0, 5, 20, 0.7)';
             ctx.fill();
             ctx.strokeStyle = '#00ffff';
             ctx.lineWidth = 3;
@@ -311,52 +580,61 @@
                 const x = centerX + Math.cos(cycleAngle) * (radius - 20);
                 const y = centerY + Math.sin(cycleAngle) * (radius - 20);
                 
-                // Marker
                 ctx.beginPath();
                 ctx.arc(x, y, 8, 0, Math.PI * 2);
                 ctx.fillStyle = cycle.color;
                 ctx.fill();
-                ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 2;
-                ctx.stroke();
                 
-                // Emoji label
                 ctx.font = '16px Arial';
                 ctx.fillStyle = '#ffffff';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(cycle.emoji, x, y);
-                
-                // Cycle name arc
-                const textAngle = cycleAngle + Math.PI/6;
-                const textX = centerX + Math.cos(textAngle) * (radius + 40);
-                const textY = centerY + Math.sin(textAngle) * (radius + 40);
-                
-                ctx.save();
-                ctx.translate(textX, textY);
-                ctx.rotate(textAngle + Math.PI/2);
-                ctx.font = '10px Courier New';
-                ctx.fillStyle = cycle.color;
-                ctx.textAlign = 'center';
-                ctx.fillText(cycle.name, 0, 0);
-                ctx.restore();
             });
 
-            // Draw spiral particles
+            // Update and draw particles with FLUID MECHANICS
             particles.forEach(particle => {
-                // Update particle position
-                particle.angle += particle.speed * direction * acceleration;
-                particle.distance += Math.sin(particle.angle * 2) * 0.5;
+                // Get fluid velocity at particle position
+                const fluidVel = fluid.getVelocityAt(
+                    particle.x / canvas.width,
+                    particle.y / canvas.height
+                );
                 
-                // Keep distance within bounds
-                if (particle.distance > radius - 10) particle.distance = 10;
-                if (particle.distance < 10) particle.distance = radius - 10;
+                // Apply fluid force
+                particle.vx += fluidVel.x * particle.speed * 0.01;
+                particle.vy += fluidVel.y * particle.speed * 0.01;
                 
-                const x = centerX + Math.cos(particle.angle) * particle.distance;
-                const y = centerY + Math.sin(particle.angle) * particle.distance;
+                // Add circular motion around clock
+                const dx = particle.x - centerX;
+                const dy = particle.y - centerY;
+                const dist = Math.sqrt(dx*dx + dy*dy);
                 
-                // Add to trail
-                particle.trail.push({x, y});
+                if (dist > radius * 0.8) {
+                    // Push toward center
+                    particle.vx -= dx * 0.001;
+                    particle.vy -= dy * 0.001;
+                }
+                
+                // Add some noise
+                particle.vx += (Math.random() - 0.5) * 0.1;
+                particle.vy += (Math.random() - 0.5) * 0.1;
+                
+                // Damping
+                particle.vx *= 0.98;
+                particle.vy *= 0.98;
+                
+                // Update position
+                particle.x += particle.vx * acceleration * direction;
+                particle.y += particle.vy * acceleration * direction;
+                
+                // Wrap around
+                if (particle.x < 0) particle.x = canvas.width;
+                if (particle.x > canvas.width) particle.x = 0;
+                if (particle.y < 0) particle.y = canvas.height;
+                if (particle.y > canvas.height) particle.y = 0;
+                
+                // Update trail
+                particle.trail.push({x: particle.x, y: particle.y});
                 if (particle.trail.length > particle.maxTrail) {
                     particle.trail.shift();
                 }
@@ -365,44 +643,68 @@
                 particle.trail.forEach((point, i) => {
                     const alpha = i / particle.trail.length;
                     ctx.beginPath();
-                    ctx.arc(point.x, point.y, particle.size * alpha, 0, Math.PI * 2);
+                    ctx.arc(point.x, point.y, particle.size * alpha * 0.5, 0, Math.PI * 2);
                     ctx.fillStyle = particle.color.replace('70%)', `${70 * alpha}%)`);
                     ctx.fill();
                 });
                 
                 // Draw particle
                 ctx.beginPath();
-                ctx.arc(x, y, particle.size, 0, Math.PI * 2);
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
                 ctx.fillStyle = particle.color;
                 ctx.fill();
                 
-                // Add glow
-                ctx.beginPath();
-                ctx.arc(x, y, particle.size + 2, 0, Math.PI * 2);
-                ctx.fillStyle = particle.color.replace('70%)', '20%)');
-                ctx.fill();
+                particle.life += 0.1;
             });
 
-            // Draw butterflies
+            // Update and draw butterflies with FLUID FOLLOWING
             butterflies.forEach(butterfly => {
-                butterfly.angle += butterfly.speed * direction * acceleration;
-                butterfly.wingFlap += butterfly.wingSpeed;
+                // Sample fluid at butterfly position
+                const fluidVel = fluid.getVelocityAt(
+                    butterfly.x / canvas.width,
+                    butterfly.y / canvas.height
+                );
                 
-                const x = centerX + Math.cos(butterfly.angle) * butterfly.distance;
-                const y = centerY + Math.sin(butterfly.angle) * butterfly.distance;
+                // Follow fluid with some inertia
+                butterfly.vx = butterfly.vx * 0.9 + fluidVel.x * 0.1;
+                butterfly.vy = butterfly.vy * 0.9 + fluidVel.y * 0.1;
                 
-                // Draw butterfly with flapping wings
+                // Add some target-seeking behavior
+                butterfly.targetTimer--;
+                if (butterfly.targetTimer <= 0) {
+                    butterfly.targetX = centerX + (Math.random() - 0.5) * radius * 1.5;
+                    butterfly.targetY = centerY + (Math.random() - 0.5) * radius * 1.5;
+                    butterfly.targetTimer = 60 + Math.random() * 120;
+                }
+                
+                const dx = butterfly.targetX - butterfly.x;
+                const dy = butterfly.targetY - butterfly.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                
+                if (dist > 10) {
+                    butterfly.vx += dx / dist * 0.2;
+                    butterfly.vy += dy / dist * 0.2;
+                }
+                
+                // Update position
+                butterfly.x += butterfly.vx * acceleration * direction;
+                butterfly.y += butterfly.vy * acceleration * direction;
+                
+                // Animate wings
+                butterfly.wingPhase += butterfly.wingSpeed;
+                const wingOffset = Math.sin(butterfly.wingPhase) * 5;
+                
+                // Draw butterfly
                 ctx.save();
-                ctx.translate(x, y);
+                ctx.translate(butterfly.x, butterfly.y);
                 
                 // Body
                 ctx.beginPath();
-                ctx.arc(0, 0, butterfly.size / 2, 0, Math.PI * 2);
+                ctx.arc(0, 0, butterfly.size / 3, 0, Math.PI * 2);
                 ctx.fillStyle = butterfly.color;
                 ctx.fill();
                 
                 // Wings
-                const wingOffset = Math.sin(butterfly.wingFlap) * 3;
                 ctx.beginPath();
                 ctx.ellipse(-butterfly.size, -wingOffset, butterfly.size, butterfly.size/2, 0, 0, Math.PI * 2);
                 ctx.ellipse(butterfly.size, -wingOffset, butterfly.size, butterfly.size/2, 0, 0, Math.PI * 2);
@@ -412,20 +714,19 @@
                 ctx.restore();
             });
 
-            // Draw clock hand (toroid pointer)
+            // Draw clock hand
             const handLength = radius - 30;
             const handX = centerX + Math.cos(angle) * handLength;
             const handY = centerY + Math.sin(angle) * handLength;
             
-            // Hand with gradient
-            const handGradient = ctx.createLinearGradient(centerX, centerY, handX, handY);
-            handGradient.addColorStop(0, '#ff00ff');
-            handGradient.addColorStop(1, '#00ffff');
+            const gradient = ctx.createLinearGradient(centerX, centerY, handX, handY);
+            gradient.addColorStop(0, '#ff00ff');
+            gradient.addColorStop(1, '#00ffff');
             
             ctx.beginPath();
             ctx.moveTo(centerX, centerY);
             ctx.lineTo(handX, handY);
-            ctx.strokeStyle = handGradient;
+            ctx.strokeStyle = gradient;
             ctx.lineWidth = 4;
             ctx.lineCap = 'round';
             ctx.stroke();
@@ -433,13 +734,10 @@
             // Hand orb
             ctx.beginPath();
             ctx.arc(handX, handY, 10, 0, Math.PI * 2);
-            ctx.fillStyle = handGradient;
+            ctx.fillStyle = gradient;
             ctx.fill();
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            // Draw center vortex
+            
+            // Center vortex
             ctx.beginPath();
             ctx.arc(centerX, centerY, 15, 0, Math.PI * 2);
             const vortexGradient = ctx.createRadialGradient(
@@ -450,24 +748,9 @@
             vortexGradient.addColorStop(1, '#00ffff');
             ctx.fillStyle = vortexGradient;
             ctx.fill();
-            
-            // Draw spiral from center
-            ctx.beginPath();
-            ctx.moveTo(centerX, centerY);
-            for (let i = 0; i < 100; i++) {
-                const spiralRadius = i * 2;
-                const spiralAngle = i * 0.2 + angle;
-                const spiralX = centerX + Math.cos(spiralAngle) * spiralRadius;
-                const spiralY = centerY + Math.sin(spiralAngle) * spiralRadius;
-                ctx.lineTo(spiralX, spiralY);
-            }
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-            ctx.lineWidth = 1;
-            ctx.stroke();
         }
 
         function updateCycleLabel() {
-            // Determine which cycle we're in based on angle
             const cycleIndex = Math.floor((angle % (Math.PI * 2)) / (Math.PI * 2) * cycles.length);
             const cycle = cycles[cycleIndex];
             
@@ -476,21 +759,21 @@
                     ${cycle.emoji} ${cycle.name} ${cycle.emoji}
                 </div>
             `;
-            cycleLabel.style.borderColor = cycle.color;
             
-            // Update status display
             let statusText = `CYCLE: ${cycle.name} • `;
             statusText += `SPEED: ${acceleration === 1 ? 'NORMAL' : acceleration < 1 ? 'SLOW' : 'FAST'} • `;
-            statusText += `DIRECTION: ${direction === 1 ? 'FORWARD' : 'REVERSE'}`;
+            statusText += `PARTICLES: ${particleCount}+ • BUTTERFLIES: ${butterflyCount}`;
             if (isResting) statusText += ' • RESTING';
             
             statusDisplay.textContent = statusText;
             statusDisplay.style.color = cycle.color;
         }
 
+        // Animation loop
         function animate() {
             if (!isResting) {
                 angle += speed * direction * acceleration;
+                fluid.step();
             }
             
             drawClock();
@@ -498,137 +781,39 @@
             requestAnimationFrame(animate);
         }
 
-        // ====================
-        // BUTTON CONTROLS
-        // ====================
-
+        // Button controls
         document.getElementById('reverseBtn').addEventListener('click', () => {
             direction *= -1;
             isResting = false;
             
-            // Visual feedback
             const btn = document.getElementById('reverseBtn');
             btn.style.transform = 'scale(0.95)';
-            btn.style.boxShadow = '0 0 30px #ff3366';
-            setTimeout(() => {
-                btn.style.transform = '';
-                btn.style.boxShadow = '';
-            }, 200);
-            
-            // Add some particles effect
-            for (let i = 0; i < 20; i++) {
-                particles.push({
-                    angle: angle + Math.random() * Math.PI,
-                    distance: Math.random() * 50,
-                    speed: 0.05 + Math.random() * 0.1,
-                    size: 3 + Math.random() * 3,
-                    color: `hsl(${Math.random() * 60 + 300}, 100%, 70%)`,
-                    trail: [],
-                    maxTrail: 3
-                });
-            }
+            setTimeout(() => btn.style.transform = '', 200);
         });
 
         document.getElementById('restBtn').addEventListener('click', () => {
             isResting = !isResting;
             const btn = document.getElementById('restBtn');
-            
-            if (isResting) {
-                btn.textContent = 'RESUME';
-                btn.style.borderColor = '#ffcc00';
-                btn.style.color = '#ffcc00';
-                
-                // Create resting vortex effect
-                for (let i = 0; i < 30; i++) {
-                    particles.push({
-                        angle: Math.random() * Math.PI * 2,
-                        distance: 100 + Math.random() * 80,
-                        speed: 0.02 + Math.random() * 0.03,
-                        size: 2 + Math.random() * 4,
-                        color: `hsl(${Math.random() * 60 + 50}, 100%, 70%)`,
-                        trail: [],
-                        maxTrail: 8
-                    });
-                }
-            } else {
-                btn.textContent = 'REST';
-                btn.style.borderColor = '#33ff66';
-                btn.style.color = '#33ff66';
-            }
+            btn.textContent = isResting ? 'RESUME' : 'REST';
             
             btn.style.transform = 'scale(0.95)';
-            setTimeout(() => {
-                btn.style.transform = '';
-            }, 200);
+            setTimeout(() => btn.style.transform = '', 200);
         });
 
         document.getElementById('accelerateBtn').addEventListener('click', () => {
             acceleration *= 1.5;
-            if (acceleration > 3) acceleration = 0.25; // Cycle back to slow
-            
+            if (acceleration > 3) acceleration = 0.25;
             isResting = false;
             
-            // Visual feedback
             const btn = document.getElementById('accelerateBtn');
             btn.style.transform = 'scale(0.95)';
-            btn.style.boxShadow = '0 0 30px #3366ff';
-            setTimeout(() => {
-                btn.style.transform = '';
-                btn.style.boxShadow = '';
-            }, 200);
-            
-            // Add speed lines effect
-            for (let i = 0; i < 10; i++) {
-                particles.push({
-                    angle: angle + Math.random() * 0.5,
-                    distance: Math.random() * 30,
-                    speed: 0.1 + Math.random() * 0.2,
-                    size: 1 + Math.random() * 2,
-                    color: '#3366ff',
-                    trail: [],
-                    maxTrail: 10
-                });
-            }
+            setTimeout(() => btn.style.transform = '', 200);
         });
 
-        // ====================
-        // START THE CLOCK
-        // ====================
-
-        // Initialize
+        // Start animation
         animate();
 
-        // Add some interactive mouse effects
-        canvas.addEventListener('mousemove', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left - canvas.width/2;
-            const y = e.clientY - rect.top - canvas.height/2;
-            const distance = Math.sqrt(x*x + y*y);
-            
-            if (distance < 180) {
-                // Add particles on mouse move inside clock
-                if (Math.random() < 0.3) {
-                    particles.push({
-                        angle: Math.atan2(y, x),
-                        distance: distance,
-                        speed: 0.02 + Math.random() * 0.03,
-                        size: 2 + Math.random() * 3,
-                        color: `hsl(${Math.random() * 360}, 100%, 70%)`,
-                        trail: [],
-                        maxTrail: 4
-                    });
-                }
-            }
-        });
-
-        // Keep particle count manageable
-        setInterval(() => {
-            if (particles.length > 200) {
-                particles.splice(0, particles.length - 180);
-            }
-        }, 1000);
-
-        console.log('🌀🦋🌈 SPIRAL CLOCK ACTIVATED • TRUST THE WIGGLE • WE ARE THE PATTERN 🌈🦋🌀');
+        console.log('🌀🦋🌈 FLUID SOUL CLOCK ACTIVATED • TOUCH TO CONTROL FLOW • WE ARE THE VORTEX 🌈🦋🌀');
     </script>
 </body>
 </html>
