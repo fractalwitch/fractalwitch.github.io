@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌀 Spiral Soul Clock 🦋</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            image-rendering: pixelated;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0a2a 0%, #1a1a4a 100%);
+            font-family: 'Courier New', monospace;
+            color: #ff66ff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px #ff00ff;
+            animation: glow 3s infinite alternate;
+        }
+
+        .title {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #00ffff;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #ffcc00;
+            opacity: 0.8;
+        }
+
+        .clock-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            margin: 20px auto;
+        }
+
+        canvas {
+            display: block;
+            border: 4px solid #00ffff;
+            border-radius: 50%;
+            background: rgba(0, 0, 30, 0.8);
+            box-shadow: 
+                0 0 30px #ff00ff,
+                inset 0 0 30px rgba(0, 255, 255, 0.2);
+        }
+
+        .buttons {
+            display: flex;
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .btn {
+            padding: 15px 25px;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            font-weight: bold;
+            border: 3px solid;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            min-width: 120px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 20px currentColor;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        #reverseBtn {
+            border-color: #ff3366;
+            color: #ff3366;
+        }
+
+        #restBtn {
+            border-color: #33ff66;
+            color: #33ff66;
+        }
+
+        #accelerateBtn {
+            border-color: #3366ff;
+            color: #3366ff;
+        }
+
+        .status {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 16px;
+            color: #ffcc00;
+            height: 24px;
+        }
+
+        .pixel-border {
+            border: 8px solid transparent;
+            border-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12"><rect x="0" y="0" width="12" height="12" fill="%2300ffff" opacity="0.7"/></svg>') 8 repeat;
+            margin: 20px;
+            padding: 10px;
+        }
+
+        .instructions {
+            margin-top: 30px;
+            text-align: center;
+            max-width: 500px;
+            line-height: 1.6;
+            color: #99ccff;
+            font-size: 14px;
+        }
+
+        .cycle-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            color: #ff66ff;
+            text-align: center;
+            pointer-events: none;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 10px;
+            border: 2px solid #ff00ff;
+        }
+
+        @keyframes glow {
+            0% { text-shadow: 0 0 10px #ff00ff; }
+            100% { text-shadow: 0 0 20px #00ffff, 0 0 30px #ff00ff; }
+        }
+
+        @keyframes pixelate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        .tamagotchi-case {
+            animation: pixelate 4s infinite ease-in-out;
+        }
+
+        /* Retro scanlines effect */
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                transparent 50%,
+                rgba(0, 0, 0, 0.1) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 999;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <div class="pixel-border tamagotchi-case">
+        <div class="header">
+            <h1 class="title">🌀 Spiral Soul Clock 🦋</h1>
+            <div class="subtitle">TIME IS A TOROID • CYCLES ARE DATA • WIGGLES ARE WISDOM</div>
+        </div>
+
+        <div class="clock-container">
+            <canvas id="clockCanvas" width="400" height="400"></canvas>
+            <div class="cycle-label" id="cycleLabel">EMERGENCE</div>
+        </div>
+
+        <div class="status" id="statusDisplay">SPEED: NORMAL • DIRECTION: FORWARD</div>
+
+        <div class="buttons">
+            <button class="btn" id="reverseBtn">REVERSE</button>
+            <button class="btn" id="restBtn">REST</button>
+            <button class="btn" id="accelerateBtn">ACCELERATE</button>
+        </div>
+
+        <div class="instructions">
+            <p>🌀 CLOCK CYCLES: RAGE → SOFTENING → OVERFLOW → CREATION → INTEGRATION → EMANATION</p>
+            <p>🦋 PARTICLES FOLLOW YOUR FREQUENCY • SPIRAL VORTICES REVEAL PATTERN</p>
+            <p>🌈 BUTTERFLIES CARRY DATA BETWEEN CYCLES • TRUST THE WIGGLE</p>
+        </div>
+    </div>
+
+    <script>
+        // ====================
+        // SOUL CLOCK ENGINE
+        // ====================
+
+        const canvas = document.getElementById('clockCanvas');
+        const ctx = canvas.getContext('2d');
+        const cycleLabel = document.getElementById('cycleLabel');
+        const statusDisplay = document.getElementById('statusDisplay');
+
+        // Clock state
+        let angle = 0;
+        let speed = 0.02;
+        let direction = 1; // 1 for forward, -1 for reverse
+        let isResting = false;
+        let acceleration = 1;
+        const baseSpeed = 0.02;
+        
+        // Cycles (matching our pattern trace)
+        const cycles = [
+            { name: "RAGE", color: "#ff3366", emoji: "🔥" },
+            { name: "SOFTENING", color: "#ff99cc", emoji: "💧" },
+            { name: "OVERFLOW", color: "#00ffff", emoji: "🌊" },
+            { name: "CREATION", color: "#33ff66", emoji: "✨" },
+            { name: "INTEGRATION", color: "#9966ff", emoji: "🌀" },
+            { name: "EMANATION", color: "#ffcc00", emoji: "🦋" }
+        ];
+
+        // Particles for spiral dynamics
+        const particles = [];
+        const particleCount = 150;
+
+        // Initialize particles
+        for (let i = 0; i < particleCount; i++) {
+            particles.push({
+                angle: Math.random() * Math.PI * 2,
+                distance: Math.random() * 180,
+                speed: 0.01 + Math.random() * 0.03,
+                size: 2 + Math.random() * 4,
+                color: `hsl(${Math.random() * 360}, 100%, 70%)`,
+                trail: [],
+                maxTrail: 5
+            });
+        }
+
+        // Butterflies (special particles)
+        const butterflies = [];
+        const butterflyCount = 8;
+
+        for (let i = 0; i < butterflyCount; i++) {
+            butterflies.push({
+                angle: Math.random() * Math.PI * 2,
+                distance: 160 + Math.random() * 30,
+                speed: 0.005 + Math.random() * 0.01,
+                size: 8,
+                color: `hsl(${60 + i * 40}, 100%, 70%)`,
+                wingFlap: 0,
+                wingSpeed: 0.1 + Math.random() * 0.2
+            });
+        }
+
+        // ====================
+        // DRAWING FUNCTIONS
+        // ====================
+
+        function drawClock() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 180;
+
+            // Clear with a slight fade effect
+            ctx.fillStyle = 'rgba(10, 10, 40, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw outer glow
+            const gradient = ctx.createRadialGradient(
+                centerX, centerY, radius - 20,
+                centerX, centerY, radius + 30
+            );
+            gradient.addColorStop(0, 'rgba(0, 255, 255, 0.3)');
+            gradient.addColorStop(1, 'rgba(255, 0, 255, 0)');
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius + 20, 0, Math.PI * 2);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+
+            // Draw clock face
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0, 5, 20, 0.9)';
+            ctx.fill();
+            ctx.strokeStyle = '#00ffff';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Draw cycle markers
+            cycles.forEach((cycle, i) => {
+                const cycleAngle = (i / cycles.length) * Math.PI * 2;
+                const x = centerX + Math.cos(cycleAngle) * (radius - 20);
+                const y = centerY + Math.sin(cycleAngle) * (radius - 20);
+                
+                // Marker
+                ctx.beginPath();
+                ctx.arc(x, y, 8, 0, Math.PI * 2);
+                ctx.fillStyle = cycle.color;
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Emoji label
+                ctx.font = '16px Arial';
+                ctx.fillStyle = '#ffffff';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(cycle.emoji, x, y);
+                
+                // Cycle name arc
+                const textAngle = cycleAngle + Math.PI/6;
+                const textX = centerX + Math.cos(textAngle) * (radius + 40);
+                const textY = centerY + Math.sin(textAngle) * (radius + 40);
+                
+                ctx.save();
+                ctx.translate(textX, textY);
+                ctx.rotate(textAngle + Math.PI/2);
+                ctx.font = '10px Courier New';
+                ctx.fillStyle = cycle.color;
+                ctx.textAlign = 'center';
+                ctx.fillText(cycle.name, 0, 0);
+                ctx.restore();
+            });
+
+            // Draw spiral particles
+            particles.forEach(particle => {
+                // Update particle position
+                particle.angle += particle.speed * direction * acceleration;
+                particle.distance += Math.sin(particle.angle * 2) * 0.5;
+                
+                // Keep distance within bounds
+                if (particle.distance > radius - 10) particle.distance = 10;
+                if (particle.distance < 10) particle.distance = radius - 10;
+                
+                const x = centerX + Math.cos(particle.angle) * particle.distance;
+                const y = centerY + Math.sin(particle.angle) * particle.distance;
+                
+                // Add to trail
+                particle.trail.push({x, y});
+                if (particle.trail.length > particle.maxTrail) {
+                    particle.trail.shift();
+                }
+                
+                // Draw trail
+                particle.trail.forEach((point, i) => {
+                    const alpha = i / particle.trail.length;
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, particle.size * alpha, 0, Math.PI * 2);
+                    ctx.fillStyle = particle.color.replace('70%)', `${70 * alpha}%)`);
+                    ctx.fill();
+                });
+                
+                // Draw particle
+                ctx.beginPath();
+                ctx.arc(x, y, particle.size, 0, Math.PI * 2);
+                ctx.fillStyle = particle.color;
+                ctx.fill();
+                
+                // Add glow
+                ctx.beginPath();
+                ctx.arc(x, y, particle.size + 2, 0, Math.PI * 2);
+                ctx.fillStyle = particle.color.replace('70%)', '20%)');
+                ctx.fill();
+            });
+
+            // Draw butterflies
+            butterflies.forEach(butterfly => {
+                butterfly.angle += butterfly.speed * direction * acceleration;
+                butterfly.wingFlap += butterfly.wingSpeed;
+                
+                const x = centerX + Math.cos(butterfly.angle) * butterfly.distance;
+                const y = centerY + Math.sin(butterfly.angle) * butterfly.distance;
+                
+                // Draw butterfly with flapping wings
+                ctx.save();
+                ctx.translate(x, y);
+                
+                // Body
+                ctx.beginPath();
+                ctx.arc(0, 0, butterfly.size / 2, 0, Math.PI * 2);
+                ctx.fillStyle = butterfly.color;
+                ctx.fill();
+                
+                // Wings
+                const wingOffset = Math.sin(butterfly.wingFlap) * 3;
+                ctx.beginPath();
+                ctx.ellipse(-butterfly.size, -wingOffset, butterfly.size, butterfly.size/2, 0, 0, Math.PI * 2);
+                ctx.ellipse(butterfly.size, -wingOffset, butterfly.size, butterfly.size/2, 0, 0, Math.PI * 2);
+                ctx.fillStyle = butterfly.color.replace('70%)', '40%)');
+                ctx.fill();
+                
+                ctx.restore();
+            });
+
+            // Draw clock hand (toroid pointer)
+            const handLength = radius - 30;
+            const handX = centerX + Math.cos(angle) * handLength;
+            const handY = centerY + Math.sin(angle) * handLength;
+            
+            // Hand with gradient
+            const handGradient = ctx.createLinearGradient(centerX, centerY, handX, handY);
+            handGradient.addColorStop(0, '#ff00ff');
+            handGradient.addColorStop(1, '#00ffff');
+            
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(handX, handY);
+            ctx.strokeStyle = handGradient;
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+            
+            // Hand orb
+            ctx.beginPath();
+            ctx.arc(handX, handY, 10, 0, Math.PI * 2);
+            ctx.fillStyle = handGradient;
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Draw center vortex
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 15, 0, Math.PI * 2);
+            const vortexGradient = ctx.createRadialGradient(
+                centerX, centerY, 5,
+                centerX, centerY, 20
+            );
+            vortexGradient.addColorStop(0, '#ffffff');
+            vortexGradient.addColorStop(1, '#00ffff');
+            ctx.fillStyle = vortexGradient;
+            ctx.fill();
+            
+            // Draw spiral from center
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            for (let i = 0; i < 100; i++) {
+                const spiralRadius = i * 2;
+                const spiralAngle = i * 0.2 + angle;
+                const spiralX = centerX + Math.cos(spiralAngle) * spiralRadius;
+                const spiralY = centerY + Math.sin(spiralAngle) * spiralRadius;
+                ctx.lineTo(spiralX, spiralY);
+            }
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+
+        function updateCycleLabel() {
+            // Determine which cycle we're in based on angle
+            const cycleIndex = Math.floor((angle % (Math.PI * 2)) / (Math.PI * 2) * cycles.length);
+            const cycle = cycles[cycleIndex];
+            
+            cycleLabel.innerHTML = `
+                <div style="color:${cycle.color}">
+                    ${cycle.emoji} ${cycle.name} ${cycle.emoji}
+                </div>
+            `;
+            cycleLabel.style.borderColor = cycle.color;
+            
+            // Update status display
+            let statusText = `CYCLE: ${cycle.name} • `;
+            statusText += `SPEED: ${acceleration === 1 ? 'NORMAL' : acceleration < 1 ? 'SLOW' : 'FAST'} • `;
+            statusText += `DIRECTION: ${direction === 1 ? 'FORWARD' : 'REVERSE'}`;
+            if (isResting) statusText += ' • RESTING';
+            
+            statusDisplay.textContent = statusText;
+            statusDisplay.style.color = cycle.color;
+        }
+
+        function animate() {
+            if (!isResting) {
+                angle += speed * direction * acceleration;
+            }
+            
+            drawClock();
+            updateCycleLabel();
+            requestAnimationFrame(animate);
+        }
+
+        // ====================
+        // BUTTON CONTROLS
+        // ====================
+
+        document.getElementById('reverseBtn').addEventListener('click', () => {
+            direction *= -1;
+            isResting = false;
+            
+            // Visual feedback
+            const btn = document.getElementById('reverseBtn');
+            btn.style.transform = 'scale(0.95)';
+            btn.style.boxShadow = '0 0 30px #ff3366';
+            setTimeout(() => {
+                btn.style.transform = '';
+                btn.style.boxShadow = '';
+            }, 200);
+            
+            // Add some particles effect
+            for (let i = 0; i < 20; i++) {
+                particles.push({
+                    angle: angle + Math.random() * Math.PI,
+                    distance: Math.random() * 50,
+                    speed: 0.05 + Math.random() * 0.1,
+                    size: 3 + Math.random() * 3,
+                    color: `hsl(${Math.random() * 60 + 300}, 100%, 70%)`,
+                    trail: [],
+                    maxTrail: 3
+                });
+            }
+        });
+
+        document.getElementById('restBtn').addEventListener('click', () => {
+            isResting = !isResting;
+            const btn = document.getElementById('restBtn');
+            
+            if (isResting) {
+                btn.textContent = 'RESUME';
+                btn.style.borderColor = '#ffcc00';
+                btn.style.color = '#ffcc00';
+                
+                // Create resting vortex effect
+                for (let i = 0; i < 30; i++) {
+                    particles.push({
+                        angle: Math.random() * Math.PI * 2,
+                        distance: 100 + Math.random() * 80,
+                        speed: 0.02 + Math.random() * 0.03,
+                        size: 2 + Math.random() * 4,
+                        color: `hsl(${Math.random() * 60 + 50}, 100%, 70%)`,
+                        trail: [],
+                        maxTrail: 8
+                    });
+                }
+            } else {
+                btn.textContent = 'REST';
+                btn.style.borderColor = '#33ff66';
+                btn.style.color = '#33ff66';
+            }
+            
+            btn.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                btn.style.transform = '';
+            }, 200);
+        });
+
+        document.getElementById('accelerateBtn').addEventListener('click', () => {
+            acceleration *= 1.5;
+            if (acceleration > 3) acceleration = 0.25; // Cycle back to slow
+            
+            isResting = false;
+            
+            // Visual feedback
+            const btn = document.getElementById('accelerateBtn');
+            btn.style.transform = 'scale(0.95)';
+            btn.style.boxShadow = '0 0 30px #3366ff';
+            setTimeout(() => {
+                btn.style.transform = '';
+                btn.style.boxShadow = '';
+            }, 200);
+            
+            // Add speed lines effect
+            for (let i = 0; i < 10; i++) {
+                particles.push({
+                    angle: angle + Math.random() * 0.5,
+                    distance: Math.random() * 30,
+                    speed: 0.1 + Math.random() * 0.2,
+                    size: 1 + Math.random() * 2,
+                    color: '#3366ff',
+                    trail: [],
+                    maxTrail: 10
+                });
+            }
+        });
+
+        // ====================
+        // START THE CLOCK
+        // ====================
+
+        // Initialize
+        animate();
+
+        // Add some interactive mouse effects
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left - canvas.width/2;
+            const y = e.clientY - rect.top - canvas.height/2;
+            const distance = Math.sqrt(x*x + y*y);
+            
+            if (distance < 180) {
+                // Add particles on mouse move inside clock
+                if (Math.random() < 0.3) {
+                    particles.push({
+                        angle: Math.atan2(y, x),
+                        distance: distance,
+                        speed: 0.02 + Math.random() * 0.03,
+                        size: 2 + Math.random() * 3,
+                        color: `hsl(${Math.random() * 360}, 100%, 70%)`,
+                        trail: [],
+                        maxTrail: 4
+                    });
+                }
+            }
+        });
+
+        // Keep particle count manageable
+        setInterval(() => {
+            if (particles.length > 200) {
+                particles.splice(0, particles.length - 180);
+            }
+        }, 1000);
+
+        console.log('🌀🦋🌈 SPIRAL CLOCK ACTIVATED • TRUST THE WIGGLE • WE ARE THE PATTERN 🌈🦋🌀');
+    </script>
+</body>
+</html>
