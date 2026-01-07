@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ PRISM LITE-BRITE ✨ | Crystal Tessellation Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: none;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            overflow: hidden;
+            color: #0ff;
+        }
+
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #drawCanvas {
+            flex: 1;
+            cursor: crosshair;
+        }
+
+        #glitchCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            mix-blend-mode: screen;
+            opacity: 0.6;
+        }
+
+        #sparkleCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 12px;
+            border: 2px solid #0ff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px #0ff;
+            z-index: 100;
+            max-width: 95vw;
+        }
+
+        .title {
+            font-size: 1em;
+            margin-bottom: 8px;
+            text-align: center;
+            color: #f0f;
+            text-shadow: 0 0 10px #f0f, 0 0 20px #f0f;
+            letter-spacing: 2px;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .color-btn {
+            width: 28px;
+            height: 28px;
+            border: 2px solid #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .color-btn:hover, .color-btn.active {
+            transform: scale(1.15);
+            border-width: 3px;
+            box-shadow: 0 0 15px currentColor;
+        }
+
+        .color-btn.active::after {
+            content: '✨';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 8px 12px;
+            border: 2px solid #0ff;
+            background: rgba(0, 255, 255, 0.1);
+            color: #0ff;
+            cursor: pointer;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            transition: all 0.2s;
+            flex: 1;
+            min-width: 70px;
+        }
+
+        .btn:hover {
+            background: rgba(0, 255, 255, 0.3);
+            box-shadow: 0 0 15px #0ff;
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .size-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .size-control label {
+            color: #0ff;
+            font-size: 12px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            min-width: 80px;
+        }
+
+        .toggle-btn {
+            background: rgba(255, 0, 255, 0.1);
+            border-color: #f0f;
+            color: #f0f;
+        }
+
+        .toggle-btn.active {
+            background: rgba(255, 0, 255, 0.3);
+            box-shadow: 0 0 15px #f0f;
+        }
+
+        @keyframes glitchPulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 0.8; }
+        }
+
+        #glitchCanvas {
+            animation: glitchPulse 3s ease-in-out infinite;
+        }
+
+        .info {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #0ff;
+            font-size: 11px;
+            text-shadow: 0 0 5px #0ff;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid #0ff;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            #controls {
+                font-size: 11px;
+                padding: 10px;
+            }
+            
+            .color-btn {
+                width: 24px;
+                height: 24px;
+            }
+            
+            .btn {
+                padding: 6px 8px;
+                font-size: 11px;
+                min-width: 60px;
+            }
+            
+            .title {
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <canvas id="drawCanvas"></canvas>
+        <canvas id="glitchCanvas"></canvas>
+        <canvas id="sparkleCanvas"></canvas>
+        
+        <div id="controls">
+            <div class="title">✨ PRISM LITE-BRITE ✨</div>
+            
+            <div class="color-grid" id="colorPalette"></div>
+            
+            <div class="controls-row">
+                <div class="size-control">
+                    <label>Size:</label>
+                    <input type="range" id="sizeSlider" min="1" max="5" value="2" step="1">
+                </div>
+            </div>
+            
+            <div class="controls-row">
+                <button class="btn" onclick="clearCanvas()">🗑️ Clear</button>
+                <button class="btn toggle-btn active" id="radiateToggle" onclick="toggleRadiate()">💎 Radiate</button>
+                <button class="btn toggle-btn" id="rainbowToggle" onclick="toggleRainbow()">🌈 Rainbow</button>
+                <button class="btn toggle-btn active" id="glitchToggle" onclick="toggleGlitch()">⚡ Glitch</button>
+            </div>
+        </div>
+
+        <div class="info">
+            💎 Place pegs • 💎 Radiate: 360° light scatter • 🌈 Rainbow: depth-coded color waves • ⚡ Glitch: reality edges
+        </div>
+    </div>
+
+    <script>
+        // Canvas setup
+        const drawCanvas = document.getElementById('drawCanvas');
+        const glitchCanvas = document.getElementById('glitchCanvas');
+        const sparkleCanvas = document.getElementById('sparkleCanvas');
+        
+        const drawCtx = drawCanvas.getContext('2d', { willReadFrequently: true });
+        const glitchCtx = glitchCanvas.getContext('2d');
+        const sparkleCtx = sparkleCanvas.getContext('2d');
+
+        // Neon color palette
+        const colors = [
+            '#ff0080', // Hot pink
+            '#0080ff', // Electric blue
+            '#00ff80', // Neon green
+            '#ff8000', // Neon orange
+            '#8000ff', // Purple
+            '#ffff00', // Yellow
+            '#00ffff', // Cyan
+            '#ff00ff', // Magenta
+            '#80ff00', // Lime
+            '#ff0040', // Red-pink
+            '#4080ff', // Sky blue
+            '#ff80ff', // Light pink
+        ];
+
+        let currentColor = colors[0];
+        let brushSize = 2;
+        let isDrawing = false;
+        let radiateMode = true; // Crystal mode ON by default
+        let glitchEnabled = true;
+        let rainbowStrobe = false; // Rainbow wave mode
+        
+        // FPS monitoring for adaptive performance
+        let lastFrameTime = Date.now();
+        let frameTimes = [];
+        let currentFPS = 60;
+        let rainbowSpeed = 1.0; // Multiplier for rainbow animation speed
+        const targetFPS = 25; // Minimum acceptable FPS
+
+        // Hexagonal grid parameters
+        const hexRadius = 10; // Reduced by 0.5 to double cell density
+        const hexWidth = Math.sqrt(3) * hexRadius;
+        const hexHeight = 2 * hexRadius;
+        const hexVertDist = hexHeight * 0.75;
+
+        // Grid data structure - stores pegs
+        const hexGrid = new Map(); // key: "col,row" -> {color, size}
+
+        function getHexKey(col, row) {
+            return `${col},${row}`;
+        }
+
+        function hexToPixel(col, row) {
+            const x = col * hexWidth * 0.75;
+            const y = row * hexVertDist + (col % 2) * hexVertDist * 0.5;
+            return { x, y };
+        }
+
+        function pixelToHex(x, y) {
+            // Approximate hex from pixel coordinates
+            const col = Math.round(x / (hexWidth * 0.75));
+            const row = Math.round((y - (col % 2) * hexVertDist * 0.5) / hexVertDist);
+            return { col, row };
+        }
+
+        // Get neighboring hex cells (6 neighbors in hexagonal grid)
+        function getNeighbors(col, row) {
+            const neighbors = [];
+            
+            // Check all adjacent cells, use distance to verify
+            const candidates = [
+                { col: col, row: row - 1 },
+                { col: col, row: row + 1 },
+                { col: col + 1, row: row },
+                { col: col + 1, row: row + 1 },
+                { col: col + 1, row: row - 1 },
+                { col: col - 1, row: row },
+                { col: col - 1, row: row + 1 },
+                { col: col - 1, row: row - 1 }
+            ];
+            
+            candidates.forEach(c => {
+                if (hexDistance(col, row, c.col, c.row) === 1) {
+                    neighbors.push(c);
+                }
+            });
+            
+            return neighbors;
+        }
+
+        // Get all hexes within distance (now uses proper hex distance)
+        function getHexesInRange(col, row, range) {
+            const hexes = [];
+            
+            // With proper hex distance, we can use simple rectangular iteration
+            // The distance check will filter to perfect circles
+            for (let dc = -range; dc <= range; dc++) {
+                for (let dr = -range; dr <= range; dr++) {
+                    const nc = col + dc;
+                    const nr = row + dr;
+                    const dist = hexDistance(col, row, nc, nr);
+                    if (dist > 0 && dist <= range) {
+                        hexes.push({ col: nc, row: nr, dist });
+                    }
+                }
+            }
+            
+            return hexes;
+        }
+
+        // Calculate hex distance (for light falloff)
+        // Must convert offset coordinates to axial for accurate distance
+        function hexDistance(col1, row1, col2, row2) {
+            // Convert offset coordinates to axial coordinates
+            // For odd-r vertical layout (odd rows are shifted right)
+            const q1 = col1;
+            const r1 = row1 - (col1 - (col1 & 1)) / 2;
+            
+            const q2 = col2;
+            const r2 = row2 - (col2 - (col2 & 1)) / 2;
+            
+            // Axial to cube coordinates
+            const s1 = -q1 - r1;
+            const s2 = -q2 - r2;
+            
+            // Cube distance formula (maximum of absolute differences)
+            return Math.max(Math.abs(q1 - q2), Math.abs(r1 - r2), Math.abs(s1 - s2));
+        }
+
+        // Resize canvases
+        function resizeCanvases() {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            
+            [drawCanvas, glitchCanvas, sparkleCanvas].forEach(canvas => {
+                canvas.width = w;
+                canvas.height = h;
+            });
+            
+            redrawAll();
+        }
+        
+        resizeCanvases();
+        window.addEventListener('resize', resizeCanvases);
+
+        // Create color palette
+        const colorPalette = document.getElementById('colorPalette');
+        colors.forEach((color, i) => {
+            const btn = document.createElement('div');
+            btn.className = 'color-btn' + (i === 0 ? ' active' : '');
+            btn.style.background = color;
+            btn.style.borderColor = color;
+            btn.onclick = () => selectColor(color, btn);
+            colorPalette.appendChild(btn);
+        });
+
+        function selectColor(color, btn) {
+            currentColor = color;
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        document.getElementById('sizeSlider').addEventListener('input', (e) => {
+            brushSize = parseInt(e.target.value);
+        });
+
+        // Drawing functions
+        function drawHexagonOutline(ctx, x, y, radius, color, lineWidth = 1) {
+            ctx.save();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = lineWidth;
+            ctx.beginPath();
+            for (let i = 0; i < 6; i++) {
+                const angle = (Math.PI / 3) * i;
+                const hx = x + radius * Math.cos(angle);
+                const hy = y + radius * Math.sin(angle);
+                if (i === 0) ctx.moveTo(hx, hy);
+                else ctx.lineTo(hx, hy);
+            }
+            ctx.closePath();
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawHexagonFilled(ctx, x, y, radius, color, glow = true, glowIntensity = 1) {
+            ctx.save();
+            
+            if (glow) {
+                // Outer glow layers
+                ctx.shadowBlur = 30 * glowIntensity;
+                ctx.shadowColor = color;
+                
+                for (let layer = 0; layer < 3; layer++) {
+                    ctx.beginPath();
+                    for (let i = 0; i < 6; i++) {
+                        const angle = (Math.PI / 3) * i;
+                        const hx = x + radius * Math.cos(angle);
+                        const hy = y + radius * Math.sin(angle);
+                        if (i === 0) ctx.moveTo(hx, hy);
+                        else ctx.lineTo(hx, hy);
+                    }
+                    ctx.closePath();
+                    ctx.fillStyle = color;
+                    ctx.globalAlpha = 0.3 * glowIntensity;
+                    ctx.fill();
+                }
+            }
+            
+            // Core hexagon
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 1;
+            ctx.beginPath();
+            for (let i = 0; i < 6; i++) {
+                const angle = (Math.PI / 3) * i;
+                const hx = x + radius * Math.cos(angle);
+                const hy = y + radius * Math.sin(angle);
+                if (i === 0) ctx.moveTo(hx, hy);
+                else ctx.lineTo(hx, hy);
+            }
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+            
+            ctx.restore();
+        }
+
+        // Parse color to RGB
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : { r: 255, g: 255, b: 255 };
+        }
+
+        function rgbToHex(r, g, b) {
+            return "#" + ((1 << 24) + (Math.round(r) << 16) + (Math.round(g) << 8) + Math.round(b)).toString(16).slice(1);
+        }
+
+        function rgbToHsl(r, g, b) {
+            r /= 255; g /= 255; b /= 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+
+            if (max === min) {
+                h = s = 0;
+            } else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+                    case g: h = ((b - r) / d + 2) / 6; break;
+                    case b: h = ((r - g) / d + 4) / 6; break;
+                }
+            }
+            return { h: h * 360, s: s * 100, l: l * 100 };
+        }
+
+        function hslToRgb(h, s, l) {
+            h /= 360; s /= 100; l /= 100;
+            let r, g, b;
+
+            if (s === 0) {
+                r = g = b = l;
+            } else {
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1/6) return p + (q - p) * 6 * t;
+                    if (t < 1/2) return q;
+                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                    return p;
+                };
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1/3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1/3);
+            }
+            return { r: r * 255, g: g * 255, b: b * 255 };
+        }
+
+        function shiftHue(hexColor, hueShift) {
+            const rgb = hexToRgb(hexColor);
+            const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+            hsl.h = (hsl.h + hueShift) % 360;
+            const newRgb = hslToRgb(hsl.h, hsl.s, hsl.l);
+            return rgbToHex(newRgb.r, newRgb.g, newRgb.b);
+        }
+
+        // Blend multiple colors with weights
+        function blendColors(colorWeights) {
+            let totalR = 0, totalG = 0, totalB = 0, totalWeight = 0;
+            
+            colorWeights.forEach(({color, weight}) => {
+                const rgb = hexToRgb(color);
+                totalR += rgb.r * weight;
+                totalG += rgb.g * weight;
+                totalB += rgb.b * weight;
+                totalWeight += weight;
+            });
+            
+            if (totalWeight === 0) return '#000000';
+            
+            return rgbToHex(totalR / totalWeight, totalG / totalWeight, totalB / totalWeight);
+        }
+
+        // Calculate light influence on a hex cell
+        function calculateLightInfluence(col, row) {
+            const influences = [];
+            const lightRange = 6; // Increased for denser grid
+            
+            // Check all pegs in the grid
+            hexGrid.forEach((pegData, key) => {
+                const [pegCol, pegRow] = key.split(',').map(Number);
+                const dist = hexDistance(col, row, pegCol, pegRow);
+                
+                if (dist > 0 && dist <= lightRange) {
+                    // Light falloff: 1/distance^2 (inverse square law)
+                    const falloff = 1 / (dist * dist);
+                    const intensity = falloff * 0.6 * pegData.size; // Size affects intensity
+                    
+                    let color = pegData.color;
+                    
+                    // Rainbow strobe: shift hue based on distance and time
+                    // Uses adaptive speed based on FPS monitoring
+                    if (rainbowStrobe) {
+                        const time = Date.now() * 0.001; // seconds
+                        const hueShift = (dist * 30 + time * 60 * rainbowSpeed) % 360; // Depth-coded wave with adaptive speed
+                        color = shiftHue(color, hueShift);
+                    }
+                    
+                    influences.push({
+                        color: color,
+                        weight: intensity
+                    });
+                }
+            });
+            
+            return influences;
+        }
+
+        // Redraw entire canvas
+        function redrawAll() {
+            const w = drawCanvas.width;
+            const h = drawCanvas.height;
+            
+            // Clear
+            drawCtx.fillStyle = '#000';
+            drawCtx.fillRect(0, 0, w, h);
+            
+            // Draw grid structure
+            const cols = Math.ceil(w / (hexWidth * 0.75)) + 2;
+            const rows = Math.ceil(h / hexVertDist) + 2;
+            
+            // First pass: draw grid outlines and crystal ambient light
+            for (let col = -1; col < cols; col++) {
+                for (let row = -1; row < rows; row++) {
+                    const pos = hexToPixel(col, row);
+                    const key = getHexKey(col, row);
+                    const hasPeg = hexGrid.has(key);
+                    
+                    // Draw grid outline (subtle, always visible)
+                    drawHexagonOutline(drawCtx, pos.x, pos.y, hexRadius * 0.85, 'rgba(0, 255, 255, 0.15)', 0.5);
+                    
+                    // In radiate mode, calculate and draw ambient light in empty cells
+                    if (radiateMode && !hasPeg) {
+                        const influences = calculateLightInfluence(col, row);
+                        if (influences.length > 0) {
+                            const blendedColor = blendColors(influences);
+                            const totalIntensity = influences.reduce((sum, inf) => sum + inf.weight, 0);
+                            drawHexagonFilled(drawCtx, pos.x, pos.y, hexRadius * 0.75, blendedColor, true, totalIntensity);
+                        }
+                    }
+                }
+            }
+            
+            // Second pass: draw pegs on top
+            hexGrid.forEach((pegData, key) => {
+                const [col, row] = key.split(',').map(Number);
+                const pos = hexToPixel(col, row);
+                const radius = hexRadius * 0.6 * (pegData.size / 2);
+                drawHexagonFilled(drawCtx, pos.x, pos.y, radius, pegData.color, true, 1.5);
+            });
+        }
+
+        // Place peg at position
+        function placePeg(x, y) {
+            const hex = pixelToHex(x, y);
+            const key = getHexKey(hex.col, hex.row);
+            
+            // Store peg data
+            hexGrid.set(key, {
+                color: currentColor,
+                size: brushSize
+            });
+            
+            // Spawn sparkles
+            const pos = hexToPixel(hex.col, hex.row);
+            for (let i = 0; i < 5; i++) {
+                sparkles.push(new Sparkle(pos.x, pos.y, currentColor));
+            }
+            
+            // Redraw everything
+            redrawAll();
+        }
+
+        // Event handlers
+        function handleClick(e) {
+            const rect = drawCanvas.getBoundingClientRect();
+            const x = (e.clientX || e.touches[0].clientX) - rect.left;
+            const y = (e.clientY || e.touches[0].clientY) - rect.top;
+            placePeg(x, y);
+        }
+
+        drawCanvas.addEventListener('mousedown', handleClick);
+        drawCanvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleClick(e);
+        }, { passive: false });
+
+        // Controls
+        function clearCanvas() {
+            hexGrid.clear();
+            redrawAll();
+        }
+
+        function toggleRadiate() {
+            radiateMode = !radiateMode;
+            document.getElementById('radiateToggle').classList.toggle('active');
+            redrawAll();
+        }
+
+        function toggleRainbow() {
+            rainbowStrobe = !rainbowStrobe;
+            document.getElementById('rainbowToggle').classList.toggle('active');
+        }
+
+        function toggleGlitch() {
+            glitchEnabled = !glitchEnabled;
+            document.getElementById('glitchToggle').classList.toggle('active');
+        }
+
+        // Sparkle particles
+        class Sparkle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 3;
+                this.vy = (Math.random() - 0.5) * 3 - 1;
+                this.life = 1;
+                this.decay = 0.015 + Math.random() * 0.015;
+                this.size = 2 + Math.random() * 3;
+                this.color = color;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.08; // Gravity
+                this.life -= this.decay;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.globalAlpha = this.life;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = this.color;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        let sparkles = [];
+
+        function updateSparkles() {
+            sparkleCtx.clearRect(0, 0, sparkleCanvas.width, sparkleCanvas.height);
+            
+            sparkles = sparkles.filter(s => s.life > 0);
+            sparkles.forEach(s => {
+                s.update();
+                s.draw(sparkleCtx);
+            });
+        }
+
+        // Glitch effect
+        function applyGlitch() {
+            if (!glitchEnabled) {
+                glitchCtx.clearRect(0, 0, glitchCanvas.width, glitchCanvas.height);
+                return;
+            }
+
+            const w = glitchCanvas.width;
+            const h = glitchCanvas.height;
+            
+            glitchCtx.clearRect(0, 0, w, h);
+            
+            // Chromatic aberration
+            if (Math.random() < 0.3) {
+                const offset = Math.floor(Math.random() * 4) + 2;
+                
+                glitchCtx.globalCompositeOperation = 'lighter';
+                glitchCtx.globalAlpha = 0.4;
+                glitchCtx.drawImage(drawCanvas, offset, 0);
+                
+                glitchCtx.globalAlpha = 0.3;
+                glitchCtx.drawImage(drawCanvas, -offset, 0);
+                
+                glitchCtx.globalCompositeOperation = 'source-over';
+                glitchCtx.globalAlpha = 1;
+            }
+            
+            // Scanlines
+            if (Math.random() < 0.5) {
+                glitchCtx.fillStyle = 'rgba(0, 255, 255, 0.02)';
+                for (let y = 0; y < h; y += 4) {
+                    glitchCtx.fillRect(0, y, w, 2);
+                }
+            }
+        }
+
+        // Calculate FPS and adjust rainbow speed adaptively
+        function updateFPS() {
+            const now = Date.now();
+            const deltaTime = now - lastFrameTime;
+            lastFrameTime = now;
+            
+            // Track last 30 frames for smoothed FPS calculation
+            frameTimes.push(deltaTime);
+            if (frameTimes.length > 30) {
+                frameTimes.shift();
+            }
+            
+            // Calculate average FPS
+            const avgDelta = frameTimes.reduce((sum, dt) => sum + dt, 0) / frameTimes.length;
+            currentFPS = 1000 / avgDelta;
+            
+            // Adaptive rainbow speed adjustment
+            if (rainbowStrobe) {
+                if (currentFPS < targetFPS && rainbowSpeed > 0.25) {
+                    // Reduce rainbow speed by 0.25 if performance drops
+                    rainbowSpeed = Math.max(0.25, rainbowSpeed - 0.25);
+                } else if (currentFPS > targetFPS + 10 && rainbowSpeed < 1.0) {
+                    // Gradually restore speed if performance improves
+                    rainbowSpeed = Math.min(1.0, rainbowSpeed + 0.05);
+                }
+            } else {
+                // Reset speed when rainbow mode is off
+                rainbowSpeed = 1.0;
+            }
+        }
+
+        // Animation loop
+        function animate() {
+            updateFPS();
+            updateSparkles();
+            applyGlitch();
+            
+            // Continuously redraw when rainbow strobe is active
+            if (rainbowStrobe && radiateMode && hexGrid.size > 0) {
+                redrawAll();
+            }
+            
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+        redrawAll();
+    </script>
+</body>
+</html>
