@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergent Cosmic Patterns</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(ellipse at center, #0f0f23 0%, #000000 70%);
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+            color: #888;
+            position: relative;
+        }
+        
+        canvas {
+            display: block;
+            cursor: crosshair;
+        }
+        
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+        }
+        
+        .control-group {
+            margin-bottom: 10px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #aaa;
+        }
+        
+        input[type="range"] {
+            width: 150px;
+            margin-right: 10px;
+            accent-color: #444;
+        }
+        
+        input[type="range"]::-webkit-slider-track {
+            background: #222;
+            height: 4px;
+            border-radius: 2px;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            background: #666;
+            border-radius: 50%;
+        }
+        
+        .sustain-control {
+            border-top: 1px solid #444;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+        
+        .sustain-control label {
+            color: #b8860b;
+        }
+        
+        button {
+            background: #1a1a2e;
+            color: #eee;
+            border: 1px solid #444;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            margin: 2px;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: #16213e;
+            border-color: #666;
+        }
+        
+        .info {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            font-size: 11px;
+            line-height: 1.4;
+            backdrop-filter: blur(5px);
+        }
+        
+        .anchor-indicator {
+            color: #b8860b;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="cosmos"></canvas>
+    
+    <div class="controls">
+        <div class="control-group">
+            <label>Star Density: <span id="densityValue">3</span></label>
+            <input type="range" id="density" min="1" max="8" value="3">
+        </div>
+        <div class="control-group">
+            <label>Connection Range: <span id="rangeValue">120</span></label>
+            <input type="range" id="connectionRange" min="50" max="250" value="120">
+        </div>
+        <div class="control-group">
+            <label>Gravity Strength: <span id="gravityValue">1.0</span></label>
+            <input type="range" id="gravity" min="0.1" max="3.0" step="0.1" value="1.0">
+        </div>
+        <div class="control-group">
+            <label>Speed: <span id="speedValue">1.0</span></label>
+            <input type="range" id="speed" min="0.2" max="3.0" step="0.1" value="1.0">
+        </div>
+        <div class="control-group sustain-control">
+            <label class="anchor-indicator">⚓ Anchor Sustain: <span id="sustainValue">1.0</span></label>
+            <input type="range" id="sustain" min="0.2" max="5.0" step="0.1" value="1.0">
+        </div>
+        <div class="control-group">
+            <button onclick="addBurst()">Cosmic Burst</button>
+            <button onclick="addAnchor()">Add Anchor</button>
+            <button onclick="togglePause()">Pause/Resume</button>
+            <button onclick="reset()">Reset</button>
+        </div>
+    </div>
+    
+    <div class="info">
+        Click anywhere to summon shooting stars<br>
+        Watch for emergent constellations<br>
+        <span class="anchor-indicator">⚓ Anchors</span> create stable gravitational nodes<br>
+        Sustain controls anchor dissolution time
+    </div>
+
+    <script>
+        const canvas = document.getElementById('cosmos');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        let stars = [];
+        let connections = [];
+        let constellations = [];
+        let isPaused = false;
+        let time = 0;
+        
+        // Control elements
+        const densitySlider = document.getElementById('density');
+        const rangeSlider = document.getElementById('connectionRange');
+        const speedSlider = document.getElementById('speed');
+        const gravitySlider = document.getElementById('gravity');
+        const sustainSlider = document.getElementById('sustain');
+        const densityValue = document.getElementById('densityValue');
+        const rangeValue = document.getElementById('rangeValue');
+        const speedValue = document.getElementById('speedValue');
+        const gravityValue = document.getElementById('gravityValue');
+        const sustainValue = document.getElementById('sustainValue');
+        
+        // Update display values
+        densitySlider.oninput = () => densityValue.textContent = densitySlider.value;
+        rangeSlider.oninput = () => rangeValue.textContent = rangeSlider.value;
+        speedSlider.oninput = () => speedValue.textContent = speedSlider.value;
+        gravitySlider.oninput = () => {
+            gravityValue.textContent = gravitySlider.value;
+            // Update existing stars' gravity strength
+            stars.forEach(star => {
+                star.gravityStrength *= parseFloat(gravitySlider.value);
+            });
+        };
+        sustainSlider.oninput = () => {
+            sustainValue.textContent = sustainSlider.value;
+            // Update existing anchors' dissolution rate
+            stars.forEach(star => {
+                if (star.isAnchor) {
+                    star.updateSustainRate(parseFloat(sustainSlider.value));
+                }
+            });
+        };
+        
+        class Star {
+            constructor(x, y, vx = null, vy = null) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx || (Math.random() - 0.5) * 4;
+                this.vy = vy || (Math.random() - 0.5) * 4;
+                this.size = Math.random() * 2 + 1;
+                this.brightness = Math.random() * 0.8 + 0.2;
+                this.color = this.generateStarColor();
+                this.life = 1.0;
+                this.maxLife = Math.random() * 300 + 200;
+                this.age = 0;
+                this.trailPoints = [];
+                this.connections = [];
+                
+                // Resonant gravity properties
+                this.gravityStrength = Math.random() * 0.8 + 0.2;
+                this.resonanceFreq = Math.random() * 0.1 + 0.02; // How it oscillates
+                this.gravityRange = 80 + Math.random() * 120; // Influence radius
+                this.isAnchor = Math.random() < 0.15; // 15% chance to be gravitational anchor
+                this.mass = this.isAnchor ? this.size * 3 : this.size;
+                this.resonancePhase = Math.random() * Math.PI * 2;
+                
+                // Anchor sustain properties
+                this.baseDissolutionRate = 0.002; // Base rate for normal stars
+                this.anchorDissolutionRate = this.isAnchor ? 0.0005 : this.baseDissolutionRate; // Anchors dissolve slower
+                this.sustainMultiplier = 1.0;
+                this.anchorStability = this.isAnchor ? Math.random() * 0.5 + 0.8 : 1.0; // Anchors more stable
+            }
+            
+            generateStarColor() {
+                const colors = [
+                    [255, 255, 255], // White
+                    [173, 216, 230], // Light blue
+                    [255, 182, 193], // Light pink
+                    [255, 215, 0],   // Gold
+                    [255, 165, 0],   // Orange
+                    [138, 43, 226]   // Blue violet
+                ];
+                
+                // Anchors get warmer colors to distinguish them
+                if (this.isAnchor) {
+                    const anchorColors = [
+                        [255, 215, 0],   // Gold
+                        [255, 165, 0],   // Orange  
+                        [255, 140, 0],   // Dark orange
+                        [184, 134, 11]   // Dark gold
+                    ];
+                    return anchorColors[Math.floor(Math.random() * anchorColors.length)];
+                }
+                
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+            
+            updateSustainRate(sustainValue) {
+                if (this.isAnchor) {
+                    // Higher sustain value = slower dissolution (divide by sustain value)
+                    this.sustainMultiplier = 1.0 / sustainValue;
+                }
+            }
+            
+            update() {
+                if (isPaused) return;
+                
+                const speed = parseFloat(speedSlider.value);
+                
+                // Apply resonant gravity from other stars
+                this.applyGravitationalForces();
+                
+                this.x += this.vx * speed;
+                this.y += this.vy * speed;
+                this.age++;
+                
+                // Add some velocity damping to prevent runaway acceleration
+                this.vx *= 0.99;
+                this.vy *= 0.99;
+                
+                // Add trail point
+                this.trailPoints.push({x: this.x, y: this.y, alpha: this.brightness});
+                if (this.trailPoints.length > 15) {
+                    this.trailPoints.shift();
+                }
+                
+                // Boundary wrapping
+                if (this.x < 0) this.x = canvas.width;
+                if (this.x > canvas.width) this.x = 0;
+                if (this.y < 0) this.y = canvas.height;
+                if (this.y > canvas.height) this.y = 0;
+                
+                // Life cycle with sustain control for anchors
+                if (this.age > this.maxLife) {
+                    if (this.isAnchor) {
+                        // Anchor dissolution affected by sustain slider
+                        const sustainValue = parseFloat(sustainSlider.value);
+                        const dissolutionRate = this.anchorDissolutionRate / sustainValue;
+                        this.life -= dissolutionRate * this.anchorStability;
+                        
+                        // Visual feedback - anchors pulse faster as they approach dissolution
+                        if (this.life < 0.3) {
+                            this.resonanceFreq *= 1.02; // Speed up pulsing
+                        }
+                    } else {
+                        this.life -= this.baseDissolutionRate;
+                    }
+                }
+                
+                return this.life > 0;
+            }
+            
+            applyGravitationalForces() {
+                for (let other of stars) {
+                    if (other === this) continue;
+                    
+                    const dx = other.x - this.x;
+                    const dy = other.y - this.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance > 0 && distance < other.gravityRange) {
+                        // Calculate resonant gravity strength
+                        const resonantPulse = Math.sin(time * other.resonanceFreq + other.resonancePhase);
+                        const baseGravity = (other.gravityStrength * other.mass) / (distance * distance);
+                        
+                        // Resonance creates variable attraction/repulsion
+                        const resonantGravity = baseGravity * (0.5 + resonantPulse * 0.5);
+                        
+                        // Sometimes gravity becomes repulsive for interesting dynamics
+                        const gravityDirection = resonantPulse > 0.7 ? -1 : 1;
+                        
+                        const force = resonantGravity * gravityDirection * 0.1;
+                        
+                        // Normalize direction and apply force
+                        const forceX = (dx / distance) * force;
+                        const forceY = (dy / distance) * force;
+                        
+                        this.vx += forceX;
+                        this.vy += forceY;
+                        
+                        // Anchors have stronger influence and form stable points
+                        if (other.isAnchor && distance < 60) {
+                            this.vx += forceX * 2;
+                            this.vy += forceY * 2;
+                        }
+                    }
+                }
+            }
+            
+            draw() {
+                // Draw trail
+                for (let i = 0; i < this.trailPoints.length; i++) {
+                    const point = this.trailPoints[i];
+                    const alpha = (i / this.trailPoints.length) * point.alpha * this.life * 0.3;
+                    
+                    ctx.save();
+                    ctx.globalAlpha = alpha;
+                    ctx.fillStyle = `rgb(${this.color[0]}, ${this.color[1]}, ${this.color[2]})`;
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, this.size * 0.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+                
+                // Draw main star with pulsing effect
+                const pulse = Math.sin(time * 0.02 + this.x * 0.01) * 0.2 + 0.8;
+                const glowSize = this.size * (2 + pulse);
+                
+                // Show gravitational influence for anchors
+                if (this.isAnchor) {
+                    const gravityPulse = Math.sin(time * this.resonanceFreq + this.resonancePhase);
+                    const sustainValue = parseFloat(sustainSlider.value);
+                    
+                    // Anchor ring opacity based on life and sustain
+                    const ringAlpha = (0.1 + (gravityPulse * 0.05)) * this.life * (sustainValue * 0.2);
+                    
+                    ctx.save();
+                    ctx.globalAlpha = ringAlpha;
+                    ctx.strokeStyle = `rgb(${Math.min(255, this.color[0] + 100)}, ${Math.min(255, this.color[1] + 50)}, ${Math.min(255, this.color[2] + 100)})`;
+                    ctx.lineWidth = this.life < 0.5 ? 3 : 1; // Thicker line as anchor weakens
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.gravityRange * (0.8 + gravityPulse * 0.2), 0, Math.PI * 2);
+                    ctx.stroke();
+                    
+                    // Add inner stability ring for anchors
+                    if (this.life < 0.5) {
+                        ctx.globalAlpha = (0.5 - this.life) * 2; // Fade in as anchor weakens
+                        ctx.strokeStyle = `rgb(255, 100, 100)`; // Warning red
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.gravityRange * 0.3, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+                    
+                    ctx.restore();
+                }
+                
+                // Outer glow (larger for anchors)
+                ctx.save();
+                ctx.globalAlpha = this.brightness * this.life * 0.3;
+                ctx.fillStyle = `rgb(${this.color[0]}, ${this.color[1]}, ${this.color[2]})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, glowSize * (this.isAnchor ? 1.5 : 1), 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+                
+                // Inner bright core
+                ctx.save();
+                ctx.globalAlpha = this.brightness * this.life;
+                const coreColor = this.isAnchor ? 
+                    `rgb(${Math.min(255, this.color[0] + 80)}, ${Math.min(255, this.color[1] + 80)}, ${Math.min(255, this.color[2] + 80)})` :
+                    `rgb(${Math.min(255, this.color[0] + 50)}, ${Math.min(255, this.color[1] + 50)}, ${Math.min(255, this.color[2] + 50)})`;
+                ctx.fillStyle = coreColor;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size * pulse * (this.isAnchor ? 1.3 : 1), 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+                
+                // Anchor symbol overlay when dissolving
+                if (this.isAnchor && this.life < 0.7) {
+                    ctx.save();
+                    ctx.globalAlpha = (0.7 - this.life) * 1.5;
+                    ctx.fillStyle = 'rgba(255, 215, 0, 0.8)';
+                    ctx.font = `${Math.max(12, this.size * 8)}px monospace`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('⚓', this.x, this.y);
+                    ctx.restore();
+                }
+            }
+        }
+        
+        class Connection {
+            constructor(star1, star2) {
+                this.star1 = star1;
+                this.star2 = star2;
+                this.strength = 0;
+                this.maxStrength = Math.random() * 0.8 + 0.2;
+                this.age = 0;
+                this.color = this.blendColors(star1.color, star2.color);
+            }
+            
+            blendColors(color1, color2) {
+                return [
+                    Math.floor((color1[0] + color2[0]) / 2),
+                    Math.floor((color1[1] + color2[1]) / 2),
+                    Math.floor((color1[2] + color2[2]) / 2)
+                ];
+            }
+            
+            update() {
+                if (isPaused) return;
+                
+                const dx = this.star2.x - this.star1.x;
+                const dy = this.star2.y - this.star1.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const connectionRange = parseInt(rangeSlider.value);
+                
+                if (distance < connectionRange) {
+                    this.strength = Math.min(this.maxStrength, this.strength + 0.05);
+                } else {
+                    this.strength = Math.max(0, this.strength - 0.02);
+                }
+                
+                this.age++;
+                return this.strength > 0 && this.star1.life > 0 && this.star2.life > 0;
+            }
+            
+            draw() {
+                if (this.strength <= 0) return;
+                
+                const pulse = Math.sin(time * 0.03 + this.age * 0.1) * 0.3 + 0.7;
+                
+                // Stronger connections when anchors are involved
+                const anchorMultiplier = (this.star1.isAnchor || this.star2.isAnchor) ? 1.5 : 1.0;
+                
+                ctx.save();
+                ctx.globalAlpha = this.strength * pulse * Math.min(this.star1.life, this.star2.life) * anchorMultiplier;
+                ctx.strokeStyle = `rgb(${this.color[0]}, ${this.color[1]}, ${this.color[2]})`;
+                ctx.lineWidth = this.strength * 2 * anchorMultiplier;
+                
+                // Add slight curve to connections
+                const midX = (this.star1.x + this.star2.x) / 2 + Math.sin(this.age * 0.05) * 10;
+                const midY = (this.star1.y + this.star2.y) / 2 + Math.cos(this.age * 0.05) * 10;
+                
+                ctx.beginPath();
+                ctx.moveTo(this.star1.x, this.star1.y);
+                ctx.quadraticCurveTo(midX, midY, this.star2.x, this.star2.y);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+        
+        function findConnections() {
+            const connectionRange = parseInt(rangeSlider.value);
+            const newConnections = [];
+            
+            for (let i = 0; i < stars.length; i++) {
+                for (let j = i + 1; j < stars.length; j++) {
+                    const dx = stars[j].x - stars[i].x;
+                    const dy = stars[j].y - stars[i].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < connectionRange) {
+                        // Check if connection already exists
+                        let exists = false;
+                        for (let conn of connections) {
+                            if ((conn.star1 === stars[i] && conn.star2 === stars[j]) ||
+                                (conn.star1 === stars[j] && conn.star2 === stars[i])) {
+                                exists = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!exists) {
+                            newConnections.push(new Connection(stars[i], stars[j]));
+                        }
+                    }
+                }
+            }
+            
+            connections.push(...newConnections);
+        }
+        
+        function addBurst() {
+            const centerX = Math.random() * canvas.width;
+            const centerY = Math.random() * canvas.height;
+            const burstCount = 8 + Math.random() * 12;
+            
+            for (let i = 0; i < burstCount; i++) {
+                const angle = (i / burstCount) * Math.PI * 2;
+                const speed = 2 + Math.random() * 3;
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed;
+                
+                stars.push(new Star(centerX, centerY, vx, vy));
+            }
+        }
+        
+        function addAnchor() {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            const anchor = new Star(x, y, 0, 0); // Start stationary
+            anchor.isAnchor = true;
+            anchor.mass *= 2;
+            anchor.gravityStrength *= 1.5;
+            anchor.gravityRange *= 1.3;
+            anchor.maxLife *= 2; // Live longer
+            anchor.anchorDissolutionRate = 0.0005; // Start with slow dissolution
+            anchor.updateSustainRate(parseFloat(sustainSlider.value));
+            stars.push(anchor);
+        }
+        
+        function togglePause() {
+            isPaused = !isPaused;
+        }
+        
+        function reset() {
+            stars = [];
+            connections = [];
+            constellations = [];
+        }
+        
+        function generateStars() {
+            const density = parseInt(densitySlider.value);
+            const targetCount = density * 15;
+            
+            while (stars.length < targetCount) {
+                const star = new Star(
+                    Math.random() * canvas.width,
+                    Math.random() * canvas.height
+                );
+                if (star.isAnchor) {
+                    star.updateSustainRate(parseFloat(sustainSlider.value));
+                }
+                stars.push(star);
+            }
+        }
+        
+        function animate() {
+            time++;
+            
+            // Clear canvas with slight trail effect
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Add background stars
+            if (Math.random() < 0.02) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, 1, 1);
+            }
+            
+            // Update and filter stars
+            stars = stars.filter(star => star.update());
+            
+            // Update and filter connections
+            connections = connections.filter(conn => conn.update());
+            
+            // Find new connections
+            if (time % 5 === 0) {
+                findConnections();
+            }
+            
+            // Draw connections first (behind stars)
+            connections.forEach(conn => conn.draw());
+            
+            // Draw stars
+            stars.forEach(star => star.draw());
+            
+            // Maintain star population
+            generateStars();
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // Event listeners
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Create multiple stars in a small burst
+            for (let i = 0; i < 5; i++) {
+                const offsetX = (Math.random() - 0.5) * 40;
+                const offsetY = (Math.random() - 0.5) * 40;
+                const star = new Star(x + offsetX, y + offsetY);
+                if (star.isAnchor) {
+                    star.updateSustainRate(parseFloat(sustainSlider.value));
+                }
+                stars.push(star);
+            }
+        });
+        
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+        
+        // Initialize
+        generateStars();
+        animate();
+    </script>
+</body>
+</html>
