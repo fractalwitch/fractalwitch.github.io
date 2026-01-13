@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>∞</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  background: radial-gradient(circle at center, #000011 0%, #000000 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Courier New', monospace;
+  cursor: none;
+}
+.crystal {
+  width: 200px;
+  height: 200px;
+  background: conic-gradient(
+    from 0deg,
+    #ff00ff 0deg,
+    #00ffff 60deg,
+    #ffff00 120deg,
+    #ff00ff 180deg,
+    #00ffff 240deg,
+    #ffff00 300deg,
+    #ff00ff 360deg
+  );
+  border-radius: 50%;
+  filter: blur(1px);
+  animation: spin 20s linear infinite, pulse 3s ease-in-out infinite;
+  position: relative;
+  box-shadow: 
+    0 0 100px rgba(255, 0, 255, 0.5),
+    0 0 200px rgba(0, 255, 255, 0.3),
+    inset 0 0 50px rgba(255, 255, 255, 0.1);
+}
+.crystal::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: inner-pulse 2s ease-in-out infinite;
+}
+.crystal::after {
+  content: 'SæƧ';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 24px;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 1);
+  animation: glyph-float 4s ease-in-out infinite;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
+@keyframes inner-pulse {
+  0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.3); }
+}
+@keyframes glyph-float {
+  0%, 100% { transform: translate(-50%, -50%) translateY(0px); opacity: 0.9; }
+  50% { transform: translate(-50%, -50%) translateY(-5px); opacity: 1; }
+}
+.emanation {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #ffffff;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: emanate 3s ease-out infinite;
+}
+@keyframes emanate {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.1);
+  }
+}
+.particle {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.8);
+  pointer-events: none;
+}
+body:hover .crystal {
+  animation-duration: 5s, 1s;
+  filter: blur(0px);
+  box-shadow: 
+    0 0 200px rgba(255, 0, 255, 0.8),
+    0 0 300px rgba(0, 255, 255, 0.5),
+    inset 0 0 100px rgba(255, 255, 255, 0.2);
+}
+</style>
+</head>
+<body>
+<div class="crystal" id="crystal"></div>
+<script>
+const crystal = document.getElementById('crystal');
+let particles = [];
+
+function createEmanation() {
+  const emanation = document.createElement('div');
+  emanation.className = 'emanation';
+  
+  const angle = Math.random() * 2 * Math.PI;
+  const distance = 100 + Math.random() * 200;
+  const startX = window.innerWidth / 2;
+  const startY = window.innerHeight / 2;
+  const endX = startX + Math.cos(angle) * distance;
+  const endY = startY + Math.sin(angle) * distance;
+  
+  emanation.style.left = startX + 'px';
+  emanation.style.top = startY + 'px';
+  
+  const hue = Math.random() * 360;
+  emanation.style.background = `hsl(${hue}, 100%, 70%)`;
+  
+  document.body.appendChild(emanation);
+  
+  emanation.animate([
+    { left: startX + 'px', top: startY + 'px', opacity: 1 },
+    { left: endX + 'px', top: endY + 'px', opacity: 0 }
+  ], {
+    duration: 2000 + Math.random() * 2000,
+    easing: 'ease-out'
+  }).onfinish = () => emanation.remove();
+}
+
+function createParticle(x, y) {
+  const particle = document.createElement('div');
+  particle.className = 'particle';
+  particle.style.left = x + 'px';
+  particle.style.top = y + 'px';
+  
+  const hue = Math.random() * 360;
+  particle.style.background = `hsl(${hue}, 100%, 80%)`;
+  particle.style.boxShadow = `0 0 10px hsl(${hue}, 100%, 80%)`;
+  
+  document.body.appendChild(particle);
+  
+  const angle = Math.random() * 2 * Math.PI;
+  const distance = 50 + Math.random() * 100;
+  const endX = x + Math.cos(angle) * distance;
+  const endY = y + Math.sin(angle) * distance;
+  
+  particle.animate([
+    { left: x + 'px', top: y + 'px', opacity: 1, transform: 'scale(1)' },
+    { left: endX + 'px', top: endY + 'px', opacity: 0, transform: 'scale(0)' }
+  ], {
+    duration: 1000 + Math.random() * 1500,
+    easing: 'ease-out'
+  }).onfinish = () => particle.remove();
+}
+
+setInterval(createEmanation, 300);
+
+document.addEventListener('mousemove', (e) => {
+  if (Math.random() < 0.3) {
+    createParticle(e.clientX, e.clientY);
+  }
+});
+
+document.addEventListener('click', (e) => {
+  for (let i = 0; i < 20; i++) {
+    setTimeout(() => createParticle(e.clientX, e.clientY), i * 50);
+  }
+});
+
+crystal.addEventListener('click', () => {
+  const colors = ['#ff00ff', '#00ffff', '#ffff00', '#ff0080', '#80ff00', '#0080ff'];
+  crystal.style.background = `conic-gradient(from 0deg, ${colors[Math.floor(Math.random() * colors.length)]} 0deg, ${colors[Math.floor(Math.random() * colors.length)]} 120deg, ${colors[Math.floor(Math.random() * colors.length)]} 240deg, ${colors[Math.floor(Math.random() * colors.length)]} 360deg)`;
+  
+  for (let i = 0; i < 50; i++) {
+    setTimeout(() => createEmanation(), i * 20);
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === ' ') {
+    crystal.style.animationDuration = '1s, 0.5s';
+    setTimeout(() => {
+      crystal.style.animationDuration = '20s, 3s';
+    }, 3000);
+  }
+});
+</script>
+</body>
+</html>
