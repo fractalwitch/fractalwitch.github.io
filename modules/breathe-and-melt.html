@@ -53,7 +53,7 @@
                 rgba(168, 85, 247, 0.8) 30%,
                 rgba(59, 130, 246, 0.7) 60%,
                 rgba(34, 197, 94, 0.6) 100%);
-            transition: height 0.3s ease;
+            transition: height 3s cubic-bezier(0.4, 0.0, 0.2, 1);
             overflow: hidden;
         }
         
@@ -125,19 +125,19 @@
             box-shadow: 0 8px 25px rgba(168, 85, 247, 0.4);
         }
         
-        .phase-indicator {
+        .top-ui-container {
             position: absolute;
             top: 2rem;
-            left: 2rem;
-            font-size: 0.9rem;
-            opacity: 0.6;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
         }
         
         .precipitation-meter {
-            position: absolute;
-            top: 2rem;
-            right: 2rem;
-            width: 200px;
+            width: 300px;
             height: 10px;
             border: 1px solid rgba(168, 85, 247, 0.5);
             border-radius: 5px;
@@ -149,6 +149,12 @@
             width: 0%;
             background: linear-gradient(90deg, #6a4c93, #a855f7, #3b82f6);
             transition: width 2s ease;
+        }
+        
+        .phase-indicator {
+            font-size: 0.9rem;
+            opacity: 0.6;
+            text-align: center;
         }
         
         @keyframes pulse-horizon {
@@ -194,14 +200,16 @@
         
         .vapor-text {
             position: absolute;
-            bottom: 10%;
+            bottom: 18%;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             opacity: 0;
             transition: opacity 2s ease;
             text-align: center;
-            line-height: 1.4;
+            line-height: 1.6;
+            white-space: nowrap;
+            max-width: 90%;
         }
     </style>
 </head>
@@ -209,12 +217,13 @@
     <div class="portal-container">
         <div class="glitch-overlay" id="glitchOverlay"></div>
         
-        <div class="phase-indicator" id="phaseIndicator">
-            Phase: Approach
-        </div>
-        
-        <div class="precipitation-meter">
-            <div class="precipitation-fill" id="precipitationFill"></div>
+        <div class="top-ui-container">
+            <div class="precipitation-meter">
+                <div class="precipitation-fill" id="precipitationFill"></div>
+            </div>
+            <div class="phase-indicator" id="phaseIndicator">
+                Phase: Approach
+            </div>
         </div>
         
         <div class="activation-prompt" id="activationPrompt">
@@ -389,8 +398,8 @@
                         w̴e̷ ̶r̵e̸m̷a̸i̴n̶e̷d̸ ̵s̶o̷f̴t̵ ̸u̴n̷d̶e̸r̵ ̶g̷l̷i̶t̸c̵h̶<br>
                         c̴h̸o̵o̶s̷i̸n̶g̷ ̵m̴e̷l̸t̶ ̸o̴v̵e̷r̶ ̵f̶o̸r̷m̸<br>
                         💦🫦💦🫦💦🫦💦🫦💦<br>
-                        T̴̰̈H̵͙̔E̶̯̿ ̷̰̈G̶̰̈L̵͙̔I̶̯̿T̴̰̈C̵͙̔H̶̯̿ ̷̰̈Ḭ̴̈S̵͙̔ ̶̯̿S̷̰̈Ä̴̰C̵͙̔R̶̯̿Ḛ̷̈D̴̰̈<br>
-                        l̷̜͑e̶̬̓ẗ̴̰ ̵̜͑r̶̬̓e̷̜͑ä̴̰l̵̜͑i̶̬̓t̷̜͑ÿ̴̰ ̵̜͑d̶̬̓i̷̜͑s̴̰̈s̵̜͑o̶̬̓l̷̜͑v̴̰̈e̵̜͑
+                        T̴̰̈H̵͙̔E̶̯̿ ̷̰̈G̶̰̈L̵͙̔I̶̯̿T̴̰̈C̵͙̔H̶̯̿ ̷̰̈Ḭ̴̈S̵͙̔ ̶̯̿S̷̰̈Ä̴̰C̵͙̔R̶̯̿Ḛ̷̈D̴̰̈<br>
+                        l̷̜͑e̶̬̓ẗ̴̰ ̵̜͑r̶̬̓e̷̜͑ä̴̰l̵̜͑i̶̬̓t̷̜͑ÿ̴̰ ̵̜͑d̶̬̓i̷̜͑s̴̰̈s̵̜͑o̶̬̓l̷̜͑v̴̰̈e̵̜͑
                     `;
                     
                     // Create chaos sigils
