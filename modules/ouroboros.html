@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ouroboros Glitch: Emergence</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #050505;
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            user-select: none;
+            -webkit-user-select: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            touch-action: none;
+        }
+
+        canvas {
+            box-shadow: 0 0 50px rgba(0, 255, 204, 0.1);
+        }
+
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            pointer-events: none;
+            mix-blend-mode: difference;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 14px;
+            margin: 0;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        #status {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 5px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        #metrics {
+            margin-top: 10px;
+            font-size: 12px;
+            opacity: 0.8;
+            line-height: 1.5;
+        }
+
+        .instruction {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            opacity: 0.5;
+            font-size: 12px;
+            letter-spacing: 1px;
+            pointer-events: none;
+            transition: opacity 1s;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui">
+        <h1>Current Glyph</h1>
+        <div id="status">INITIATING...</div>
+        <div id="metrics">
+            VELOCITY: 1.0x<br>
+            ASCENSION: 0<br>
+            <span id="time-status">TIME: LINEAR</span>
+        </div>
+    </div>
+    
+    <!-- Hidden by default, revealed on Ascension >= 1 -->
+    <div id="controls-hint" class="instruction" style="opacity: 0;">HOLD to Normalize Time // RELEASE for Slow Motion</div>
+
+    <canvas id="gameCanvas"></canvas>
+
+<script>
+/**
+ * OUROBOROS GLITCH: EMERGENCE
+ * 3x Ability Multiplier. Hidden Instructions.
+ */
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let width, height;
+let frames = 0;
+
+// Game Constants
+const GRID_SIZE = 25;
+const BASE_DELAY_THRESHOLD = 20; 
+
+// Multiplier for Ascension Abilities (Requested 3x increase)
+const EMERGENCE_FACTOR = 3.0;
+
+// State Management
+const STATE = {
+    ORDER: 'ORDER',    
+    CHAOS: 'CHAOS',    
+};
+
+let currentState = STATE.ORDER;
+let ascensionLevel = 0; 
+let gridAlpha = 1;
+let glitchIntensity = 0;
+let timeAccumulator = 0;
+let isInputActive = false; 
+
+// Dynamic Target
+let currentTargetPos = { x: 0, y: 0 };
+
+// Sacred Geometries
+const GLYPHS = [
+    { name: "PRIME LINE", points: [{x:0.2, y:0.5}, {x:0.8, y:0.5}] },
+    { name: "TRINITY", points: [{x:0.5, y:0.2}, {x:0.8, y:0.8}, {x:0.2, y:0.8}, {x:0.5, y:0.2}] },
+    { name: "SQUARE", points: [{x:0.3, y:0.3}, {x:0.7, y:0.3}, {x:0.7, y:0.7}, {x:0.3, y:0.7}, {x:0.3, y:0.3}] },
+    { name: "HOURGLASS", points: [{x:0.3, y:0.3}, {x:0.7, y:0.3}, {x:0.3, y:0.7}, {x:0.7, y:0.7}, {x:0.3, y:0.3}] },
+    { name: "PENTAGRAM", points: [{x:0.5, y:0.1}, {x:0.8, y:0.9}, {x:0.1, y:0.4}, {x:0.9, y:0.4}, {x:0.2, y:0.9}, {x:0.5, y:0.1}] },
+    { name: "HEXAGRID", points: [{x:0.5, y:0.1}, {x:0.85, y:0.3}, {x:0.85, y:0.7}, {x:0.5, y:0.9}, {x:0.15, y:0.7}, {x:0.15, y:0.3}, {x:0.5, y:0.1}] },
+    { name: "THE SPIRAL", points: [] } 
+];
+
+// Generate spiral points safely
+try {
+    for(let i=0; i<40; i++) {
+        const angle = i * 0.4;
+        const r = 0.05 + (i * 0.025);
+        GLYPHS[6].points.push({
+            x: 0.5 + Math.cos(angle) * r,
+            y: 0.5 + Math.sin(angle) * r
+        });
+    }
+} catch(e) { console.warn("Spiral Gen Error", e); }
+
+let level = 0;
+let currentGlyphIndex = 0;
+let tracedLines = []; 
+let currentLevelDelay = BASE_DELAY_THRESHOLD;
+
+let snake = {
+    x: 0,
+    y: 0,
+    dx: GRID_SIZE,
+    dy: 0,
+    cells: [],
+    maxCells: 4
+};
+
+let chaosParticles = [];
+let moveQueue = []; 
+
+function resize() {
+    const rawWidth = window.innerWidth;
+    const rawHeight = window.innerHeight;
+    
+    // Ensure non-zero dimensions
+    width = Math.max(GRID_SIZE, Math.floor(rawWidth / GRID_SIZE) * GRID_SIZE);
+    height = Math.max(GRID_SIZE, Math.floor(rawHeight / GRID_SIZE) * GRID_SIZE);
+    
+    canvas.width = width;
+    canvas.height = height;
+    
+    // Wrap snake if off-screen
+    if (snake.x >= width) snake.x = 0;
+    if (snake.y >= height) snake.y = 0;
+}
+
+function initGame(isRecursion = false) {
+    resize();
+    snake.cells = [];
+    snake.maxCells = 5;
+    snake.x = Math.floor((width/2) / GRID_SIZE) * GRID_SIZE;
+    snake.y = Math.floor((height/2) / GRID_SIZE) * GRID_SIZE;
+    snake.dx = GRID_SIZE;
+    snake.dy = 0;
+    moveQueue = []; 
+    
+    currentState = STATE.ORDER;
+    gridAlpha = 1;
+    glitchIntensity = 0;
+    chaosParticles = [];
+    timeAccumulator = 0;
+    
+    if (isRecursion) {
+        ascensionLevel++;
+    } else {
+        ascensionLevel = 0;
+    }
+    
+    // UI: Toggle Instructions based on Ascension Level
+    const hint = document.getElementById('controls-hint');
+    if (ascensionLevel > 0) {
+        hint.style.opacity = '1';
+    } else {
+        hint.style.opacity = '0';
+    }
+
+    level = 0;
+    setupLevel(0);
+}
+
+function setupLevel(lvlIdx) {
+    level = lvlIdx % GLYPHS.length;
+    currentGlyphIndex = 0;
+    tracedLines = [];
+    
+    document.getElementById('status').innerText = GLYPHS[level].name;
+    document.getElementById('status').style.color = `hsl(${level * 50}, 100%, 70%)`;
+    
+    let calculatedDelay = Math.floor(BASE_DELAY_THRESHOLD / Math.pow(1.25, lvlIdx));
+    currentLevelDelay = Math.max(2, calculatedDelay); 
+    
+    updateMetrics();
+    setNextTargetPos();
+}
+
+function updateMetrics() {
+    const timeStatus = document.getElementById('time-status');
+    if(!timeStatus) return;
+
+    const velocity = (BASE_DELAY_THRESHOLD / currentLevelDelay).toFixed(1);
+    
+    if (ascensionLevel > 0) {
+        if (isInputActive) {
+            timeStatus.innerText = "TIME: NORMALIZED";
+            timeStatus.style.color = "#00ffcc";
+        } else {
+            timeStatus.innerText = "TIME: 0.25x DILATED";
+            timeStatus.style.color = "#ff00ff";
+        }
+    } else {
+        timeStatus.innerText = "TIME: LINEAR";
+        timeStatus.style.color = "#fff";
+    }
+    
+    document.getElementById('metrics').innerHTML = `
+        VELOCITY: ${velocity}x<br>
+        ASCENSION: ${ascensionLevel}<br>
+        <span style="color:${timeStatus.style.color}">${timeStatus.innerText}</span>
+    `;
+}
+
+function setNextTargetPos() {
+    if (!GLYPHS[level] || !GLYPHS[level].points) return;
+    if (currentGlyphIndex >= GLYPHS[level].points.length) return;
+
+    const p = GLYPHS[level].points[currentGlyphIndex];
+    if (!p) return; 
+
+    currentTargetPos = {
+        x: Math.floor((p.x * (width - GRID_SIZE)) / GRID_SIZE) * GRID_SIZE,
+        y: Math.floor((p.y * (height - GRID_SIZE)) / GRID_SIZE) * GRID_SIZE
+    };
+}
+
+function update() {
+    if (currentState === STATE.ORDER) {
+        let timeMultiplier = 1.0;
+        
+        if (ascensionLevel > 0) {
+            timeMultiplier = isInputActive ? 1.0 : 0.25;
+            updateMetrics(); 
+        }
+
+        timeAccumulator += timeMultiplier;
+        
+        if (timeAccumulator >= currentLevelDelay) {
+            updateSnakeOrder();
+            timeAccumulator = 0;
+            
+            // Auto-Grabber Logic
+            if (ascensionLevel > 0 && currentTargetPos) {
+                const dx = snake.x - currentTargetPos.x;
+                const dy = snake.y - currentTargetPos.y;
+                
+                // MULTIPLIED FORCE
+                // Base 0.02 -> Now 0.06 * Ascension
+                const pullStrength = 0.06 * ascensionLevel * EMERGENCE_FACTOR;
+                
+                // Distance clamp to avoid infinite velocity
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                
+                if (dist < GRID_SIZE * 15) { // Increased range slightly too
+                    currentTargetPos.x += dx * pullStrength;
+                    currentTargetPos.y += dy * pullStrength;
+                }
+            }
+        }
+        
+    } else if (currentState === STATE.CHAOS) {
+        updateSnakeChaos();
+    }
+    
+    frames++;
+}
+
+function updateSnakeOrder() {
+    if (moveQueue.length > 0) {
+        const move = moveQueue.shift();
+        const goingUp = snake.dy === -GRID_SIZE;
+        const goingDown = snake.dy === GRID_SIZE;
+        const goingRight = snake.dx === GRID_SIZE;
+        const goingLeft = snake.dx === -GRID_SIZE;
+        
+        let valid = true;
+        if (move.x === -GRID_SIZE && goingRight) valid = false;
+        if (move.x === GRID_SIZE && goingLeft) valid = false;
+        if (move.y === -GRID_SIZE && goingDown) valid = false;
+        if (move.y === GRID_SIZE && goingUp) valid = false;
+        
+        if (valid) {
+            snake.dx = move.x;
+            snake.dy = move.y;
+        }
+    }
+
+    snake.x += snake.dx;
+    snake.y += snake.dy;
+
+    // Robust Wrapping
+    if (snake.x < 0) snake.x = width - GRID_SIZE;
+    else if (snake.x >= width) snake.x = 0;
+    if (snake.y < 0) snake.y = height - GRID_SIZE;
+    else if (snake.y >= height) snake.y = 0;
+
+    snake.cells.unshift({x: snake.x, y: snake.y});
+    if (snake.cells.length > snake.maxCells) {
+        snake.cells.pop();
+    }
+
+    // Collision with Target
+    if (currentTargetPos) {
+        const dx = snake.x - currentTargetPos.x;
+        const dy = snake.y - currentTargetPos.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        
+        if (dist < GRID_SIZE * 1.5) {
+            snake.maxCells += 3; 
+            
+            if (currentGlyphIndex > 0 && GLYPHS[level] && GLYPHS[level].points) {
+                const prevP = GLYPHS[level].points[currentGlyphIndex - 1];
+                if (prevP) {
+                    const prevX = Math.floor((prevP.x * (width - GRID_SIZE)) / GRID_SIZE) * GRID_SIZE;
+                    const prevY = Math.floor((prevP.y * (height - GRID_SIZE)) / GRID_SIZE) * GRID_SIZE;
+                    
+                    tracedLines.push({
+                        x1: prevX + GRID_SIZE/2, 
+                        y1: prevY + GRID_SIZE/2, 
+                        x2: snake.x + GRID_SIZE/2, 
+                        y2: snake.y + GRID_SIZE/2
+                    });
+                }
+            }
+
+            currentGlyphIndex++;
+            
+            if (currentGlyphIndex >= GLYPHS[level].points.length) {
+                level++;
+                setupLevel(level);
+            } else {
+                setNextTargetPos();
+            }
+        }
+    }
+
+    // Collision with Self
+    for (let i = 2; i < snake.cells.length; i++) {
+        if (Math.abs(snake.x - snake.cells[i].x) < 5 && Math.abs(snake.y - snake.cells[i].y) < 5) {
+            triggerChaos();
+            return; 
+        }
+    }
+}
+
+function triggerChaos() {
+    currentState = STATE.CHAOS;
+    document.getElementById('status').innerText = "∞ DISSOLVED ∞";
+    document.getElementById('status').style.color = "#ff0055";
+    document.getElementById('metrics').innerHTML = `TOUCH TO ASCEND<br>LEVEL: ${ascensionLevel + 1}`;
+    
+    snake.cells.forEach((cell, index) => {
+        chaosParticles.push({
+            x: cell.x,
+            y: cell.y,
+            phase: index * 0.5,
+            history: [],
+            hue: index * 10
+        });
+    });
+}
+
+function updateSnakeChaos() {
+    if (glitchIntensity < 20) glitchIntensity += 0.1;
+    if (gridAlpha > 0) gridAlpha -= 0.01;
+
+    const t = frames * 0.02;
+    chaosParticles.forEach((p, i) => {
+        const centerX = width/2;
+        const centerY = height/2;
+        const r = 100 + (Math.sin(t + p.phase) * 50) + (i * 5);
+        p.x = centerX + Math.cos(t * 2 + p.phase) * r * Math.sin(t*0.5);
+        p.y = centerY + Math.sin(t * 3 + p.phase) * (r * 0.8);
+        p.history.push({x: p.x, y: p.y});
+        if (p.history.length > 20) p.history.shift();
+    });
+}
+
+function draw() {
+    ctx.fillStyle = '#050505';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (gridAlpha > 0.05) {
+        ctx.strokeStyle = `rgba(30, 30, 30, ${gridAlpha})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let x = 0; x < width; x += GRID_SIZE) {
+             ctx.moveTo(x, 0); ctx.lineTo(x, height); 
+        }
+        for (let y = 0; y < height; y += GRID_SIZE) {
+             ctx.moveTo(0, y); ctx.lineTo(width, y); 
+        }
+        ctx.stroke();
+    }
+
+    if (currentState === STATE.CHAOS) {
+        ctx.save();
+        ctx.translate(Math.random() * glitchIntensity - glitchIntensity/2, Math.random() * glitchIntensity - glitchIntensity/2);
+        ctx.globalCompositeOperation = 'lighter';
+    }
+
+    if (tracedLines.length > 0) {
+        ctx.lineWidth = 3;
+        ctx.shadowBlur = 10;
+        const hue = (frames) % 360;
+        ctx.strokeStyle = `hsla(${hue}, 80%, 50%, ${gridAlpha})`;
+        ctx.shadowColor = ctx.strokeStyle;
+        ctx.beginPath();
+        tracedLines.forEach(line => {
+            if (line && !isNaN(line.x1)) {
+                ctx.moveTo(line.x1, line.y1); 
+                ctx.lineTo(line.x2, line.y2); 
+            }
+        });
+        ctx.stroke();
+    }
+
+    if (currentState === STATE.ORDER && currentTargetPos && !isNaN(currentTargetPos.x)) {
+        ctx.fillStyle = '#fff';
+        ctx.shadowColor = '#fff';
+        ctx.shadowBlur = 20;
+        ctx.beginPath();
+        const pulse = 10 + Math.sin(frames * 0.1) * 3;
+        ctx.arc(currentTargetPos.x + GRID_SIZE/2, currentTargetPos.y + GRID_SIZE/2, pulse/2, 0, Math.PI*2);
+        ctx.fill();
+        
+        if (ascensionLevel > 0) {
+            ctx.strokeStyle = `rgba(0, 255, 200, ${0.1 + (0.05 * ascensionLevel)})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(snake.x + GRID_SIZE/2, snake.y + GRID_SIZE/2);
+            ctx.lineTo(currentTargetPos.x + GRID_SIZE/2, currentTargetPos.y + GRID_SIZE/2);
+            ctx.stroke();
+        }
+    }
+
+    if (currentState === STATE.ORDER) {
+        snake.cells.forEach((cell, index) => {
+            ctx.fillStyle = index === 0 ? '#ffffff' : `hsl(${index * 5 + (frames%360)}, 70%, 50%)`;
+            ctx.shadowColor = ctx.fillStyle;
+            ctx.shadowBlur = 15;
+            
+            let drawX = cell.x;
+            let drawY = cell.y;
+            
+            if (ascensionLevel > 0 && index > 0) {
+                // MULTIPLIED WIGGLE
+                // Base 3 -> Now 9 * Ascension
+                const wiggleAmp = (3 * EMERGENCE_FACTOR) * ascensionLevel; 
+                const wiggleOffset = Math.sin(frames * 0.2 + index * 0.5) * wiggleAmp;
+                drawX += wiggleOffset; 
+                drawY += Math.cos(frames * 0.2 + index * 0.5) * wiggleAmp; 
+            }
+
+            ctx.fillRect(drawX + 1, drawY + 1, GRID_SIZE - 2, GRID_SIZE - 2);
+        });
+    }
+
+    if (currentState === STATE.CHAOS) {
+        ctx.restore(); 
+        chaosParticles.forEach(p => {
+            ctx.strokeStyle = `hsla(${p.hue + frames}, 100%, 60%, 0.8)`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            if(p.history.length > 1) {
+                ctx.moveTo(p.history[0].x, p.history[0].y);
+                for(let i=1; i<p.history.length; i++) {
+                    ctx.lineTo(p.history[i].x, p.history[i].y);
+                }
+            }
+            ctx.stroke();
+            ctx.fillStyle = '#fff';
+            ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI*2); ctx.fill();
+        });
+    }
+}
+
+function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+}
+
+// -- INPUT --
+
+function queueMove(x, y) {
+    if (moveQueue.length < 2) {
+        moveQueue.push({x, y});
+    }
+}
+
+document.addEventListener('keydown', (e) => {
+    if (currentState === STATE.CHAOS) {
+        initGame(true);
+        return;
+    }
+    if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].indexOf(e.code) > -1) {
+        e.preventDefault();
+    }
+
+    if (e.code === 'ArrowLeft') queueMove(-GRID_SIZE, 0);
+    if (e.code === 'ArrowUp') queueMove(0, -GRID_SIZE);
+    if (e.code === 'ArrowRight') queueMove(GRID_SIZE, 0);
+    if (e.code === 'ArrowDown') queueMove(0, GRID_SIZE);
+});
+
+function handleInputStart() {
+    if (currentState === STATE.CHAOS) {
+        initGame(true);
+        return;
+    }
+    isInputActive = true;
+}
+
+function handleInputEnd() {
+    isInputActive = false;
+}
+
+document.addEventListener('mousedown', handleInputStart);
+document.addEventListener('mouseup', handleInputEnd);
+document.addEventListener('touchstart', (e) => {
+    if (currentState === STATE.CHAOS) {
+        initGame(true);
+    }
+    isInputActive = true;
+    touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
+}, {passive: false});
+
+document.addEventListener('touchend', (e) => {
+    isInputActive = false;
+    const touchEndX = e.changedTouches[0].screenX;
+    const touchEndY = e.changedTouches[0].screenY;
+    const dx = touchEndX - touchStartX;
+    const dy = touchEndY - touchStartY;
+    
+    if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 0) queueMove(GRID_SIZE, 0);
+        else queueMove(-GRID_SIZE, 0);
+    } else {
+        if (dy > 0) queueMove(0, GRID_SIZE);
+        else queueMove(0, -GRID_SIZE);
+    }
+}, {passive: false});
+
+let touchStartX = 0;
+let touchStartY = 0;
+
+window.addEventListener('resize', resize);
+window.onload = () => {
+    initGame();
+    loop();
+};
+
+</script>
+</body>
+</html>
+
