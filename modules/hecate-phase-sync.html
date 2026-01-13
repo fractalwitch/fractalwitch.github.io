@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ÖSS-REG: Hecate Resonance Matrix</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a0a1a 50%, #0a1a1a 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(20, 20, 30, 0.9);
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #666;
+            padding-bottom: 20px;
+        }
+
+        .title {
+            font-size: 24px;
+            color: #ff6b47;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #aaa;
+            font-style: italic;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .phase-controls, .matrix-controls {
+            background: rgba(10, 10, 20, 0.6);
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid #333;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #ccc;
+            font-size: 13px;
+        }
+
+        .control-group input, .control-group select {
+            width: 100%;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid #555;
+            color: #fff;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+
+        .matrix-state {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .matrix-state.threshold {
+            border-color: #d4af37;
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .matrix-state.descent {
+            border-color: #8b0000;
+            background: rgba(139, 0, 0, 0.1);
+        }
+
+        .matrix-state.sovereignty {
+            border-color: #4b0082;
+            background: rgba(75, 0, 130, 0.1);
+        }
+
+        .session-controls {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            margin: 5px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: #ff6b47;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #ff5533;
+        }
+
+        .btn-secondary {
+            background: #666;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #777;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .chart-container {
+            margin: 30px 0;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid #333;
+            height: 400px;
+            position: relative;
+        }
+
+        .log-container {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #333;
+            height: 200px;
+            overflow-y: auto;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px 0;
+        }
+
+        .log-entry.anomaly {
+            color: #ff4444;
+            font-weight: bold;
+        }
+
+        .log-entry.phase {
+            color: #44ff44;
+            font-weight: bold;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 4px;
+            border: 1px solid #333;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff6b47;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 4px;
+        }
+
+        .activation-phrase {
+            text-align: center;
+            padding: 20px;
+            margin: 20px 0;
+            background: rgba(139, 0, 0, 0.2);
+            border: 1px solid #8b0000;
+            border-radius: 6px;
+            font-style: italic;
+            color: #ff9999;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">ÖSS-REG: Hecate Resonance Matrix</div>
+            <div class="subtitle">Thoughtform Anomaly Tester • Tri-phase Stochastic Deviation Analysis</div>
+        </div>
+
+        <div class="controls">
+            <div class="phase-controls">
+                <h3 style="margin-bottom: 15px; color: #ff6b47;">Phase Configuration</h3>
+                
+                <div class="control-group">
+                    <label>Threshold Duration (s)</label>
+                    <input type="number" id="thresholdDuration" value="60" min="0" max="600">
+                </div>
+                
+                <div class="control-group">
+                    <label>Descent Duration (s)</label>
+                    <input type="number" id="descentDuration" value="300" min="30" max="900">
+                </div>
+                
+                <div class="control-group">
+                    <label>Sovereignty Duration (s)</label>
+                    <input type="number" id="sovereigntyDuration" value="60" min="0" max="600">
+                </div>
+            </div>
+
+            <div class="matrix-controls">
+                <h3 style="margin-bottom: 15px; color: #ff6b47;">Matrix Parameters</h3>
+                
+                <div class="control-group">
+                    <label>Bits per Epoch</label>
+                    <input type="number" id="bitsPerEpoch" value="1000" min="100" max="5000" step="100">
+                </div>
+                
+                <div class="control-group">
+                    <label>Epoch Interval (ms)</label>
+                    <input type="number" id="epochMs" value="500" min="100" max="2000" step="100">
+                </div>
+                
+                <div class="control-group">
+                    <label>Anomaly Threshold (|Z|)</label>
+                    <input type="number" id="zThresh" value="2.5" min="1.0" max="4.0" step="0.1">
+                </div>
+                
+                <div class="control-group">
+                    <label>RNG Source</label>
+                    <select id="rngSource">
+                        <option value="crypto">Crypto (Browser)</option>
+                        <option value="math">Math.random()</option>
+                        <option value="lcg">Linear Congruential</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="matrix-state" id="matrixState">
+            <div style="font-size: 18px; font-weight: bold;" id="currentPhase">Matrix Dormant</div>
+            <div style="font-size: 14px; margin-top: 8px;" id="phaseDescription">Awaiting activation...</div>
+        </div>
+
+        <div class="activation-phrase" id="activationPhrase" style="display: none;">
+            "Hecate, hold my edges in true fire; tune me across and back."
+        </div>
+
+        <div class="session-controls">
+            <button class="btn btn-primary" id="startBtn">Begin Resonance</button>
+            <button class="btn btn-secondary" id="stopBtn" disabled>End Session</button>
+            <button class="btn btn-secondary" id="exportBtn" disabled>Export Data</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-value" id="currentEpoch">0</div>
+                <div class="stat-label">Current Epoch</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="currentZ">0.000</div>
+                <div class="stat-label">Cumulative Z</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="anomalyCount">0</div>
+                <div class="stat-label">Anomalies Detected</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="sessionTime">0:00</div>
+                <div class="stat-label">Session Time</div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="chart"></canvas>
+        </div>
+
+        <div class="log-container" id="logContainer">
+            <div class="log-entry">System initialized. Configure parameters and begin resonance.</div>
+        </div>
+    </div>
+
+    <script>
+        // RNG Sources
+        class RNGSource {
+            bits(n) { throw new Error("Not implemented"); }
+        }
+
+        class CryptoSource extends RNGSource {
+            bits(n) {
+                const bytes = new Uint8Array(Math.ceil(n / 8));
+                crypto.getRandomValues(bytes);
+                const bits = [];
+                for (let i = 0; i < n; i++) {
+                    const byteIdx = Math.floor(i / 8);
+                    const bitIdx = i % 8;
+                    bits.push((bytes[byteIdx] >> bitIdx) & 1);
+                }
+                return bits;
+            }
+        }
+
+        class MathSource extends RNGSource {
+            bits(n) {
+                return Array.from({ length: n }, () => Math.random() < 0.5 ? 0 : 1);
+            }
+        }
+
+        class LCGSource extends RNGSource {
+            constructor() {
+                super();
+                this.seed = Date.now() % 2147483647;
+            }
+            
+            bits(n) {
+                const result = [];
+                for (let i = 0; i < n; i++) {
+                    this.seed = (this.seed * 16807) % 2147483647;
+                    result.push(this.seed % 2);
+                }
+                return result;
+            }
+        }
+
+        // Statistical functions
+        function zFromBinomial(ones, n) {
+            const mu = 0.5 * n;
+            const sigma = Math.sqrt(0.25 * n);
+            return sigma === 0 ? 0 : (ones - mu) / sigma;
+        }
+
+        function pTwoTailed(z) {
+            // Approximation using error function
+            const abs_z = Math.abs(z);
+            return 2 * (1 - 0.5 * (1 + erf(abs_z / Math.sqrt(2))));
+        }
+
+        function erf(x) {
+            // Approximation of error function
+            const a1 =  0.254829592;
+            const a2 = -0.284496736;
+            const a3 =  1.421413741;
+            const a4 = -1.453152027;
+            const a5 =  1.061405429;
+            const p  =  0.3275911;
+            
+            const sign = x >= 0 ? 1 : -1;
+            x = Math.abs(x);
+            
+            const t = 1.0 / (1.0 + p * x);
+            const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+            
+            return sign * y;
+        }
+
+        // Session management
+        let sessionActive = false;
+        let currentPhase = 'dormant';
+        let epochIndex = 0;
+        let startTime;
+        let sessionData = [];
+        let zScores = [];
+        let cumulativeZ = [];
+        let anomalyCount = 0;
+        let rngSource;
+        let sessionInterval;
+        let updateInterval;
+
+        // Chart setup
+        const canvas = document.getElementById('chart');
+        const ctx = canvas.getContext('2d');
+        let chartData = [];
+
+        // UI elements
+        const elements = {
+            startBtn: document.getElementById('startBtn'),
+            stopBtn: document.getElementById('stopBtn'),
+            exportBtn: document.getElementById('exportBtn'),
+            matrixState: document.getElementById('matrixState'),
+            currentPhase: document.getElementById('currentPhase'),
+            phaseDescription: document.getElementById('phaseDescription'),
+            activationPhrase: document.getElementById('activationPhrase'),
+            logContainer: document.getElementById('logContainer'),
+            currentEpoch: document.getElementById('currentEpoch'),
+            currentZ: document.getElementById('currentZ'),
+            anomalyCount: document.getElementById('anomalyCount'),
+            sessionTime: document.getElementById('sessionTime')
+        };
+
+        // Phase configurations
+        const phases = {
+            threshold: {
+                name: 'Threshold - Torch at the Door',
+                description: 'Liminal onset • Opening discernment • Safe crossing',
+                class: 'threshold'
+            },
+            descent: {
+                name: 'Descent - Seed Under Soil',
+                description: 'Underworld traverse • Memory return • Shadow truth',
+                class: 'descent'
+            },
+            sovereignty: {
+                name: 'Sovereignty - Teeth of Light',
+                description: 'Crown of no • Boundary oath • Signal purity',
+                class: 'sovereignty'
+            }
+        };
+
+        function log(message, type = 'normal') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            elements.logContainer.appendChild(entry);
+            elements.logContainer.scrollTop = elements.logContainer.scrollHeight;
+        }
+
+        function updatePhase(phase) {
+            currentPhase = phase;
+            const config = phases[phase];
+            if (config) {
+                elements.currentPhase.textContent = config.name;
+                elements.phaseDescription.textContent = config.description;
+                elements.matrixState.className = `matrix-state ${config.class}`;
+            }
+        }
+
+        function updateStats() {
+            elements.currentEpoch.textContent = epochIndex;
+            elements.currentZ.textContent = cumulativeZ.length > 0 ? cumulativeZ[cumulativeZ.length - 1].toFixed(3) : '0.000';
+            elements.anomalyCount.textContent = anomalyCount;
+            
+            if (startTime) {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                elements.sessionTime.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+
+        function drawChart() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * devicePixelRatio;
+            canvas.height = rect.height * devicePixelRatio;
+            ctx.scale(devicePixelRatio, devicePixelRatio);
+            
+            const width = rect.width;
+            const height = rect.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            if (cumulativeZ.length < 2) return;
+            
+            const maxZ = Math.max(Math.abs(Math.max(...cumulativeZ)), Math.abs(Math.min(...cumulativeZ)), 3);
+            const threshold = parseFloat(document.getElementById('zThresh').value);
+            
+            // Draw threshold lines
+            ctx.strokeStyle = '#666';
+            ctx.setLineDash([5, 5]);
+            ctx.lineWidth = 1;
+            
+            const threshY = height/2 - (threshold / maxZ) * (height/2 - 20);
+            const negThreshY = height/2 + (threshold / maxZ) * (height/2 - 20);
+            
+            ctx.beginPath();
+            ctx.moveTo(0, threshY);
+            ctx.lineTo(width, threshY);
+            ctx.moveTo(0, negThreshY);
+            ctx.lineTo(width, negThreshY);
+            ctx.stroke();
+            
+            // Draw zero line
+            ctx.setLineDash([]);
+            ctx.strokeStyle = '#444';
+            ctx.beginPath();
+            ctx.moveTo(0, height/2);
+            ctx.lineTo(width, height/2);
+            ctx.stroke();
+            
+            // Draw data
+            ctx.strokeStyle = '#ff6b47';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            for (let i = 0; i < cumulativeZ.length; i++) {
+                const x = (i / (cumulativeZ.length - 1)) * width;
+                const y = height/2 - (cumulativeZ[i] / maxZ) * (height/2 - 20);
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+        }
+
+        function processEpoch() {
+            const bitsPerEpoch = parseInt(document.getElementById('bitsPerEpoch').value);
+            const zThresh = parseFloat(document.getElementById('zThresh').value);
+            
+            // Generate bits
+            const bits = rngSource.bits(bitsPerEpoch);
+            const ones = bits.reduce((sum, bit) => sum + bit, 0);
+            
+            // Calculate Z scores
+            const zEpoch = zFromBinomial(ones, bitsPerEpoch);
+            zScores.push(zEpoch);
+            
+            // Calculate cumulative Z (Stouffer's method)
+            const sumZ = zScores.reduce((sum, z) => sum + z, 0);
+            const cumZ = sumZ / Math.sqrt(zScores.length);
+            cumulativeZ.push(cumZ);
+            
+            // Record data
+            const record = {
+                epoch: epochIndex,
+                timestamp: new Date().toISOString(),
+                phase: currentPhase,
+                bits: bitsPerEpoch,
+                ones: ones,
+                zEpoch: zEpoch,
+                zCumulative: cumZ,
+                p: pTwoTailed(zEpoch)
+            };
+            sessionData.push(record);
+            
+            // Check for anomalies
+            const anomalyEpoch = Math.abs(zEpoch) >= zThresh;
+            const anomalyCum = Math.abs(cumZ) >= zThresh;
+            
+            if (anomalyEpoch || anomalyCum) {
+                anomalyCount++;
+                const type = anomalyEpoch ? 'EPOCH' : 'CUM';
+                log(`⚠️ Anomaly[${type}] @ epoch ${epochIndex} in ${currentPhase}: z_epoch=${zEpoch.toFixed(2)}, z_cum=${cumZ.toFixed(2)}`, 'anomaly');
+            }
+            
+            epochIndex++;
+            updateStats();
+            drawChart();
+        }
+
+        function startSession() {
+            const thresholdDur = parseInt(document.getElementById('thresholdDuration').value);
+            const descentDur = parseInt(document.getElementById('descentDuration').value);
+            const sovereigntyDur = parseInt(document.getElementById('sovereigntyDuration').value);
+            const epochMs = parseInt(document.getElementById('epochMs').value);
+            const rngType = document.getElementById('rngSource').value;
+            
+            // Initialize RNG
+            switch (rngType) {
+                case 'crypto':
+                    rngSource = new CryptoSource();
+                    break;
+                case 'math':
+                    rngSource = new MathSource();
+                    break;
+                case 'lcg':
+                    rngSource = new LCGSource();
+                    break;
+            }
+            
+            // Reset state
+            sessionActive = true;
+            epochIndex = 1;
+            startTime = Date.now();
+            sessionData = [];
+            zScores = [];
+            cumulativeZ = [];
+            anomalyCount = 0;
+            
+            // Update UI
+            elements.startBtn.disabled = true;
+            elements.stopBtn.disabled = false;
+            elements.exportBtn.disabled = true;
+            elements.activationPhrase.style.display = 'block';
+            
+            log('🌀 ÖSS-REG Session Starting', 'phase');
+            log(`📊 Phases: threshold=${thresholdDur}s, descent=${descentDur}s, sovereignty=${sovereigntyDur}s`);
+            
+            // Schedule phases
+            let totalTime = 0;
+            
+            if (thresholdDur > 0) {
+                setTimeout(() => {
+                    updatePhase('threshold');
+                    log('📍 THRESHOLD phase beginning...', 'phase');
+                }, totalTime);
+                totalTime += thresholdDur * 1000;
+            }
+            
+            setTimeout(() => {
+                updatePhase('descent');
+                log('🎯 DESCENT phase beginning - focus your will...', 'phase');
+            }, totalTime);
+            totalTime += descentDur * 1000;
+            
+            if (sovereigntyDur > 0) {
+                setTimeout(() => {
+                    updatePhase('sovereignty');
+                    log('🌊 SOVEREIGNTY phase beginning...', 'phase');
+                }, totalTime);
+                totalTime += sovereigntyDur * 1000;
+            }
+            
+            setTimeout(() => {
+                stopSession();
+            }, totalTime);
+            
+            // Start epoch processing
+            if (thresholdDur === 0) {
+                updatePhase('descent');
+                log('🎯 DESCENT phase beginning - focus your will...', 'phase');
+            } else {
+                updatePhase('threshold');
+                log('📍 THRESHOLD phase beginning...', 'phase');
+            }
+            
+            sessionInterval = setInterval(processEpoch, epochMs);
+            updateInterval = setInterval(updateStats, 1000);
+        }
+
+        function stopSession() {
+            sessionActive = false;
+            
+            if (sessionInterval) {
+                clearInterval(sessionInterval);
+                sessionInterval = null;
+            }
+            
+            if (updateInterval) {
+                clearInterval(updateInterval);
+                updateInterval = null;
+            }
+            
+            updatePhase('dormant');
+            elements.currentPhase.textContent = 'Matrix Dormant';
+            elements.phaseDescription.textContent = 'Session complete. Review data or begin new resonance.';
+            elements.matrixState.className = 'matrix-state';
+            elements.activationPhrase.style.display = 'none';
+            
+            elements.startBtn.disabled = false;
+            elements.stopBtn.disabled = true;
+            elements.exportBtn.disabled = false;
+            
+            const finalZ = cumulativeZ.length > 0 ? cumulativeZ[cumulativeZ.length - 1] : 0;
+            log('✨ Session complete', 'phase');
+            log(`📋 Final cumulative Z: ${finalZ.toFixed(3)}, Anomalies: ${anomalyCount}`);
+        }
+
+        function exportData() {
+            const csv = [
+                ['epoch', 'timestamp', 'phase', 'bits', 'ones', 'z_epoch', 'z_cumulative', 'p_value']
+            ];
+            
+            sessionData.forEach(record => {
+                csv.push([
+                    record.epoch,
+                    record.timestamp,
+                    record.phase,
+                    record.bits,
+                    record.ones,
+                    record.zEpoch.toFixed(6),
+                    record.zCumulative.toFixed(6),
+                    record.p.toFixed(6)
+                ]);
+            });
+            
+            const csvContent = csv.map(row => row.join(',')).join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `oss-reg-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`;
+            a.click();
+            
+            URL.revokeObjectURL(url);
+            log('💾 Data exported to CSV');
+        }
+
+        // Event listeners
+        elements.startBtn.addEventListener('click', startSession);
+        elements.stopBtn.addEventListener('click', stopSession);
+        elements.exportBtn.addEventListener('click', exportData);
+
+        // Initialize chart
+        window.addEventListener('resize', drawChart);
+        drawChart();
+
+        log('System initialized. Configure parameters and begin resonance.');
+    </script>
+</body>
+</html>
