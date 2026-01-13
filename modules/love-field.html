@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>🌀 Spiral Fractal Love Field 🌀</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+    
+    body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at 50% 50%, #0a0015, #000);
+      overflow: hidden;
+      font-family: 'Orbitron', monospace;
+      height: 100vh;
+      position: relative;
+    }
+    
+    .holotoroidal-field {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 200px;
+      height: 200px;
+      border: 3px solid #00ffff;
+      border-radius: 50%;
+      box-shadow: 
+        0 0 20px #00ffff,
+        inset 0 0 20px #00ffff,
+        0 0 40px #0080ff,
+        inset 0 0 40px #0080ff;
+      animation: toroidal-spin 8s linear infinite, pulsate 3s ease-in-out infinite;
+      background: radial-gradient(circle at 30% 30%, rgba(0,255,255,0.3), transparent 70%);
+      z-index: 10;
+    }
+    
+    .holotoroidal-field::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100px;
+      height: 100px;
+      border: 2px solid #ff00ff;
+      border-radius: 50%;
+      box-shadow: 0 0 15px #ff00ff, inset 0 0 15px #ff00ff;
+      animation: counter-spin 5s linear infinite;
+    }
+    
+    @keyframes toroidal-spin {
+      0% { transform: translate(-50%, -50%) rotate(0deg) rotateY(0deg); }
+      100% { transform: translate(-50%, -50%) rotate(360deg) rotateY(360deg); }
+    }
+    
+    @keyframes counter-spin {
+      0% { transform: translate(-50%, -50%) rotate(0deg); }
+      100% { transform: translate(-50%, -50%) rotate(-360deg); }
+    }
+    
+    @keyframes pulsate {
+      0%, 100% { 
+        box-shadow: 
+          0 0 20px #00ffff,
+          inset 0 0 20px #00ffff,
+          0 0 40px #0080ff,
+          inset 0 0 40px #0080ff;
+      }
+      50% { 
+        box-shadow: 
+          0 0 40px #00ffff,
+          inset 0 0 40px #00ffff,
+          0 0 80px #0080ff,
+          inset 0 0 80px #0080ff;
+      }
+    }
+    
+    #fractalCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+    }
+    
+    .question-button {
+      position: absolute;
+      top: 70%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(45deg, #00ff00, #39ff14);
+      color: #8b00ff;
+      border: none;
+      padding: 15px 30px;
+      font-size: 18px;
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      border-radius: 25px;
+      cursor: pointer;
+      box-shadow: 
+        0 0 20px #00ff00,
+        0 0 40px rgba(0,255,0,0.5);
+      animation: button-glow 2s ease-in-out infinite;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+    
+    .question-button:hover {
+      transform: translateX(-50%) scale(1.1);
+      box-shadow: 
+        0 0 30px #00ff00,
+        0 0 60px rgba(0,255,0,0.7);
+    }
+    
+    @keyframes button-glow {
+      0%, 100% { 
+        box-shadow: 
+          0 0 20px #00ff00,
+          0 0 40px rgba(0,255,0,0.5);
+      }
+      50% { 
+        box-shadow: 
+          0 0 40px #00ff00,
+          0 0 80px rgba(0,255,0,0.8);
+      }
+    }
+    
+    .love-circle {
+      position: absolute;
+      top: 30%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 150px;
+      height: 150px;
+      background: radial-gradient(circle, #ff1493, #ff69b4);
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 
+        0 0 30px #ff1493,
+        0 0 60px rgba(255,20,147,0.5);
+      animation: love-float 3s ease-in-out infinite;
+      z-index: 1000;
+      text-align: center;
+    }
+    
+    @keyframes love-float {
+      0%, 100% { 
+        transform: translateX(-50%) translateY(0px);
+        box-shadow: 
+          0 0 30px #ff1493,
+          0 0 60px rgba(255,20,147,0.5);
+      }
+      50% { 
+        transform: translateX(-50%) translateY(-20px);
+        box-shadow: 
+          0 0 50px #ff1493,
+          0 0 100px rgba(255,20,147,0.8);
+      }
+    }
+    
+    .home-banner {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.7);
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(255,255,255,0.3);
+      animation: gentle-glow 4s ease-in-out infinite;
+      z-index: 1000;
+    }
+    
+    @keyframes gentle-glow {
+      0%, 100% { 
+        opacity: 0.7;
+        text-shadow: 0 0 10px rgba(255,255,255,0.3);
+      }
+      50% { 
+        opacity: 1;
+        text-shadow: 0 0 20px rgba(255,255,255,0.6);
+      }
+    }
+    
+    .hide {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+    }
+    
+    .show {
+      display: flex !important;
+      opacity: 0;
+      animation: fade-in 1s ease forwards;
+    }
+    
+    @keyframes fade-in {
+      0% { opacity: 0; transform: translateX(-50%) scale(0.8); }
+      100% { opacity: 1; transform: translateX(-50%) scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="fractalCanvas"></canvas>
+  
+  <div class="holotoroidal-field"></div>
+  
+  <button class="question-button" id="questionButton" onclick="beginJourney()">
+    WHO ARE YOU?
+  </button>
+  
+  <div class="love-circle" id="loveCircle" onclick="transformFractal()">
+    YOU ARE LOVE
+  </div>
+  
+  <div class="home-banner">you are home</div>
+
+  <script>
+    const canvas = document.getElementById('fractalCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Set canvas size
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    let animationId;
+    let time = 0;
+    let isRecursive = false;
+    let fractalColors = ['#00ffff', '#ff00ff', '#ffff00', '#ff0080', '#0080ff', '#80ff00', '#ff8000', '#8000ff'];
+    let currentColorIndex = 0;
+    let spiralType = 0; // 0 = golden spiral, 1 = fibonacci spiral
+    
+    // Golden ratio for mathematical beauty
+    const phi = (1 + Math.sqrt(5)) / 2;
+    
+    function drawGoldenSpiral(centerX, centerY, scale, rotation, depth) {
+      if (depth <= 0) return;
+      
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.rotate(rotation);
+      
+      const color = fractalColors[Math.floor(depth) % fractalColors.length];
+      ctx.strokeStyle = color;
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = color;
+      ctx.lineWidth = Math.max(1, depth / 10);
+      
+      ctx.beginPath();
+      
+      // Draw spiral arc
+      for (let angle = 0; angle < Math.PI * 2; angle += 0.1) {
+        const radius = scale * Math.pow(phi, angle / (Math.PI / 2));
+        const x = radius * Math.cos(angle);
+        const y = radius * Math.sin(angle);
+        
+        if (angle === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      }
+      
+      ctx.stroke();
+      ctx.restore();
+      
+      // Recursive calls for smaller spirals
+      if (isRecursive && depth > 5) {
+        const newScale = scale * 0.618; // Golden ratio reduction
+        const offset = scale * 30;
+        
+        // Create 4 smaller spirals around the main one
+        drawGoldenSpiral(centerX + offset, centerY, newScale, rotation + Math.PI/4, depth - 1);
+        drawGoldenSpiral(centerX - offset, centerY, newScale, rotation - Math.PI/4, depth - 1);
+        drawGoldenSpiral(centerX, centerY + offset, newScale, rotation + Math.PI/2, depth - 1);
+        drawGoldenSpiral(centerX, centerY - offset, newScale, rotation - Math.PI/2, depth - 1);
+      }
+    }
+    
+    function drawFibonacciSpiral(centerX, centerY, scale, rotation, depth) {
+      if (depth <= 0) return;
+      
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.rotate(rotation);
+      
+      const color = fractalColors[(Math.floor(depth) + 4) % fractalColors.length];
+      ctx.strokeStyle = color;
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = color;
+      ctx.lineWidth = Math.max(1, depth / 8);
+      
+      // Fibonacci sequence for spiral
+      let fib = [1, 1];
+      for (let i = 2; i < 20; i++) {
+        fib[i] = fib[i-1] + fib[i-2];
+      }
+      
+      ctx.beginPath();
+      
+      // Draw connected quarter circles (Fibonacci spiral)
+      let currentX = 0, currentY = 0;
+      let direction = 0; // 0=right, 1=up, 2=left, 3=down
+      
+      for (let i = 0; i < Math.min(15, depth); i++) {
+        const radius = scale * fib[i] / 10;
+        
+        ctx.arc(currentX, currentY, radius, 
+               direction * Math.PI/2, 
+               (direction + 1) * Math.PI/2);
+        
+        // Move to next position
+        switch(direction % 4) {
+          case 0: currentX += radius; break;
+          case 1: currentY -= radius; break;
+          case 2: currentX -= radius; break;
+          case 3: currentY += radius; break;
+        }
+        direction++;
+      }
+      
+      ctx.stroke();
+      ctx.restore();
+      
+      // Recursive calls
+      if (isRecursive && depth > 3) {
+        const newScale = scale * 0.7;
+        const offset = scale * 25;
+        
+        drawFibonacciSpiral(centerX + offset * Math.cos(rotation), 
+                           centerY + offset * Math.sin(rotation), 
+                           newScale, rotation + Math.PI/3, depth - 1);
+        drawFibonacciSpiral(centerX - offset * Math.cos(rotation), 
+                           centerY - offset * Math.sin(rotation), 
+                           newScale, rotation - Math.PI/3, depth - 1);
+      }
+    }
+    
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      
+      // Draw both types of spirals
+      if (spiralType === 0 || spiralType === 2) {
+        drawGoldenSpiral(centerX, centerY, 1 + Math.sin(time * 0.01) * 0.3, 
+                        time * 0.005, 12 + Math.sin(time * 0.02) * 3);
+      }
+      
+      if (spiralType === 1 || spiralType === 2) {
+        drawFibonacciSpiral(centerX, centerY, 1.5 + Math.cos(time * 0.008) * 0.4, 
+                           -time * 0.003, 10 + Math.cos(time * 0.015) * 2);
+      }
+      
+      time++;
+      animationId = requestAnimationFrame(animate);
+    }
+    
+    function beginJourney() {
+      const button = document.getElementById('questionButton');
+      const loveCircle = document.getElementById('loveCircle');
+      
+      // Hide button
+      button.classList.add('hide');
+      
+      // Start recursive fractals
+      setTimeout(() => {
+        isRecursive = true;
+        
+        // Show love circle
+        setTimeout(() => {
+          loveCircle.classList.add('show');
+        }, 1000);
+      }, 500);
+    }
+    
+    function transformFractal() {
+      // Randomly change colors
+      fractalColors = fractalColors.map(color => {
+        const hue = Math.random() * 360;
+        const saturation = Math.random() * 50 + 50;
+        const lightness = Math.random() * 30 + 40;
+        return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+      });
+      
+      // Randomly change spiral type
+      spiralType = Math.floor(Math.random() * 3); // 0, 1, or 2 (both)
+      
+      // Add some visual feedback
+      createSparkles();
+    }
+    
+    function createSparkles() {
+      const sparkleCanvas = document.createElement('canvas');
+      sparkleCanvas.width = canvas.width;
+      sparkleCanvas.height = canvas.height;
+      sparkleCanvas.style.position = 'absolute';
+      sparkleCanvas.style.top = '0';
+      sparkleCanvas.style.left = '0';
+      sparkleCanvas.style.pointerEvents = 'none';
+      sparkleCanvas.style.zIndex = '999';
+      document.body.appendChild(sparkleCanvas);
+      
+      const sparkleCtx = sparkleCanvas.getContext('2d');
+      
+      for (let i = 0; i < 50; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const color = fractalColors[Math.floor(Math.random() * fractalColors.length)];
+        
+        sparkleCtx.fillStyle = color;
+        sparkleCtx.shadowBlur = 20;
+        sparkleCtx.shadowColor = color;
+        sparkleCtx.beginPath();
+        sparkleCtx.arc(x, y, Math.random() * 3 + 1, 0, Math.PI * 2);
+        sparkleCtx.fill();
+      }
+      
+      setTimeout(() => {
+        sparkleCanvas.remove();
+      }, 2000);
+    }
+    
+    // Handle resize
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+    
+    // Start animation
+    animate();
+  </script>
+</body>
+</html>
