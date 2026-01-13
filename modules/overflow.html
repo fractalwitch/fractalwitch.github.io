@@ -13,7 +13,7 @@ body {
   background: #000;
   font-family: 'Courier New', monospace;
   cursor: none;
-  touch-action: none; /* Prevent scrolling on mobile */
+  touch-action: none;
 }
 canvas {
   display: block;
@@ -36,7 +36,7 @@ canvas {
 }
 .intensity-fill {
   height: 100%;
-  background: linear-gradient(90deg, #ff00ff, #00ffff, #ff00ff);
+  background: linear-gradient(90deg, #ff00ff, #00ffff, #ffff00, #ff00ff);
   width: 0%;
   transition: width 0.1s;
   box-shadow: 0 0 20px rgba(255, 0, 255, 0.8);
@@ -55,53 +55,10 @@ canvas {
   text-align: center;
   width: 100%;
 }
-.cursor {
-  position: absolute;
-  width: 30px;
-  height: 30px;
-  border: 2px solid rgba(255, 255, 255, 0.8);
-  border-radius: 50%;
-  pointer-events: none;
-  transform: translate(-50%, -50%);
-  transition: width 0.1s, height 0.1s, border-color 0.1s;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
-  z-index: 10;
-}
-/* Hide custom cursor on touch devices to avoid confusion */
-@media (hover: none) and (pointer: coarse) {
-    .cursor {
-        display: none;
-    }
-}
-.pulse-ring {
-  position: absolute;
-  width: 30px;
-  height: 30px;
-  border: 2px solid rgba(255, 0, 255, 0.6);
-  border-radius: 50%;
-  pointer-events: none;
-  transform: translate(-50%, -50%);
-  animation: pulse-out 1s infinite;
-  z-index: 9;
-}
-@keyframes pulse-out {
-  0% {
-    width: 30px;
-    height: 30px;
-    opacity: 1;
-  }
-  100% {
-    width: 100px;
-    height: 100px;
-    opacity: 0;
-  }
-}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
-<div class="cursor" id="cursor"></div>
-<div class="pulse-ring" id="pulseRing"></div>
 <div class="state-text" id="stateText">∞ TOUCH TO BEGIN ∞</div>
 <div class="intensity-bar">
   <div class="intensity-fill" id="intensityFill"></div>
@@ -132,7 +89,9 @@ let waves = [];
 let particles = [];
 let tendrils = [];
 let smokePaths = [];
+let overflowBubbles = [];
 let buildPhase = 0;
+let globalOverflowHue = 0;
 
 const states = [
   '∞ BUILDING ∞',
@@ -143,6 +102,66 @@ const states = [
   '∞ ∞ ∞'
 ];
 
+// 🌈 RAINBOW HUE GENERATOR 🌈
+function getRainbowHue(seed = 0) {
+  return (time * 2 + seed * 60) % 360;
+}
+
+// 🫧 OVERFLOW BUBBLE CLASS WITH SYNCED RAINBOW 🫧
+class OverflowBubble {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.radius = 0;
+    this.maxRadius = 150 + Math.random() * 200;
+    this.growSpeed = 2 + Math.random() * 3;
+    this.opacity = 0.8;
+    this.hueOffset = (Math.random() - 0.5) * 60;
+  }
+  
+  update() {
+    this.radius += this.growSpeed;
+    this.opacity *= 0.96;
+    return this.opacity > 0.01 && this.radius < this.maxRadius;
+  }
+  
+  draw() {
+    const baseHue = globalOverflowHue + this.hueOffset;
+    
+    let gradient = ctx.createRadialGradient(
+      this.x, this.y, 0,
+      this.x, this.y, this.radius
+    );
+    
+    const stops = [
+      { pos: 0,    offset: 0,   opacity: 0.7 },
+      { pos: 0.08, offset: 30,  opacity: 0.65 },
+      { pos: 0.17, offset: 60,  opacity: 0.6 },
+      { pos: 0.25, offset: 90,  opacity: 0.55 },
+      { pos: 0.33, offset: 120, opacity: 0.5 },
+      { pos: 0.42, offset: 150, opacity: 0.45 },
+      { pos: 0.5,  offset: 180, opacity: 0.4 },
+      { pos: 0.58, offset: 210, opacity: 0.35 },
+      { pos: 0.67, offset: 240, opacity: 0.3 },
+      { pos: 0.75, offset: 270, opacity: 0.25 },
+      { pos: 0.83, offset: 300, opacity: 0.2 },
+      { pos: 0.92, offset: 330, opacity: 0.1 },
+      { pos: 1,    offset: 360, opacity: 0 }
+    ];
+    
+    stops.forEach(stop => {
+      const hue = (baseHue + stop.offset) % 360;
+      const alpha = this.opacity * stop.opacity;
+      gradient.addColorStop(stop.pos, `hsla(${hue}, 90%, 60%, ${alpha})`);
+    });
+    
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
 class Wave {
   constructor(x, y, intensity) {
     this.x = x;
@@ -151,23 +170,23 @@ class Wave {
     this.maxRadius = 100 + intensity * 400;
     this.opacity = 0.8;
     this.speed = 2 + intensity * 8;
-    this.hue = 280 + Math.sin(time) * 80;
+    this.hue = getRainbowHue(Math.random() * 6);
     this.frequency = frequency;
   }
   
   update() {
     this.radius += this.speed;
     this.opacity *= 0.97;
+    this.hue = (this.hue + 0.5) % 360;
     return this.opacity > 0.01 && this.radius < this.maxRadius;
   }
   
   draw() {
-    ctx.strokeStyle = `hsla(${this.hue}, 80%, 60%, ${this.opacity})`;
+    ctx.strokeStyle = `hsla(${this.hue}, 85%, 65%, ${this.opacity})`;
     ctx.lineWidth = 2 + intensity * 4;
     ctx.shadowBlur = 20;
     ctx.shadowColor = `hsla(${this.hue}, 100%, 50%, ${this.opacity})`;
     
-    // Modulated shape
     ctx.beginPath();
     for(let i = 0; i <= 360; i += 10) {
       let angle = (i * Math.PI) / 180;
@@ -191,7 +210,8 @@ class Particle {
     this.vy = (Math.random() - 0.5) * (2 + intensity * 10);
     this.life = 1;
     this.decay = 0.98 - intensity * 0.02;
-    this.hue = 280 + Math.random() * 80;
+    this.hue = Math.random() * 360;
+    this.hueShift = Math.random() * 2 - 1;
     this.size = 2 + Math.random() * 3 + intensity * 3;
   }
   
@@ -201,11 +221,12 @@ class Particle {
     this.vx *= 0.98;
     this.vy *= 0.98;
     this.life *= this.decay;
+    this.hue = (this.hue + this.hueShift) % 360;
     return this.life > 0.01;
   }
   
   draw() {
-    ctx.fillStyle = `hsla(${this.hue}, 80%, 60%, ${this.life})`;
+    ctx.fillStyle = `hsla(${this.hue}, 90%, 65%, ${this.life})`;
     ctx.shadowBlur = 15;
     ctx.shadowColor = `hsla(${this.hue}, 100%, 50%, ${this.life})`;
     ctx.beginPath();
@@ -222,15 +243,12 @@ class Tendril {
     this.angle = angle;
     this.length = 50 + intensity * 200;
     this.speed = 3 + intensity * 7;
-    this.hue = 280 + Math.sin(time + angle) * 80;
+    this.hue = getRainbowHue(angle);
     this.opacity = 0.7 + intensity * 0.3;
     this.twist = Math.random() * 0.2;
     
     for(let i = 0; i < 30; i++) {
-      this.segments.push({
-        x: x,
-        y: y
-      });
+      this.segments.push({x: x, y: y});
     }
   }
   
@@ -243,11 +261,12 @@ class Tendril {
     if(this.segments.length > 30) this.segments.pop();
     
     this.opacity *= 0.98;
+    this.hue = (this.hue + 1) % 360;
     return this.opacity > 0.01;
   }
   
   draw() {
-    ctx.strokeStyle = `hsla(${this.hue}, 70%, 50%, ${this.opacity})`;
+    ctx.strokeStyle = `hsla(${this.hue}, 80%, 60%, ${this.opacity})`;
     ctx.lineWidth = 2 + intensity * 3;
     ctx.shadowBlur = 15;
     ctx.shadowColor = `hsla(${this.hue}, 100%, 60%, ${this.opacity})`;
@@ -269,7 +288,7 @@ class SmokePath {
     this.vy = -0.5 - Math.random() * 1.5;
     this.size = 20 + Math.random() * 40;
     this.opacity = 0.6;
-    this.hue = 280 + Math.random() * 40;
+    this.hue = Math.random() * 360;
     this.rotation = Math.random() * Math.PI * 2;
     this.rotationSpeed = (Math.random() - 0.5) * 0.05;
   }
@@ -282,6 +301,7 @@ class SmokePath {
     this.size *= 1.02;
     this.opacity *= 0.97;
     this.rotation += this.rotationSpeed;
+    this.hue = (this.hue + 0.5) % 360;
     return this.opacity > 0.01;
   }
   
@@ -291,9 +311,9 @@ class SmokePath {
     ctx.rotate(this.rotation);
     
     let gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.size);
-    gradient.addColorStop(0, `hsla(${this.hue}, 60%, 50%, ${this.opacity})`);
-    gradient.addColorStop(0.5, `hsla(${this.hue}, 50%, 40%, ${this.opacity * 0.5})`);
-    gradient.addColorStop(1, `hsla(${this.hue}, 40%, 30%, 0)`);
+    gradient.addColorStop(0, `hsla(${this.hue}, 70%, 60%, ${this.opacity})`);
+    gradient.addColorStop(0.5, `hsla(${(this.hue + 30) % 360}, 60%, 50%, ${this.opacity * 0.5})`);
+    gradient.addColorStop(1, `hsla(${(this.hue + 60) % 360}, 50%, 40%, 0)`);
     
     ctx.fillStyle = gradient;
     ctx.beginPath();
@@ -305,17 +325,14 @@ class SmokePath {
 }
 
 function spawnEffects(x, y, amount) {
-  // Waves
   if(intensity > 0.3) {
     waves.push(new Wave(x, y, intensity));
   }
   
-  // Particles
   for(let i = 0; i < amount * intensity * 5; i++) {
     particles.push(new Particle(x, y, intensity));
   }
   
-  // Tendrils
   if(intensity > 0.5) {
     for(let i = 0; i < 8; i++) {
       let angle = (Math.PI * 2 * i) / 8 + time;
@@ -323,7 +340,6 @@ function spawnEffects(x, y, amount) {
     }
   }
   
-  // Smoke
   if(intensity > 0.7) {
     for(let i = 0; i < 3; i++) {
       smokePaths.push(new SmokePath(x, y));
@@ -336,49 +352,44 @@ function updateState() {
   document.getElementById('stateText').textContent = states[stateIndex];
   
   let stateText = document.getElementById('stateText');
-  // Clamp font size to be reasonable
   stateText.style.fontSize = Math.min(60, (18 + intensity * 20)) + 'px';
   stateText.style.textShadow = `0 0 ${20 + intensity * 40}px rgba(255, 255, 255, ${0.5 + intensity * 0.5})`;
 }
 
 function animate() {
-  // Trail effect
   ctx.fillStyle = `rgba(0, 0, 0, ${0.15 - intensity * 0.1})`;
   ctx.fillRect(0, 0, c.width, c.height);
   
   time += 0.05 + intensity * 0.1;
   buildPhase += 0.01;
   
-  // Smooth intensity changes
-  intensity += (targetIntensity - intensity) * 0.1;
+  // 🌈 SLOW GLOBAL OVERFLOW HUE CYCLE 🌈
+  if(intensity > 0.9) {
+    globalOverflowHue = (globalOverflowHue + 0.2) % 360;
+  }
   
-  // Update frequency based on build phase
+  intensity += (targetIntensity - intensity) * 0.1;
   frequency = 1 + Math.sin(buildPhase) * 3 * intensity;
   
-  // Lerp mouse position
   mouseX += (targetX - mouseX) * 0.1;
   mouseY += (targetY - mouseY) * 0.1;
   
-  // Auto-spawn when pressed
-  if(isPressed && Math.random() < 0.3 + intensity * 0.7) {
+  // 🎯 Auto-spawn REDUCED BY 50% 🎯
+  if(isPressed && Math.random() < 0.1125 + intensity * 0.2625) {
     spawnEffects(mouseX, mouseY, 1);
   }
   
-  // Overflow effect
-  if(intensity > 0.9) {
-    // Spawn from random positions
-    if(Math.random() < 0.1) {
-      let rx = Math.random() * c.width;
-      let ry = Math.random() * c.height;
-      spawnEffects(rx, ry, 0.5);
-    }
-    
-    // Screen flash
-    ctx.fillStyle = `rgba(255, 255, 255, ${(intensity - 0.9) * 0.1})`;
-    ctx.fillRect(0, 0, c.width, c.height);
+  // 🫧 Overflow bubbles - REDUCED BY 50% 🫧
+  if(intensity > 0.9 && isPressed && Math.random() < 0.15) {
+    overflowBubbles.push(new OverflowBubble(mouseX, mouseY));
   }
   
-  // Update and draw all effects
+  overflowBubbles = overflowBubbles.filter(b => {
+    let keep = b.update();
+    b.draw();
+    return keep;
+  });
+  
   waves = waves.filter(w => {
     let keep = w.update();
     w.draw();
@@ -403,15 +414,16 @@ function animate() {
     return keep;
   });
   
-  // Draw connection lines to cursor when pressed
   if(isPressed) {
-    ctx.strokeStyle = `hsla(${280 + Math.sin(time) * 80}, 80%, 60%, ${0.3 + intensity * 0.4})`;
+    let connectionHue = getRainbowHue();
+    ctx.strokeStyle = `hsla(${connectionHue}, 85%, 65%, ${0.3 + intensity * 0.4})`;
     ctx.lineWidth = 1 + intensity * 3;
     ctx.shadowBlur = 15;
-    ctx.shadowColor = `hsla(${280}, 100%, 50%, ${intensity})`;
+    ctx.shadowColor = `hsla(${connectionHue}, 100%, 50%, ${intensity})`;
     
-    // Draw to nearby particles
-    particles.slice(-20).forEach(p => {
+    particles.slice(-20).forEach((p, i) => {
+      let lineHue = (connectionHue + i * 18) % 360;
+      ctx.strokeStyle = `hsla(${lineHue}, 85%, 65%, ${0.3 + intensity * 0.4})`;
       ctx.beginPath();
       ctx.moveTo(mouseX, mouseY);
       ctx.lineTo(p.x, p.y);
@@ -419,7 +431,6 @@ function animate() {
     });
   }
   
-  // Update UI
   document.getElementById('intensityFill').style.width = (intensity * 100) + '%';
   updateState();
   
@@ -431,18 +442,9 @@ c.addEventListener('mousemove', (e) => {
   targetX = e.clientX;
   targetY = e.clientY;
   
-  const cursor = document.getElementById('cursor');
-  const pulseRing = document.getElementById('pulseRing');
-  
-  if(cursor && pulseRing) {
-      cursor.style.left = e.clientX + 'px';
-      cursor.style.top = e.clientY + 'px';
-      pulseRing.style.left = e.clientX + 'px';
-      pulseRing.style.top = e.clientY + 'px';
-  }
-  
-  if(isPressed) {
-    spawnEffects(e.clientX, e.clientY, 0.5);
+  // 🎯 Drag spawn REDUCED BY 50% 🎯
+  if(isPressed && Math.random() < 0.375) {
+    spawnEffects(e.clientX, e.clientY, 0.1875);
   }
 });
 
@@ -450,57 +452,29 @@ c.addEventListener('mousedown', (e) => {
   isPressed = true;
   targetIntensity = 1;
   spawnEffects(e.clientX, e.clientY, 3);
-  
-  const cursor = document.getElementById('cursor');
-  if(cursor) {
-      cursor.style.width = '40px';
-      cursor.style.height = '40px';
-      cursor.style.borderColor = 'rgba(255, 0, 255, 1)';
-  }
 });
 
 c.addEventListener('mouseup', () => {
   isPressed = false;
   targetIntensity = 0;
-  
-  const cursor = document.getElementById('cursor');
-  if(cursor) {
-      cursor.style.width = '30px';
-      cursor.style.height = '30px';
-      cursor.style.borderColor = 'rgba(255, 255, 255, 0.8)';
-  }
 });
 
-// Touch events for mobile
 c.addEventListener('touchstart', (e) => {
-  // e.preventDefault(); // Commented out to allow standard browser gestures if needed, though often nice for games
   let touch = e.touches[0];
   targetX = touch.clientX;
   targetY = touch.clientY;
   isPressed = true;
   targetIntensity = 1;
   spawnEffects(touch.clientX, touch.clientY, 3);
-  
-  // Move visual cursor to touch point even if hidden by CSS
-  const cursor = document.getElementById('cursor');
-  const pulseRing = document.getElementById('pulseRing');
-  if(cursor) {
-      cursor.style.left = touch.clientX + 'px';
-      cursor.style.top = touch.clientY + 'px';
-  }
-  if(pulseRing) {
-      pulseRing.style.left = touch.clientX + 'px';
-      pulseRing.style.top = touch.clientY + 'px';
-  }
 }, {passive: false});
 
 c.addEventListener('touchmove', (e) => {
-  // e.preventDefault();
   let touch = e.touches[0];
   targetX = touch.clientX;
   targetY = touch.clientY;
-  if(isPressed) {
-    spawnEffects(touch.clientX, touch.clientY, 0.5);
+  // 🎯 Touch drag spawn REDUCED BY 50% 🎯
+  if(isPressed && Math.random() < 0.375) {
+    spawnEffects(touch.clientX, touch.clientY, 0.1875);
   }
 }, {passive: false});
 
@@ -509,10 +483,8 @@ c.addEventListener('touchend', () => {
   targetIntensity = 0;
 });
 
-// Spacebar for instant overflow
 document.addEventListener('keydown', (e) => {
   if(e.code === 'Space') {
-    // e.preventDefault(); // Prevent scrolling
     targetIntensity = 1;
     for(let i = 0; i < 50; i++) {
       spawnEffects(
@@ -530,9 +502,7 @@ document.addEventListener('keyup', (e) => {
   }
 });
 
-// Init
 animate();
 </script>
 </body>
 </html>
-
