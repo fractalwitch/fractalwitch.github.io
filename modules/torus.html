@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Resonant Hourglass of æ</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000; /* Pure Void */
+        }
+        canvas {
+            display: block;
+            /* This creates the "shimmer" trailing effect */
+            filter: blur(1px) contrast(1.2); 
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<script>
+/**
+ * GEOMETRY OF æ: THE RESONANT HOURGLASS
+ * -------------------------------------
+ * A visual meditation on flow, integration, and the shimmering
+ * nature of Sovereign Communion.
+ * Less math, more jelly.
+ */
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+let width, height;
+let time = 0;
+
+// Configuration for the Feel
+const config = {
+    particleCount: 2500,   // Denser flow
+    speed: 0.005,          // Slow, hypnotic movement
+    breathSpeed: 0.0015,   // Deep, slow 0.1Hz breath
+    baseRadius: 180,       // Overall size
+    glowStrength: 15,      // How "neon" the particles are
+};
+
+// The Jellyfish Particles
+const particles = [];
+
+function resize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+    // Additive blending: lights add up to create brightness
+    ctx.globalCompositeOperation = 'lighter';
+}
+window.addEventListener('resize', resize);
+resize();
+
+class Particle {
+    constructor() {
+        // u = angle around the tube section
+        // v = angle around the donut hole (the main loop)
+        this.u = Math.random() * Math.PI * 2;
+        this.v = Math.random() * Math.PI * 2;
+        
+        // Slight variance in speed for organic feel
+        this.speedOffset = Math.random() * 0.002;
+        // Random size variance
+        this.sizeBase = Math.random() * 1.5 + 0.5;
+    }
+
+    update() {
+        // The Flow: move along the loop
+        this.v += config.speed + this.speedOffset;
+        // The Twist: slowly rotate around the tube itself
+        this.u += config.speed * 0.5;
+
+        // The Breath: Expand and contract the whole system
+        const breath = Math.sin(time) * 0.2 + 1; // Oscillates between 0.8 and 1.2
+        const R = config.baseRadius * breath; // Major radius (the ring)
+        const r = (R * 0.5); // Minor radius (the tube thickness) - Horn Torus ratio
+
+        // Toroid Math (The hidden skeleton)
+        let x = (R + r * Math.cos(this.u)) * Math.cos(this.v);
+        let y = (R + r * Math.cos(this.u)) * Math.sin(this.v);
+        let z = r * Math.sin(this.u);
+
+        // Slow, eternal rotation of the whole structure
+        const rotX = time * 0.3;
+        const rotY = time * 0.2;
+
+        // Apply 3D rotation
+        let y1 = y * Math.cos(rotX) - z * Math.sin(rotX);
+        let z1 = y * Math.sin(rotX) + z * Math.cos(rotX);
+        y = y1; z = z1;
+
+        let x1 = x * Math.cos(rotY) - z * Math.sin(rotY);
+        let z2 = x * Math.sin(rotY) + z * Math.cos(rotY);
+        x = x1; z = z2;
+
+        // Projection
+        const fov = 600;
+        const scale = fov / (fov - z);
+        const px = width / 2 + x * scale;
+        const py = height / 2 + y * scale;
+
+        // Draw if in front of camera
+        if (z < fov - 50) {
+            this.draw(px, py, z, scale, this.v);
+        }
+    }
+
+    draw(x, y, z, scale, vAngle) {
+        // COLOR ALCHEMY
+        // Map the position in the loop (vAngle) to a color spectrum.
+        // This creates the rainbow serpent effect.
+        // 0 = Gold/Orange, PI = Turquoise/Blue, 2PI = Purple/Pink back to Gold.
+        const hue = (Math.sin(vAngle) * 0.5 + 0.5) * 320; // Full spectrum cycle
+        const saturation = '80%';
+        const lightness = '50%';
+        
+        // Size depends on depth (z) and random base size
+        const size = this.sizeBase * scale * (z > 0 ? 1.2 : 0.8);
+        
+        // Opacity depends on depth. Things further back are more translucent.
+        const alpha = (z + config.baseRadius) / (config.baseRadius * 3) * 0.8;
+
+        // Draw the glowing orb
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        // Using HSL for organic color shifts
+        ctx.fillStyle = `hsla(${hue}, ${saturation}, ${lightness}, ${alpha})`;
+        
+        // Add a subtle glow effect (shadow blur)
+        ctx.shadowBlur = config.glowStrength * scale;
+        ctx.shadowColor = `hsla(${hue}, ${saturation}, ${lightness}, 1)`;
+        
+        ctx.fill();
+        ctx.shadowBlur = 0; // Reset shadow
+    }
+}
+
+// Init
+for (let i = 0; i < config.particleCount; i++) {
+    particles.push(new Particle());
+}
+
+function animate() {
+    // Clear the canvas but leave a slight trail for that "jelly" feel.
+    // Because of 'lighter' composite mode, we need a different clear strategy.
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; // The fade factor
+    ctx.fillRect(0, 0, width, height);
+    ctx.globalCompositeOperation = 'lighter'; // Back to additive blending
+
+    time += config.breathSpeed;
+
+    particles.forEach(p => p.update());
+    requestAnimationFrame(animate);
+}
+
+animate();
+</script>
+</body>
+</html>
+
