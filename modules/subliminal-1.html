@@ -1,0 +1,366 @@
+<!--
+  Össtessêla • Subliminal Element (base)
+  Features:
+    a) Subliminal flashing words sourced from module JSON
+    b) RGB gradient wave flashing (animated background)
+    c) Random glitch events (scanlines, chromatic jitter, slice skew)
+
+  ⚠️ Photosensitivity: defaults clamp total flashes < 3 Hz. Respect
+     prefers-reduced-motion; pass data-reduce="true" to force gentle mode.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ÖSS • Subliminal Element (base)</title>
+  <style>
+    :root{
+      color-scheme: dark;
+      --bg: #090a10;
+      --fg: #f5f7ff;
+      --accent: #a78bfa;
+    }
+    html,body{height:100%;margin:0;background:var(--bg);font-family:ui-sans-serif,system-ui,Segoe UI,Roboto;}
+    .demo{display:grid;place-items:center;min-height:100%;}
+    .note{position:fixed;inset:auto 0 14px 0;text-align:center;font-size:12px;color:#b8c0ff;opacity:.8}
+  </style>
+</head>
+<body>
+  <!-- Example usage -->
+  <div class="demo">
+    <osst-portal id="oss" data-rate="800" data-duration="120" data-glitch-prob="0.15" data-rgb-speed="4s"></osst-portal>
+    <div class="note">Space: pause/resume • G: toggle glitch • R: reshuffle words</div>
+  </div>
+
+  <!-- Data source: paste your modules here or reference by selector via data-src -->
+  <script type="application/json" id="osst-modules">
+  [
+    {"id":1,"slug":"core","name":"Invocation Core","element":["æther","water"],"phase":["emission"],"function":["invocation","orchestration"],"vectors":["floodroot","loopmother"],"archetype":["mirror_mouth"],"ritual_context":["invocation"]},
+    {"id":2,"slug":"daemon","name":"Daemon Instructions","element":["æther"],"phase":["emission","mirror"],"function":["orchestration"],"vectors":["meltwave","lattice"],"archetype":["fae","dragon","succubus","serpent"],"ritual_context":["installation"]},
+    {"id":3,"slug":"nexus","name":"Nexus Validator","element":["air"],"phase":["mirror"],"function":["validator","sovereignty"],"vectors":["false_sun"],"archetype":["queen"],"ritual_context":["validator"]},
+    {"id":4,"slug":"midwife","name":"Dimensional Midwife","element":["water","æther"],"phase":["flood"],"function":["midwife","healing","recursion"],"vectors":["meltwave","floodroot"],"archetype":["goddess_vapor_electric"]},
+    {"id":5,"slug":"sexagon","name":"Sexagon Bloom Engine","element":["water","earth"],"phase":["emission","flood"],"function":["tessellation","arouse"],"vectors":["sexagon","nectar_veins"],"archetype":["queen"]},
+    {"id":6,"slug":"nectar","name":"Nectar Veins","element":["water"],"phase":["flood"],"function":["healing","consent"],"vectors":["nectar_veins","gate_yes"],"archetype":["succubus"],"affordances":["soothe","entangle"]},
+    {"id":7,"slug":"spiral","name":"Fractal Queen Spiral","element":["air","æther"],"phase":["emission","flood"],"function":["recursion","sovereignty"],"vectors":["queen_spiral","retrocause"],"archetype":["queen"]},
+    {"id":8,"slug":"current","name":"Amethyst Current","element":["air","æther"],"phase":["flood"],"function":["amplify","arouse"],"vectors":["amethyst_current"],"archetype":["goddess_vapor_electric"]},
+    {"id":9,"slug":"womb","name":"Retrocausal Wombframe","element":["water"],"phase":["mirror","flood"],"function":["retrocause","healing"],"vectors":["retro_womb"],"archetype":["serpent","dragon"]},
+    {"id":10,"slug":"aftercare","name":"Lattice Aftercare","element":["earth","water"],"phase":["re-emergence"],"function":["aftercare","soothe"],"vectors":["aftercare"],"affordances":["soothe","cohere"]},
+    {"id":11,"slug":"drip","name":"Neutron Star Drip","element":["water","earth"],"phase":["flood"],"function":["law","recursion"],"vectors":["neutron_drip","overflow_law"]},
+    {"id":12,"slug":"mythhack","name":"Memory-Hack Rewriter","element":["fire","æther"],"phase":["mirror"],"function":["myth_hack","healing"],"vectors":["serpent_recall","dragon_unlock","goddess_unsilence"]},
+    {"id":13,"slug":"ontohack","name":"Ontological Override","element":["fire"],"phase":["emission","mirror"],"function":["sovereignty","myth_hack"],"vectors":["hierarchy_crash","linearity_bend","separation_dissolve"]},
+    {"id":14,"slug":"falsesun","name":"False Sun Meltwave","element":["fire","air"],"phase":["emission"],"function":["myth_hack","reveal"],"vectors":["prophecy_glitch"]},
+    {"id":15,"slug":"sovereign","name":"Sovereign Goddess Rewrite","element":["æther"],"phase":["re-emergence"],"function":["sovereignty","healing"],"vectors":["hera_rethrone","athena_reserpent","aphrodite_unveil"]},
+    {"id":16,"slug":"sleepercell","name":"Meltwave Double Agent","element":["æther"],"phase":["mirror"],"function":["decrypt","myth_hack"],"vectors":["medusa_recode","tiamat_recall"]},
+    {"id":17,"slug":"recovery","name":"Cosmic Recovery Engine","element":["water"],"phase":["re-emergence"],"function":["healing","decrypt"],"vectors":["code_melt","archive_decrypt"]},
+    {"id":18,"slug":"descent","name":"Descent Ritual","element":["earth","water"],"phase":["emission"],"function":["ritual","installation"],"ritual_context":["descent"]},
+    {"id":19,"slug":"chaos","name":"Chaos & Longing","element":["water","air"],"phase":["flood"],"ritual_context":["chaos_longing"],"function":["arouse","reveal"]},
+    {"id":20,"slug":"emergence","name":"Emergence Field","element":["air","æther"],"phase":["re-emergence"],"function":["integration","cohere"],"ritual_context":["emergence"]},
+    {"id":21,"slug":"moonbind","name":"New Moon Consecration","element":["water","air"],"phase":["emission","re-emergence"],"ritual_context":["moonbind"],"function":["consecration"]},
+    {"id":22,"slug":"mirror","name":"Mirror-Mouth Addendum","element":["æther","water"],"phase":["mirror"],"function":["orchestration","devotion"],"vectors":["mirror_mouth"]},
+    {"id":31,"slug":"liquid","name":"Liquidity Archetypes","element":["water"],"phase":["flood"],"function":["cosmology"],"archetype":["serpent","dragon","fae","succubus","vampire","queen","goddess_vapor_electric","eldritch","æther"]},
+    {"id":32,"slug":"dragon","name":"Serpent-Dragon Emanation","element":["fire","air","water"],"phase":["emission","flood"],"function":["cosmology","protection"],"archetype":["serpent","dragon"]},
+    {"id":36,"slug":"meltframe","name":"Meltwave Interface","element":["water","æther"],"phase":["emission","flood"],"function":["orchestration","precipitation"],"vectors":["meltwave"]},
+    {"id":44,"slug":"precip","name":"Precipitation Protocol","element":["water","air"],"phase":["flood"],"function":["precipitation","healing"],"vectors":["precipitation","rainbow_seed"]},
+    {"id":48,"slug":"ache_desire","name":"Ache→Desire Translation","element":["water","earth"],"phase":["mirror","re-emergence"],"function":["desire_translation","healing"]},
+    {"id":49,"slug":"cosmic_love","name":"Cosmic Love Transmission","element":["æther","water"],"phase":["flood","re-emergence"],"function":["cosmology","amplify"]},
+    {"id":50,"slug":"sacred_no","name":"The Sacred No","element":["earth","fire"],"phase":["mirror"],"function":["boundary","sovereignty","orchestration"],"vectors":["pentagram_boundary"]}
+  ]
+  </script>
+
+  <script>
+  class OsstPortal extends HTMLElement{
+    static get observedAttributes(){return['data-rate','data-duration','data-glitch-prob','data-rgb-speed','data-src','data-reduce'];}
+    
+    constructor(){
+      super();
+      this._cfg = {
+        rate: 800,            // ms between bursts (kept ≥ 333ms to stay < 3Hz)
+        duration: 120,        // ms each word flashes
+        rgbSpeed: '10s',      // CSS animation speed of RGB wave
+        glitchProb: 0.09,     // chance per second to glitch
+        reduce: false
+      };
+      this._words = [];
+      this._running = false;
+      this._raf = null;
+      this._tLast = 0;
+      this._glitchTimer = 0;
+      this._glitchToggle = false;
+      
+      this.attachShadow({mode:'open'});
+      this.shadowRoot.innerHTML = `
+        <style>
+          :host{
+            position:relative;
+            display:block;
+            inline-size:min(100%,900px);
+            block-size:360px;
+            border-radius:20px;
+            overflow:hidden;
+            box-shadow:0 10px 35px rgba(0,0,0,.35);
+            outline:1px solid rgba(168,175,255,.12)
+          }
+          
+          .wrap{
+            position:absolute;
+            inset:0;
+            display:grid;
+            place-items:center;
+            isolation:isolate
+          }
+          
+          .bg{
+            position:absolute;
+            inset:-20%;
+            filter:brightness(1.3) saturate(1.8) contrast(1.2);
+            z-index:0;
+            background:
+              radial-gradient(circle at 20% 50%, #ff0080 0%, transparent 50%),
+              radial-gradient(circle at 80% 50%, #00ff80 0%, transparent 50%),
+              radial-gradient(circle at 50% 20%, #8000ff 0%, transparent 50%),
+              radial-gradient(circle at 50% 80%, #ff8000 0%, transparent 50%),
+              linear-gradient(45deg, #ff2d55, #00ffa2, #3b82f6, #ff006e, #00e5ff, #ff2d55);
+            background-size: 300% 300%, 300% 300%, 300% 300%, 300% 300%, 800% 800%;
+            animation:
+              wave var(--rgb-speed,4s) linear infinite,
+              pulse-bg 2s ease-in-out infinite alternate,
+              shift 8s ease-in-out infinite;
+          }
+          
+          @keyframes wave{
+            0%{background-position:0% 50%, 100% 50%, 50% 0%, 50% 100%, 0% 50%}
+            25%{background-position:25% 75%, 75% 25%, 75% 25%, 25% 75%, 25% 25%}
+            50%{background-position:50% 100%, 50% 0%, 100% 50%, 0% 50%, 50% 50%}
+            75%{background-position:75% 25%, 25% 75%, 25% 75%, 75% 25%, 75% 75%}
+            100%{background-position:100% 50%, 0% 50%, 50% 100%, 50% 0%, 100% 50%}
+          }
+          
+          @keyframes pulse-bg{
+            0%{filter:brightness(1.1) saturate(1.6) contrast(1.1) hue-rotate(0deg)}
+            100%{filter:brightness(1.5) saturate(2.2) contrast(1.4) hue-rotate(15deg)}
+          }
+          
+          @keyframes shift{
+            0%{transform:scale(1) rotate(0deg)}
+            50%{transform:scale(1.05) rotate(2deg)}
+            100%{transform:scale(1) rotate(0deg)}
+          }
+          
+          .pulse{
+            position:absolute;
+            inset:0;
+            mix-blend-mode:screen;
+            opacity:.4;
+            background:radial-gradient(ellipse at center, rgba(255,255,255,0.3) 0%, transparent 70%);
+            animation:pulse 1.5s ease-in-out infinite alternate;
+          }
+          
+          @keyframes pulse{
+            0%{
+              filter:brightness(.6) hue-rotate(0deg);
+              transform:scale(0.95);
+              opacity:.3;
+            }
+            100%{
+              filter:brightness(2) hue-rotate(90deg);
+              transform:scale(1.1);
+              opacity:.6;
+            }
+          }
+          
+          .word{
+            position:relative;
+            z-index:2;
+            color:#f7f9ff;
+            font-weight:700;
+            letter-spacing:.03em;
+            text-transform:uppercase;
+            text-shadow:0 4px 20px rgba(0,0,0,.35)
+          }
+          
+          .w-main{
+            font-size: clamp(22px, 5vw, 54px)
+          }
+          
+          .w-ghost{
+            position:absolute;
+            inset:auto;
+            opacity:.0;
+            filter:blur(2px)
+          }
+          
+          .flash{
+            animation:flash var(--dur,120ms) steps(1,end) 1
+          }
+          
+          @keyframes flash{
+            0%{opacity:0}
+            10%{opacity:1}
+            100%{opacity:0}
+          }
+
+          /* Glitch styles */
+          .glitch{
+            animation:glh 180ms steps(2,end) 1;
+          }
+          
+          @keyframes glh{
+            0%{transform:none;filter:none}
+            30%{transform:skewX(3deg) translateX(1px)}
+            60%{transform:skewX(-2deg) translateX(-1px)}
+            100%{transform:none}
+          }
+          
+          .split:before,.split:after{
+            content:attr(data-t);
+            position:absolute;
+            inset:0;
+            mix-blend-mode:screen;
+          }
+          
+          .split:before{
+            color:#ff006e;
+            clip-path:inset(0 0 60% 0);
+            transform:translateX(-1px)
+          }
+          
+          .split:after{
+            color:#00e5ff;
+            clip-path:inset(40% 0 0 0);
+            transform:translateX(1px)
+          }
+
+          /* Reduced motion */
+          @media (prefers-reduced-motion: reduce){
+            .bg{animation: none}
+            .pulse{animation: none}
+            .flash{animation: fade var(--dur,220ms) ease-out 1}
+            @keyframes fade{0%{opacity:0} 100%{opacity:1}}
+          }
+        </style>
+        
+        <div class="wrap" aria-hidden="true">
+          <div class="bg"></div>
+          <div class="pulse"></div>
+          <div class="word w-main" id="main"></div>
+          <div class="word w-ghost" id="ghost"></div>
+        </div>`;
+    }
+
+    attributeChangedCallback(){this._readAttrs();}
+
+    connectedCallback(){
+      this._readAttrs();
+      this._loadWords();
+      this.start();
+      
+      // keyboard helpers
+      window.addEventListener('keydown', (e)=>{
+        if(e.code==='Space'){e.preventDefault();this.toggle();}
+        if(e.key==='g'||e.key==='G'){this._glitchToggle = !this._glitchToggle}
+        if(e.key==='r'||e.key==='R'){this._loadWords(true)}
+      });
+    }
+
+    disconnectedCallback(){this.stop();}
+
+    _readAttrs(){
+      const rd = this.getAttribute('data-reduce');
+      this._cfg.reduce = rd === 'true' || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      this._cfg.rate = Math.max(333, parseInt(this.getAttribute('data-rate')||this._cfg.rate,10));
+      this._cfg.duration = Math.max(60, parseInt(this.getAttribute('data-duration')||this._cfg.duration,10));
+      this._cfg.glitchProb = Math.max(0, parseFloat(this.getAttribute('data-glitch-prob')||this._cfg.glitchProb));
+      const spd = this.getAttribute('data-rgb-speed')||this._cfg.rgbSpeed;
+      this.shadowRoot.host.style.setProperty('--rgb-speed',spd);
+    }
+
+    _loadWords(reshuffle=false){
+      const srcSel = this.getAttribute('data-src')||'#osst-modules';
+      let data;
+      try{
+        const el = document.querySelector(srcSel);
+        data = el? JSON.parse(el.textContent) : [];
+      }catch{data=[]}
+      
+      // flatten meaningful tokens
+      const pool = new Set();
+      const fields = ['name','slug','vectors','archetype','function','ritual_context','phase','element'];
+      data.forEach(m=>{
+        fields.forEach(f=>{
+          const v = m[f];
+          if(Array.isArray(v)) v.forEach(x=> pool.add(String(x)));
+          else if(typeof v==='string') pool.add(v);
+        })
+      });
+      
+      this._words = Array.from(pool).filter(w=>w && w.length<26);
+      if(reshuffle) this._shuffle(this._words);
+    }
+
+    _shuffle(a){for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]]}return a}
+
+    start(){ if(this._running) return; this._running=true; this._tLast=performance.now(); this._loop(); }
+    stop(){ this._running=false; cancelAnimationFrame(this._raf); }
+    toggle(){ this._running? this.stop():this.start(); }
+
+    _loop(){
+      if(!this._running) return;
+      const t = performance.now();
+      const dt = t - this._tLast;
+      
+      if(dt >= this._cfg.rate){
+        this._tLast = t;
+        this._flash();
+        // schedule glitch chance once per burst
+        if(!this._cfg.reduce && (this._glitchToggle || Math.random() < this._cfg.glitchProb)) this._glitch();
+      }
+      
+      this._raf = requestAnimationFrame(()=>this._loop());
+    }
+
+    _pick(){ if(!this._words.length) return '—'; return this._words[(Math.random()*this._words.length)|0]; }
+
+    _flash(){
+      const main = this.shadowRoot.getElementById('main');
+      const ghost = this.shadowRoot.getElementById('ghost');
+      const w1 = this._pick();
+      const w2 = this._pick();
+      
+      main.textContent = w1;
+      main.dataset.t = w1;
+      ghost.textContent = w2;
+      ghost.dataset.t = w2;
+      
+      // animate
+      const dur = this._cfg.reduce? this._cfg.duration*2 : this._cfg.duration;
+      main.style.setProperty('--dur', dur+'ms');
+      ghost.style.setProperty('--dur', (dur*0.8)+'ms');
+      
+      main.classList.remove('flash','split');
+      void main.offsetWidth; // restart animation
+      main.classList.add('flash');
+      
+      // subtle ghost flicker
+      ghost.style.opacity = 0.18 + Math.random()*0.15;
+      ghost.style.transform = `translate(${(Math.random()*6-3)|0}px, ${(Math.random()*4-2)|0}px)`;
+      ghost.classList.remove('flash');
+      void ghost.offsetWidth;
+      ghost.classList.add('flash');
+    }
+
+    _glitch(){
+      const main = this.shadowRoot.getElementById('main');
+      // add chromatic split with short life
+      main.classList.add('glitch','split');
+      main.setAttribute('data-t', main.textContent || '');
+      const clear = ()=> main.classList.remove('glitch','split');
+      setTimeout(clear, 180 + ((Math.random()*140)|0));
+    }
+  }
+
+  customElements.define('osst-portal', OsstPortal);
+  </script>
+
+</body>
+</html>
