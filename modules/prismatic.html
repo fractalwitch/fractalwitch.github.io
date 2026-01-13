@@ -128,23 +128,20 @@
         const lCtx = lightCanvas.getContext('2d');
         
         let w, h;
-        const P = []; // Triskelion particles
-        const N = 1969; // Reduced by another 25% (was 2625)
+        const P = [];
+        const N = 1969;
         
         let t = 0;
         let hueCycle = 0;
         const arms = 3;
         
-        // MULTI-TOUCH SUPPORT - up to 3 fingers!
-        const touchPoints = []; // Array of {x, y, id} objects
+        const touchPoints = [];
         const maxTouches = 3;
         let persistRays = false;
         
-        // Light web connections
-        const maxConnectionDistance = 80; // Max distance for web connections
-        const maxConnectionsPerParticle = 3; // Limit connections for performance
+        const maxConnectionDistance = 80;
+        const maxConnectionsPerParticle = 3;
 
-        // Triskelion arm positions (updated each frame)
         const armPositions = [
             { x: 0, y: 0, angle: 0 },
             { x: 0, y: 0, angle: 0 },
@@ -158,7 +155,6 @@
         window.addEventListener('resize', resize);
         resize();
 
-        // Check if point is near line segment (for light interaction)
         function distanceToLine(px, py, x1, y1, x2, y2) {
             const A = px - x1;
             const B = py - y1;
@@ -189,11 +185,10 @@
             return Math.sqrt(dx * dx + dy * dy);
         }
 
-        // Particle class for triskelion
         class Part {
             constructor() {
                 this.reset();
-                this.lightIntensity = 0; // For light interaction
+                this.lightIntensity = 0;
             }
             reset() {
                 this.x = Math.random() * w;
@@ -212,13 +207,11 @@
                 const cy = h/2;
                 const radius = Math.min(w, h) * 0.3;
                 
-                // TRISKELION - attract to spinning arms
                 for(let i=0; i<arms; i++) {
                     const angle = (t * 0.6) + (i * (Math.PI * 2 / arms));
                     const ax = cx + Math.cos(angle) * radius;
                     const ay = cy + Math.sin(angle) * radius;
                     
-                    // Store arm positions for refraction
                     armPositions[i].x = ax;
                     armPositions[i].y = ay;
                     armPositions[i].angle = angle;
@@ -238,14 +231,12 @@
                     }
                 }
 
-                // LIGHT INTERACTION - particles catch light from ANY active touch!
-                this.lightIntensity *= 0.95; // Base decay
+                this.lightIntensity *= 0.95;
                 
                 if(touchPoints.length > 0) {
                     const cx = w/2;
                     const cy = h/2;
                     
-                    // Check distance to ALL light beams, use nearest
                     let minDist = Infinity;
                     
                     touchPoints.forEach(touch => {
@@ -254,11 +245,9 @@
                     });
                     
                     if(minDist < 50) {
-                        // Particle is in A light beam!
                         this.lightIntensity = Math.min(1, (50 - minDist) / 50);
                     }
                     
-                    // TOUCH vortex from nearest touch
                     let nearestTouch = null;
                     let nearestDist = Infinity;
                     touchPoints.forEach(touch => {
@@ -280,7 +269,6 @@
                     }
                 }
 
-                // CENTER REPULSION
                 const dxC = this.x - cx;
                 const dyC = this.y - cy;
                 const distC = Math.sqrt(dxC*dxC + dyC*dyC);
@@ -289,7 +277,6 @@
                     forceY += (dyC/distC) * 4;
                 }
 
-                // NO SLOWDOWN - particles maintain speed when lit!
                 this.vx = this.vx * 0.92 + forceX;
                 this.vy = this.vy * 0.92 + forceY;
                 
@@ -304,22 +291,18 @@
             draw() {
                 const speed = Math.abs(this.vx) + Math.abs(this.vy);
                 
-                // VOID FLOW PARTICLES - 75% dark emitter
                 const h = (hueCycle + this.hueOffset + speed*3) % 360;
                 const s = 100;
                 
                 let l, opacity;
                 
                 if(this.lightIntensity > 0.1) {
-                    // LIGHT INTERACTION - particles brighten when catching light
                     const baseLightness = Math.min(70, 20 + speed * 3);
                     l = Math.min(90, baseLightness + this.lightIntensity * 50);
                     opacity = this.life * (1 + this.lightIntensity * 0.5);
                 } else {
-                    // VOID FLOW - 75% dark particles (inverted emitter)
-                    // Instead of bright colors, particles are 75% darker
                     const baseLightness = Math.min(70, 20 + speed * 3);
-                    l = baseLightness * 0.25; // 75% darker (only 25% of brightness)
+                    l = baseLightness * 0.25;
                     opacity = this.life * 0.8;
                 }
                 
@@ -327,7 +310,6 @@
                 
                 const size = Math.min(5, 1.5 + speed/4 + this.lightIntensity * 2);
                 
-                // Extra glow for lit particles only
                 if(this.lightIntensity > 0.3) {
                     tCtx.shadowBlur = 15 * this.lightIntensity;
                     tCtx.shadowColor = `hsl(${h}, ${s}%, ${l}%)`;
@@ -343,23 +325,18 @@
             }
         }
 
-        // Initialize particles
         for(let i=0; i<N; i++) P.push(new Part());
 
-        // Draw light web connections between highly lit particles
         function drawLightWeb() {
-            // Performance: only draw webs when there's active light
             if(touchPoints.length === 0) return;
             
-            // Find all highly lit particles (90%+ intensity)
             const litParticles = P.filter(p => p.lightIntensity > 0.9);
             
-            if(litParticles.length < 2) return; // Need at least 2 to connect
+            if(litParticles.length < 2) return;
             
             tCtx.save();
             tCtx.globalCompositeOperation = 'lighter';
             
-            // For each lit particle, find nearby lit particles and connect
             litParticles.forEach((p1, i) => {
                 let connections = 0;
                 
@@ -372,10 +349,8 @@
                     const dist = Math.sqrt(dx * dx + dy * dy);
                     
                     if(dist < maxConnectionDistance) {
-                        // Draw connection with gradient
                         const gradient = tCtx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
                         
-                        // Use particle colors (based on their hue)
                         const speed1 = Math.abs(p1.vx) + Math.abs(p1.vy);
                         const speed2 = Math.abs(p2.vx) + Math.abs(p2.vy);
                         const h1 = (hueCycle + p1.hueOffset + speed1*3) % 360;
@@ -384,7 +359,6 @@
                         gradient.addColorStop(0, `hsla(${h1}, 100%, 70%, ${p1.lightIntensity * 0.6})`);
                         gradient.addColorStop(1, `hsla(${h2}, 100%, 70%, ${p2.lightIntensity * 0.6})`);
                         
-                        // Draw the connection line
                         tCtx.strokeStyle = gradient;
                         tCtx.lineWidth = 1.5;
                         tCtx.shadowBlur = 10;
@@ -404,31 +378,25 @@
             tCtx.restore();
         }
 
-        // Draw white light beam from touch point to center
-        // WITH LIGHT ABSORPTION - particles act as sponges!
+        // 💎 REDUCED BLOOM WHITE BEAM 💎
         function drawWhiteBeam(fromX, fromY) {
             const toX = w/2;
             const toY = h/2;
             
-            // OPTIMIZED PROGRESSIVE LIGHT ABSORPTION
-            // Only check particles that could be near beam (performance optimization)
             const litParticlesInBeam = [];
             const beamLength = Math.hypot(toX - fromX, toY - fromY);
             
-            // Quick bounds check first (much faster than full calculation for all particles)
             const minX = Math.min(fromX, toX) - 50;
             const maxX = Math.max(fromX, toX) + 50;
             const minY = Math.min(fromY, toY) - 50;
             const maxY = Math.max(fromY, toY) + 50;
             
             P.forEach(p => {
-                // Skip particles outside beam bounding box (fast rejection)
                 if(p.x < minX || p.x > maxX || p.y < minY || p.y > maxY) return;
                 
                 if(p.lightIntensity > 0.2) {
                     const dist = distanceToLine(p.x, p.y, fromX, fromY, toX, toY);
                     if(dist < 50) {
-                        // Calculate position along beam (0 = start, 1 = end)
                         const dx = p.x - fromX;
                         const dy = p.y - fromY;
                         const beamDx = toX - fromX;
@@ -445,43 +413,40 @@
                 }
             });
             
-            // Sort by position along beam (closest first)
             litParticlesInBeam.sort((a, b) => a.position - b.position);
             
-            // Calculate cumulative absorption
             let cumulativeAbsorption = 0;
             litParticlesInBeam.forEach(p => {
-                cumulativeAbsorption += p.intensity * 0.12; // Each particle absorbs up to 12%
+                cumulativeAbsorption += p.intensity * 0.12;
             });
             
-            cumulativeAbsorption = Math.min(0.85, cumulativeAbsorption); // Max 85% absorption
+            cumulativeAbsorption = Math.min(0.85, cumulativeAbsorption);
             const beamOpacity = 1 - cumulativeAbsorption;
             
-            // Draw beam with gradient that accounts for progressive absorption
             const gradient = lCtx.createLinearGradient(fromX, fromY, toX, toY);
             
-            // Start bright, get dimmer as absorbed
-            gradient.addColorStop(0, `rgba(255, 255, 255, ${0.9})`);
-            gradient.addColorStop(0.5, `rgba(220, 220, 255, ${0.7 * (1 - cumulativeAbsorption * 0.5)})`);
-            gradient.addColorStop(1, `rgba(180, 180, 255, ${0.4 * beamOpacity})`);
+            // Reduced opacity at source
+            gradient.addColorStop(0, `rgba(255, 255, 255, ${0.5})`); // Was 0.9
+            gradient.addColorStop(0.5, `rgba(220, 220, 255, ${0.35 * (1 - cumulativeAbsorption * 0.5)})`); // Was 0.7
+            gradient.addColorStop(1, `rgba(180, 180, 255, ${0.2 * beamOpacity})`); // Was 0.4
 
-            // Draw beam
             lCtx.save();
             lCtx.strokeStyle = gradient;
-            lCtx.lineWidth = 30;
+            lCtx.lineWidth = 25; // Slightly thinner (was 30)
             lCtx.lineCap = 'round';
-            lCtx.shadowBlur = 40 * (0.5 + beamOpacity * 0.5);
-            lCtx.shadowColor = '#fff';
+            // 75% bloom reduction (25% of original)
+            lCtx.shadowBlur = 10 * (0.5 + beamOpacity * 0.5); // Was 40
+            lCtx.shadowColor = 'rgba(255, 255, 255, 0.4)'; // Reduced opacity
             
             lCtx.beginPath();
             lCtx.moveTo(fromX, fromY);
             lCtx.lineTo(toX, toY);
             lCtx.stroke();
             
-            // Bright core (also progressively dimmed)
-            lCtx.lineWidth = 12;
-            lCtx.strokeStyle = `rgba(255, 255, 255, ${0.8 + beamOpacity * 0.2})`;
-            lCtx.shadowBlur = 20 * (0.5 + beamOpacity * 0.5);
+            // Bright core - also reduced
+            lCtx.lineWidth = 10; // Was 12
+            lCtx.strokeStyle = `rgba(255, 255, 255, ${0.5 + beamOpacity * 0.15})`; // Was 0.8 + 0.2
+            lCtx.shadowBlur = 5 * (0.5 + beamOpacity * 0.5); // Was 20
             lCtx.beginPath();
             lCtx.moveTo(fromX, fromY);
             lCtx.lineTo(toX, toY);
@@ -490,47 +455,48 @@
             lCtx.restore();
         }
 
-        // Draw refracted FULL SPECTRUM (9 beams) FROM EACH TRISKELION ARM
+        // 🌈✨ SEAMLESS PRISMATIC SPECTRUM ✨🌈
         function drawRefractedRays(sourceX, sourceY) {
             const cx = w/2;
             const cy = h/2;
             
-            // FULL RAINBOW SPECTRUM - 9 beams!
             const colors = [
-                { name: 'red', color: '#ff0040', hue: 0, refractionOffset: -0.4, width: 25 },
-                { name: 'orange', color: '#ff8000', hue: 30, refractionOffset: -0.3, width: 25 },
-                { name: 'yellow', color: '#ffff00', hue: 60, refractionOffset: -0.2, width: 25 },
-                { name: 'lime', color: '#80ff00', hue: 90, refractionOffset: -0.1, width: 25 },
-                { name: 'green', color: '#00ff80', hue: 150, refractionOffset: 0, width: 25 },
-                { name: 'cyan', color: '#00ffff', hue: 180, refractionOffset: 0.1, width: 25 },
-                { name: 'blue', color: '#0080ff', hue: 210, refractionOffset: 0.2, width: 25 },
-                { name: 'indigo', color: '#4000ff', hue: 250, refractionOffset: 0.3, width: 25 },
-                { name: 'violet', color: '#8000ff', hue: 280, refractionOffset: 0.4, width: 25 }
+                { hue: 0,   refractionOffset: -0.45 },
+                { hue: 15,  refractionOffset: -0.4 },
+                { hue: 30,  refractionOffset: -0.35 },
+                { hue: 45,  refractionOffset: -0.3 },
+                { hue: 60,  refractionOffset: -0.25 },
+                { hue: 75,  refractionOffset: -0.2 },
+                { hue: 90,  refractionOffset: -0.15 },
+                { hue: 105, refractionOffset: -0.1 },
+                { hue: 120, refractionOffset: -0.05 },
+                { hue: 150, refractionOffset: 0 },
+                { hue: 180, refractionOffset: 0.05 },
+                { hue: 195, refractionOffset: 0.1 },
+                { hue: 210, refractionOffset: 0.15 },
+                { hue: 225, refractionOffset: 0.2 },
+                { hue: 250, refractionOffset: 0.25 },
+                { hue: 270, refractionOffset: 0.3 },
+                { hue: 290, refractionOffset: 0.35 },
+                { hue: 310, refractionOffset: 0.4 }
             ];
 
-            // Draw refracted rays from EACH triskelion arm
             armPositions.forEach((arm, armIndex) => {
-                // Calculate incoming light angle TO THIS ARM
                 const dx = arm.x - sourceX;
                 const dy = arm.y - sourceY;
                 const incomingAngle = Math.atan2(dy, dx);
                 
-                colors.forEach(({ color, refractionOffset, width }) => {
-                    // CRITICAL: Refracted angle is based on incoming angle + refraction offset
-                    // This makes it REACTIVE to light position!
+                colors.forEach(({ hue, refractionOffset }, colorIndex) => {
                     const refractedAngle = incomingAngle + Math.PI + refractionOffset;
                     
-                    const rayLength = Math.max(w, h);
+                    const rayLength = Math.max(w, h) * 1.2;
                     
-                    // TAPERING CONE GEOMETRY
-                    // Start with tight cone at origin, bloom 40% wider at outer edge
-                    const startWidth = width * 0.3; // Tight at origin
-                    const endWidth = width * 1.4; // 40% wider at end (1.0 + 0.4)
+                    const baseWidth = 35;
+                    const startWidth = baseWidth * 0.8;
+                    const endWidth = baseWidth * 2.0;
                     
-                    // Calculate perpendicular angle for cone edges
                     const perpAngle = refractedAngle + Math.PI / 2;
                     
-                    // Origin points (tight cone)
                     const startLeft = {
                         x: arm.x + Math.cos(perpAngle) * startWidth / 2,
                         y: arm.y + Math.sin(perpAngle) * startWidth / 2
@@ -540,7 +506,6 @@
                         y: arm.y - Math.sin(perpAngle) * startWidth / 2
                     };
                     
-                    // End points (bloomed cone)
                     const endCenterX = arm.x + Math.cos(refractedAngle) * rayLength;
                     const endCenterY = arm.y + Math.sin(refractedAngle) * rayLength;
                     
@@ -553,19 +518,23 @@
                         y: endCenterY - Math.sin(perpAngle) * endWidth / 2
                     };
 
-                    // Create gradient for tapering effect
                     const gradient = lCtx.createLinearGradient(
                         arm.x, arm.y, endCenterX, endCenterY
                     );
-                    gradient.addColorStop(0, color);
-                    gradient.addColorStop(0.3, color);
-                    gradient.addColorStop(1, color.replace(')', ', 0)').replace('rgb', 'rgba'));
+                    
+                    const color = `hsl(${hue}, 100%, 60%)`;
+                    
+                    gradient.addColorStop(0, color.replace(')', ', 0.4)').replace('hsl', 'hsla'));
+                    gradient.addColorStop(0.15, color.replace(')', ', 0.25)').replace('hsl', 'hsla'));
+                    gradient.addColorStop(0.35, color.replace(')', ', 0.12)').replace('hsl', 'hsla'));
+                    gradient.addColorStop(0.6, color.replace(')', ', 0.04)').replace('hsl', 'hsla'));
+                    gradient.addColorStop(1, color.replace(')', ', 0)').replace('hsl', 'hsla'));
 
-                    // Draw the tapering cone as a filled path
                     lCtx.save();
                     lCtx.fillStyle = gradient;
-                    lCtx.shadowBlur = 40;
-                    lCtx.shadowColor = color;
+                    lCtx.shadowBlur = 50;
+                    lCtx.shadowColor = color.replace(')', ', 0.3)').replace('hsl', 'hsla');
+                    lCtx.globalCompositeOperation = 'lighter';
                     
                     lCtx.beginPath();
                     lCtx.moveTo(startLeft.x, startLeft.y);
@@ -575,15 +544,14 @@
                     lCtx.closePath();
                     lCtx.fill();
                     
-                    // Add bright core along centerline
-                    lCtx.strokeStyle = color;
-                    lCtx.lineWidth = startWidth;
+                    lCtx.strokeStyle = color.replace(')', ', 0.15)').replace('hsl', 'hsla');
+                    lCtx.lineWidth = startWidth * 0.4;
                     lCtx.lineCap = 'round';
-                    lCtx.globalAlpha = 0.6;
+                    lCtx.shadowBlur = 30;
                     lCtx.beginPath();
                     lCtx.moveTo(arm.x, arm.y);
-                    lCtx.lineTo(arm.x + Math.cos(refractedAngle) * rayLength * 0.3, 
-                                arm.y + Math.sin(refractedAngle) * rayLength * 0.3);
+                    lCtx.lineTo(arm.x + Math.cos(refractedAngle) * rayLength * 0.2, 
+                                arm.y + Math.sin(refractedAngle) * rayLength * 0.2);
                     lCtx.stroke();
                     
                     lCtx.restore();
@@ -591,23 +559,20 @@
             });
         }
 
-        // MULTI-TOUCH HANDLERS - up to 3 fingers!
         let canvasIsDragging = false;
 
         function updateTouches(e) {
-            // Only set touch if not clicking button
             const target = e.target;
             if (target.tagName === 'BUTTON' || target.closest('#controls')) {
-                return; // Let button handle it
+                return;
             }
             
             e.preventDefault();
             canvasIsDragging = true;
             
-            touchPoints.length = 0; // Clear existing
+            touchPoints.length = 0;
             
             if(e.touches) {
-                // Touch events - can have multiple touches
                 const numTouches = Math.min(e.touches.length, maxTouches);
                 for(let i = 0; i < numTouches; i++) {
                     touchPoints.push({
@@ -617,7 +582,6 @@
                     });
                 }
             } else {
-                // Mouse event - single touch
                 touchPoints.push({
                     x: e.clientX,
                     y: e.clientY,
@@ -648,7 +612,6 @@
         });
         document.addEventListener('mouseup', clearTouches);
 
-        // Button handler
         const persistBtn = document.getElementById('persistBtn');
         persistBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -664,8 +627,6 @@
         });
 
         function loop() {
-            // Triskelion canvas (particle system)
-            // INCREASED TRAILING by 10% (0.1 -> 0.09)
             tCtx.globalCompositeOperation = 'source-over';
             tCtx.fillStyle = 'rgba(0, 0, 0, 0.09)';
             tCtx.fillRect(0, 0, w, h);
@@ -680,19 +641,15 @@
                 p.draw();
             });
             
-            // Draw light web connections between highly lit particles
             drawLightWeb();
 
-            // Light refraction canvas
             if (!persistRays) {
                 lCtx.clearRect(0, 0, w, h);
             } else {
-                // Fade for persistence
                 lCtx.fillStyle = 'rgba(0, 0, 0, 0.03)';
                 lCtx.fillRect(0, 0, w, h);
             }
 
-            // Draw light if ANY touches are active
             if (touchPoints.length > 0) {
                 touchPoints.forEach(touch => {
                     drawWhiteBeam(touch.x, touch.y);
@@ -704,7 +661,6 @@
         }
         loop();
 
-        // Controls
         function togglePersist() {
             persistRays = !persistRays;
             persistBtn.classList.toggle('active');
