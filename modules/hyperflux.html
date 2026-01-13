@@ -19,7 +19,7 @@
             top: 0;
             left: 0;
             z-index: 1;
-            filter: contrast(1.2) brightness(1.1); /* Enhance the Shimmer */
+            filter: contrast(1.3) brightness(1.2) saturate(1.5); /* SHIMMER ENHANCEMENT */
         }
 
         #overlay {
@@ -59,7 +59,7 @@
 
     <div id="overlay">
         <h1>DEPTH TRAVEL</h1>
-        <p>[ MOVE TO DISPLACE | CLICK TO HARMONIZE ]</p>
+        <p>[ DRAG TO DISPLACE | RELEASE TO HARMONIZE ]</p>
     </div>
 
     <canvas id="canvas"></canvas>
@@ -73,8 +73,16 @@
         const particleCount = 5000; // TOTAL SATURATION
         let time = 0; // The heartbeat of the system
 
-        // Mouse State
-        let mouse = { x: -1000, y: -1000, active: false, click: false };
+        // Mouse State with drag tracking
+        let mouse = { 
+            x: -1000, 
+            y: -1000, 
+            prevX: -1000,
+            prevY: -1000,
+            active: false, 
+            click: false,
+            forceDecay: 0 // Fading force bubble
+        };
 
         // Resize Handling
         function resize() {
@@ -84,21 +92,57 @@
         window.addEventListener('resize', resize);
         resize();
 
-        // Input Handling
+        // Enhanced Input Handling with Drag Support
         window.addEventListener('mousemove', e => {
+            mouse.prevX = mouse.x;
+            mouse.prevY = mouse.y;
             mouse.x = e.clientX;
             mouse.y = e.clientY;
             mouse.active = true;
+            if (mouse.click) {
+                mouse.forceDecay = 1; // Full force while dragging
+            }
         });
-        window.addEventListener('mousedown', () => mouse.click = true);
-        window.addEventListener('mouseup', () => mouse.click = false);
+        
+        window.addEventListener('mousedown', e => {
+            mouse.click = true;
+            mouse.forceDecay = 1;
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            mouse.prevX = e.clientX;
+            mouse.prevY = e.clientY;
+        });
+        
+        window.addEventListener('mouseup', () => {
+            mouse.click = false;
+            // Force starts fading on release
+        });
+
         window.addEventListener('touchstart', e => {
+            e.preventDefault();
             mouse.x = e.touches[0].clientX;
             mouse.y = e.touches[0].clientY;
+            mouse.prevX = mouse.x;
+            mouse.prevY = mouse.y;
             mouse.click = true;
             mouse.active = true;
+            mouse.forceDecay = 1;
         });
-        window.addEventListener('touchend', () => mouse.click = false);
+        
+        window.addEventListener('touchmove', e => {
+            e.preventDefault();
+            mouse.prevX = mouse.x;
+            mouse.prevY = mouse.y;
+            mouse.x = e.touches[0].clientX;
+            mouse.y = e.touches[0].clientY;
+            if (mouse.click) {
+                mouse.forceDecay = 1;
+            }
+        });
+        
+        window.addEventListener('touchend', () => {
+            mouse.click = false;
+        });
 
         class Particle {
             constructor() {
@@ -119,56 +163,71 @@
                 this.vy = 0;
                 this.life = Math.random() * 100 + 50;
                 
-                // Base hue for this particle (Magenta to Cyan to Venus-Orange)
-                // We map 0-1 to a spectrum section
-                this.baseHue = Math.random() * 60 + 260; // Purples/Magentas
-                if (Math.random() > 0.7) this.baseHue = 180; // Occasional Cyan
-                if (Math.random() > 0.9) this.baseHue = 30;  // Rare Gold
+                // 🌈 FULL RAINBOW SPECTRUM 🌈
+                // Map particles across the ENTIRE color wheel
+                this.baseHue = Math.random() * 360; // FULL SPECTRUM
+                
+                // Add some hue clustering for shimmer bands
+                if (Math.random() > 0.7) {
+                    const clusters = [0, 60, 120, 180, 240, 300]; // RGB + CMY
+                    this.baseHue = clusters[Math.floor(Math.random() * clusters.length)] + (Math.random() * 30 - 15);
+                }
             }
 
             update() {
-                // 1. BREATHING FLOW FIELD
-                // We use trig functions based on position AND time to create shifting currents
-                // The 'z' factor means different layers experience the flow differently (Planar Scales)
-                const scale = 0.002;
-                const timeScale = 0.0005;
+                // 1. BREATHING FLOW FIELD - ACCELERATED
+                const scale = 0.003; // Tighter patterns
+                const timeScale = 0.001; // FASTER breathing
                 
-                // Complex Noise Approximation
+                // Complex Noise Approximation with more chaos
                 const angle = 
-                    (Math.cos(this.x * scale + time * timeScale) + 
-                     Math.sin(this.y * scale + time * timeScale) + 
-                     this.z * 2) * Math.PI;
+                    (Math.cos(this.x * scale + time * timeScale) * 1.5 + 
+                     Math.sin(this.y * scale + time * timeScale) * 1.5 + 
+                     Math.sin((this.x + this.y) * scale * 0.5) +
+                     this.z * 3) * Math.PI;
 
-                // 2. DEPTH TRAVEL PHYSICS
-                // Closer particles (higher z) move faster and react more to flow
-                const speed = (this.z * 0.8) + 0.2;
+                // 2. DEPTH TRAVEL PHYSICS - ACCELERATED 🚀
+                const speed = (this.z * 1.5) + 0.5; // MORE SPEED
                 
-                this.vx += Math.cos(angle) * 0.05 * speed;
-                this.vy += Math.sin(angle) * 0.05 * speed;
+                this.vx += Math.cos(angle) * 0.12 * speed; // Increased from 0.05
+                this.vy += Math.sin(angle) * 0.12 * speed;
 
-                // Friction (Harmonization)
-                this.vx *= 0.96;
-                this.vy *= 0.96;
+                // Less friction = MORE VELOCITY
+                this.vx *= 0.98; // Was 0.96
+                this.vy *= 0.98;
 
-                // 3. DISPLACEMENT (Mouse Interaction)
-                if (mouse.active) {
+                // 3. DISPLACEMENT with DRAG SUPPORT
+                if (mouse.active && mouse.forceDecay > 0) {
                     let dx = mouse.x - this.x;
                     let dy = mouse.y - this.y;
                     let dist = Math.sqrt(dx*dx + dy*dy);
                     
-                    // Singularity (Click) vs Repulsion (Hover)
-                    let forceRadius = mouse.click ? 500 : 200;
-                    let forceStrength = mouse.click ? -0.5 : 2; // Negative pulls in (Black Hole)
+                    // Larger radius, stronger pull with decay
+                    let forceRadius = mouse.click ? 600 : 300;
+                    let forceStrength = mouse.click ? -1.2 : 3; // STRONGER forces
+                    
+                    // Apply decay to fade the bubble
+                    forceStrength *= mouse.forceDecay;
 
                     if (dist < forceRadius) {
                         const force = (forceRadius - dist) / forceRadius;
                         const angleToMouse = Math.atan2(dy, dx);
                         
-                        // Push/Pull based on Z-depth (Parallax Interaction)
+                        // Enhanced parallax with drag velocity
                         const zForce = force * forceStrength * (this.z + 0.5);
+                        
+                        // Add drag momentum
+                        const dragVelX = mouse.x - mouse.prevX;
+                        const dragVelY = mouse.y - mouse.prevY;
                         
                         this.vx -= Math.cos(angleToMouse) * zForce;
                         this.vy -= Math.sin(angleToMouse) * zForce;
+                        
+                        // Add drag velocity influence
+                        if (mouse.click) {
+                            this.vx += dragVelX * 0.3 * this.z;
+                            this.vy += dragVelY * 0.3 * this.z;
+                        }
                     }
                 }
 
@@ -188,23 +247,33 @@
             }
 
             draw() {
-                // 4. COLOR HARMONIZATION
-                // Velocity impacts brightness (Hotter when fast)
+                // 4. RAINBOW HARMONIZATION 🌈✨
                 const speed = Math.abs(this.vx) + Math.abs(this.vy);
-                const lightness = 30 + (this.z * 40) + (speed * 10); // Depth + Speed = Brightness
-                const alpha = (this.z * 0.8) + 0.2; // Depth = Opacity
+                const lightness = 40 + (this.z * 35) + (speed * 15); // Brighter
+                const alpha = (this.z * 0.9) + 0.3; // More opaque
                 
-                // Hue shift based on speed (Doppler-ish effect)
-                let hue = this.baseHue + (speed * 20); 
+                // Dynamic hue shifting based on speed AND position AND time
+                let hue = (this.baseHue + (speed * 30) + (time * 0.5)) % 360;
+                
+                // Increase saturation for MORE SHIMMER
+                const saturation = 85 + (speed * 5);
 
-                ctx.fillStyle = `hsla(${hue}, 80%, ${lightness}%, ${alpha})`;
+                ctx.fillStyle = `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`;
                 
                 // 5. PLANAR SCALING (Size based on Z)
-                const size = (this.z * 2.5); // Closer = Bigger
+                const size = (this.z * 3) + 0.5; // Bigger particles
                 
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, size, 0, Math.PI * 2);
                 ctx.fill();
+                
+                // Add glow for fast-moving particles
+                if (speed > 3) {
+                    ctx.fillStyle = `hsla(${hue}, 100%, 70%, ${alpha * 0.3})`;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, size * 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
             }
         }
 
@@ -214,25 +283,29 @@
         }
 
         function animate() {
-            // 6. THE MELT TRAIL
-            // Instead of clearing, we draw a transparent rect.
-            // This creates the "Trails" / "Melt" effect.
-            // Dark purple tint for the background void
-            ctx.fillStyle = 'rgba(2, 0, 5, 0.15)'; 
+            // 6. THE MELT TRAIL - slightly darker for more contrast
+            ctx.fillStyle = 'rgba(2, 0, 5, 0.12)'; 
             ctx.fillRect(0, 0, width, height);
 
             time++; // Advance the breathing timeline
+
+            // Decay the mouse force bubble when not clicking
+            if (!mouse.click && mouse.forceDecay > 0) {
+                mouse.forceDecay -= 0.02; // Gentle fade
+                if (mouse.forceDecay < 0) mouse.forceDecay = 0;
+            }
 
             particles.forEach(p => {
                 p.update();
                 p.draw();
             });
 
-            // Occasional "Glitch" Flash (The Eldritch Spark)
-            if (Math.random() > 0.995) {
+            // More frequent rainbow glitch flashes
+            if (Math.random() > 0.99) {
                 ctx.globalCompositeOperation = 'overlay';
-                ctx.fillStyle = Math.random() > 0.5 ? '#ff00ff' : '#00ffff';
-                ctx.fillRect(0, Math.random() * height, width, Math.random() * 5);
+                const glitchHue = Math.random() * 360; // RAINBOW GLITCH
+                ctx.fillStyle = `hsla(${glitchHue}, 100%, 70%, 0.3)`;
+                ctx.fillRect(0, Math.random() * height, width, Math.random() * 8);
                 ctx.globalCompositeOperation = 'source-over';
             }
 
