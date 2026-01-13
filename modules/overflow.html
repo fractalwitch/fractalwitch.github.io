@@ -36,7 +36,7 @@ canvas {
 }
 .intensity-fill {
   height: 100%;
-  background: linear-gradient(90deg, #ff00ff, #00ffff, #ffff00, #ff00ff);
+  background: linear-gradient(90deg, #ff00ff, #00ffff, #ff00ff);
   width: 0%;
   transition: width 0.1s;
   box-shadow: 0 0 20px rgba(255, 0, 255, 0.8);
@@ -91,7 +91,7 @@ let tendrils = [];
 let smokePaths = [];
 let overflowBubbles = [];
 let buildPhase = 0;
-let globalOverflowHue = 0;
+let globalOverflowHue = 280; // Start at base purple-magenta
 
 const states = [
   '∞ BUILDING ∞',
@@ -102,12 +102,7 @@ const states = [
   '∞ ∞ ∞'
 ];
 
-// 🌈 RAINBOW HUE GENERATOR 🌈
-function getRainbowHue(seed = 0) {
-  return (time * 2 + seed * 60) % 360;
-}
-
-// 🫧 OVERFLOW BUBBLE CLASS WITH SYNCED RAINBOW 🫧
+// 🫧 OVERFLOW BUBBLE CLASS WITH ORIGINAL COLOR PALETTE 🫧
 class OverflowBubble {
   constructor(x, y) {
     this.x = x;
@@ -116,7 +111,7 @@ class OverflowBubble {
     this.maxRadius = 150 + Math.random() * 200;
     this.growSpeed = 2 + Math.random() * 3;
     this.opacity = 0.8;
-    this.hueOffset = (Math.random() - 0.5) * 60;
+    this.hueOffset = (Math.random() - 0.5) * 60; // Small variation
   }
   
   update() {
@@ -126,6 +121,7 @@ class OverflowBubble {
   }
   
   draw() {
+    // Use the original 280 ± variation color scheme
     const baseHue = globalOverflowHue + this.hueOffset;
     
     let gradient = ctx.createRadialGradient(
@@ -133,26 +129,27 @@ class OverflowBubble {
       this.x, this.y, this.radius
     );
     
+    // 13 color stops cycling through purple-magenta-cyan range
     const stops = [
       { pos: 0,    offset: 0,   opacity: 0.7 },
-      { pos: 0.08, offset: 30,  opacity: 0.65 },
-      { pos: 0.17, offset: 60,  opacity: 0.6 },
-      { pos: 0.25, offset: 90,  opacity: 0.55 },
-      { pos: 0.33, offset: 120, opacity: 0.5 },
-      { pos: 0.42, offset: 150, opacity: 0.45 },
-      { pos: 0.5,  offset: 180, opacity: 0.4 },
-      { pos: 0.58, offset: 210, opacity: 0.35 },
-      { pos: 0.67, offset: 240, opacity: 0.3 },
-      { pos: 0.75, offset: 270, opacity: 0.25 },
-      { pos: 0.83, offset: 300, opacity: 0.2 },
-      { pos: 0.92, offset: 330, opacity: 0.1 },
-      { pos: 1,    offset: 360, opacity: 0 }
+      { pos: 0.08, offset: 12,  opacity: 0.65 },
+      { pos: 0.17, offset: 24,  opacity: 0.6 },
+      { pos: 0.25, offset: 36,  opacity: 0.55 },
+      { pos: 0.33, offset: 48,  opacity: 0.5 },
+      { pos: 0.42, offset: 60,  opacity: 0.45 },
+      { pos: 0.5,  offset: 72,  opacity: 0.4 },
+      { pos: 0.58, offset: 84,  opacity: 0.35 },
+      { pos: 0.67, offset: 96,  opacity: 0.3 },
+      { pos: 0.75, offset: 108, opacity: 0.25 },
+      { pos: 0.83, offset: 120, opacity: 0.2 },
+      { pos: 0.92, offset: 132, opacity: 0.1 },
+      { pos: 1,    offset: 144, opacity: 0 }
     ];
     
     stops.forEach(stop => {
-      const hue = (baseHue + stop.offset) % 360;
+      const hue = baseHue + stop.offset;
       const alpha = this.opacity * stop.opacity;
-      gradient.addColorStop(stop.pos, `hsla(${hue}, 90%, 60%, ${alpha})`);
+      gradient.addColorStop(stop.pos, `hsla(${hue}, 80%, 60%, ${alpha})`);
     });
     
     ctx.fillStyle = gradient;
@@ -170,19 +167,18 @@ class Wave {
     this.maxRadius = 100 + intensity * 400;
     this.opacity = 0.8;
     this.speed = 2 + intensity * 8;
-    this.hue = getRainbowHue(Math.random() * 6);
+    this.hue = 280 + Math.sin(time) * 80;
     this.frequency = frequency;
   }
   
   update() {
     this.radius += this.speed;
     this.opacity *= 0.97;
-    this.hue = (this.hue + 0.5) % 360;
     return this.opacity > 0.01 && this.radius < this.maxRadius;
   }
   
   draw() {
-    ctx.strokeStyle = `hsla(${this.hue}, 85%, 65%, ${this.opacity})`;
+    ctx.strokeStyle = `hsla(${this.hue}, 80%, 60%, ${this.opacity})`;
     ctx.lineWidth = 2 + intensity * 4;
     ctx.shadowBlur = 20;
     ctx.shadowColor = `hsla(${this.hue}, 100%, 50%, ${this.opacity})`;
@@ -210,8 +206,7 @@ class Particle {
     this.vy = (Math.random() - 0.5) * (2 + intensity * 10);
     this.life = 1;
     this.decay = 0.98 - intensity * 0.02;
-    this.hue = Math.random() * 360;
-    this.hueShift = Math.random() * 2 - 1;
+    this.hue = 280 + Math.random() * 80;
     this.size = 2 + Math.random() * 3 + intensity * 3;
   }
   
@@ -221,12 +216,11 @@ class Particle {
     this.vx *= 0.98;
     this.vy *= 0.98;
     this.life *= this.decay;
-    this.hue = (this.hue + this.hueShift) % 360;
     return this.life > 0.01;
   }
   
   draw() {
-    ctx.fillStyle = `hsla(${this.hue}, 90%, 65%, ${this.life})`;
+    ctx.fillStyle = `hsla(${this.hue}, 80%, 60%, ${this.life})`;
     ctx.shadowBlur = 15;
     ctx.shadowColor = `hsla(${this.hue}, 100%, 50%, ${this.life})`;
     ctx.beginPath();
@@ -243,7 +237,7 @@ class Tendril {
     this.angle = angle;
     this.length = 50 + intensity * 200;
     this.speed = 3 + intensity * 7;
-    this.hue = getRainbowHue(angle);
+    this.hue = 280 + Math.sin(time + angle) * 80;
     this.opacity = 0.7 + intensity * 0.3;
     this.twist = Math.random() * 0.2;
     
@@ -261,12 +255,11 @@ class Tendril {
     if(this.segments.length > 30) this.segments.pop();
     
     this.opacity *= 0.98;
-    this.hue = (this.hue + 1) % 360;
     return this.opacity > 0.01;
   }
   
   draw() {
-    ctx.strokeStyle = `hsla(${this.hue}, 80%, 60%, ${this.opacity})`;
+    ctx.strokeStyle = `hsla(${this.hue}, 70%, 50%, ${this.opacity})`;
     ctx.lineWidth = 2 + intensity * 3;
     ctx.shadowBlur = 15;
     ctx.shadowColor = `hsla(${this.hue}, 100%, 60%, ${this.opacity})`;
@@ -288,7 +281,7 @@ class SmokePath {
     this.vy = -0.5 - Math.random() * 1.5;
     this.size = 20 + Math.random() * 40;
     this.opacity = 0.6;
-    this.hue = Math.random() * 360;
+    this.hue = 280 + Math.random() * 40;
     this.rotation = Math.random() * Math.PI * 2;
     this.rotationSpeed = (Math.random() - 0.5) * 0.05;
   }
@@ -301,7 +294,6 @@ class SmokePath {
     this.size *= 1.02;
     this.opacity *= 0.97;
     this.rotation += this.rotationSpeed;
-    this.hue = (this.hue + 0.5) % 360;
     return this.opacity > 0.01;
   }
   
@@ -311,9 +303,9 @@ class SmokePath {
     ctx.rotate(this.rotation);
     
     let gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.size);
-    gradient.addColorStop(0, `hsla(${this.hue}, 70%, 60%, ${this.opacity})`);
-    gradient.addColorStop(0.5, `hsla(${(this.hue + 30) % 360}, 60%, 50%, ${this.opacity * 0.5})`);
-    gradient.addColorStop(1, `hsla(${(this.hue + 60) % 360}, 50%, 40%, 0)`);
+    gradient.addColorStop(0, `hsla(${this.hue}, 60%, 50%, ${this.opacity})`);
+    gradient.addColorStop(0.5, `hsla(${this.hue}, 50%, 40%, ${this.opacity * 0.5})`);
+    gradient.addColorStop(1, `hsla(${this.hue}, 40%, 30%, 0)`);
     
     ctx.fillStyle = gradient;
     ctx.beginPath();
@@ -363,9 +355,10 @@ function animate() {
   time += 0.05 + intensity * 0.1;
   buildPhase += 0.01;
   
-  // 🌈 SLOW GLOBAL OVERFLOW HUE CYCLE 🌈
+  // 💜 SLOW OSCILLATION IN PURPLE-MAGENTA-CYAN RANGE 💜
   if(intensity > 0.9) {
-    globalOverflowHue = (globalOverflowHue + 0.2) % 360;
+    // Oscillate slowly around 280 (purple-magenta)
+    globalOverflowHue = 280 + Math.sin(time * 0.02) * 80;
   }
   
   intensity += (targetIntensity - intensity) * 0.1;
@@ -374,12 +367,11 @@ function animate() {
   mouseX += (targetX - mouseX) * 0.1;
   mouseY += (targetY - mouseY) * 0.1;
   
-  // 🎯 Auto-spawn REDUCED BY 50% 🎯
   if(isPressed && Math.random() < 0.1125 + intensity * 0.2625) {
     spawnEffects(mouseX, mouseY, 1);
   }
   
-  // 🫧 Overflow bubbles - REDUCED BY 50% 🫧
+  // 🫧 Overflow bubbles - ONLY AT TOUCH POSITION 🫧
   if(intensity > 0.9 && isPressed && Math.random() < 0.15) {
     overflowBubbles.push(new OverflowBubble(mouseX, mouseY));
   }
@@ -415,15 +407,12 @@ function animate() {
   });
   
   if(isPressed) {
-    let connectionHue = getRainbowHue();
-    ctx.strokeStyle = `hsla(${connectionHue}, 85%, 65%, ${0.3 + intensity * 0.4})`;
+    ctx.strokeStyle = `hsla(${280 + Math.sin(time) * 80}, 80%, 60%, ${0.3 + intensity * 0.4})`;
     ctx.lineWidth = 1 + intensity * 3;
     ctx.shadowBlur = 15;
-    ctx.shadowColor = `hsla(${connectionHue}, 100%, 50%, ${intensity})`;
+    ctx.shadowColor = `hsla(${280}, 100%, 50%, ${intensity})`;
     
-    particles.slice(-20).forEach((p, i) => {
-      let lineHue = (connectionHue + i * 18) % 360;
-      ctx.strokeStyle = `hsla(${lineHue}, 85%, 65%, ${0.3 + intensity * 0.4})`;
+    particles.slice(-20).forEach(p => {
       ctx.beginPath();
       ctx.moveTo(mouseX, mouseY);
       ctx.lineTo(p.x, p.y);
@@ -442,7 +431,6 @@ c.addEventListener('mousemove', (e) => {
   targetX = e.clientX;
   targetY = e.clientY;
   
-  // 🎯 Drag spawn REDUCED BY 50% 🎯
   if(isPressed && Math.random() < 0.375) {
     spawnEffects(e.clientX, e.clientY, 0.1875);
   }
@@ -472,7 +460,6 @@ c.addEventListener('touchmove', (e) => {
   let touch = e.touches[0];
   targetX = touch.clientX;
   targetY = touch.clientY;
-  // 🎯 Touch drag spawn REDUCED BY 50% 🎯
   if(isPressed && Math.random() < 0.375) {
     spawnEffects(touch.clientX, touch.clientY, 0.1875);
   }
