@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arcane Lipgloss Core</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #05000a; /* Deep void purple */
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Lofi/Glitch Overlay Layers - CSS based for screen space effects */
+        .overlay-scanlines {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; z-index: 10;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            mix-blend-mode: overlay;
+            opacity: 0.3;
+        }
+
+        .overlay-rgb-split {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; z-index: 11;
+            background: linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 3px 100%;
+            mix-blend-mode: screen;
+        }
+
+        /* Scanline Bar Animation */
+        .scanline-bar {
+            width: 100%;
+            height: 150px;
+            z-index: 12;
+            background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(255, 105, 180, 0.1) 50%, rgba(0,0,0,0) 100%);
+            opacity: 0.2;
+            position: absolute;
+            bottom: 100%;
+            animation: scanlineMove 12s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes scanlineMove {
+            0% { bottom: 100%; }
+            100% { bottom: -150px; }
+        }
+
+        .ui-hidden {
+            position: absolute;
+            bottom: 30px;
+            width: 100%;
+            text-align: center;
+            color: rgba(255, 215, 0, 0.6);
+            font-size: 14px;
+            z-index: 20;
+            text-shadow: 0 0 10px #ff69b4, 0 0 20px #ff0000;
+            opacity: 0.8;
+            user-select: none;
+            letter-spacing: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- CSS overlays for final screen-space grit -->
+    <div class="overlay-scanlines"></div>
+    <div class="overlay-rgb-split"></div>
+    <div class="scanline-bar"></div>
+    
+    <div id="canvas-container"></div>
+    <div class="ui-hidden">~ THE GOLDEN OOZE ~</div>
+
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- Custom Vertex Shader -->
+    <script id="vertexShader" type="x-shader/x-vertex">
+        uniform float uTime;
+        uniform vec2 uMouse;
+        uniform float uScrollSpeed;
+        
+        varying vec2 vUv;
+        varying vec3 vNormal;
+        varying float vDistortion;
+        varying vec3 vViewPosition;
+        varying vec3 vWorldPosition;
+
+        // --- NOISE FUNCTIONS ---
+        vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+        vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+        vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
+
+        float snoise(vec2 v) {
+            const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+            vec2 i  = floor(v + dot(v, C.yy) );
+            vec2 x0 = v - i + dot(i, C.xx);
+            vec2 i1;
+            i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+            vec4 x12 = x0.xyxy + C.xxzz;
+            x12.xy -= i1;
+            i = mod289(i);
+            vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 )) + i.x + vec3(0.0, i1.x, 1.0 ));
+            vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+            m = m*m ;
+            m = m*m ;
+            vec3 x = 2.0 * fract(p * C.www) - 1.0;
+            vec3 h = abs(x) - 0.5;
+            vec3 ox = floor(x + 0.5);
+            vec3 a0 = x - ox;
+            m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+            vec3 g;
+            g.x  = a0.x  * x0.x  + h.x  * x0.y;
+            g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+            return 130.0 * dot(m, g);
+        }
+
+        void main() {
+            vUv = uv;
+            // Seamless scrolling: Add time to the Z component used for noise generation.
+            // We don't move the geometry physically, we move the noise field through it.
+            float flowZ = position.z + uTime * uScrollSpeed;
+            
+            // BREATHING & WIGGLING
+            // Complex wave function representing the "pulse" of the tunnel
+            float pulse = sin(flowZ * 0.1 + uTime * 0.5) * 1.5;
+            float breathing = sin(uTime * 0.8) * 0.5;
+            
+            // Mouse influence on twisting
+            float twist = sin(flowZ * 0.05 + uTime * 0.3) * (uMouse.x * 3.0);
+            
+            // Primary "Melting" noise distortion
+            // Using flowZ ensures the melt pattern travels down the tunnel seamlessly.
+            float noiseVal = snoise(vec2(flowZ * 0.08, position.x * 0.3 + uTime * 0.1));
+            vDistortion = noiseVal; // Pass to fragment for coloring
+
+            vec3 newPos = position;
+            
+            // Apply expansion/contraction based on noise and pulse
+            float expansion = 1.0 + (noiseVal * 0.4) + (pulse * 0.1) + (breathing * 0.05);
+            newPos.x *= expansion;
+            newPos.y *= expansion;
+
+            // Spiral twist effect along the Z axis
+            float angle = twist * 0.3 * (position.z * 0.02);
+            float ca = cos(angle);
+            float sa = sin(angle);
+            mat2 rot = mat2(ca, -sa, sa, ca);
+            newPos.xy = rot * newPos.xy;
+
+            // Add large-scale serpentine movement path
+            newPos.x += sin(flowZ * 0.05) * 8.0;
+            newPos.y += cos(flowZ * 0.07) * 8.0;
+
+            // Standard Three.js positioning
+            vec4 mvPosition = modelViewMatrix * vec4(newPos, 1.0);
+            vWorldPosition = (modelMatrix * vec4(newPos, 1.0)).xyz;
+            vViewPosition = -mvPosition.xyz;
+            vNormal = normalMatrix * normal;
+            gl_Position = projectionMatrix * mvPosition;
+        }
+    </script>
+
+    <!-- Custom Fragment Shader -->
+    <script id="fragmentShader" type="x-shader/x-fragment">
+        uniform float uTime;
+        uniform vec2 uResolution;
+        uniform vec2 uMouse;
+        uniform float uScrollSpeed;
+
+        varying vec2 vUv;
+        varying vec3 vNormal;
+        varying float vDistortion;
+        varying vec3 vViewPosition;
+        varying vec3 vWorldPosition;
+
+        // Cosine based palette function for iridescent look
+        vec3 palette( in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d ) {
+            return a + b*cos( 6.28318*(c*t+d) );
+        }
+
+        // --- 3D NOISE for surface texture ---
+        vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+        vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+        vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
+        vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+
+        float snoise(vec3 v) { 
+            const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
+            const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+            vec3 i  = floor(v + dot(v, C.yyy) );
+            vec3 x0 = v - i + dot(i, C.xxx) ;
+            vec3 g = step(x0.yzx, x0.xyz);
+            vec3 l = 1.0 - g;
+            vec3 i1 = min( g.xyz, l.zxy );
+            vec3 i2 = max( g.xyz, l.zxy );
+            vec3 x1 = x0 - i1 + C.xxx;
+            vec3 x2 = x0 - i2 + C.yyy; 
+            vec3 x3 = x0 - 1.0 + C.zzz; 
+            i = mod289(i); 
+            vec4 p = permute( permute( permute( 
+                        i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
+                    + i.y + vec4(0.0, i1.y, i2.y, 1.0 )) 
+                    + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+            float n_ = 0.142857142857; 
+            vec3  ns = n_ * D.wyz - D.xzx;
+            vec4 j = p - 49.0 * floor(p * ns.z * ns.z); 
+            vec4 x_ = floor(j * ns.z);
+            vec4 y_ = floor(j - 7.0 * x_ ); 
+            vec4 x = x_ *ns.x + ns.yyyy;
+            vec4 y = y_ *ns.x + ns.yyyy;
+            vec4 h = 1.0 - abs(x) - abs(y);
+            vec4 b0 = vec4( x.xy, y.xy );
+            vec4 b1 = vec4( x.zw, y.zw );
+            vec4 s0 = floor(b0)*2.0 + 1.0;
+            vec4 s1 = floor(b1)*2.0 + 1.0;
+            vec4 sh = -step(h, vec4(0.0));
+            vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
+            vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+            vec3 p0 = vec3(a0.xy,h.x);
+            vec3 p1 = vec3(a0.zw,h.y);
+            vec3 p2 = vec3(a1.xy,h.z);
+            vec3 p3 = vec3(a1.zw,h.w);
+            vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+            p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
+            vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+            m = m * m;
+            return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3) ) );
+        }
+
+        // 2D Noise for grain
+        float hash(vec2 p) { return fract(1e4 * sin(17.0 * p.x + p.y * 0.1) * (0.1 + abs(sin(p.y * 13.0 + p.x)))); }
+        float noise2D(vec2 p) {
+            vec2 i = floor(p); vec2 f = fract(p);
+            float a = hash(i); float b = hash(i + vec2(1.0, 0.0));
+            float c = hash(i + vec2(0.0, 1.0)); float d = hash(i + vec2(1.0, 1.0));
+            vec2 u = f * f * (3.0 - 2.0 * f);
+            return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+        }
+
+        void main() {
+            // --- SETUP UVs for seamless flow ---
+            // vUv.y is the length of the tunnel. We add time to scroll it endlessly.
+            vec2 flowingUV = vUv;
+            flowingUV.y += uTime * uScrollSpeed * 0.05; // Adjust speed of texture flow
+            
+            // Generate a "melt" noise value that moves with the flow
+            float meltNoise = snoise(vec3(flowingUV * 4.0, uTime * 0.3));
+            
+            // Distort UVs further with the melt noise for liquid feeling
+            vec2 distortedUV = flowingUV;
+            distortedUV.x += meltNoise * 0.1;
+            distortedUV.y += snoise(vec3(flowingUV.xy * 8.0, uTime * 0.5)) * 0.05;
+
+
+            // --- ARCANE COLOR PALETTE ---
+            vec3 colA = vec3(0.5, 0.5, 0.5);
+            vec3 colB = vec3(0.5, 0.5, 0.5);
+            vec3 colC = vec3(1.0, 1.0, 1.0);
+            vec3 colD = vec3(0.0, 0.33, 0.67); // Magentas, cyans, golds phases
+
+            // Mix vertex distortion and texture noise for color variation
+            float colorMix = vDistortion + meltNoise * 0.6;
+            vec3 tunnelColor = palette(colorMix + uTime * 0.1 + flowingUV.y, colA, colB, colC, colD);
+
+            // --- LIQUID SURFACE PROPERTIES (Specular & Bump) ---
+            vec3 viewDir = normalize(vViewPosition);
+            vec3 normal = normalize(vNormal);
+            // Bump mapping: perturb normal based on noise for wet look
+            normal.x += snoise(vec3(distortedUV * 20.0, uTime)) * 0.3;
+            normal.y += snoise(vec3(distortedUV * 15.0, uTime + 10.0)) * 0.3;
+            normal = normalize(normal);
+
+            // Fresnel effect (rim lighting) - strong magenta/purple glow
+            float fresnel = pow(1.0 - max(0.0, dot(viewDir, normal)), 2.5);
+            vec3 rimColor = vec3(0.8, 0.1, 0.6) * fresnel * 3.0;
+
+            // Specular highlight (wet lip gloss shine)
+            vec3 lightDir = normalize(vec3(0.2, 0.8, 1.0));
+            float spec = pow(max(dot(reflect(-lightDir, normal), viewDir), 0.0), 40.0);
+            vec3 specColor = vec3(1.0, 0.9, 1.0) * spec * 1.5;
+
+            // Combine tunnel layers
+            vec3 finalColor = tunnelColor + rimColor + specColor;
+            
+            // Darken deeper into the tunnel (fog-like effect)
+            // Using world position Z instead of UV.y for better depth perception regardless of scroll
+            float depthFog = smoothstep(-150.0, 50.0, vWorldPosition.z);
+            finalColor *= 0.2 + 0.8 * depthFog;
+
+
+            // --- INTEGRATED GRAIN GRID ---
+            // Calculate grain based on screen coordinates so it's sharp
+            vec2 screenUV = gl_FragCoord.xy / uResolution.xy;
+            // Distort screen UVs by the same melt noise so grain flows with liquid
+            vec2 distortedScreenUV = screenUV + vec2(meltNoise * 0.02, snoise(vec3(screenUV*5.0, uTime))*0.02);
+            
+            // High frequency noise for grit
+            float grain = (noise2D(distortedScreenUV * uResolution.xy * 0.5 + uTime * 10.0) - 0.5) * 2.0;
+            // Add subtle grid lines
+            float grid = step(0.95, fract(distortedScreenUV.x * 40.0)) + step(0.95, fract(distortedScreenUV.y * 40.0));
+            
+            // Apply grain and grid to the tunnel color, but less on bright highlights
+            finalColor -= grain * 0.15 * (1.0 - spec);
+            finalColor += grid * 0.05 * vec3(1.0, 0.5, 0.8); // Pinkish grid lines
+
+
+            // --- THE GOLDEN LIQUID CORE ---
+            // Work in normalized device coordinates (-1 to 1) centered
+            vec2 centerUV = screenUV * 2.0 - 1.0;
+            // Correct aspect ratio for perfectly round core
+            centerUV.x *= uResolution.x / uResolution.y;
+            
+            float radius = length(centerUV);
+            float angle = atan(centerUV.y, centerUV.x);
+            
+            // Oozing noise applied to the radius boundary
+            float oozeNoise = snoise(vec3(cos(angle)*3.0, sin(angle)*3.0, uTime * 1.5));
+            float wobblyRadius = radius - oozeNoise * 0.15;
+
+            // SDF for the core orb
+            float coreShape = 1.0 - smoothstep(0.2, 0.25 + breathing*0.05, wobblyRadius);
+            // SDF for the oozing border
+            float borderShape = smoothstep(0.2, 0.28, wobblyRadius) * (1.0 - smoothstep(0.28, 0.35, wobblyRadius));
+
+            vec3 goldCoreColor = vec3(1.0, 0.85, 0.4); // Bright gold center
+            vec3 oozeBorderColor = vec3(1.0, 0.5, 0.0); // Orangey molten border
+            
+            // Mix border and core
+            vec3 finalCoreColor = mix(oozeBorderColor, goldCoreColor, coreShape);
+            float totalCoreAlpha = coreShape + borderShape;
+
+            // Composite Core on top of Tunnel
+            finalColor = mix(finalColor, finalCoreColor, totalCoreAlpha);
+
+            gl_FragColor = vec4(finalColor, 1.0);
+        }
+    </script>
+
+    <script>
+        // --- THREE.JS SETUP ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        // Dark background color, though mostly covered by geometry
+        scene.background = new THREE.Color(0x05000a);
+
+        // Camera is now stationary regarding Z-movement
+        const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 50; // Pull camera back a bit to see the tunnel entrance
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        // Use slightly lower pixel ratio for performance due to heavy shaders
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); 
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+
+        // --- UNIFORMS ---
+        const uniforms = {
+            uTime: { value: 0 },
+            uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+            uMouse: { value: new THREE.Vector2(0.0, 0.0) },
+            uScrollSpeed: { value: 30.0 } // Speed of the endless flow
+        };
+
+        // --- TUNNEL GEOMETRY ---
+        // Very long cylinder, high segmentation for smooth vertex displacement
+        const geometry = new THREE.CylinderGeometry(15, 15, 300, 64, 500, true);
+        
+        const material = new THREE.ShaderMaterial({
+            vertexShader: document.getElementById('vertexShader').textContent,
+            fragmentShader: document.getElementById('fragmentShader').textContent,
+            uniforms: uniforms,
+            side: THREE.BackSide // Render inside
+        });
+
+        const tunnel = new THREE.Mesh(geometry, material);
+        tunnel.rotation.x = -Math.PI / 2; // Align along Z-axis
+        scene.add(tunnel);
+
+        // --- PARTICLES EMERGING FROM CORE ---
+        const particlesCount = 600;
+        const particlesGeometry = new THREE.BufferGeometry();
+        const posArray = new Float32Array(particlesCount * 3);
+        // Add randomness to size and speed per particle
+        const dataArray = new Float32Array(particlesCount * 2); // x: speed, y: size constraint
+
+        for(let i = 0; i < particlesCount; i++) {
+            const i3 = i * 3;
+            const i2 = i * 2;
+            // Spawn deep in the distance (near the visual core location)
+            posArray[i3 + 2] = -150 + Math.random() * 50; 
+            
+            // Spawn within a small radius around the center axis
+            const r = 5 * Math.sqrt(Math.random()); 
+            const theta = Math.random() * 2 * Math.PI;
+            posArray[i3] = r * Math.cos(theta);
+            posArray[i3 + 1] = r * Math.sin(theta);
+
+            // Random speed and size data
+            dataArray[i2] = 0.5 + Math.random() * 1.5; // Speed multiplier
+            dataArray[i2 + 1] = Math.random(); // Size variation
+        }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        particlesGeometry.setAttribute('aData', new THREE.BufferAttribute(dataArray, 2));
+
+        // Simple material for particles - shader does the heavy lifting for the rest
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.3,
+            color: 0xffddaa, // Gold/glitter color
+            transparent: true,
+            opacity: 0.9,
+            blending: THREE.AdditiveBlending,
+             // Use a soft circle texture if available, otherwise squares act as "glitch pixels"
+            // map: new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/spark1.png'),
+        });
+
+        const starField = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(starField);
+
+
+        // --- INTERACTION ---
+        let mouseX = 0, mouseY = 0;
+        let targetX = 0, targetY = 0;
+        const windowHalfX = window.innerWidth / 2;
+        const windowHalfY = window.innerHeight / 2;
+
+        function updateMouse(x, y) {
+            // Normalize mouse for uniforms (-1 to 1)
+            uniforms.uMouse.value.x = (x / window.innerWidth) * 2 - 1;
+            uniforms.uMouse.value.y = -(y / window.innerHeight) * 2 + 1;
+            // Coordinates for camera sway
+            mouseX = (x - windowHalfX) / 500;
+            mouseY = (y - windowHalfY) / 500;
+        }
+
+        document.addEventListener('mousemove', (e) => updateMouse(e.clientX, e.clientY));
+        document.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) updateMouse(e.touches[0].clientX, e.touches[0].clientY);
+        }, { passive: false });
+
+
+        // --- ANIMATION LOOP ---
+        const clock = new THREE.Clock();
+
+        function animate() {
+            const elapsedTime = clock.getElapsedTime();
+            uniforms.uTime.value = elapsedTime;
+
+            // --- Particle Flow Logic ---
+            const positions = starField.geometry.attributes.position.array;
+            const data = starField.geometry.attributes.aData.array;
+
+            for(let i = 0; i < particlesCount; i++) {
+                const i3 = i * 3;
+                const speed = data[i*2] * (uniforms.uScrollSpeed.value * 0.03); // Move relative to scroll speed
+
+                // Move particle towards camera (+Z)
+                positions[i3 + 2] += speed;
+
+                // SPIRAL motion as they move forward
+                const spiralRadius = 0.02 * speed;
+                const angle = elapsedTime * data[i*2] + positions[i3+2]*0.05;
+                positions[i3] += Math.cos(angle) * spiralRadius;
+                positions[i3+1] += Math.sin(angle) * spiralRadius;
+
+                // Reset if it passes the camera (Z > 60)
+                if(positions[i3 + 2] > 60) {
+                    positions[i3 + 2] = -150; // Send back to deep distance
+                    // Reset XY to center to "re-emerge"
+                    const r = 3 * Math.sqrt(Math.random()); 
+                    const theta = Math.random() * 2 * Math.PI;
+                    positions[i3] = r * Math.cos(theta);
+                    positions[i3 + 1] = r * Math.sin(theta);
+                }
+            }
+            starField.geometry.attributes.position.needsUpdate = true;
+            starField.rotation.z += 0.002; // Slow overall rotation
+
+            // --- Camera Sway ---
+            targetX = mouseX * 20;
+            targetY = mouseY * 20;
+            camera.position.x += (targetX - camera.position.x) * 0.03;
+            camera.position.y += (-targetY - camera.position.y) * 0.03;
+            // Always look towards the deep center
+            camera.lookAt(0, 0, -50);
+
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+
+        // --- RESIZE HANDLER ---
+        window.addEventListener('resize', () => {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+            uniforms.uResolution.value.x = width;
+            uniforms.uResolution.value.y = height;
+        });
+
+        // Start
+        animate();
+
+    </script>
+</body>
+</html>
+
+
