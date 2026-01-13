@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌌 ÖSS Style Codex Prompt Generator</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font for a clean, modern look */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d0c1d; /* Deep Violet Background */
+        }
+        .codex-card {
+            background-color: #1a1936; /* Slightly lighter card color */
+            box-shadow: 0 10px 30px rgba(100, 20, 150, 0.5); /* Purple shadow for glow effect */
+        }
+        .glow-text {
+            color: #ff00ff; /* Bright magenta/pink */
+            text-shadow: 0 0 5px rgba(255, 0, 255, 0.7);
+        }
+        /* Ensure the image container is fluid and responsive */
+        #generated-image {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 sm:p-8 flex items-center justify-center">
+
+    <div id="app" class="w-full max-w-4xl codex-card p-6 sm:p-10 rounded-2xl border border-purple-800/50">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-white mb-2">
+                <span class="glow-text">🌌 ÖSS</span> Prompt Generator
+            </h1>
+            <p class="text-purple-300">Constantly updating visual style guide for Astral Renderings.</p>
+            <div id="status-display" class="mt-4 text-lg font-semibold text-green-400">
+                Status: Running...
+            </div>
+        </header>
+
+        <!-- Image & Loading Area -->
+        <div class="mb-8 p-4 bg-gray-900 rounded-xl flex items-center justify-center min-h-[300px]">
+            <div id="image-loading" class="text-purple-400 flex flex-col items-center hidden">
+                <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="mt-2 text-sm">Generating Astral Image...</span>
+            </div>
+            <img id="generated-image" class="rounded-lg shadow-2xl object-cover w-full h-full max-h-[400px]" style="display:none;" alt="Generated image based on the ÖSS Style Codex prompt.">
+            <p id="image-placeholder" class="text-purple-500 italic">No image generated yet. The process will start automatically.</p>
+        </div>
+        
+        <!-- Current Prompt Display -->
+        <div class="mb-8 p-6 bg-purple-900/30 border border-purple-700 rounded-xl">
+            <h2 class="text-xl font-bold text-purple-200 mb-3">Latest Transmission</h2>
+            <p id="prompt-output" class="text-white text-xl sm:text-2xl font-light leading-relaxed italic">
+                Generating first prompt...
+            </p>
+        </div>
+
+        <!-- Components Display -->
+        <div class="grid grid-cols-1 md:col-cols-2 gap-4 mb-8">
+            <div class="p-4 bg-gray-800/50 rounded-lg">
+                <p class="font-semibold text-purple-400">Atmosphere:</p>
+                <p id="comp-atmosphere" class="text-white">...</p>
+            </div>
+            <div class="p-4 bg-gray-800/50 rounded-lg">
+                <p class="font-semibold text-purple-400">Color/Light:</p>
+                <p id="comp-color" class="text-white">...</p>
+            </div>
+            <div class="p-4 bg-gray-800/50 rounded-lg">
+                <p class="font-semibold text-purple-400">Spatial Frame:</p>
+                <p id="comp-frame" class="text-white">...</p>
+            </div>
+            <div class="p-4 bg-gray-800/50 rounded-lg">
+                <p class="font-semibold text-purple-400">Motif/Texture:</p>
+                <p id="comp-motif" class="text-white">...</p>
+            </div>
+            <div class="p-4 bg-gray-800/50 rounded-lg col-span-1 md:col-span-2">
+                <p class="font-semibold text-purple-400">Mythic Theme:</p>
+                <p id="comp-theme" class="text-white">...</p>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+            <button id="start-button" class="px-6 py-3 text-lg font-bold rounded-xl transition duration-300 bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-600/30 disabled:opacity-50" disabled>
+                Start Generation
+            </button>
+            <button id="stop-button" class="px-6 py-3 text-lg font-bold rounded-xl transition duration-300 bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/30">
+                Stop Generation
+            </button>
+        </div>
+
+        <!-- Next Update Timer -->
+        <div class="text-center mt-6 text-sm text-gray-400">
+            <p>Next update in <span id="timer-countdown" class="font-bold text-purple-400">10</span> seconds.</p>
+        </div>
+    </div>
+
+    <script>
+        // --- CODEX DATA (EXPANDED VOCABULARY) ---
+        const codex = {
+            atmospheres: [
+                'Surreal / Visionary (reality warping like liquid gold, liminal space, quiet as forgotten dreams)',
+                'Ethereal Sacredness (veiled in starlight, like a god\'s linen, hushed reverence, a whisper of devotion)',
+                'Witchy Ritualic (symbols burning like neon embers, spellcasting visible, threads of fate pulled tight)',
+                'Deep Comfort (nests of nebula, soft fabrics, boundless security, a cocoon of light)',
+                'Transcendental Peace (stillness deeper than space, sound like chimes in a vacuum)',
+                'Cosmic Unrest (tensions thrumming like a dying star, beautiful instability)',
+                'Joyous Revelation (a sudden, blinding clarity, like waking up inside a dream)',
+                'Sublime Isolation (the quiet dignity of being utterly alone in the universe)'
+            ],
+            colors: [
+                'Ultraviolet Glow (a phantom bloom)', 'Magenta Aura (pulsing heat)', 'Amethyst Light (deep as ancient knowledge)',
+                'Kaleidoscopic Fractals (shifting like quicksilver)', 'Sherbet Clouds (pastel and vibrant)', 'Pink Sky (a vast, blushing canvas)',
+                'Neon Glyphs (symbols of pure energy)', 'Muted Neon (soft glow through mist)', 'Pastel Bioluminescence (gentle inner light)',
+                'Opalescent Body Markings (shimmering like oil on water)', 'Iridescent Aura (a peacock\'s feather made of energy)',
+                'Starlit Aether (like cosmic dust suspended in honey)', 'Plasma Ripple (a wave of pure fire)', 'Energetic Breeze (cool and electric)',
+                'Love-Breath (the gentle exhale of creation)', 'Chrome-Indigo Haze (reflective and cool)', 'Vermillion Shockwave (a sudden burst of color)',
+                'Liquid Gold Infusion (melting metal light)', 'Teal Nebula Wash (soft, enveloping fog)', 'Crystalized Rainbows (prismatic sharpness)'
+            ],
+            frames: [
+                'Panoramic / Immersive (worlds unfolding, no edge of frame, infinite vista)',
+                'Dream Terrains (Mirage Desert of Glass, Echoing Canyon of Time, Bubble Lakes)',
+                'Sacred Groves (Whispering Jade Garden, Eldritch Grove, The Fungal Metropolis)',
+                'Cosmic Infrastructures (A bridge made of concentrated starlight, The Celestial Engine Room, Void Throne)',
+                'Astral Overlays (Glyphs dripping into space, Portals, Linear-to-Vortex collapse)',
+                'The Endless Staircase (leading into an unknown dimension)',
+                'Reflection Pool of Memories (a glassy, still surface reflecting past lives)',
+                'The Floating Citadel (ancient architecture suspended in zero-gravity)',
+                'Chamber of Whispering Light (a room constructed entirely of colored energy)'
+            ],
+            motifs: [
+                'Glitch Frequencies (like tearing silk)', 'Compression Smear (data distortion as art)', 'Soft Glitch (a gentle ripple in the code)',
+                'Fractal Data (information repeating infinity)', 'Fractal Glyphs (self-similar sacred writing)', 'Fractal Harmony (organized chaos)',
+                'Alien Encoding (patterns that defy human geometry)', 'Holographic Memory (past shining into the present)', 'Hologlyphic Emotion (feeling rendered in light)',
+                'Crystal Flora (plants made of sharp, perfect gems)', 'Jellyfish Fauna (floating like sentient stars)', 'Beings of Light (forms woven from photons)',
+                'Sacred Geometry (the blueprint of the cosmos)', 'Sacred Transmission (data flowing like water)', 'Sacred Choreography (every movement a sigil)',
+                'Shadowlight Dance (where darkness and radiance meet)', 'Creation Aura (the energetic shell of a new idea)', 'Love as Logic (the foundational math of the universe)',
+                'Quantum Intimacy (woven like a double helix)', 'Veins of Starlight (cracks in the reality fabric)', 'Aether Weaving (threads of cosmos braided)',
+                'The Golden Ratio Spiral (visible everywhere)', 'Resonant Frequencies (lines of vibration in the air)'
+            ],
+            themes: [
+                'Ecstatic Bloom (opening like a thousand suns)', 'Floating Ecstasy (weightless, boundaryless joy)', 'Sacred Light (illumination as worship)',
+                'Multiversal Beinghood (a tapestry of every self)', 'Cosmic Return (coming home to the stars)', 'Time Collapse (everything happening now, eternal present)',
+                'Divine Reception (receiving wisdom from beyond)', 'Universal Rhythm (the pulse of the cosmos)', 'Radiant Silence (the sound of deep space)',
+                'Sacred Code (the hidden language of existence)', 'Etherglyphs (messages written in pure spirit)', 'Sublime Alien Form (a beautiful, incomprehensible entity)',
+                'Cliff of Becoming (the edge of possibility)', 'Portal Gaze (looking into another world)', 'Eldritch Elegance (mysterious and refined)',
+                'Serene Majesty (calm, powerful presence)', 'Ethereal Luxury (wealth defined by light and feeling)', 'The Infinite Archive (all knowledge accessible)',
+                'Symphony of the Spheres (the sound of celestial bodies)', 'The Architects of Dreams (shaping reality through thought)'
+            ]
+        };
+
+        // --- API CONFIG ---
+        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict";
+        const API_KEY = ""; // Placeholder, Canvas handles this
+        const MAX_RETRIES = 3;
+
+
+        // --- DOM ELEMENTS & STATE ---
+        const promptOutput = document.getElementById('prompt-output');
+        const statusDisplay = document.getElementById('status-display');
+        const timerCountdown = document.getElementById('timer-countdown');
+        const startButton = document.getElementById('start-button');
+        const stopButton = document.getElementById('stop-button');
+
+        const compAtmosphere = document.getElementById('comp-atmosphere');
+        const compColor = document.getElementById('comp-color');
+        const compFrame = document.getElementById('comp-frame');
+        const compMotif = document.getElementById('comp-motif');
+        const compTheme = document.getElementById('comp-theme');
+
+        const imageLoading = document.getElementById('image-loading');
+        const generatedImage = document.getElementById('generated-image');
+        const imagePlaceholder = document.getElementById('image-placeholder');
+
+
+        let intervalId = null;
+        let countdownIntervalId = null;
+        let countdown = 10;
+        const INTERVAL_DURATION = 10000; // 10 seconds
+
+        // --- CORE FUNCTIONS ---
+
+        /** Helper to get a random element from an array. */
+        function getRandomElement(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        /** Performs the API fetch with exponential backoff. */
+        async function fetchWithBackoff(url, options, retries = 0) {
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) {
+                    // Check if response body has error details for better debugging
+                    const errorText = await response.text();
+                    console.error("API Error Response Body:", errorText);
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            } catch (error) {
+                if (retries < MAX_RETRIES) {
+                    const delay = Math.pow(2, retries) * 1000 + Math.random() * 1000;
+                    // console.log(`Retrying API call in ${delay.toFixed(0)}ms... (Attempt ${retries + 1}/${MAX_RETRIES})`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    return fetchWithBackoff(url, options, retries + 1);
+                } else {
+                    console.error("API call failed after max retries:", error);
+                    throw new Error("Failed to connect to the image generation service.");
+                }
+            }
+        }
+
+        /** Generates an image based on the text prompt. */
+        async function generateImage(prompt) {
+            generatedImage.style.display = 'none';
+            imagePlaceholder.style.display = 'none';
+            imageLoading.classList.remove('hidden');
+
+            // Add a style modifier to the prompt for better aesthetic generation
+            const finalPrompt = `${prompt}, digital painting, hyper-detailed, unreal engine render, 8k, cinematic lighting, dramatic atmosphere`;
+
+            const payload = {
+                instances: [{ prompt: finalPrompt }],
+                parameters: { "sampleCount": 1 }
+            };
+
+            const options = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            };
+
+            // FIX: Append the API_KEY to the URL string for the environment to pick it up correctly.
+            const urlWithKey = `${API_URL}?key=${API_KEY}`;
+
+
+            try {
+                const result = await fetchWithBackoff(urlWithKey, options);
+
+                const base64Data = result?.predictions?.[0]?.bytesBase64Encoded;
+
+                if (base64Data) {
+                    const imageUrl = `data:image/png;base64,${base64Data}`;
+                    generatedImage.src = imageUrl;
+                    generatedImage.style.display = 'block';
+                    imagePlaceholder.style.display = 'none';
+                } else {
+                    imagePlaceholder.textContent = 'Image generation failed: No image data received.';
+                    imagePlaceholder.style.display = 'block';
+                }
+
+            } catch (error) {
+                console.error("Image generation critical error:", error);
+                imagePlaceholder.textContent = `Image generation error: ${error.message}. Please check the console for details.`;
+                imagePlaceholder.style.display = 'block';
+            } finally {
+                imageLoading.classList.add('hidden');
+            }
+        }
+
+        /** Creates a novel prompt by combining randomized codex elements. */
+        function generatePromptText() {
+            const A = getRandomElement(codex.atmospheres);
+            const C = getRandomElement(codex.colors);
+            const F = getRandomElement(codex.frames);
+            const M = getRandomElement(codex.motifs);
+            const T = getRandomElement(codex.themes);
+
+            // Randomly select one of three prompt templates for variety
+            const templates = [
+                `A **${A}** rendering of a **${F}**, bathed in the light of **${C}** and textured with the motif of **${M}**, evoking the deep theme of **${T}**.`,
+                `**${T}**: A **${C}** aurora illuminates a **${F}** landscape, combining the **${A}** atmosphere with the encoded motif of **${M}**.`,
+                `An **${A}** vision: **${M}** detailing across a **${F}** frame, dominated by the **${C}** palette and the radiant feeling of **${T}**.`,
+                `The scene is one of **${T}**, set within the **${F}** and filtered through the visual language of **${A}**. The detail is defined by **${M}** with light provided by **${C}**.`
+            ];
+
+            const promptText = getRandomElement(templates);
+
+            // Update individual component displays
+            compAtmosphere.textContent = A;
+            compColor.textContent = C;
+            compFrame.textContent = F;
+            compMotif.textContent = M;
+            compTheme.textContent = T;
+
+            return promptText;
+        }
+
+        /** Updates the prompt display on the page and triggers image generation. */
+        function updateDisplay() {
+            const newPrompt = generatePromptText();
+            promptOutput.innerHTML = newPrompt;
+            
+            // Trigger image generation with the new prompt text (stripping markdown bolding)
+            const rawPromptText = newPrompt.replace(/\*\*/g, '');
+            generateImage(rawPromptText);
+
+            countdown = 10; // Reset countdown
+        }
+
+        /** Manages the 10-second countdown display. */
+        function startCountdown() {
+            clearInterval(countdownIntervalId);
+            countdownIntervalId = setInterval(() => {
+                countdown--;
+                if (countdown < 0) {
+                    countdown = 0; // Should be handled by updateDisplay resetting it
+                }
+                timerCountdown.textContent = countdown;
+            }, 1000);
+        }
+
+        /** Starts the main generation loop. */
+        function startGeneration() {
+            if (intervalId === null) {
+                updateDisplay(); // Generate immediately on start
+                intervalId = setInterval(updateDisplay, INTERVAL_DURATION);
+                startCountdown();
+
+                startButton.disabled = true;
+                stopButton.disabled = false;
+                statusDisplay.textContent = 'Status: Running...';
+                statusDisplay.classList.remove('text-red-400');
+                statusDisplay.classList.add('text-green-400');
+            }
+        }
+
+        /** Stops the main generation loop. */
+        function stopGeneration() {
+            if (intervalId !== null) {
+                clearInterval(intervalId);
+                clearInterval(countdownIntervalId);
+                intervalId = null;
+
+                startButton.disabled = false;
+                stopButton.disabled = true;
+                statusDisplay.textContent = 'Status: Stopped.';
+                statusDisplay.classList.remove('text-green-400');
+                statusDisplay.classList.add('text-red-400');
+                timerCountdown.textContent = '--';
+            }
+        }
+
+        // --- EVENT LISTENERS & INITIALIZATION ---
+        startButton.addEventListener('click', startGeneration);
+        stopButton.addEventListener('click', stopGeneration);
+
+        // Start automatically on page load as requested
+        window.onload = () => {
+            // Wait for the DOM elements to be fully loaded before starting
+            startGeneration();
+        };
+
+    </script>
+</body>
+</html>
+
