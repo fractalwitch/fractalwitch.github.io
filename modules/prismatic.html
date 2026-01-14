@@ -80,10 +80,11 @@
         }
 
         .btn.active {
-            background: rgba(255, 0, 255, 0.3);
-            border-color: #f0f;
-            color: #f0f;
-            box-shadow: 0 0 15px #f0f;
+            background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+            border-color: #ff00ff;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.8);
+            font-weight: bold;
         }
 
         #info {
@@ -112,7 +113,7 @@
 
     <div id="controls">
         <div class="title">✨ PRISMATIC REFRACTION ENGINE ✨</div>
-        <button class="btn" id="persistBtn">🌈 Persist Rays</button>
+        <button class="btn" id="rainbowBtn">🌈 RAINBOW MODE</button>
     </div>
 
     <div id="info">
@@ -133,11 +134,12 @@
         
         let t = 0;
         let hueCycle = 0;
+        let rainbowShift = 0;
         const arms = 3;
         
         const touchPoints = [];
         const maxTouches = 3;
-        let persistRays = false;
+        let rainbowMode = false;
         
         const maxConnectionDistance = 80;
         const maxConnectionsPerParticle = 3;
@@ -378,84 +380,7 @@
             tCtx.restore();
         }
 
-        // 💎 REDUCED BLOOM WHITE BEAM 💎
-        function drawWhiteBeam(fromX, fromY) {
-            const toX = w/2;
-            const toY = h/2;
-            
-            const litParticlesInBeam = [];
-            const beamLength = Math.hypot(toX - fromX, toY - fromY);
-            
-            const minX = Math.min(fromX, toX) - 50;
-            const maxX = Math.max(fromX, toX) + 50;
-            const minY = Math.min(fromY, toY) - 50;
-            const maxY = Math.max(fromY, toY) + 50;
-            
-            P.forEach(p => {
-                if(p.x < minX || p.x > maxX || p.y < minY || p.y > maxY) return;
-                
-                if(p.lightIntensity > 0.2) {
-                    const dist = distanceToLine(p.x, p.y, fromX, fromY, toX, toY);
-                    if(dist < 50) {
-                        const dx = p.x - fromX;
-                        const dy = p.y - fromY;
-                        const beamDx = toX - fromX;
-                        const beamDy = toY - fromY;
-                        const projection = (dx * beamDx + dy * beamDy) / (beamLength * beamLength);
-                        
-                        if(projection > 0 && projection < 1) {
-                            litParticlesInBeam.push({
-                                position: projection,
-                                intensity: p.lightIntensity
-                            });
-                        }
-                    }
-                }
-            });
-            
-            litParticlesInBeam.sort((a, b) => a.position - b.position);
-            
-            let cumulativeAbsorption = 0;
-            litParticlesInBeam.forEach(p => {
-                cumulativeAbsorption += p.intensity * 0.12;
-            });
-            
-            cumulativeAbsorption = Math.min(0.85, cumulativeAbsorption);
-            const beamOpacity = 1 - cumulativeAbsorption;
-            
-            const gradient = lCtx.createLinearGradient(fromX, fromY, toX, toY);
-            
-            // Reduced opacity at source
-            gradient.addColorStop(0, `rgba(255, 255, 255, ${0.5})`); // Was 0.9
-            gradient.addColorStop(0.5, `rgba(220, 220, 255, ${0.35 * (1 - cumulativeAbsorption * 0.5)})`); // Was 0.7
-            gradient.addColorStop(1, `rgba(180, 180, 255, ${0.2 * beamOpacity})`); // Was 0.4
-
-            lCtx.save();
-            lCtx.strokeStyle = gradient;
-            lCtx.lineWidth = 25; // Slightly thinner (was 30)
-            lCtx.lineCap = 'round';
-            // 75% bloom reduction (25% of original)
-            lCtx.shadowBlur = 10 * (0.5 + beamOpacity * 0.5); // Was 40
-            lCtx.shadowColor = 'rgba(255, 255, 255, 0.4)'; // Reduced opacity
-            
-            lCtx.beginPath();
-            lCtx.moveTo(fromX, fromY);
-            lCtx.lineTo(toX, toY);
-            lCtx.stroke();
-            
-            // Bright core - also reduced
-            lCtx.lineWidth = 10; // Was 12
-            lCtx.strokeStyle = `rgba(255, 255, 255, ${0.5 + beamOpacity * 0.15})`; // Was 0.8 + 0.2
-            lCtx.shadowBlur = 5 * (0.5 + beamOpacity * 0.5); // Was 20
-            lCtx.beginPath();
-            lCtx.moveTo(fromX, fromY);
-            lCtx.lineTo(toX, toY);
-            lCtx.stroke();
-            
-            lCtx.restore();
-        }
-
-        // 🌈✨ SEAMLESS PRISMATIC SPECTRUM ✨🌈
+        // 🌈✨💎 RAINBOW MODE - FLOWING S-WAVE SPECTRUM! 💎✨🌈
         function drawRefractedRays(sourceX, sourceY) {
             const cx = w/2;
             const cy = h/2;
@@ -491,19 +416,23 @@
                     
                     const rayLength = Math.max(w, h) * 1.2;
                     
+                    const beamStartDistance = 50;
+                    const beamStartX = arm.x + Math.cos(refractedAngle) * beamStartDistance;
+                    const beamStartY = arm.y + Math.sin(refractedAngle) * beamStartDistance;
+                    
                     const baseWidth = 35;
-                    const startWidth = baseWidth * 0.8;
+                    const startWidth = baseWidth * 0.5;
                     const endWidth = baseWidth * 2.0;
                     
                     const perpAngle = refractedAngle + Math.PI / 2;
                     
                     const startLeft = {
-                        x: arm.x + Math.cos(perpAngle) * startWidth / 2,
-                        y: arm.y + Math.sin(perpAngle) * startWidth / 2
+                        x: beamStartX + Math.cos(perpAngle) * startWidth / 2,
+                        y: beamStartY + Math.sin(perpAngle) * startWidth / 2
                     };
                     const startRight = {
-                        x: arm.x - Math.cos(perpAngle) * startWidth / 2,
-                        y: arm.y - Math.sin(perpAngle) * startWidth / 2
+                        x: beamStartX - Math.cos(perpAngle) * startWidth / 2,
+                        y: beamStartY - Math.sin(perpAngle) * startWidth / 2
                     };
                     
                     const endCenterX = arm.x + Math.cos(refractedAngle) * rayLength;
@@ -519,21 +448,23 @@
                     };
 
                     const gradient = lCtx.createLinearGradient(
-                        arm.x, arm.y, endCenterX, endCenterY
+                        beamStartX, beamStartY, endCenterX, endCenterY
                     );
                     
-                    const color = `hsl(${hue}, 100%, 60%)`;
+                    // 🌈 RAINBOW MODE - SHIFT HUES OVER TIME! 🌈
+                    const finalHue = rainbowMode ? (hue + rainbowShift) % 360 : hue;
+                    const color = `hsl(${finalHue}, 100%, 60%)`;
                     
-                    gradient.addColorStop(0, color.replace(')', ', 0.4)').replace('hsl', 'hsla'));
-                    gradient.addColorStop(0.15, color.replace(')', ', 0.25)').replace('hsl', 'hsla'));
-                    gradient.addColorStop(0.35, color.replace(')', ', 0.12)').replace('hsl', 'hsla'));
-                    gradient.addColorStop(0.6, color.replace(')', ', 0.04)').replace('hsl', 'hsla'));
+                    gradient.addColorStop(0, color.replace(')', ', 0.08)').replace('hsl', 'hsla'));
+                    gradient.addColorStop(0.12, color.replace(')', ', 0.28)').replace('hsl', 'hsla'));
+                    gradient.addColorStop(0.3, color.replace(')', ', 0.18)').replace('hsl', 'hsla'));
+                    gradient.addColorStop(0.55, color.replace(')', ', 0.08)').replace('hsl', 'hsla'));
                     gradient.addColorStop(1, color.replace(')', ', 0)').replace('hsl', 'hsla'));
 
                     lCtx.save();
                     lCtx.fillStyle = gradient;
-                    lCtx.shadowBlur = 50;
-                    lCtx.shadowColor = color.replace(')', ', 0.3)').replace('hsl', 'hsla');
+                    lCtx.shadowBlur = 35;
+                    lCtx.shadowColor = color.replace(')', ', 0.2)').replace('hsl', 'hsla');
                     lCtx.globalCompositeOperation = 'lighter';
                     
                     lCtx.beginPath();
@@ -544,14 +475,17 @@
                     lCtx.closePath();
                     lCtx.fill();
                     
-                    lCtx.strokeStyle = color.replace(')', ', 0.15)').replace('hsl', 'hsla');
-                    lCtx.lineWidth = startWidth * 0.4;
+                    lCtx.strokeStyle = color.replace(')', ', 0.08)').replace('hsl', 'hsla');
+                    lCtx.lineWidth = startWidth * 0.25;
                     lCtx.lineCap = 'round';
-                    lCtx.shadowBlur = 30;
+                    lCtx.shadowBlur = 15;
+                    
+                    const coreStart = beamStartDistance + 30;
                     lCtx.beginPath();
-                    lCtx.moveTo(arm.x, arm.y);
-                    lCtx.lineTo(arm.x + Math.cos(refractedAngle) * rayLength * 0.2, 
-                                arm.y + Math.sin(refractedAngle) * rayLength * 0.2);
+                    lCtx.moveTo(arm.x + Math.cos(refractedAngle) * coreStart, 
+                                arm.y + Math.sin(refractedAngle) * coreStart);
+                    lCtx.lineTo(arm.x + Math.cos(refractedAngle) * rayLength * 0.22, 
+                                arm.y + Math.sin(refractedAngle) * rayLength * 0.22);
                     lCtx.stroke();
                     
                     lCtx.restore();
@@ -612,18 +546,18 @@
         });
         document.addEventListener('mouseup', clearTouches);
 
-        const persistBtn = document.getElementById('persistBtn');
-        persistBtn.addEventListener('click', (e) => {
+        const rainbowBtn = document.getElementById('rainbowBtn');
+        rainbowBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            togglePersist();
+            toggleRainbow();
         });
-        persistBtn.addEventListener('touchstart', (e) => {
+        rainbowBtn.addEventListener('touchstart', (e) => {
             e.stopPropagation();
         });
-        persistBtn.addEventListener('touchend', (e) => {
+        rainbowBtn.addEventListener('touchend', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            togglePersist();
+            toggleRainbow();
         });
 
         function loop() {
@@ -635,6 +569,12 @@
             
             t += 0.02;
             hueCycle += 1;
+            
+            // 🌈 RAINBOW SHIFT - Smooth flowing spectrum! 🌈
+            if(rainbowMode) {
+                rainbowShift += 1.5; // Speed of rainbow cycling
+                if(rainbowShift >= 360) rainbowShift -= 360;
+            }
 
             P.forEach(p => {
                 p.update();
@@ -643,16 +583,10 @@
             
             drawLightWeb();
 
-            if (!persistRays) {
-                lCtx.clearRect(0, 0, w, h);
-            } else {
-                lCtx.fillStyle = 'rgba(0, 0, 0, 0.03)';
-                lCtx.fillRect(0, 0, w, h);
-            }
+            lCtx.clearRect(0, 0, w, h);
 
             if (touchPoints.length > 0) {
                 touchPoints.forEach(touch => {
-                    drawWhiteBeam(touch.x, touch.y);
                     drawRefractedRays(touch.x, touch.y);
                 });
             }
@@ -661,12 +595,9 @@
         }
         loop();
 
-        function togglePersist() {
-            persistRays = !persistRays;
-            persistBtn.classList.toggle('active');
-            if (!persistRays) {
-                lCtx.clearRect(0, 0, w, h);
-            }
+        function toggleRainbow() {
+            rainbowMode = !rainbowMode;
+            rainbowBtn.classList.toggle('active');
         }
     </script>
 </body>
