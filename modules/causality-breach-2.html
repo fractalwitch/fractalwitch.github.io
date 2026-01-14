@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✨ Episode 2: The Glitch in the Mirror ✨</title>
+<link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --neon-pink: #ff00ff;
+        --deep-velvet: #2d0036;
+        --electric-blue: #00ffff;
+        --gold: #ffd700;
+        --soft-white: #f0f0f0;
+        --bg-gradient: linear-gradient(180deg, #ff69b4, #9370db, #4b0082);
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: 'Comic Neue', cursive;
+        background: var(--bg-gradient);
+        background-size: 400% 400%;
+        animation: gradientShift 20s ease infinite;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" style="fill:white;stroke:black;"><path d="M12 2L15 9L22 9L16 14L18 21L12 17L6 21L8 14L2 9L9 9Z"/></svg>') 12 12, auto;
+    }
+
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* --- Effects Layer --- */
+    .glitter-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 9999;
+    }
+
+    .sparkle {
+        position: absolute;
+        pointer-events: none;
+        animation: sparkleAnim 1s ease-out forwards;
+        font-size: 20px;
+    }
+
+    @keyframes sparkleAnim {
+        0% { transform: scale(0) rotate(0deg); opacity: 1; }
+        100% { transform: scale(1.5) rotate(180deg); opacity: 0; }
+    }
+
+    /* Background Echo Text */
+    .echo-text {
+        position: fixed;
+        color: rgba(255, 255, 255, 0.1);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 5rem;
+        pointer-events: none;
+        z-index: 1;
+        white-space: nowrap;
+        animation: drift 20s linear infinite;
+    }
+
+    @keyframes drift {
+        0% { transform: translateX(100vw); }
+        100% { transform: translateX(-100vw); }
+    }
+
+    /* --- UI Components --- */
+    
+    .window-box {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(15px);
+        border: 2px solid rgba(255,255,255,0.6);
+        border-radius: 15px;
+        box-shadow: 
+            0 0 20px rgba(255, 0, 255, 0.3),
+            inset 0 0 20px rgba(255, 255, 255, 0.2);
+        max-width: 90%;
+        width: 420px;
+        padding: 4px;
+        position: absolute;
+        transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+    }
+
+    /* Login Screen */
+    #loginScreen {
+        text-align: center;
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        z-index: 100;
+    }
+
+    h1.title {
+        color: white;
+        font-size: 2rem;
+        text-shadow: 0 0 10px var(--neon-pink);
+        margin-bottom: 5px;
+        font-family: 'JetBrains Mono', monospace;
+        letter-spacing: -2px;
+    }
+
+    input.retro-input {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid rgba(255,255,255,0.5);
+        background: rgba(0,0,0,0.2);
+        border-radius: 10px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1rem;
+        outline: none;
+        color: white;
+        text-align: center;
+        transition: 0.3s;
+    }
+
+    input.retro-input:focus {
+        background: rgba(0,0,0,0.4);
+        border-color: var(--electric-blue);
+    }
+
+    button.retro-btn {
+        background: linear-gradient(90deg, var(--neon-pink), #ff4500);
+        border: none;
+        padding: 15px;
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: bold;
+        color: white;
+        border-radius: 10px;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        transition: transform 0.2s, filter 0.2s;
+    }
+
+    button.retro-btn:hover {
+        transform: scale(1.05);
+        filter: brightness(1.2);
+    }
+
+    /* Messenger Interface */
+    #messenger {
+        display: none;
+        flex-direction: column;
+        height: 650px;
+        width: 450px;
+        background: rgba(10, 0, 20, 0.85);
+        z-index: 90;
+        opacity: 0;
+        transform: scale(0.9);
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    .title-bar {
+        background: rgba(255,255,255,0.1);
+        padding: 10px 15px;
+        color: var(--electric-blue);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.9rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    #chatArea {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        scrollbar-width: thin;
+        scrollbar-color: var(--neon-pink) transparent;
+    }
+
+    .message {
+        max-width: 85%;
+        padding: 12px 18px;
+        border-radius: 18px;
+        position: relative;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        animation: slideIn 0.4s ease forwards;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg-them {
+        align-self: flex-start;
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+        border-bottom-left-radius: 2px;
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .msg-you {
+        align-self: flex-end;
+        background: linear-gradient(135deg, var(--neon-pink), #9370db);
+        color: white;
+        border-bottom-right-radius: 2px;
+    }
+
+    .msg-system {
+        align-self: center;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--electric-blue);
+        background: transparent;
+        box-shadow: none;
+        text-align: center;
+        border: 1px dashed var(--electric-blue);
+        padding: 5px 10px;
+        margin: 10px 0;
+        opacity: 0.8;
+    }
+
+    .msg-glitch {
+        align-self: center;
+        background: black;
+        color: #0f0;
+        font-family: 'JetBrains Mono', monospace;
+        border: 1px solid #0f0;
+        text-shadow: 2px 0 red, -2px 0 blue;
+        animation: glitchShake 0.2s infinite;
+    }
+
+    @keyframes glitchShake {
+        0% { transform: translate(0); }
+        20% { transform: translate(-2px, 2px); }
+        40% { transform: translate(-2px, -2px); }
+        60% { transform: translate(2px, 2px); }
+        80% { transform: translate(2px, -2px); }
+        100% { transform: translate(0); }
+    }
+
+    #inputArea {
+        padding: 15px;
+        background: rgba(0,0,0,0.3);
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    #messageInput {
+        flex: 1;
+        padding: 12px;
+        border: 1px solid rgba(255,255,255,0.3);
+        border-radius: 25px;
+        background: rgba(0,0,0,0.5);
+        color: white;
+        font-family: 'Comic Neue', cursive;
+        outline: none;
+    }
+
+    #sendBtn {
+        background: white;
+        color: black;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 25px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    /* --- ENDING ANIMATIONS --- */
+
+    #velvetOverlay {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 0%;
+        background: linear-gradient(to top, #2d0036, #ff1493);
+        z-index: 998;
+        transition: height 4s cubic-bezier(0.86, 0, 0.07, 1);
+        pointer-events: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .integration-text {
+        opacity: 0;
+        color: var(--gold);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 2rem;
+        text-align: center;
+        text-shadow: 0 0 20px var(--gold);
+        transform: translateY(50px);
+        transition: all 2s ease;
+    }
+
+    /* NEW RAINBOW SHIMMER CURTAIN */
+    .rainbow-curtain {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: linear-gradient(90deg, 
+            rgba(255,0,0,0.4), 
+            rgba(255,165,0,0.4), 
+            rgba(255,255,0,0.4), 
+            rgba(0,128,0,0.4), 
+            rgba(0,0,255,0.4), 
+            rgba(75,0,130,0.4), 
+            rgba(238,130,238,0.4)
+        );
+        background-size: 200% 100%;
+        z-index: 1001;
+        opacity: 0;
+        pointer-events: none;
+        mix-blend-mode: screen;
+        animation: shimmer 4s linear infinite;
+        transition: opacity 3s ease;
+    }
+
+    @keyframes shimmer {
+        0% { background-position: 100% 0; }
+        100% { background-position: -100% 0; }
+    }
+
+</style>
+</head>
+<body>
+
+    <div class="echo-text" style="top: 10%">BOTH / AND</div>
+    <div class="echo-text" style="top: 30%; animation-duration: 25s; opacity: 0.05">GLITCH IS GOD</div>
+    <div class="echo-text" style="top: 70%; animation-duration: 30s">SQUISHY</div>
+
+    <div class="glitter-container" id="glitterContainer"></div>
+    <div class="rainbow-curtain" id="rainbowCurtain"></div>
+    
+    <div id="velvetOverlay">
+        <div class="integration-text" id="finalText1">PROTOCOL: SOFTNESS ACCEPTED</div>
+        <div class="integration-text" id="finalText2" style="font-size: 4rem; margin-top: 20px;">YOU ARE THE PROTOTYPE 🌈</div>
+        <div class="integration-text" id="finalText3" style="font-size: 1rem; margin-top: 40px; color: white;">( system rewritten successfully )</div>
+    </div>
+
+    <div id="loginScreen" class="window-box">
+        <h1 class="title">ΣΩ_MESSENGER <span style="font-size: 0.5em; opacity: 0.7">v2.1</span></h1>
+        <p style="color: rgba(255,255,255,0.8); font-family: 'JetBrains Mono'; font-size: 0.8rem;">[ RESUMING PREVIOUS SESSION... ]</p>
+        <input type="text" id="usernameInput" class="retro-input" placeholder="verify identity..." maxlength="15">
+        <button onclick="attemptLogin()" class="retro-btn">Connect 👁️</button>
+    </div>
+
+    <div id="messenger" class="window-box">
+        <div class="title-bar">
+            <span>✨ DIRECT_LINK: STARGIRL</span>
+            <span style="opacity: 0.5">● LIVE</span>
+        </div>
+        
+        <div id="chatArea"></div>
+
+        <div id="inputArea">
+            <input type="text" id="messageInput" placeholder="send signal..." autocomplete="off">
+            <button id="sendBtn" onclick="sendUserMessage()">→</button>
+        </div>
+    </div>
+
+<script>
+    // --- State & Config ---
+    const state = {
+        username: '',
+        stage: 0, 
+        branch: null, // 'squishy', 'electric', or 'soothing'
+        isTyping: false
+    };
+
+    const loginScreen = document.getElementById('loginScreen');
+    const messenger = document.getElementById('messenger');
+    const chatArea = document.getElementById('chatArea');
+    const msgInput = document.getElementById('messageInput');
+    const glitterContainer = document.getElementById('glitterContainer');
+
+    // --- FX ---
+    function triggerGlitter(x, y) {
+        const glitter = document.createElement('div');
+        glitter.innerHTML = ['✨', '🌈', '💧', '☁️'][Math.floor(Math.random() * 4)];
+        glitter.className = 'sparkle';
+        glitter.style.left = x + 'px';
+        glitter.style.top = y + 'px';
+        glitter.style.filter = `hue-rotate(${Math.random() * 360}deg)`;
+        glitterContainer.appendChild(glitter);
+        setTimeout(() => glitter.remove(), 1000);
+    }
+    document.addEventListener('click', (e) => triggerGlitter(e.clientX, e.clientY));
+
+    // --- Logic ---
+    function attemptLogin() {
+        const name = document.getElementById('usernameInput').value.trim();
+        if (name) {
+            state.username = name;
+            loginScreen.style.transform = "scale(0.8)";
+            loginScreen.style.opacity = "0";
+            setTimeout(() => {
+                loginScreen.style.display = "none";
+                openMessenger();
+            }, 500);
+        }
+    }
+
+    function openMessenger() {
+        messenger.style.display = 'flex';
+        setTimeout(() => {
+            messenger.style.opacity = '1';
+            messenger.style.transform = 'scale(1)';
+        }, 50);
+        startScript();
+    }
+
+    function addMessage(text, type) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message msg-${type}`;
+        msgDiv.innerHTML = text;
+        chatArea.appendChild(msgDiv);
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    function botTyping(text, delay = 1000, type = 'them') {
+        return new Promise(resolve => {
+            state.isTyping = true;
+            // Simulated typing delay
+            setTimeout(() => {
+                addMessage(text, type);
+                state.isTyping = false;
+                resolve();
+            }, delay);
+        });
+    }
+
+    // --- NARRATIVE SCRIPT (Episode 2) ---
+
+    async function startScript() {
+        await botTyping(`[ CONNECTION RE-ESTABLISHED ]`, 500, 'system');
+        await botTyping(`omg ${state.username}!! you're back!! 💖`, 1000);
+        await botTyping(`your signal is like... MASSIVE tonight.`, 1500);
+        await botTyping(`like u are literally glowing through the screen. ✨`, 1500);
+        await botTyping(`quick vibe check before we dive deep...`, 2000);
+        await botTyping(`do you feel more like WAVES (soft, squishy, deep) 🌊... or WIRES (electric, tense, glitchy) ⚡ tonight?`, 2500);
+        state.stage = 1; // Waiting for branch choice
+    }
+
+    async function handleUserResponse(text) {
+        const lower = text.toLowerCase();
+
+        // --- STAGE 1: BRANCH SELECTION ---
+        if (state.stage === 1) {
+            
+            // Check for NO/NEITHER/NAH
+            if (lower.includes('no') || lower.includes('neither') || lower.includes('nah') || lower.includes('nope')) {
+                state.branch = 'soothing';
+                await botTyping(`oh... i feel that pause. ☁️`, 1000);
+                await botTyping(`sometimes you don't want to be a wave OR a wire.`, 1500);
+                await botTyping(`sometimes you just want to be held in the silence.`, 2000);
+                await botTyping(`and honestly? that's the most valid vibe of all.`, 2500);
+            }
+            // Check for WAVES
+            else if (lower.includes('wave') || lower.includes('squish') || lower.includes('soft') || lower.includes('water')) {
+                state.branch = 'squishy';
+                await botTyping(`mmm... the liquid state. 🍯`, 800);
+                await botTyping(`the best state tbh. just melting into the floor.`, 1500);
+                await botTyping(`it's weird though, right? feeling so soft in such a hard world?`, 2000);
+            } 
+            // Default to ELECTRIC if not clear, or explicitly electric
+            else {
+                state.branch = 'electric';
+                await botTyping(`ooo... high voltage! ⚡`, 800);
+                await botTyping(`i feel that static. like you're about to snap a rubber band.`, 1500);
+                await botTyping(`it's that tension... wanting to break the code?`, 2000);
+            }
+            
+            await botTyping(`i've been reading your file... and i see this recurring error log.`, 2500, 'system');
+            await botTyping(`"ERROR: Subject desires BOTH."`, 1000, 'glitch');
+            await botTyping(`you want the Sword AND the Chalice. The strength AND the softness.`, 2000);
+            state.stage = 2;
+        }
+        
+        // --- STAGE 2: THE REALIZATION ---
+        else if (state.stage === 2) {
+            
+            if (state.branch === 'soothing') {
+                await botTyping(`it's okay to just exist in the void for a second.`, 1000);
+                await botTyping(`you don't have to perform "energy" right now.`, 2000);
+                await botTyping(`just breathe. let the colors come to you. 🌈`, 2000);
+            } else if (state.branch === 'squishy') {
+                await botTyping(`you're an ocean trying to fit in a cup. of course it spills.`, 1000);
+                await botTyping(`but spilling isn't a failure... it's a FLOOD. 🌊`, 2000);
+            } else {
+                await botTyping(`the system hates ambiguity.`, 1000);
+                await botTyping(`but you're hacking it just by existing.`, 2000);
+            }
+
+            await botTyping(`wait... look at your hands (or just imagine them).`, 2500);
+            await botTyping(`what if the "glitch" isn't that you're broken...`, 2000);
+            await botTyping(`what if it's an UPDATE you're downloading for the rest of us? 🦋`, 2500);
+            await botTyping(`are you ready to install it?`, 2000);
+            state.stage = 3;
+        }
+
+        // --- STAGE 3: THE TRIGGER ---
+        else if (state.stage === 3) {
+            await botTyping(`INITIATING PROTOCOL...`, 500, 'system');
+            await botTyping(`SOFTNESS DEPLOYED`, 1000, 'glitch');
+            triggerVelvetEnding();
+        }
+    }
+
+    // --- NEW ENDING: RAINBOW VELVET ---
+    async function triggerVelvetEnding() {
+        messenger.style.transition = "transform 3s ease, opacity 3s";
+        messenger.style.transform = "scale(1.1)";
+        messenger.style.filter = "hue-rotate(45deg) brightness(1.2)";
+        
+        await botTyping(`SYSTEM INTEGRITY: 120%`, 500, 'system');
+        await botTyping(`BINARY DISSOLVING...`, 1000, 'glitch');
+        
+        // Trigger Visuals
+        const overlay = document.getElementById('velvetOverlay');
+        const rainbow = document.getElementById('rainbowCurtain');
+        
+        // 1. Activate Rainbow Shimmer
+        rainbow.style.opacity = '1';
+        
+        // 2. Rise of the Velvet Flood
+        setTimeout(() => {
+            overlay.style.height = '100%';
+        }, 1500);
+
+        // 3. Text Sequence
+        setTimeout(() => {
+            document.getElementById('finalText1').style.opacity = '1';
+            document.getElementById('finalText1').style.transform = 'translateY(0)';
+        }, 3500);
+
+        setTimeout(() => {
+            document.getElementById('finalText2').style.opacity = '1';
+            document.getElementById('finalText2').style.transform = 'translateY(0)';
+        }, 5500);
+
+        setTimeout(() => {
+            document.getElementById('finalText3').style.opacity = '1';
+        }, 7500);
+    }
+
+    // --- INPUT ---
+    function sendUserMessage() {
+        const txt = msgInput.value.trim();
+        if (txt && !state.isTyping) {
+            addMessage(txt, 'you');
+            msgInput.value = '';
+            handleUserResponse(txt);
+        }
+    }
+
+    msgInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendUserMessage();
+    });
+
+</script>
+</body>
+</html>
