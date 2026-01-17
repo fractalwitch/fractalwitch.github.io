@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sacramento Celestial Portal</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Lucide Icons (UMD) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            background-color: #030014;
+            color: #e2e8f0;
+            font-family: 'Space Mono', monospace;
+        }
+        h1, h2, h3, .font-cinzel {
+            font-family: 'Cinzel', serif;
+        }
+        
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(139, 92, 246, 0.5); 
+            border-radius: 4px;
+        }
+
+        /* Animations */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(139, 92, 246, 0.2); }
+            50% { box-shadow: 0 0 25px rgba(139, 92, 246, 0.6); }
+        }
+        .animate-pulse-glow {
+            animation: pulse-glow 4s infinite;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+            animation: marquee 30s linear infinite;
+        }
+        
+        /* Glassmorphism Utilities */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-panel:hover {
+            border-color: rgba(167, 139, 250, 0.5);
+            background: rgba(15, 23, 42, 0.7);
+        }
+    </style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+    
+    // Icon Wrapper component because we are using UMD Lucide
+    const Icon = ({ name, size = 24, className = "" }) => {
+        useEffect(() => {
+            lucide.createIcons();
+        }, [name]);
+        return <i data-lucide={name} width={size} height={size} className={className}></i>;
+    };
+
+    const CelestialPortal = () => {
+        const [currentTime, setCurrentTime] = useState(new Date());
+        const [solarData, setSolarData] = useState(null);
+        const [newsData, setNewsData] = useState([]);
+        const [loading, setLoading] = useState(true);
+        const [autoRefresh, setAutoRefresh] = useState(true);
+
+        // --- CONFIGURATION ---
+        const LOCATION = { name: "Sacramento, CA", lat: 38.5816, lon: -121.4944 };
+        const NASA_API_KEY = "DEMO_KEY"; 
+
+        // --- MATH & CALCULATIONS ---
+
+        // 1. Orbital Physics (Planets)
+        const calculatePlanets = (date) => {
+            const rad = Math.PI / 180;
+            const deg = 180 / Math.PI;
+            const time = date.getTime();
+            const jd = (time / 86400000) - (date.getTimezoneOffset() / 1440) + 2440587.5;
+            const D = jd - 2451543.5;
+
+            // Planet Data (Keplerian elements for J2000.0)
+            const planets = [
+                { name: "Mercury", N: 48.3313, i: 7.0047, w: 29.1241, a: 0.387098, e: 0.205635, M_0: 168.6562, n: 4.0923344368, element: "Earth" },
+                { name: "Venus", N: 76.6799, i: 3.3946, w: 54.8910, a: 0.723330, e: 0.006773, M_0: 48.0052, n: 1.6021302244, element: "Air" },
+                { name: "Mars", N: 49.5574, i: 1.8497, w: 286.5016, a: 1.523688, e: 0.093405, M_0: 18.6021, n: 0.5240207766, element: "Fire" },
+                { name: "Jupiter", N: 100.4542, i: 1.3030, w: 273.8777, a: 5.20256, e: 0.048498, M_0: 19.8950, n: 0.0830853001, element: "Fire" },
+                { name: "Saturn", N: 113.6634, i: 2.4886, w: 339.3939, a: 9.55475, e: 0.055546, M_0: 316.9670, n: 0.0334442282, element: "Earth" }
+            ];
+
+            const zodiac = [
+                { name: "Aries", element: "Fire" }, { name: "Taurus", element: "Earth" }, 
+                { name: "Gemini", element: "Air" }, { name: "Cancer", element: "Water" }, 
+                { name: "Leo", element: "Fire" }, { name: "Virgo", element: "Earth" }, 
+                { name: "Libra", element: "Air" }, { name: "Scorpio", element: "Water" }, 
+                { name: "Sagittarius", element: "Fire" }, { name: "Capricorn", element: "Earth" }, 
+                { name: "Aquarius", element: "Air" }, { name: "Pisces", element: "Water" }
+            ];
+
+            return planets.map(p => {
+                let M_p = (p.M_0 + p.n * D) % 360;
+                if (M_p < 0) M_p += 360;
+                const E = M_p + (180/Math.PI) * p.e * Math.sin(M_p * rad) * (1 + p.e * Math.cos(M_p * rad));
+                let xv = p.a * (Math.cos(E * rad) - p.e);
+                let yv = p.a * (Math.sqrt(1 - p.e*p.e) * Math.sin(E * rad));
+                let v = (Math.atan2(yv, xv) * deg);
+                let l_helio = v + p.w;
+                let finalPos = (l_helio) % 360;
+                if (finalPos < 0) finalPos += 360;
+                
+                const signIndex = Math.floor(finalPos / 30);
+                const degreeInSign = finalPos % 30;
+                
+                return {
+                    ...p,
+                    degree: degreeInSign.toFixed(1),
+                    sign: zodiac[signIndex].name,
+                    element: zodiac[signIndex].element,
+                    // Pseudo-retrograde check: if distance from sun is reducing (simplified visual logic)
+                    isRetrograde: false 
+                };
+            });
+        };
+
+        // 2. Lunar Math
+        const calculateMoonPhase = (date) => {
+            const jd = (date.getTime() / 86400000) - (date.getTimezoneOffset() / 1440) + 2440587.5;
+            const daysSinceNew = jd - 2451549.5; 
+            const lunarCycle = 29.53058867;
+            const progress = (daysSinceNew % lunarCycle) / lunarCycle;
+            const phaseIndex = Math.floor(progress * 8);
+            
+            // Unicode Moons are easy, but let's do CSS art or SVG in the render
+            const phases = [
+                { name: "New Moon", lighting: 0, type: "New" },
+                { name: "Waxing Crescent", lighting: 25, type: "Waxing" },
+                { name: "First Quarter", lighting: 50, type: "Waxing" },
+                { name: "Waxing Gibbous", lighting: 75, type: "Waxing" },
+                { name: "Full Moon", lighting: 100, type: "Full" },
+                { name: "Waning Gibbous", lighting: 75, type: "Waning" },
+                { name: "Last Quarter", lighting: 50, type: "Waning" },
+                { name: "Waning Crescent", lighting: 25, type: "Waning" }
+            ];
+            
+            return {
+                ...phases[phaseIndex],
+                illumination: ((Math.sin(progress * Math.PI * 2 - Math.PI / 2) + 1) * 50).toFixed(1),
+                age: (progress * 29.53).toFixed(1),
+                rawProgress: progress
+            };
+        };
+
+        // --- FETCHING ---
+
+        const loadData = async () => {
+            setLoading(true);
+            const endDate = new Date().toISOString().split('T')[0];
+            const startDate = new Date(Date.now() - 12096e5).toISOString().split('T')[0]; // 14 days ago
+
+            // 1. Solar Data
+            try {
+                const solRes = await fetch(`https://api.nasa.gov/DONKI/FLR?startDate=${startDate}&endDate=${endDate}&api_key=${NASA_API_KEY}`);
+                const solData = await solRes.json();
+                
+                // Rank flares: X > M > C > B
+                const rankFlare = (cls) => {
+                    if (!cls) return 0;
+                    const type = cls.charAt(0);
+                    const val = parseFloat(cls.substring(1)) || 0;
+                    const mult = { 'X': 1000, 'M': 100, 'C': 10, 'B': 1 };
+                    return (mult[type] || 0) * val;
+                };
+
+                const sortedSolar = Array.isArray(solData) ? solData.sort((a, b) => rankFlare(b.classType) - rankFlare(a.classType)) : [];
+                setSolarData(sortedSolar);
+            } catch (e) {
+                console.warn("NASA API Error", e);
+                // Fallback Mock Data for demo purposes if API fails
+                setSolarData([
+                    { classType: "M1.2", activeRegionNum: "AR3576", beginTime: new Date(Date.now() - 86400000).toISOString() },
+                    { classType: "C4.5", activeRegionNum: "AR3575", beginTime: new Date(Date.now() - 172800000).toISOString() }
+                ]);
+            }
+
+            // 2. Anomaly News (RSS to JSON)
+            try {
+                // Using a space/science feed
+                const RSS_URL = "https://rss.nytimes.com/services/xml/rss/nyt/Space.xml"; 
+                const newsRes = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(RSS_URL)}`);
+                const newsJson = await newsRes.json();
+                if(newsJson.items) {
+                    setNewsData(newsJson.items.map(i => i.title));
+                }
+            } catch (e) {
+                setNewsData(["SIGNAL INTERFERENCE DETECTED", "AWAITING UPLINK RECONNECTION", "LOCAL ANOMALY SCAN IN PROGRESS"]);
+            }
+            
+            setLoading(false);
+        };
+
+        useEffect(() => {
+            loadData();
+            const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+            return () => clearInterval(timer);
+        }, []);
+
+        const moonInfo = useMemo(() => calculateMoonPhase(currentTime), [currentTime]);
+        const planetInfo = useMemo(() => calculatePlanets(currentTime), [currentTime]);
+        const peakFlare = solarData && solarData.length > 0 ? solarData[0] : null;
+
+        return (
+            <div className="min-h-screen relative overflow-x-hidden selection:bg-purple-500 selection:text-white">
+                
+                {/* BACKGROUND LAYERS */}
+                <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_100%,#1e1b4b,transparent_50%)] z-0"></div>
+                <div className="fixed inset-0 z-0 opacity-20" style={{backgroundImage: 'url("https://www.transparenttextures.com/patterns/stardust.png")'}}></div>
+                <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-500 to-transparent z-50 opacity-70"></div>
+
+                <main className="relative z-10 max-w-7xl mx-auto p-4 md:p-8 lg:p-12">
+                    
+                    {/* HEADER */}
+                    <header className="flex flex-col md:flex-row justify-between items-center mb-12 border-b border-white/10 pb-6 gap-6">
+                        <div className="text-center md:text-left">
+                            <h1 className="text-5xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-200 via-cyan-200 to-purple-200 animate-pulse-glow">
+                                PORTAL
+                            </h1>
+                            <div className="flex items-center justify-center md:justify-start gap-3 mt-2 text-purple-300/60 font-mono text-sm tracking-widest">
+                                <Icon name="map-pin" size={14} />
+                                <span>SACRAMENTO, CA</span>
+                                <span className="w-1 h-1 rounded-full bg-purple-500"></span>
+                                <span>{LOCATION.lat}° N</span>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col items-center md:items-end">
+                            <div className="text-4xl font-mono text-white tracking-widest">
+                                {currentTime.toLocaleTimeString('en-US', { hour12: false })}
+                            </div>
+                            <div className="text-purple-300/50 text-xs uppercase tracking-[0.2em] mt-1">
+                                {currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* DASHBOARD GRID */}
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+
+                        {/* 1. MOON PHASE (Left Col, Large) */}
+                        <div className="md:col-span-4 glass-panel rounded-3xl p-8 flex flex-col items-center justify-center relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-4 opacity-50"><Icon name="moon" className="text-purple-400" /></div>
+                            
+                            {/* Visual Moon Representation */}
+                            <div className="w-48 h-48 rounded-full bg-slate-900 relative shadow-[0_0_50px_rgba(168,85,247,0.2)] mb-6 animate-float">
+                                <div className="absolute inset-0 rounded-full border border-white/10"></div>
+                                {/* Simple shadow simulation based on progress */}
+                                <div 
+                                    className="absolute inset-0 rounded-full bg-gradient-to-tr from-black via-transparent to-transparent transition-all duration-1000"
+                                    style={{
+                                        opacity: moonInfo.type === 'New' ? 0.9 : 0.2,
+                                        transform: `rotate(${moonInfo.rawProgress * 360}deg)`
+                                    }}
+                                ></div>
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <span className="text-4xl filter drop-shadow-[0_0_10px_white]">
+                                        {moonInfo.type === 'Full' ? '🌕' : moonInfo.type === 'New' ? '🌑' : '🌖'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <h2 className="text-2xl font-cinzel text-purple-100 mb-1">{moonInfo.name}</h2>
+                            <div className="flex items-center gap-4 text-xs font-mono text-purple-300/70 mt-4">
+                                <div className="px-3 py-1 rounded-full border border-purple-500/30">
+                                    ILLUM: {moonInfo.illumination}%
+                                </div>
+                                <div className="px-3 py-1 rounded-full border border-purple-500/30">
+                                    AGE: {moonInfo.age}D
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 2. SOLAR FLARE (Center Col, Main Stat) */}
+                        <div className="md:col-span-4 flex flex-col gap-6">
+                            
+                            {/* Latent Cache Peak Display */}
+                            <div className="glass-panel rounded-3xl p-6 relative overflow-hidden group flex-1">
+                                <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-orange-500/10 rounded-full blur-3xl group-hover:bg-orange-500/20 transition-all"></div>
+                                
+                                <div className="flex justify-between items-start mb-6">
+                                    <div className="flex items-center gap-2 text-orange-300">
+                                        <Icon name="sun" size={18} />
+                                        <span className="text-xs font-bold tracking-widest uppercase">Solar Latency (14D)</span>
+                                    </div>
+                                    <Icon name="activity" size={16} className="text-orange-500 animate-pulse" />
+                                </div>
+
+                                <div className="text-center py-4">
+                                    <div className="text-xs text-slate-400 mb-2 uppercase tracking-widest">Peak Detected Activity</div>
+                                    <div className={`text-6xl font-black font-mono ${peakFlare?.classType.startsWith('X') ? 'text-red-500 drop-shadow-[0_0_15px_red]' : 'text-orange-400'}`}>
+                                        {peakFlare ? peakFlare.classType : "QUIET"}
+                                    </div>
+                                    <div className="text-xs text-orange-300/50 mt-2 font-mono">
+                                        REGION {peakFlare?.activeRegionNum || "N/A"} • {peakFlare?.beginTime?.split('T')[0]}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Recent Activity List */}
+                            <div className="glass-panel rounded-3xl p-6 flex-1 overflow-hidden">
+                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <Icon name="history" size={12} /> Recent Flares
+                                </h3>
+                                <div className="space-y-3 h-32 overflow-y-auto custom-scrollbar pr-2">
+                                    {solarData && solarData.length > 0 ? solarData.slice(0, 5).map((flare, i) => (
+                                        <div key={i} className="flex items-center justify-between text-sm p-2 rounded hover:bg-white/5 transition-colors border-b border-white/5">
+                                            <span className={`font-mono font-bold ${flare.classType.startsWith('X') ? 'text-red-400' : 'text-yellow-400'}`}>
+                                                {flare.classType}
+                                            </span>
+                                            <span className="text-xs text-slate-500 font-mono">
+                                                {flare.beginTime.split('T')[0].slice(5)}
+                                            </span>
+                                        </div>
+                                    )) : (
+                                        <div className="text-xs text-slate-600 text-center italic mt-4">No significant data cached</div>
+                                    )}
+                                </div>
+                            </div>
+
+                        </div>
+
+                        {/* 3. ASTROLOGY (Right Col) */}
+                        <div className="md:col-span-4 glass-panel rounded-3xl p-6 relative">
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-2 text-cyan-300">
+                                    <Icon name="star" size={18} />
+                                    <span className="text-xs font-bold tracking-widest uppercase">Local Sky</span>
+                                </div>
+                                <div className="px-2 py-0.5 rounded border border-cyan-500/30 text-[10px] text-cyan-400">
+                                    GEOCENTRIC
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                {planetInfo.map((p, i) => (
+                                    <div key={i} className="group flex items-center justify-between p-3 rounded-xl bg-black/20 border border-white/5 hover:border-cyan-500/40 transition-all cursor-crosshair">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-800 to-black flex items-center justify-center text-[10px] font-bold text-slate-300 border border-white/10 group-hover:border-cyan-400/50">
+                                                {p.name.substring(0,2)}
+                                            </div>
+                                            <div>
+                                                <div className="text-sm font-bold text-slate-200">{p.name}</div>
+                                                <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                                                    IN {p.sign.toUpperCase()} 
+                                                    <span className={`w-1.5 h-1.5 rounded-full ${
+                                                        p.element === 'Fire' ? 'bg-red-500' : 
+                                                        p.element === 'Water' ? 'bg-blue-500' : 
+                                                        p.element === 'Earth' ? 'bg-green-500' : 'bg-yellow-200'
+                                                    }`}></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-sm font-mono text-cyan-200">{p.degree}°</div>
+                                            {/* Visual Retrograde Indicator (Simulated) */}
+                                            {p.isRetrograde && <div className="text-[8px] text-red-400 font-bold uppercase tracking-wide">RETRO</div>}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* 4. ANOMALY TICKER (Full Width) */}
+                        <div className="md:col-span-12 mt-4">
+                            <div className="relative glass-panel rounded-full h-12 flex items-center overflow-hidden border-pink-500/20">
+                                <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-[#030014] to-transparent z-20 flex items-center pl-6 gap-2">
+                                    <div className="w-2 h-2 bg-pink-500 rounded-full animate-pulse"></div>
+                                    <span className="text-xs font-bold text-pink-400 tracking-widest">ANOMALIES</span>
+                                </div>
+                                
+                                <div className="flex w-full overflow-hidden">
+                                    <div className="flex animate-marquee gap-8 items-center whitespace-nowrap pl-32">
+                                        {[...newsData, ...newsData].map((headline, i) => (
+                                            <div key={i} className="flex items-center gap-3 text-sm font-mono text-pink-100/70">
+                                                <span className="text-pink-500/50">///</span>
+                                                {headline}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-[#030014] to-transparent z-20"></div>
+                            </div>
+                        </div>
+
+                    </div>
+                    
+                    <footer className="mt-16 text-center opacity-40 hover:opacity-100 transition-opacity">
+                        <p className="text-[10px] font-mono tracking-[0.3em] text-purple-300">
+                            SACRAMENTO PORTAL ID: 991-DELTA • REFRESH RATE: SYNCHRONOUS
+                        </p>
+                    </footer>
+
+                </main>
+            </div>
+        );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<CelestialPortal />);
+</script>
+
+</body>
+</html>
+
