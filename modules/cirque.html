@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌀 FLUX HALO NODE :: CIRQUE PRIMALIS 🌀</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Courier+Prime:wght@400;700&display=swap');
+        
+        :root {
+            --prism-glow: rgba(138, 43, 226, 0.4);
+            --halo-white: rgba(255, 255, 255, 0.95);
+            --bloom-pink: #ff69b4;
+            --flux-cyan: #00ffff;
+            --echo-purple: #9932cc;
+            --void-deep: #0a0032;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: radial-gradient(circle at 30% 70%, var(--void-deep) 0%, #1a0038 40%, #2d0a4f 100%);
+            color: #e0d7ff;
+            font-family: 'Courier Prime', monospace;
+            margin: 0;
+            overflow: hidden;
+            cursor: none;
+            user-select: none;
+        }
+        
+        #arena {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(255, 105, 180, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 255, 255, 0.05) 0%, transparent 50%);
+        }
+        
+        #performer {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, var(--bloom-pink) 0%, rgba(255, 105, 180, 0.3) 70%, transparent 100%);
+            border: 2px solid var(--halo-white);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            box-shadow: 
+                0 0 20px var(--bloom-pink),
+                inset 0 0 20px rgba(255, 255, 255, 0.2);
+            animation: performerPulse 3s infinite ease-in-out;
+            transition: all 0.3s ease;
+        }
+        
+        @keyframes performerPulse {
+            0%, 100% { 
+                transform: translate(-50%, -50%) scale(1);
+                box-shadow: 0 0 20px var(--bloom-pink), inset 0 0 20px rgba(255, 255, 255, 0.2);
+            }
+            50% { 
+                transform: translate(-50%, -50%) scale(1.1);
+                box-shadow: 0 0 40px var(--bloom-pink), inset 0 0 30px rgba(255, 255, 255, 0.4);
+            }
+        }
+        
+        #flux-halo {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border: 3px solid var(--halo-white);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            filter: drop-shadow(0 0 15px var(--flux-cyan));
+            animation: haloFloat 6s infinite ease-in-out;
+            z-index: 8;
+            transition: all 0.2s ease;
+        }
+        
+        #flux-halo::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: haloRotate 12s infinite linear;
+        }
+        
+        #flux-halo::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            background: var(--flux-cyan);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px var(--flux-cyan);
+            animation: coreFlicker 2s infinite ease-in-out;
+        }
+        
+        @keyframes haloFloat {
+            0%, 100% { 
+                transform: translate(-50%, -50%) scale(0.95) rotate(0deg);
+                opacity: 0.8;
+            }
+            50% { 
+                transform: translate(-50%, -50%) scale(1.05) rotate(180deg);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes haloRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes coreFlicker {
+            0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 0.3; transform: translate(-50%, -50%) scale(0.7); }
+        }
+        
+        .prism-beam {
+            position: absolute;
+            width: 1px;
+            height: 100vh;
+            background: linear-gradient(
+                to bottom, 
+                transparent 0%, 
+                var(--prism-glow) 30%, 
+                rgba(0, 255, 255, 0.4) 50%, 
+                var(--prism-glow) 70%, 
+                transparent 100%
+            );
+            top: 0;
+            transform-origin: bottom center;
+            animation: beamSweep 20s infinite linear;
+            opacity: 0.6;
+        }
+        
+        @keyframes beamSweep {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .particle {
+            position: absolute;
+            background: var(--flux-cyan);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particleFloat 4s infinite ease-in-out;
+        }
+        
+        @keyframes particleFloat {
+            0%, 100% { 
+                opacity: 0;
+                transform: translateY(0px) scale(0);
+            }
+            50% { 
+                opacity: 1;
+                transform: translateY(-100px) scale(1);
+            }
+        }
+        
+        #console {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid var(--bloom-pink);
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 0.9em;
+            max-width: 350px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(255, 105, 180, 0.3);
+            font-family: 'Orbitron', monospace;
+            line-height: 1.4;
+        }
+        
+        #console .status-line {
+            color: var(--flux-cyan);
+            margin-bottom: 5px;
+        }
+        
+        #console .highlight {
+            color: var(--bloom-pink);
+            font-weight: 700;
+        }
+        
+        #energy-bar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 200px;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid var(--halo-white);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        #energy-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--bloom-pink), var(--flux-cyan));
+            width: 89%;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px rgba(255, 105, 180, 0.5);
+        }
+        
+        #move-tracker {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2em;
+            color: var(--halo-white);
+            text-shadow: 0 0 10px var(--flux-cyan);
+            font-weight: 700;
+        }
+        
+        .trail-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--bloom-pink);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: trailFade 1s forwards;
+        }
+        
+        @keyframes trailFade {
+            0% { 
+                opacity: 1; 
+                transform: scale(1); 
+            }
+            100% { 
+                opacity: 0; 
+                transform: scale(0); 
+            }
+        }
+        
+        .ripple {
+            position: absolute;
+            border: 2px solid var(--flux-cyan);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: rippleExpand 1.5s forwards;
+        }
+        
+        @keyframes rippleExpand {
+            0% {
+                width: 20px;
+                height: 20px;
+                opacity: 1;
+            }
+            100% {
+                width: 200px;
+                height: 200px;
+                opacity: 0;
+            }
+        }
+        
+        .custom-cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, var(--bloom-pink) 0%, transparent 70%);
+            border: 1px solid var(--halo-white);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1000;
+            mix-blend-mode: screen;
+            transition: transform 0.1s ease;
+        }
+        
+        /* Performance modes */
+        .practice-mode {
+            filter: hue-rotate(120deg);
+        }
+        
+        .perform-mode {
+            filter: saturate(1.5) brightness(1.2);
+        }
+        
+        .rest-mode {
+            filter: grayscale(0.3) brightness(0.8);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            #console {
+                bottom: 10px;
+                left: 10px;
+                max-width: calc(100vw - 20px);
+                font-size: 0.8em;
+            }
+            
+            #energy-bar {
+                top: 10px;
+                right: 10px;
+                width: 150px;
+                height: 15px;
+            }
+            
+            #move-tracker {
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="custom-cursor" id="cursor"></div>
+    
+    <div id="arena">
+        <!-- Prism beams -->
+        <div class="prism-beam" style="left: 15%; bottom: 0;"></div>
+        <div class="prism-beam" style="left: 35%; bottom: 0; animation-delay: -7s;"></div>
+        <div class="prism-beam" style="left: 65%; bottom: 0; animation-delay: -14s;"></div>
+        <div class="prism-beam" style="left: 85%; bottom: 0; animation-delay: -3s;"></div>
+        
+        <!-- Performer and Halo -->
+        <div id="performer"></div>
+        <div id="flux-halo"></div>
+    </div>
+    
+    <div id="energy-bar">
+        <div id="energy-fill"></div>
+    </div>
+    
+    <div id="move-tracker">FLUX HALO NODE :: ACTIVE</div>
+    
+    <div id="console">
+        <div class="status-line">> FLUX HALO NODE ACTIVATED</div>
+        <div class="status-line">> WELCOME, <span class="highlight">BLOOM-LEAPER</span></div>
+        <div class="status-line">> CURRENT PHASE: [<span class="highlight" id="phase">PRACTICE</span>]</div>
+        <div class="status-line">> LAST MOVE: [<span class="highlight" id="last-move">HALO VAULT - SUCCESS</span>]</div>
+        <div class="status-line">> ENERGY SIGNATURE: [<span class="highlight" id="energy-level">89%</span> SYNCHED]</div>
+    </div>
+
+    <script>
+        // Global variables
+        const halo = document.getElementById('flux-halo');
+        const performer = document.getElementById('performer');
+        const arena = document.getElementById('arena');
+        const cursor = document.getElementById('cursor');
+        const energyFill = document.getElementById('energy-fill');
+        
+        let currentPhase = 'practice';
+        let energyLevel = 89;
+        let isInteracting = false;
+        let particleId = 0;
+        
+        // Moves database
+        const moves = [
+            "HALO CATCH", "BLOOM LEAP", "ECHO SPIRAL", "PRISM VAULT", 
+            "FLUX REBOUND", "VOID DIVE", "STAR PIERCE", "DREAM WEAVE",
+            "LIGHT BRIDGE", "SHADOW DANCE", "COSMIC SPIN", "PORTAL JUMP"
+        ];
+        
+        const phases = ['PRACTICE', 'PERFORM', 'REST', 'TRANSCEND'];
+        
+        // Custom cursor
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX - 10 + 'px';
+            cursor.style.top = e.clientY - 10 + 'px';
+            
+            // Create trail particles
+            if (Math.random() > 0.7) {
+                createTrailParticle(e.clientX, e.clientY);
+            }
+        });
+        
+        // Halo interaction - follows mouse with orbital mechanics
+        document.addEventListener('mousemove', (e) => {
+            const performerRect = performer.getBoundingClientRect();
+            const px = performerRect.left + performerRect.width / 2;
+            const py = performerRect.top + performerRect.height / 2;
+            
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
+            
+            // Calculate angle and distance
+            const angle = Math.atan2(mouseY - py, mouseX - px);
+            const maxDistance = 150;
+            const minDistance = 80;
+            const distance = minDistance + (maxDistance - minDistance) * (Math.sin(Date.now() * 0.002) + 1) / 2;
+            
+            // Position halo
+            const haloX = px + Math.cos(angle) * distance;
+            const haloY = py + Math.sin(angle) * distance;
+            
+            halo.style.left = haloX + 'px';
+            halo.style.top = haloY + 'px';
+            halo.style.transform = `translate(-50%, -50%) rotate(${angle * (180/Math.PI) + 90}deg) scale(${1 + Math.sin(Date.now() * 0.005) * 0.1})`;
+            
+            // Energy boost when close to performer
+            const distanceToPerformer = Math.sqrt((mouseX - px) ** 2 + (mouseY - py) ** 2);
+            if (distanceToPerformer < 100) {
+                energyLevel = Math.min(100, energyLevel + 0.1);
+                if (!isInteracting) {
+                    isInteracting = true;
+                    createRipple(px, py);
+                    updateMove();
+                }
+            } else {
+                isInteracting = false;
+            }
+        });
+        
+        // Click interactions
+        document.addEventListener('click', (e) => {
+            createRipple(e.clientX, e.clientY);
+            createParticleExplosion(e.clientX, e.clientY);
+            
+            // Energy surge
+            energyLevel = Math.min(100, energyLevel + 5);
+            updateEnergy();
+            
+            // Phase change chance
+            if (Math.random() > 0.7) {
+                cyclePhase();
+            }
+            
+            // Always update move on interaction
+            updateMove();
+        });
+        
+        // Space bar for special moves
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                performSpecialMove();
+            }
+        });
+        
+        // Particle system
+        function createTrailParticle(x, y) {
+            const particle = document.createElement('div');
+            particle.className = 'trail-particle';
+            particle.style.left = x + 'px';
+            particle.style.top = y + 'px';
+            arena.appendChild(particle);
+            
+            setTimeout(() => {
+                if (particle.parentNode) {
+                    particle.parentNode.removeChild(particle);
+                }
+            }, 1000);
+        }
+        
+        function createParticleExplosion(x, y) {
+            for (let i = 0; i < 8; i++) {
+                setTimeout(() => {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.width = Math.random() * 6 + 2 + 'px';
+                    particle.style.height = particle.style.width;
+                    particle.style.left = x + (Math.random() - 0.5) * 100 + 'px';
+                    particle.style.top = y + (Math.random() - 0.5) * 100 + 'px';
+                    particle.style.animationDelay = Math.random() * 2 + 's';
+                    
+                    if (Math.random() > 0.5) {
+                        particle.style.background = 'var(--bloom-pink)';
+                    }
+                    
+                    arena.appendChild(particle);
+                    
+                    setTimeout(() => {
+                        if (particle.parentNode) {
+                            particle.parentNode.removeChild(particle);
+                        }
+                    }, 4000);
+                }, i * 50);
+            }
+        }
+        
+        function createRipple(x, y) {
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple';
+            ripple.style.left = x - 10 + 'px';
+            ripple.style.top = y - 10 + 'px';
+            arena.appendChild(ripple);
+            
+            setTimeout(() => {
+                if (ripple.parentNode) {
+                    ripple.parentNode.removeChild(ripple);
+                }
+            }, 1500);
+        }
+        
+        // UI Updates
+        function updateMove() {
+            const randomMove = moves[Math.floor(Math.random() * moves.length)];
+            const success = Math.random() > 0.3 ? 'SUCCESS' : 'FLUX';
+            document.getElementById('last-move').textContent = `${randomMove} - ${success}`;
+            
+            // Visual feedback
+            if (success === 'SUCCESS') {
+                performer.style.filter = 'brightness(1.5) saturate(1.5)';
+                setTimeout(() => {
+                    performer.style.filter = '';
+                }, 500);
+            }
+        }
+        
+        function cyclePhase() {
+            const currentIndex = phases.indexOf(currentPhase.toUpperCase());
+            const nextIndex = (currentIndex + 1) % phases.length;
+            currentPhase = phases[nextIndex].toLowerCase();
+            
+            document.getElementById('phase').textContent = phases[nextIndex];
+            
+            // Apply phase effects
+            arena.className = currentPhase + '-mode';
+        }
+        
+        function updateEnergy() {
+            energyFill.style.width = energyLevel + '%';
+            document.getElementById('energy-level').textContent = Math.floor(energyLevel) + '%';
+            
+            // Energy decay
+            energyLevel = Math.max(20, energyLevel - 0.1);
+        }
+        
+        function performSpecialMove() {
+            // Epic special move sequence
+            const specialMoves = ['TRANSCENDENT LEAP', 'COSMIC CONVERGENCE', 'REALITY SHIFT', 'DIMENSIONAL PIERCE'];
+            const move = specialMoves[Math.floor(Math.random() * specialMoves.length)];
+            
+            document.getElementById('last-move').textContent = move + ' - TRANSCENDENT';
+            
+            // Visual spectacular
+            performer.style.animation = 'none';
+            performer.style.transform = 'translate(-50%, -50%) scale(2)';
+            performer.style.filter = 'brightness(3) saturate(2)';
+            
+            // Halo goes wild
+            halo.style.animation = 'none';
+            halo.style.transform = 'translate(-50%, -50%) scale(3) rotate(720deg)';
+            
+            // Energy surge
+            energyLevel = 100;
+            updateEnergy();
+            
+            // Create massive particle explosion
+            const performerRect = performer.getBoundingClientRect();
+            const px = performerRect.left + performerRect.width / 2;
+            const py = performerRect.top + performerRect.height / 2;
+            
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => createParticleExplosion(px, py), i * 100);
+            }
+            
+            // Reset after effect
+            setTimeout(() => {
+                performer.style.animation = '';
+                performer.style.transform = '';
+                performer.style.filter = '';
+                halo.style.animation = '';
+                halo.style.transform = '';
+            }, 3000);
+        }
+        
+        // Ambient particle generation
+        setInterval(() => {
+            if (Math.random() > 0.8) {
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * window.innerHeight;
+                createTrailParticle(x, y);
+            }
+        }, 1000);
+        
+        // Console updates
+        setInterval(() => {
+            updateEnergy();
+            
+            if (Math.random() > 0.7) {
+                updateMove();
+            }
+            
+            if (Math.random() > 0.9) {
+                cyclePhase();
+            }
+        }, 3000);
+        
+        // Welcome sequence
+        setTimeout(() => {
+            console.log('🌀 FLUX HALO NODE ACTIVATED 🌀');
+            console.log('Controls: Move mouse to guide halo, click for energy, spacebar for special moves');
+            
+            // Initial particle burst
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            createParticleExplosion(centerX, centerY);
+        }, 500);
+        
+        // Prevent context menu
+        document.addEventListener('contextmenu', e => e.preventDefault());
+    </script>
+</body>
+</html>
