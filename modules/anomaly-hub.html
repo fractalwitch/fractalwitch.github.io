@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sacramento Celestial Portal v7.0</title>
+    <title>Sacramento Celestial Portal v7.1</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -58,7 +58,7 @@
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.3s ease;
-            transform: translateZ(0); /* Hardware accelerate to stop jitter */
+            transform: translateZ(0);
         }
         .glass-panel:hover {
             border-color: rgba(167, 139, 250, 0.5);
@@ -75,6 +75,49 @@
             transform: scale(1.01);
             z-index: 50;
             background: rgba(20, 30, 60, 0.95);
+        }
+
+        /* Desire item strikethrough */
+        .desire-completed {
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+        
+        .desire-checkbox {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(236, 72, 153, 0.5);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        .desire-checkbox:checked {
+            background: linear-gradient(135deg, #ec4899, #a855f7);
+            border-color: #ec4899;
+        }
+        .desire-checkbox:checked::after {
+            content: '✓';
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* Time clock clickable */
+        .time-clock {
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+        }
+        .time-clock:hover {
+            text-shadow: 0 0 20px rgba(168, 85, 247, 0.6);
+        }
+        .time-clock:active {
+            transform: scale(0.98);
         }
 
         /* --- DIVINE MODE (Light/Maximalist) --- */
@@ -109,6 +152,32 @@
         
         .divine-mode h1 {
             text-shadow: 2px 2px 0px #ff00ff, -2px -2px 0px #00ffff;
+        }
+
+        /* Improved Grid Layout */
+        .portal-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+            align-items: stretch;
+            justify-content: center;
+        }
+        
+        @media (min-width: 768px) {
+            .portal-grid {
+                gap: 2rem;
+            }
+        }
+        
+        .module-container {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .module-container .glass-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
     </style>
 </head>
@@ -168,6 +237,111 @@
         );
     });
 
+    // --- DAILY DESIRES COMPONENT ---
+    const DailyDesires = memo(({ desires, setDesires }) => {
+        const [newDesire, setNewDesire] = useState('');
+        
+        const addDesire = () => {
+            if (!newDesire.trim()) return;
+            const updated = [...desires, { id: Date.now(), text: newDesire.trim(), completed: false }];
+            setDesires(updated);
+            setNewDesire('');
+        };
+        
+        const toggleDesire = (id) => {
+            const updated = desires.map(d => d.id === id ? { ...d, completed: !d.completed } : d);
+            setDesires(updated);
+        };
+        
+        const updateDesireText = (id, text) => {
+            const updated = desires.map(d => d.id === id ? { ...d, text } : d);
+            setDesires(updated);
+        };
+        
+        const removeDesire = (id) => {
+            const updated = desires.filter(d => d.id !== id);
+            setDesires(updated);
+        };
+        
+        return (
+            <div className="glass-panel rounded-3xl p-6 relative overflow-hidden flex flex-col h-full min-h-[16rem]">
+                <div className="flex items-center gap-2 text-pink-300 mb-4">
+                    <Icon name="heart" size={18} />
+                    <span className="text-xs font-bold tracking-widest uppercase">Daily Desires</span>
+                </div>
+                
+                {/* Add new desire */}
+                <div className="flex gap-2 mb-4">
+                    <input
+                        type="text"
+                        placeholder="Plant a seed..."
+                        value={newDesire}
+                        onChange={(e) => setNewDesire(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && addDesire()}
+                        className="flex-1 bg-black/30 border border-pink-500/30 rounded-lg px-3 py-2 text-sm text-pink-100 placeholder-pink-300/40 outline-none focus:border-pink-400/60 transition-colors"
+                    />
+                    <button 
+                        onClick={addDesire}
+                        className="px-3 py-2 bg-pink-500/20 border border-pink-500/30 rounded-lg text-pink-300 hover:bg-pink-500/30 transition-colors"
+                    >
+                        <Icon name="plus" size={16} />
+                    </button>
+                </div>
+                
+                {/* Desires list - scrollable */}
+                <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-1">
+                    {desires.length === 0 ? (
+                        <div className="text-center text-pink-300/40 text-xs py-8 italic">
+                            What does your heart desire today?
+                        </div>
+                    ) : (
+                        desires.map((desire) => (
+                            <div 
+                                key={desire.id} 
+                                className={`flex items-center gap-3 p-3 rounded-lg bg-black/20 border border-white/5 group transition-all ${desire.completed ? 'opacity-60' : ''}`}
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={desire.completed}
+                                    onChange={() => toggleDesire(desire.id)}
+                                    className="desire-checkbox"
+                                />
+                                <input
+                                    type="text"
+                                    value={desire.text}
+                                    onChange={(e) => updateDesireText(desire.id, e.target.value)}
+                                    className={`flex-1 bg-transparent border-none outline-none text-sm text-pink-100/80 ${desire.completed ? 'desire-completed' : ''}`}
+                                />
+                                <button 
+                                    onClick={() => removeDesire(desire.id)}
+                                    className="opacity-0 group-hover:opacity-100 text-pink-400/50 hover:text-pink-400 transition-all"
+                                >
+                                    <Icon name="x" size={14} />
+                                </button>
+                            </div>
+                        ))
+                    )}
+                </div>
+                
+                {/* Progress indicator */}
+                {desires.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-white/10">
+                        <div className="flex justify-between text-[10px] text-pink-300/50 font-mono mb-1">
+                            <span>MANIFESTED</span>
+                            <span>{desires.filter(d => d.completed).length}/{desires.length}</span>
+                        </div>
+                        <div className="h-1 bg-black/30 rounded-full overflow-hidden">
+                            <div 
+                                className="h-full bg-gradient-to-r from-pink-500 to-purple-500 transition-all duration-500"
+                                style={{ width: `${(desires.filter(d => d.completed).length / desires.length) * 100}%` }}
+                            />
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    });
+
     // --- MAIN APP ---
 
     const CelestialPortal = () => {
@@ -176,24 +350,34 @@
             name: "Sacramento, CA", 
             lat: 38.5816, 
             lon: -121.4944, 
-            timezone: "America/Los_Angeles" 
+            timezone: "America/Los_Angeles",
+            country: "US"
         });
         
-        // Time is updated every second, forced re-render is isolated to time display mostly
+        // Time state with format toggle
         const [currentTime, setCurrentTime] = useState(new Date());
+        const [timeFormat, setTimeFormat] = useState(() => {
+            const saved = localStorage.getItem('portal_time_format');
+            return saved || '24hr'; // Default to 24hr military
+        });
         
         const [solarData, setSolarData] = useState(null);
         const [quakeData, setQuakeData] = useState([]);
         const [newsData, setNewsData] = useState([]);
         const [weatherData, setWeatherData] = useState(null);
         
+        // Daily Desires state with persistence
+        const [desires, setDesires] = useState(() => {
+            const saved = localStorage.getItem('portal_desires');
+            return saved ? JSON.parse(saved) : [];
+        });
+        
         // Sorting
         const [isSorting, setIsSorting] = useState(false);
         const [selectedForSwap, setSelectedForSwap] = useState(null);
         const [moduleOrder, setModuleOrder] = useState(() => {
-            const saved = localStorage.getItem('portal_order_v4');
-            // Removed 'gcp' from default
-            return saved ? JSON.parse(saved) : ['moon', 'solar', 'sky', 'weather', 'seismic'];
+            const saved = localStorage.getItem('portal_order_v5');
+            return saved ? JSON.parse(saved) : ['moon', 'desires', 'solar', 'sky', 'weather', 'seismic'];
         });
 
         // Search State
@@ -207,9 +391,20 @@
         const [expanded, setExpanded] = useState({ moon: false, solar: false, sky: false, weather: false, news: false });
         const toggleExpand = (key, val) => setExpanded(prev => ({...prev, [key]: val}));
 
-        const NASA_API_KEY = "DEMO_KEY"; 
+        // Updated NASA API Key
+        const NASA_API_KEY = "K2aCj4HFtTSCgKxilD8WAAkmqCuM6uUCzQdq0xlx"; 
 
         // --- EFFECTS ---
+
+        // Save desires to localStorage
+        useEffect(() => {
+            localStorage.setItem('portal_desires', JSON.stringify(desires));
+        }, [desires]);
+
+        // Save time format preference
+        useEffect(() => {
+            localStorage.setItem('portal_time_format', timeFormat);
+        }, [timeFormat]);
 
         useEffect(() => {
             if (divineMode) document.body.classList.add('divine-mode');
@@ -249,11 +444,12 @@
                     setQuakeData(d.features.slice(0, 20));
                 } catch(e) {}
 
-                // Weather (Dynamic Location)
+                // Weather (Dynamic Location with Celsius for Canada)
                 try {
-                    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.lat}&longitude=${location.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset&current_weather=true&temperature_unit=fahrenheit&timezone=auto`);
+                    const tempUnit = location.country === 'CA' ? 'celsius' : 'fahrenheit';
+                    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.lat}&longitude=${location.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset&current_weather=true&temperature_unit=${tempUnit}&timezone=auto`);
                     const d = await r.json();
-                    setWeatherData(d);
+                    setWeatherData({ ...d, tempUnit });
                 } catch(e) {}
 
                 // News
@@ -273,7 +469,7 @@
                 }
             };
             load();
-        }, [location]); // Reload when location changes
+        }, [location]);
 
         // --- MATH ENGINE ---
 
@@ -286,7 +482,6 @@
             const rad = Math.PI / 180;
             const deg = 180 / Math.PI;
 
-            // Simple orbital elements (J2000.0)
             const planets = {
                 Mercury: { N: 48.3313, i: 7.0047, w: 29.1241, a: 0.387098, e: 0.205635, M: 168.6562, n: 4.0923344368 },
                 Venus: { N: 76.6799, i: 3.3946, w: 54.8910, a: 0.723330, e: 0.006773, M: 48.0052, n: 1.6021302244 },
@@ -310,23 +505,21 @@
                 const yv = p.a * (Math.sqrt(1 - p.e*p.e) * Math.sin(E_rad));
                 const v = Math.atan2(yv, xv) * deg;
                 const r = Math.sqrt(xv*xv + yv*yv);
-                const l = v + p.w; // Heliocentric long
-                // Convert to Cartesian
+                const l = v + p.w;
                 const x = r * Math.cos(l * rad);
                 const y = r * Math.sin(l * rad);
-                const z = 0; // Simplified
+                const z = 0;
                 return { x, y, z, l };
             };
 
             const earthNow = getPos(planets.Earth);
-            const earthPrev = getPos(planets.Earth, -0.1); // -2.4 hours
+            const earthPrev = getPos(planets.Earth, -0.1);
 
             return Object.keys(planets).filter(k => k !== 'Earth').map(key => {
                 const p = planets[key];
                 const pNow = getPos(p);
                 const pPrev = getPos(p, -0.1);
 
-                // Geocentric Coords (Planet - Earth)
                 const dx = pNow.x - earthNow.x;
                 const dy = pNow.y - earthNow.y;
                 const geoLong = (Math.atan2(dy, dx) * deg + 360) % 360;
@@ -335,8 +528,6 @@
                 const dy_prev = pPrev.y - earthPrev.y;
                 const geoLong_prev = (Math.atan2(dy_prev, dx_prev) * deg + 360) % 360;
 
-                // Retrograde check: if longitude decreases
-                // Handle 360 wrapping
                 let diff = geoLong - geoLong_prev;
                 if (diff < -300) diff += 360;
                 if (diff > 300) diff -= 360;
@@ -354,7 +545,7 @@
                     isRetrograde: isRetro
                 };
             });
-        }, [currentTime]); // Recalc every minute ideally, or on load. Since currentTime updates 1s, useMemo handles it.
+        }, [currentTime]);
 
         const moonInfo = useMemo(() => {
             const jd = (currentTime.getTime() / 86400000) - (currentTime.getTimezoneOffset() / 1440) + 2440587.5;
@@ -385,25 +576,50 @@
         const formatTime = (t) => new Date(t).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: location.timezone });
         const getWeatherIcon = (c) => c === 0 ? "sun" : c < 3 ? "cloud-sun" : c < 50 ? "cloud" : c < 80 ? "cloud-rain" : "cloud-lightning";
 
+        // Time format toggle function
+        const toggleTimeFormat = () => {
+            setTimeFormat(prev => prev === '24hr' ? '12hr' : '24hr');
+        };
+
+        // Format time based on current setting
+        const getFormattedTime = () => {
+            if (timeFormat === '24hr') {
+                // Full 24hr military time: HH:MM:SS
+                return currentTime.toLocaleTimeString('en-US', { 
+                    hour12: false, 
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    timeZone: location.timezone 
+                });
+            } else {
+                // Abbreviated 12hr: h:MM AM/PM
+                return currentTime.toLocaleTimeString('en-US', { 
+                    hour12: true, 
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    timeZone: location.timezone 
+                });
+            }
+        };
+
         // --- HANDLERS ---
 
         const handleLocationSearch = async () => {
             if(!searchQuery) return;
             setIsSearching(false);
             try {
-                // Using Open-Meteo Geocoding
                 const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchQuery)}&count=1&language=en&format=json`);
                 const data = await res.json();
                 if (data.results && data.results.length > 0) {
                     const place = data.results[0];
-                    // Filter simple US/CA check if desired, but Open-Meteo is global. 
-                    // Let's allow it, or strictly check country_code
                     if(['US','CA'].includes(place.country_code)) {
                         setLocation({
                             name: `${place.name}, ${place.admin1 || place.country_code}`,
                             lat: place.latitude,
                             lon: place.longitude,
-                            timezone: place.timezone
+                            timezone: place.timezone,
+                            country: place.country_code
                         });
                     } else {
                         alert("Please select a city in US or Canada.");
@@ -415,7 +631,7 @@
         };
 
         const handleSaveOrder = () => {
-            localStorage.setItem('portal_order_v4', JSON.stringify(moduleOrder));
+            localStorage.setItem('portal_order_v5', JSON.stringify(moduleOrder));
             setIsSorting(false);
             setSelectedForSwap(null);
         };
@@ -440,19 +656,20 @@
                 }
             };
             return (
-                <div onClick={handleClick} className={`${colSpan} transition-all duration-300 ${isSorting ? 'animate-edit-mode' : ''} ${isSelected ? 'selected-for-swap' : ''}`}>
-                    <div className={isSorting ? 'pointer-events-none' : ''}>{children}</div>
+                <div onClick={handleClick} className={`module-container ${colSpan} transition-all duration-300 ${isSorting ? 'animate-edit-mode' : ''} ${isSelected ? 'selected-for-swap' : ''}`}>
+                    <div className={`h-full ${isSorting ? 'pointer-events-none' : ''}`}>{children}</div>
                 </div>
             );
         };
 
         const renderModule = (id) => {
             const peakFlare = solarData?.[0];
+            const tempSymbol = weatherData?.tempUnit === 'celsius' ? '°C' : '°F';
             
             switch(id) {
                 case 'moon':
                     return (
-                        <div onClick={() => toggleExpand('moon', true)} className="glass-panel rounded-3xl p-8 flex flex-col items-center justify-center relative overflow-hidden group cursor-pointer h-full min-h-[16rem]">
+                        <div onClick={() => toggleExpand('moon', true)} className="glass-panel rounded-3xl p-8 flex flex-col items-center justify-center relative overflow-hidden group cursor-pointer h-full min-h-[18rem]">
                             <div className="absolute top-4 right-4 opacity-50"><Icon name="maximize-2" size={16} className="text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity" /></div>
                             <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-slate-900 relative shadow-[0_0_50px_rgba(168,85,247,0.2)] mb-4 animate-float">
                                 <div className="absolute inset-0 rounded-full border border-white/10"></div>
@@ -466,9 +683,11 @@
                             </div>
                         </div>
                     );
+                case 'desires':
+                    return <DailyDesires desires={desires} setDesires={setDesires} />;
                 case 'solar':
                     return (
-                        <div onClick={() => toggleExpand('solar', true)} className="glass-panel rounded-3xl p-6 relative overflow-hidden h-full min-h-[16rem] cursor-pointer group flex flex-col justify-between">
+                        <div onClick={() => toggleExpand('solar', true)} className="glass-panel rounded-3xl p-6 relative overflow-hidden h-full min-h-[18rem] cursor-pointer group flex flex-col justify-between">
                             <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-50 transition-opacity"><Icon name="maximize-2" size={16} className="text-orange-400" /></div>
                             <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-orange-500/10 rounded-full blur-3xl"></div>
                             <div className="flex justify-between items-start">
@@ -483,7 +702,7 @@
                     );
                 case 'sky':
                     return (
-                        <div onClick={() => toggleExpand('sky', true)} className="glass-panel rounded-3xl p-6 relative cursor-pointer group h-full min-h-[16rem]">
+                        <div onClick={() => toggleExpand('sky', true)} className="glass-panel rounded-3xl p-6 relative cursor-pointer group h-full min-h-[18rem]">
                             <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-50 transition-opacity"><Icon name="maximize-2" size={16} className="text-cyan-400" /></div>
                             <div className="flex items-center gap-2 text-cyan-300 mb-4"><Icon name="star" size={18} /><span className="text-xs font-bold tracking-widest uppercase">Sky</span></div>
                             <div className="space-y-2">
@@ -502,14 +721,14 @@
                     );
                 case 'weather':
                     return weatherData && (
-                        <div onClick={() => toggleExpand('weather', true)} className="glass-panel rounded-3xl p-6 relative cursor-pointer group h-full min-h-[16rem] overflow-hidden flex flex-col justify-between">
+                        <div onClick={() => toggleExpand('weather', true)} className="glass-panel rounded-3xl p-6 relative cursor-pointer group h-full min-h-[18rem] overflow-hidden flex flex-col justify-between">
                             <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-50 transition-opacity"><Icon name="maximize-2" size={16} className="text-yellow-400" /></div>
                             <div className="flex items-center gap-2 text-yellow-300"><Icon name="cloud-sun" size={18} /><span className="text-xs font-bold tracking-widest uppercase">Local</span></div>
                             <div className="flex items-center justify-between flex-1">
                                 <div className="weather-icon-anim text-4xl text-yellow-100"><Icon name={getWeatherIcon(weatherData.current_weather.weathercode)} size={36} /></div>
                                 <div className="text-right">
-                                    <div className="text-3xl font-mono font-bold text-white">{weatherData.current_weather.temperature}°F</div>
-                                    <div className="text-[10px] text-slate-400">WIND: {weatherData.current_weather.windspeed} mph</div>
+                                    <div className="text-3xl font-mono font-bold text-white">{weatherData.current_weather.temperature}{tempSymbol}</div>
+                                    <div className="text-[10px] text-slate-400">WIND: {weatherData.current_weather.windspeed} {weatherData.tempUnit === 'celsius' ? 'km/h' : 'mph'}</div>
                                 </div>
                             </div>
                             <div className="flex justify-between mt-2 pt-2 border-t border-white/10 text-[10px] text-slate-400 font-mono">
@@ -520,10 +739,9 @@
                     );
                 case 'seismic':
                     return (
-                        <div className="glass-panel rounded-3xl p-6 relative overflow-hidden flex flex-col h-full min-h-[16rem]">
+                        <div className="glass-panel rounded-3xl p-6 relative overflow-hidden flex flex-col h-full min-h-[18rem]">
                             <div className="flex items-center gap-2 text-rose-300 mb-2"><Icon name="activity" size={18} /><span className="text-xs font-bold tracking-widest uppercase">Seismic</span></div>
                             <SeismicGraph data={quakeData} />
-                            {/* Clipped to 10 items, 3 visible */}
                             <div className="space-y-2 flex-1 overflow-y-auto custom-scrollbar pr-1 max-h-[100px]">
                                 {quakeData.slice(0, 10).map((q, i) => (
                                     <div key={i} className="flex flex-col text-[10px] bg-black/20 p-2 rounded border border-white/5 gap-1">
@@ -540,13 +758,15 @@
             }
         };
 
+        // Updated column spans for better grid fill
         const getColSpan = (id) => {
             if (id === 'moon') return 'col-span-12 md:col-span-4';
-            if (id === 'solar') return 'col-span-12 md:col-span-2 lg:col-span-2';
-            if (id === 'sky') return 'col-span-12 md:col-span-3 lg:col-span-3';
-            if (id === 'seismic') return 'col-span-12 md:col-span-3 lg:col-span-3';
-            if (id === 'weather') return 'col-span-12 md:col-span-3 lg:col-span-3';
-            return 'col-span-12 md:col-span-3';
+            if (id === 'desires') return 'col-span-12 md:col-span-4';
+            if (id === 'solar') return 'col-span-12 md:col-span-4';
+            if (id === 'sky') return 'col-span-12 md:col-span-4';
+            if (id === 'seismic') return 'col-span-12 md:col-span-4';
+            if (id === 'weather') return 'col-span-12 md:col-span-4';
+            return 'col-span-12 md:col-span-4';
         };
 
         return (
@@ -554,10 +774,10 @@
                 {!divineMode && <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_100%,#1e1b4b,transparent_60%)] z-0"></div>}
                 {!divineMode && <div className="fixed inset-0 z-0 opacity-20" style={{backgroundImage: 'url("https://www.transparenttextures.com/patterns/stardust.png")'}}></div>}
 
-                <main className="relative z-10 max-w-7xl mx-auto p-4 md:p-8 lg:p-12">
+                <main className="relative z-10 max-w-7xl mx-auto p-6 md:p-10 lg:p-14">
                     
                     {/* HEADER */}
-                    <header className="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-white/10 pb-6 gap-6">
+                    <header className="flex flex-col md:flex-row justify-between items-center mb-10 border-b border-white/10 pb-8 gap-6">
                         <div className="text-center md:text-left">
                             <h1 className="text-5xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-200 via-cyan-200 to-purple-200 animate-pulse-glow">PORTAL</h1>
                             
@@ -588,11 +808,17 @@
                             </div>
                         </div>
                         <div className="flex flex-col items-center md:items-end">
-                            <div className="text-4xl font-mono text-white tracking-widest">
-                                {currentTime.toLocaleTimeString('en-US', { hour12: false, timeZone: location.timezone })}
+                            {/* CLICKABLE TIME CLOCK */}
+                            <div 
+                                onClick={toggleTimeFormat}
+                                className="time-clock text-4xl font-mono text-white tracking-widest"
+                                title={`Click to switch to ${timeFormat === '24hr' ? '12-hour' : '24-hour'} format`}
+                            >
+                                {getFormattedTime()}
                             </div>
-                            <div className="text-purple-300/50 text-xs uppercase tracking-[0.2em] mt-1">
-                                {currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: location.timezone })}
+                            <div className="flex items-center gap-2 text-purple-300/50 text-xs uppercase tracking-[0.2em] mt-1">
+                                <span>{currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: location.timezone })}</span>
+                                <span className="text-[8px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300/70">{timeFormat === '24hr' ? 'MIL' : 'STD'}</span>
                             </div>
                             
                             <div className="flex gap-2 mt-4">
@@ -612,10 +838,10 @@
                         </div>
                     </header>
                     
-                    {isSorting && <div className="text-center text-purple-300 text-xs font-mono mb-4 animate-pulse">TAP A MODULE TO SELECT, TAP ANOTHER TO SWAP</div>}
+                    {isSorting && <div className="text-center text-purple-300 text-xs font-mono mb-6 animate-pulse">TAP A MODULE TO SELECT, TAP ANOTHER TO SWAP</div>}
 
-                    {/* DYNAMIC GRID */}
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-min">
+                    {/* DYNAMIC GRID - Improved layout */}
+                    <div className="portal-grid">
                         {moduleOrder.filter(id => id !== 'gcp').map(id => (
                             <ModuleWrapper key={id} id={id} colSpan={getColSpan(id)}>
                                 {renderModule(id)}
@@ -623,7 +849,7 @@
                         ))}
 
                         {/* News Ticker */}
-                        <div className="col-span-12 mt-2">
+                        <div className="col-span-12 mt-4">
                             <div onClick={() => toggleExpand('news', true)} className="relative glass-panel rounded-full h-12 flex items-center overflow-hidden border-pink-500/20 cursor-pointer hover:bg-slate-800/80 transition-colors">
                                 <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-[#0f172a] to-transparent z-20 flex items-center pl-6 gap-2">
                                     <div className="w-2 h-2 bg-pink-500 rounded-full animate-pulse"></div>
@@ -680,12 +906,15 @@
                     
                     {expanded.weather && weatherData && <Overlay title={`Forecast: ${location.name.split(',')[0]}`} onClose={() => toggleExpand('weather', false)}>
                         <div className="grid gap-4">
-                            {weatherData.daily.time.slice(0, 3).map((t, i) => (
-                                <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-black/40 border border-white/10">
-                                    <div className="flex items-center gap-4"><Icon name={getWeatherIcon(weatherData.daily.weathercode[i])} size={32} className="text-yellow-200" /><div><div className="font-bold text-slate-200">{i === 0 ? "Today" : new Date(t + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' })}</div><div className="text-xs text-slate-500">H: {weatherData.daily.temperature_2m_max[i]}°F L: {weatherData.daily.temperature_2m_min[i]}°F</div></div></div>
-                                    <div className="text-right text-xs font-mono text-slate-400"><div>Rise: {formatTime(weatherData.daily.sunrise[i])}</div><div>Set: {formatTime(weatherData.daily.sunset[i])}</div></div>
-                                </div>
-                            ))}
+                            {weatherData.daily.time.slice(0, 3).map((t, i) => {
+                                const tempSymbol = weatherData.tempUnit === 'celsius' ? '°C' : '°F';
+                                return (
+                                    <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-black/40 border border-white/10">
+                                        <div className="flex items-center gap-4"><Icon name={getWeatherIcon(weatherData.daily.weathercode[i])} size={32} className="text-yellow-200" /><div><div className="font-bold text-slate-200">{i === 0 ? "Today" : new Date(t + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' })}</div><div className="text-xs text-slate-500">H: {weatherData.daily.temperature_2m_max[i]}{tempSymbol} L: {weatherData.daily.temperature_2m_min[i]}{tempSymbol}</div></div></div>
+                                        <div className="text-right text-xs font-mono text-slate-400"><div>Rise: {formatTime(weatherData.daily.sunrise[i])}</div><div>Set: {formatTime(weatherData.daily.sunset[i])}</div></div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </Overlay>}
                     
@@ -714,4 +943,3 @@
 
 </body>
 </html>
-
