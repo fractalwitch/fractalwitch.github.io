@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sacramento Celestial Portal v4.0</title>
+    <title>Sacramento Celestial Portal v7.0</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -24,64 +24,41 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
+        /* Base Dark Mode */
         body {
             background-color: #030014;
             color: #e2e8f0;
             font-family: 'Space Mono', monospace;
             overflow-x: hidden;
+            transition: background-color 0.5s ease;
         }
-        h1, h2, h3, .font-cinzel {
-            font-family: 'Cinzel', serif;
-        }
+        h1, h2, h3, .font-cinzel { font-family: 'Cinzel', serif; }
         
-        /* Custom Scrollbar */
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(139, 92, 246, 0.5); 
-            border-radius: 4px;
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.5); border-radius: 4px; }
 
-        /* Animations */
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-        .animate-float {
-            animation: float 6s ease-in-out infinite;
-        }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-5px); } 100% { transform: translateY(0px); } }
+        .animate-float { animation: float 6s ease-in-out infinite; will-change: transform; }
         
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 10px rgba(139, 92, 246, 0.2); }
-            50% { box-shadow: 0 0 25px rgba(139, 92, 246, 0.6); }
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        .animate-marquee { animation: marquee 90s linear infinite; will-change: transform; }
+        .animate-marquee:hover { animation-play-state: paused; }
+        
+        @keyframes gentle-pulse {
+            0% { transform: scale(1); border-color: rgba(255,255,255,0.1); }
+            50% { transform: scale(0.99); border-color: rgba(168,85,247,0.5); }
+            100% { transform: scale(1); border-color: rgba(255,255,255,0.1); }
         }
-        .animate-pulse-glow {
-            animation: pulse-glow 4s infinite;
-        }
+        .animate-edit-mode { animation: gentle-pulse 2s infinite ease-in-out; cursor: crosshair; }
 
-        @keyframes marquee {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-        .animate-marquee {
-            animation: marquee 90s linear infinite;
-        }
-        .animate-marquee:hover {
-            animation-play-state: paused;
-        }
-        
-        /* Glassmorphism */
         .glass-panel {
             background: rgba(15, 23, 42, 0.6);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.3s ease;
+            transform: translateZ(0); /* Hardware accelerate to stop jitter */
         }
         .glass-panel:hover {
             border-color: rgba(167, 139, 250, 0.5);
@@ -89,13 +66,49 @@
             box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
         }
         
-        .overlay-backdrop {
-            background: rgba(3, 0, 20, 0.85);
-            backdrop-filter: blur(8px);
+        .overlay-backdrop { background: rgba(3, 0, 20, 0.85); backdrop-filter: blur(8px); }
+        .weather-icon-anim { animation: float 4s ease-in-out infinite; will-change: transform; }
+        
+        .selected-for-swap {
+            border-color: #a855f7 !important;
+            box-shadow: 0 0 30px rgba(168,85,247,0.5) !important;
+            transform: scale(1.01);
+            z-index: 50;
+            background: rgba(20, 30, 60, 0.95);
         }
 
-        .weather-icon-anim {
-            animation: float 4s ease-in-out infinite;
+        /* --- DIVINE MODE (Light/Maximalist) --- */
+        body.divine-mode {
+            background: linear-gradient(45deg, #ff00cc, #333399, #00ffff);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: #fff;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .divine-mode .glass-panel {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur( 8px );
+            -webkit-backdrop-filter: blur( 8px );
+        }
+        .divine-mode .glass-panel:hover {
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 0 40px rgba(255, 0, 255, 0.6);
+            border-color: rgba(255, 255, 255, 0.8);
+        }
+        .divine-mode .text-slate-500 { color: rgba(255,255,255,0.7) !important; }
+        .divine-mode .text-slate-300 { color: #fff !important; }
+        .divine-mode .text-slate-400 { color: rgba(255,255,255,0.8) !important; }
+        .divine-mode .bg-black\/20 { background: rgba(0,0,0,0.2); }
+        
+        .divine-mode h1 {
+            text-shadow: 2px 2px 0px #ff00ff, -2px -2px 0px #00ffff;
         }
     </style>
 </head>
@@ -104,14 +117,11 @@
 <div id="root"></div>
 
 <script type="text/babel">
-    const { useState, useEffect, useMemo, useRef } = React;
+    const { useState, useEffect, useMemo, useRef, memo, useCallback } = React;
 
-    // --- UTILITY COMPONENTS ---
-
+    // --- UTILS ---
     const Icon = ({ name, size = 24, className = "" }) => {
-        useEffect(() => {
-            if (window.lucide) window.lucide.createIcons();
-        }, [name]);
+        useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [name]);
         return <i data-lucide={name} width={size} height={size} className={className}></i>;
     };
 
@@ -131,36 +141,23 @@
         </div>
     );
 
-    // --- GRAPH COMPONENTS (Raw SVG for stability) ---
+    // --- ISOLATED COMPONENTS ---
 
-    const SeismicGraph = ({ data }) => {
+    const SeismicGraph = memo(({ data }) => {
         if (!data || data.length === 0) return <div className="h-16 flex items-center justify-center text-[10px] text-slate-500">NO DATA</div>;
-
-        // Sort by time
         const sorted = [...data].sort((a, b) => a.properties.time - b.properties.time);
         const maxMag = Math.max(...sorted.map(d => d.properties.mag)) || 5;
-        
-        // SVG Dimensions
-        const height = 60;
-        const width = 100;
-        
-        // Create points
+        const height = 60, width = 100;
         const points = sorted.map((d, i) => {
             const x = (i / (sorted.length - 1)) * width;
-            const y = height - ((d.properties.mag / maxMag) * height * 0.8) - 5; // buffer
+            const y = height - ((d.properties.mag / maxMag) * height * 0.8) - 5; 
             return `${x},${y}`;
         }).join(' ');
-
         return (
             <div className="w-full h-16 bg-black/20 rounded-lg mb-3 relative overflow-hidden flex items-end px-1 border border-white/5">
                 <div className="absolute top-1 left-2 text-[8px] text-slate-500 font-mono">INTENSITY (24H)</div>
                 <svg className="w-full h-full" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
-                    <polyline
-                        points={points}
-                        fill="none"
-                        stroke="rgba(244, 63, 94, 0.6)"
-                        strokeWidth="1.5"
-                    />
+                    <polyline points={points} fill="none" stroke="rgba(244, 63, 94, 0.6)" strokeWidth="1.5" />
                     {sorted.map((d, i) => {
                         const x = (i / (sorted.length - 1)) * width;
                         const y = height - ((d.properties.mag / maxMag) * height * 0.8) - 5;
@@ -169,629 +166,543 @@
                 </svg>
             </div>
         );
-    };
-
-    const GCPGraph = () => {
-        const [history, setHistory] = useState(() => Array(40).fill(50));
-        const [zScore, setZScore] = useState(0);
-
-        useEffect(() => {
-            const interval = setInterval(() => {
-                setHistory(prev => {
-                    const last = prev[prev.length - 1];
-                    // Random walk logic
-                    const delta = (Math.random() - 0.5) * 10;
-                    // Centering force to keep it in bounds
-                    const centerForce = (50 - last) * 0.05;
-                    let next = last + delta + centerForce;
-                    next = Math.max(0, Math.min(100, next));
-                    
-                    const newHist = [...prev.slice(1), next];
-                    
-                    // Update Z-Score display based on deviation from 50
-                    setZScore(((next - 50) / 15).toFixed(3));
-                    
-                    return newHist;
-                });
-            }, 1000);
-            return () => clearInterval(interval);
-        }, []);
-
-        const points = history.map((val, i) => {
-            const x = (i / (history.length - 1)) * 100;
-            const y = 100 - val; // Invert for SVG Y coords
-            return `${x},${y}`;
-        }).join(' ');
-
-        const color = Math.abs(zScore) > 2 ? "#f87171" : Math.abs(zScore) > 1.5 ? "#facc15" : "#34d399";
-
-        return (
-            <div className="flex flex-col h-full justify-between">
-                <div className="flex justify-between items-end mb-2 px-1">
-                    <div className="text-[10px] text-slate-500 font-mono">NETWORK VARIANCE</div>
-                    <div className="font-mono text-sm font-bold" style={{ color: color }}>Z: {zScore}</div>
-                </div>
-                <div className="flex-1 w-full bg-black/30 rounded border border-white/5 relative overflow-hidden">
-                    <div className="absolute top-1/2 w-full border-b border-white/10"></div>
-                    <svg className="w-full h-full p-1" viewBox="0 0 100 100" preserveAspectRatio="none">
-                        <polyline
-                            points={points}
-                            fill="none"
-                            stroke={color}
-                            strokeWidth="2"
-                            vectorEffect="non-scaling-stroke"
-                        />
-                    </svg>
-                </div>
-                <div className="flex justify-between text-[8px] text-slate-600 font-mono mt-1 px-1">
-                    <span>NODES: 65</span>
-                    <span>P: {(Math.random()).toFixed(4)}</span>
-                </div>
-            </div>
-        );
-    };
+    });
 
     // --- MAIN APP ---
 
     const CelestialPortal = () => {
+        // State
+        const [location, setLocation] = useState({ 
+            name: "Sacramento, CA", 
+            lat: 38.5816, 
+            lon: -121.4944, 
+            timezone: "America/Los_Angeles" 
+        });
+        
+        // Time is updated every second, forced re-render is isolated to time display mostly
         const [currentTime, setCurrentTime] = useState(new Date());
+        
         const [solarData, setSolarData] = useState(null);
         const [quakeData, setQuakeData] = useState([]);
         const [newsData, setNewsData] = useState([]);
         const [weatherData, setWeatherData] = useState(null);
         
-        // Modal States
-        const [moonExpanded, setMoonExpanded] = useState(false);
-        const [newsExpanded, setNewsExpanded] = useState(false);
-        const [solarExpanded, setSolarExpanded] = useState(false);
-        const [skyExpanded, setSkyExpanded] = useState(false);
-        const [weatherExpanded, setWeatherExpanded] = useState(false);
+        // Sorting
+        const [isSorting, setIsSorting] = useState(false);
+        const [selectedForSwap, setSelectedForSwap] = useState(null);
+        const [moduleOrder, setModuleOrder] = useState(() => {
+            const saved = localStorage.getItem('portal_order_v4');
+            // Removed 'gcp' from default
+            return saved ? JSON.parse(saved) : ['moon', 'solar', 'sky', 'weather', 'seismic'];
+        });
 
-        const LOCATION = { name: "Sacramento, CA", lat: 38.5816, lon: -121.4944 };
+        // Search State
+        const [isSearching, setIsSearching] = useState(false);
+        const [searchQuery, setSearchQuery] = useState("");
+
+        // Divine Mode
+        const [divineMode, setDivineMode] = useState(false);
+
+        // Expanded
+        const [expanded, setExpanded] = useState({ moon: false, solar: false, sky: false, weather: false, news: false });
+        const toggleExpand = (key, val) => setExpanded(prev => ({...prev, [key]: val}));
+
         const NASA_API_KEY = "DEMO_KEY"; 
 
-        // --- MATH & HELPERS ---
+        // --- EFFECTS ---
 
-        const calculatePlanets = useMemo(() => {
-            return (date) => {
-                const rad = Math.PI / 180;
-                const deg = 180 / Math.PI;
-                const time = date.getTime();
-                const jd = (time / 86400000) - (date.getTimezoneOffset() / 1440) + 2440587.5;
-                const D = jd - 2451543.5;
+        useEffect(() => {
+            if (divineMode) document.body.classList.add('divine-mode');
+            else document.body.classList.remove('divine-mode');
+        }, [divineMode]);
 
-                const planets = [
-                    { name: "Mercury", N: 48.3313, i: 7.0047, w: 29.1241, a: 0.387098, e: 0.205635, M_0: 168.6562, n: 4.0923344368, element: "Earth", period: 88 },
-                    { name: "Venus", N: 76.6799, i: 3.3946, w: 54.8910, a: 0.723330, e: 0.006773, M_0: 48.0052, n: 1.6021302244, element: "Air", period: 225 },
-                    { name: "Mars", N: 49.5574, i: 1.8497, w: 286.5016, a: 1.523688, e: 0.093405, M_0: 18.6021, n: 0.5240207766, element: "Fire", period: 687 },
-                    { name: "Jupiter", N: 100.4542, i: 1.3030, w: 273.8777, a: 5.20256, e: 0.048498, M_0: 19.8950, n: 0.0830853001, element: "Fire", period: 4333 },
-                    { name: "Saturn", N: 113.6634, i: 2.4886, w: 339.3939, a: 9.55475, e: 0.055546, M_0: 316.9670, n: 0.0334442282, element: "Earth", period: 10759 },
-                    { name: "Uranus", N: 74.0005, i: 0.7733, w: 96.6612, a: 19.18171, e: 0.047318, M_0: 142.5905, n: 0.011725806, element: "Air", period: 30688 },
-                    { name: "Neptune", N: 131.7806, i: 1.7700, w: 272.8461, a: 30.05826, e: 0.008606, M_0: 260.2471, n: 0.005995147, element: "Water", period: 60182 }
-                ];
-
-                const zodiac = [
-                    { name: "Aries", element: "Fire" }, { name: "Taurus", element: "Earth" }, 
-                    { name: "Gemini", element: "Air" }, { name: "Cancer", element: "Water" }, 
-                    { name: "Leo", element: "Fire" }, { name: "Virgo", element: "Earth" }, 
-                    { name: "Libra", element: "Air" }, { name: "Scorpio", element: "Water" }, 
-                    { name: "Sagittarius", element: "Fire" }, { name: "Capricorn", element: "Earth" }, 
-                    { name: "Aquarius", element: "Air" }, { name: "Pisces", element: "Water" }
-                ];
-
-                return planets.map(p => {
-                    let M_p = (p.M_0 + p.n * D) % 360;
-                    if (M_p < 0) M_p += 360;
-                    const E = M_p + (180/Math.PI) * p.e * Math.sin(M_p * rad) * (1 + p.e * Math.cos(M_p * rad));
-                    let xv = p.a * (Math.cos(E * rad) - p.e);
-                    let yv = p.a * (Math.sqrt(1 - p.e*p.e) * Math.sin(E * rad));
-                    let v = (Math.atan2(yv, xv) * deg);
-                    let l_helio = v + p.w;
-                    let finalPos = (l_helio) % 360;
-                    if (finalPos < 0) finalPos += 360;
-                    
-                    const signIndex = Math.floor(finalPos / 30);
-                    const degreeInSign = finalPos % 30;
-                    
-                    // DETERMINISTIC RETROGRADE
-                    // Seeded by day of year so it doesn't flash
-                    const daySeed = Math.floor(D); 
-                    const isRetro = Math.sin((daySeed / p.period) * 10) > 0.8; 
-
-                    return {
-                        ...p,
-                        degree: degreeInSign.toFixed(1),
-                        sign: zodiac[signIndex].name,
-                        element: zodiac[signIndex].element,
-                        isRetrograde: isRetro
-                    };
-                });
-            }
+        // Clock Tick
+        useEffect(() => {
+            const t = setInterval(() => setCurrentTime(new Date()), 1000);
+            return () => clearInterval(t);
         }, []);
 
-        const calculateMoonPhase = (date) => {
-            const jd = (date.getTime() / 86400000) - (date.getTimezoneOffset() / 1440) + 2440587.5;
-            const daysSinceNew = jd - 2451549.5; 
-            const lunarCycle = 29.53058867;
-            const progress = (daysSinceNew % lunarCycle) / lunarCycle;
-            const phaseIndex = Math.floor(progress * 8);
-            
-            const phases = [
-                { name: "New Moon", type: "New", icon: "🌑" },
-                { name: "Waxing Crescent", type: "Waxing", icon: "🌒" },
-                { name: "First Quarter", type: "Waxing", icon: "🌓" },
-                { name: "Waxing Gibbous", type: "Waxing", icon: "🌔" },
-                { name: "Full Moon", type: "Full", icon: "🌕" },
-                { name: "Waning Gibbous", type: "Waning", icon: "🌖" },
-                { name: "Last Quarter", type: "Waning", icon: "🌗" },
-                { name: "Waning Crescent", type: "Waning", icon: "🌘" }
-            ];
-            
-            return {
-                ...phases[phaseIndex],
-                illumination: ((Math.sin(progress * Math.PI * 2 - Math.PI / 2) + 1) * 50).toFixed(1),
-                age: (progress * 29.53).toFixed(1),
-                rawProgress: progress
+        // Data Fetching (Re-runs when location changes)
+        useEffect(() => {
+            const load = async () => {
+                const end = new Date().toISOString().split('T')[0];
+                const start = new Date(Date.now() - 2592000000).toISOString().split('T')[0]; // 30 Days
+
+                // Solar
+                try {
+                    const r = await fetch(`https://api.nasa.gov/DONKI/FLR?startDate=${start}&endDate=${end}&api_key=${NASA_API_KEY}`);
+                    if (!r.ok) throw new Error("API Limit");
+                    const d = await r.json();
+                    if(Array.isArray(d) && d.length > 0) {
+                        setSolarData(d.sort((a,b) => (b.classType[0]==='X'?1000:1) * parseFloat(b.classType.slice(1)) - (a.classType[0]==='X'?1000:1) * parseFloat(a.classType.slice(1))));
+                    } else {
+                        setSolarData([{classType: "QUIET", activeRegionNum: "N/A", beginTime: new Date().toISOString()}]);
+                    }
+                } catch(e) {
+                    setSolarData([{classType: "QUIET", activeRegionNum: "N/A", beginTime: new Date().toISOString()}]);
+                }
+
+                // Seismic
+                try {
+                    const r = await fetch("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson");
+                    const d = await r.json();
+                    setQuakeData(d.features.slice(0, 20));
+                } catch(e) {}
+
+                // Weather (Dynamic Location)
+                try {
+                    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.lat}&longitude=${location.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset&current_weather=true&temperature_unit=fahrenheit&timezone=auto`);
+                    const d = await r.json();
+                    setWeatherData(d);
+                } catch(e) {}
+
+                // News
+                try {
+                    const rssUrls = ["https://rss.nytimes.com/services/xml/rss/nyt/Space.xml", "https://www.goodnewsnetwork.org/feed/"];
+                    const promises = rssUrls.map(url => fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`).then(res => res.json()));
+                    const results = await Promise.all(promises);
+                    let allItems = results.flatMap(r => r.items ? r.items : []);
+                    allItems = allItems.map(i => ({ title: i.title, link: i.link, source: i.link.includes("goodnews") ? "GOOD NEWS" : "SPACE FEED" }));
+                    const signals = [
+                        { title: ">>> SIGNAL RECEIVED: Global Coherence 99.8%", link: "#", source: "NOOSPHERE" },
+                        { title: ">>> EVENT: Latent Energy Shift in Sector 4", link: "#", source: "GAIA" }
+                    ];
+                    setNewsData([...allItems.slice(0, 15), ...signals].sort(() => Math.random() - 0.5));
+                } catch(e) {
+                    setNewsData([{ title: "Awaiting Uplink...", link: "#", source: "SYSTEM" }]);
+                }
             };
-        };
+            load();
+        }, [location]); // Reload when location changes
+
+        // --- MATH ENGINE ---
+
+        // Planetary Engine (Keplerian -> Geocentric)
+        const planetInfo = useMemo(() => {
+            const date = currentTime;
+            const time = date.getTime();
+            const jd = (time / 86400000) - (date.getTimezoneOffset() / 1440) + 2440587.5;
+            const D = jd - 2451543.5;
+            const rad = Math.PI / 180;
+            const deg = 180 / Math.PI;
+
+            // Simple orbital elements (J2000.0)
+            const planets = {
+                Mercury: { N: 48.3313, i: 7.0047, w: 29.1241, a: 0.387098, e: 0.205635, M: 168.6562, n: 4.0923344368 },
+                Venus: { N: 76.6799, i: 3.3946, w: 54.8910, a: 0.723330, e: 0.006773, M: 48.0052, n: 1.6021302244 },
+                Earth: { N: 0.0, i: 0.0, w: 282.9404, a: 1.000000, e: 0.016709, M: 356.0470, n: 0.9856002585 },
+                Mars: { N: 49.5574, i: 1.8497, w: 286.5016, a: 1.523688, e: 0.093405, M: 18.6021, n: 0.5240207766 },
+                Jupiter: { N: 100.4542, i: 1.3030, w: 273.8777, a: 5.20256, e: 0.048498, M: 19.8950, n: 0.0830853001 },
+                Saturn: { N: 113.6634, i: 2.4886, w: 339.3939, a: 9.55475, e: 0.055546, M: 316.9670, n: 0.0334442282 },
+                Uranus: { N: 74.0005, i: 0.7733, w: 96.6612, a: 19.18171, e: 0.047318, M: 142.5905, n: 0.011725806 },
+                Neptune: { N: 131.7806, i: 1.7700, w: 272.8461, a: 30.05826, e: 0.008606, M: 260.2471, n: 0.005995147 }
+            };
+
+            const zodiac = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"];
+            const elements = ["Fire", "Earth", "Air", "Water", "Fire", "Earth", "Air", "Water", "Fire", "Earth", "Air", "Water"];
+
+            const getPos = (p, d_offset = 0) => {
+                const M_p = (p.M + p.n * (D + d_offset)) % 360;
+                const M_rad = M_p * rad;
+                const E = M_p + (180/Math.PI) * p.e * Math.sin(M_rad) * (1 + p.e * Math.cos(M_rad));
+                const E_rad = E * rad;
+                const xv = p.a * (Math.cos(E_rad) - p.e);
+                const yv = p.a * (Math.sqrt(1 - p.e*p.e) * Math.sin(E_rad));
+                const v = Math.atan2(yv, xv) * deg;
+                const r = Math.sqrt(xv*xv + yv*yv);
+                const l = v + p.w; // Heliocentric long
+                // Convert to Cartesian
+                const x = r * Math.cos(l * rad);
+                const y = r * Math.sin(l * rad);
+                const z = 0; // Simplified
+                return { x, y, z, l };
+            };
+
+            const earthNow = getPos(planets.Earth);
+            const earthPrev = getPos(planets.Earth, -0.1); // -2.4 hours
+
+            return Object.keys(planets).filter(k => k !== 'Earth').map(key => {
+                const p = planets[key];
+                const pNow = getPos(p);
+                const pPrev = getPos(p, -0.1);
+
+                // Geocentric Coords (Planet - Earth)
+                const dx = pNow.x - earthNow.x;
+                const dy = pNow.y - earthNow.y;
+                const geoLong = (Math.atan2(dy, dx) * deg + 360) % 360;
+
+                const dx_prev = pPrev.x - earthPrev.x;
+                const dy_prev = pPrev.y - earthPrev.y;
+                const geoLong_prev = (Math.atan2(dy_prev, dx_prev) * deg + 360) % 360;
+
+                // Retrograde check: if longitude decreases
+                // Handle 360 wrapping
+                let diff = geoLong - geoLong_prev;
+                if (diff < -300) diff += 360;
+                if (diff > 300) diff -= 360;
+                
+                const isRetro = diff < 0;
+
+                const signIdx = Math.floor(geoLong / 30);
+                const degree = geoLong % 30;
+
+                return {
+                    name: key,
+                    sign: zodiac[signIdx],
+                    element: elements[signIdx],
+                    degree: degree.toFixed(1),
+                    isRetrograde: isRetro
+                };
+            });
+        }, [currentTime]); // Recalc every minute ideally, or on load. Since currentTime updates 1s, useMemo handles it.
+
+        const moonInfo = useMemo(() => {
+            const jd = (currentTime.getTime() / 86400000) - (currentTime.getTimezoneOffset() / 1440) + 2440587.5;
+            const daysSinceNew = jd - 2451549.5; 
+            const progress = (daysSinceNew % 29.53059) / 29.53059;
+            const phaseIndex = Math.floor(progress * 8);
+            const phases = [{name:"New Moon",icon:"🌑"},{name:"Waxing Crescent",icon:"🌒"},{name:"First Quarter",icon:"🌓"},{name:"Waxing Gibbous",icon:"🌔"},{name:"Full Moon",icon:"🌕"},{name:"Waning Gibbous",icon:"🌖"},{name:"Last Quarter",icon:"🌗"},{name:"Waning Crescent",icon:"🌘"}];
+            return { ...phases[phaseIndex], illumination: ((Math.sin(progress * Math.PI * 2 - Math.PI / 2) + 1) * 50).toFixed(1), age: (progress * 29.53).toFixed(1), rawProgress: progress };
+        }, [currentTime]);
 
         const getMonthlyMoons = () => {
             const moons = [];
             const now = new Date();
-            const year = now.getFullYear();
-            const month = now.getMonth();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-            for(let i=1; i<=daysInMonth; i++) {
-                const d = new Date(year, month, i);
-                moons.push({ date: i, ...calculateMoonPhase(d) });
+            const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            for(let i=1; i<=days; i++) {
+                const d = new Date(now.getFullYear(), now.getMonth(), i);
+                const jd = (d.getTime() / 86400000) - (d.getTimezoneOffset() / 1440) + 2440587.5;
+                const daysSinceNew = jd - 2451549.5; 
+                const progress = (daysSinceNew % 29.53059) / 29.53059;
+                const phaseIndex = Math.floor(progress * 8);
+                const phases = [{name:"New",icon:"🌑"},{name:"Waxing",icon:"🌒"},{name:"First",icon:"🌓"},{name:"Waxing",icon:"🌔"},{name:"Full",icon:"🌕"},{name:"Waning",icon:"🌖"},{name:"Last",icon:"🌗"},{name:"Waning",icon:"🌘"}];
+                moons.push({ date: i, ...phases[phaseIndex] });
             }
             return moons;
         };
-
-        const formatTime = (time) => new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-
-        const getWeatherIcon = (code) => {
-            if (code === 0) return "sun";
-            if (code < 3) return "cloud-sun";
-            if (code < 50) return "cloud";
-            if (code < 60) return "cloud-drizzle";
-            if (code < 70) return "cloud-rain";
-            if (code < 80) return "snowflake";
-            if (code < 95) return "cloud-rain";
-            return "cloud-lightning";
-        };
-
-        // --- FETCHING ---
-
-        const loadData = async () => {
-            const endDate = new Date().toISOString().split('T')[0];
-            const startDate = new Date(Date.now() - 12096e5).toISOString().split('T')[0];
-
-            // 1. Solar Data
-            try {
-                const solRes = await fetch(`https://api.nasa.gov/DONKI/FLR?startDate=${startDate}&endDate=${endDate}&api_key=${NASA_API_KEY}`);
-                const solData = await solRes.json();
-                const sortedSolar = Array.isArray(solData) ? solData.sort((a, b) => {
-                    const rank = cls => {
-                        if (!cls) return 0;
-                        const m = { 'X': 1000, 'M': 100, 'C': 10, 'B': 1 };
-                        return (m[cls[0]] || 0) * (parseFloat(cls.substring(1)) || 0);
-                    };
-                    return rank(b.classType) - rank(a.classType);
-                }) : [];
-                setSolarData(sortedSolar);
-            } catch (e) { /* Fallback */ }
-
-            // 2. Earthquakes (USGS)
-            try {
-                const quakeRes = await fetch("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson");
-                const quakeJson = await quakeRes.json();
-                setQuakeData(quakeJson.features.slice(0, 20)); 
-            } catch(e) { console.error("Quake Fetch Error"); }
-
-            // 3. News (Merged)
-            const cosmicHeadlines = [
-                { title: "Global Consciousness Coherence Peaks at 99.9%", source: "NOOSPHERE NET" },
-                { title: "Unidentified Energy Signature Detected in Ionosphere", source: "SKYWATCH" },
-                { title: "Mass Meditation Event Synchronizes Local Field", source: "AETHER" },
-                { title: "Logarithmic Ontological Shift Detected in Sector 7", source: "REALITY MONITOR" },
-                { title: "Latent Energy Reservoir Activated Near Equator", source: "GAIA PULSE" },
-                { title: "Time dilation reported in localized pockets", source: "CHRONOS" }
-            ];
-
-            try {
-                const RSS_URL = "https://www.goodnewsnetwork.org/feed/"; 
-                const newsRes = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(RSS_URL)}`);
-                const newsJson = await newsRes.json();
-                
-                const sillyHeadlines = [
-                    { title: "Local Cat Elected Mayor of Small Town", source: "TOWN HALL" },
-                    { title: "Scientists Discover Planet Made Entirely of Pink Diamonds", source: "SPACE" },
-                    { title: "Man Befriends Octopus, Learns to play Checkers", source: "NATURE" },
-                ];
-
-                let mixedNews = [];
-                if(newsJson.items) {
-                    mixedNews = [...newsJson.items.map(i => ({...i, source: "GOOD NEWS"})), ...cosmicHeadlines, ...sillyHeadlines];
-                } else {
-                    mixedNews = [...sillyHeadlines, ...cosmicHeadlines];
-                }
-                
-                setNewsData(mixedNews.sort(() => Math.random() - 0.5));
-            } catch (e) {
-                setNewsData(cosmicHeadlines);
-            }
-            
-            // 4. Weather (Open-Meteo)
-            try {
-                const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${LOCATION.lat}&longitude=${LOCATION.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset&current_weather=true&timezone=auto`);
-                const weatherJson = await weatherRes.json();
-                setWeatherData(weatherJson);
-            } catch(e) { console.error("Weather Fetch Error"); }
-        };
-
-        useEffect(() => {
-            loadData();
-            const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-            return () => clearInterval(timer);
-        }, []);
-
-        const moonInfo = useMemo(() => calculateMoonPhase(currentTime), [currentTime]);
-        const planetInfo = useMemo(() => calculatePlanets(currentTime), [currentTime]);
         const monthlyMoons = useMemo(() => getMonthlyMoons(), [currentTime]);
-        const peakFlare = solarData && solarData.length > 0 ? solarData[0] : null;
+
+        const formatTime = (t) => new Date(t).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: location.timezone });
+        const getWeatherIcon = (c) => c === 0 ? "sun" : c < 3 ? "cloud-sun" : c < 50 ? "cloud" : c < 80 ? "cloud-rain" : "cloud-lightning";
+
+        // --- HANDLERS ---
+
+        const handleLocationSearch = async () => {
+            if(!searchQuery) return;
+            setIsSearching(false);
+            try {
+                // Using Open-Meteo Geocoding
+                const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchQuery)}&count=1&language=en&format=json`);
+                const data = await res.json();
+                if (data.results && data.results.length > 0) {
+                    const place = data.results[0];
+                    // Filter simple US/CA check if desired, but Open-Meteo is global. 
+                    // Let's allow it, or strictly check country_code
+                    if(['US','CA'].includes(place.country_code)) {
+                        setLocation({
+                            name: `${place.name}, ${place.admin1 || place.country_code}`,
+                            lat: place.latitude,
+                            lon: place.longitude,
+                            timezone: place.timezone
+                        });
+                    } else {
+                        alert("Please select a city in US or Canada.");
+                    }
+                }
+            } catch(e) {
+                console.error("Geocoding failed");
+            }
+        };
+
+        const handleSaveOrder = () => {
+            localStorage.setItem('portal_order_v4', JSON.stringify(moduleOrder));
+            setIsSorting(false);
+            setSelectedForSwap(null);
+        };
+
+        // --- GRID RENDERING ---
+
+        const ModuleWrapper = ({ id, colSpan, children }) => {
+            const isSelected = selectedForSwap === id;
+            const handleClick = (e) => {
+                if (!isSorting) return; 
+                e.stopPropagation(); 
+                if (selectedForSwap === null) setSelectedForSwap(id);
+                else if (selectedForSwap === id) setSelectedForSwap(null);
+                else {
+                    const newOrder = [...moduleOrder];
+                    const idxA = newOrder.indexOf(selectedForSwap);
+                    const idxB = newOrder.indexOf(id);
+                    newOrder[idxA] = id;
+                    newOrder[idxB] = selectedForSwap;
+                    setModuleOrder(newOrder);
+                    setSelectedForSwap(null);
+                }
+            };
+            return (
+                <div onClick={handleClick} className={`${colSpan} transition-all duration-300 ${isSorting ? 'animate-edit-mode' : ''} ${isSelected ? 'selected-for-swap' : ''}`}>
+                    <div className={isSorting ? 'pointer-events-none' : ''}>{children}</div>
+                </div>
+            );
+        };
+
+        const renderModule = (id) => {
+            const peakFlare = solarData?.[0];
+            
+            switch(id) {
+                case 'moon':
+                    return (
+                        <div onClick={() => toggleExpand('moon', true)} className="glass-panel rounded-3xl p-8 flex flex-col items-center justify-center relative overflow-hidden group cursor-pointer h-full min-h-[16rem]">
+                            <div className="absolute top-4 right-4 opacity-50"><Icon name="maximize-2" size={16} className="text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity" /></div>
+                            <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-slate-900 relative shadow-[0_0_50px_rgba(168,85,247,0.2)] mb-4 animate-float">
+                                <div className="absolute inset-0 rounded-full border border-white/10"></div>
+                                <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-black via-transparent to-transparent transition-all duration-1000" style={{opacity: moonInfo.type==='New'?0.9:0.2, transform: `rotate(${moonInfo.rawProgress*360}deg)`}}></div>
+                                <div className="absolute inset-0 flex items-center justify-center text-5xl filter drop-shadow-[0_0_10px_white]">{moonInfo.icon}</div>
+                            </div>
+                            <h2 className="text-xl font-cinzel text-purple-100 mb-1">{moonInfo.name}</h2>
+                            <div className="flex gap-4 text-[10px] font-mono text-purple-300/70 mt-2">
+                                <div className="px-2 py-1 rounded border border-purple-500/30">ILLUM: {moonInfo.illumination}%</div>
+                                <div className="px-2 py-1 rounded border border-purple-500/30">AGE: {moonInfo.age}D</div>
+                            </div>
+                        </div>
+                    );
+                case 'solar':
+                    return (
+                        <div onClick={() => toggleExpand('solar', true)} className="glass-panel rounded-3xl p-6 relative overflow-hidden h-full min-h-[16rem] cursor-pointer group flex flex-col justify-between">
+                            <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-50 transition-opacity"><Icon name="maximize-2" size={16} className="text-orange-400" /></div>
+                            <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-orange-500/10 rounded-full blur-3xl"></div>
+                            <div className="flex justify-between items-start">
+                                <div className="flex items-center gap-2 text-orange-300"><Icon name="sun" size={18} /><span className="text-xs font-bold tracking-widest uppercase">Solar Activity</span></div>
+                                <span className="text-[10px] font-mono text-orange-400/60">30D MAX</span>
+                            </div>
+                            <div className="text-center flex-1 flex flex-col justify-center">
+                                <div className={`text-5xl font-black font-mono ${peakFlare?.classType.startsWith('X') ? 'text-red-500 drop-shadow-[0_0_15px_red]' : 'text-orange-400'}`}>{peakFlare ? peakFlare.classType : "QUIET"}</div>
+                                <div className="text-[10px] text-orange-300/50 mt-1 font-mono uppercase">{peakFlare ? `Active Region ${peakFlare.activeRegionNum}` : "No Activity"}</div>
+                            </div>
+                        </div>
+                    );
+                case 'sky':
+                    return (
+                        <div onClick={() => toggleExpand('sky', true)} className="glass-panel rounded-3xl p-6 relative cursor-pointer group h-full min-h-[16rem]">
+                            <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-50 transition-opacity"><Icon name="maximize-2" size={16} className="text-cyan-400" /></div>
+                            <div className="flex items-center gap-2 text-cyan-300 mb-4"><Icon name="star" size={18} /><span className="text-xs font-bold tracking-widest uppercase">Sky</span></div>
+                            <div className="space-y-2">
+                                {planetInfo.slice(0, 4).map((p, i) => (
+                                    <div key={i} className="flex justify-between text-xs border-b border-white/5 pb-2">
+                                        <span className="text-slate-300 font-bold">{p.name}</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-cyan-200/70 font-mono">{p.sign}</span>
+                                            {p.isRetrograde && <span className="text-[8px] text-red-400 bg-red-900/30 px-1 rounded">Rx</span>}
+                                        </div>
+                                    </div>
+                                ))}
+                                <div className="text-[10px] text-center text-cyan-500/50 pt-1">Tap for Alignment</div>
+                            </div>
+                        </div>
+                    );
+                case 'weather':
+                    return weatherData && (
+                        <div onClick={() => toggleExpand('weather', true)} className="glass-panel rounded-3xl p-6 relative cursor-pointer group h-full min-h-[16rem] overflow-hidden flex flex-col justify-between">
+                            <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-50 transition-opacity"><Icon name="maximize-2" size={16} className="text-yellow-400" /></div>
+                            <div className="flex items-center gap-2 text-yellow-300"><Icon name="cloud-sun" size={18} /><span className="text-xs font-bold tracking-widest uppercase">Local</span></div>
+                            <div className="flex items-center justify-between flex-1">
+                                <div className="weather-icon-anim text-4xl text-yellow-100"><Icon name={getWeatherIcon(weatherData.current_weather.weathercode)} size={36} /></div>
+                                <div className="text-right">
+                                    <div className="text-3xl font-mono font-bold text-white">{weatherData.current_weather.temperature}°F</div>
+                                    <div className="text-[10px] text-slate-400">WIND: {weatherData.current_weather.windspeed} mph</div>
+                                </div>
+                            </div>
+                            <div className="flex justify-between mt-2 pt-2 border-t border-white/10 text-[10px] text-slate-400 font-mono">
+                                <div className="flex items-center gap-1"><Icon name="sunrise" size={10} /> {formatTime(weatherData.daily.sunrise[0])}</div>
+                                <div className="flex items-center gap-1"><Icon name="sunset" size={10} /> {formatTime(weatherData.daily.sunset[0])}</div>
+                            </div>
+                        </div>
+                    );
+                case 'seismic':
+                    return (
+                        <div className="glass-panel rounded-3xl p-6 relative overflow-hidden flex flex-col h-full min-h-[16rem]">
+                            <div className="flex items-center gap-2 text-rose-300 mb-2"><Icon name="activity" size={18} /><span className="text-xs font-bold tracking-widest uppercase">Seismic</span></div>
+                            <SeismicGraph data={quakeData} />
+                            {/* Clipped to 10 items, 3 visible */}
+                            <div className="space-y-2 flex-1 overflow-y-auto custom-scrollbar pr-1 max-h-[100px]">
+                                {quakeData.slice(0, 10).map((q, i) => (
+                                    <div key={i} className="flex flex-col text-[10px] bg-black/20 p-2 rounded border border-white/5 gap-1">
+                                        <div className="flex justify-between items-center">
+                                            <div className="truncate max-w-[70%] text-rose-100/80">{q.properties.place}</div>
+                                            <div className={`font-bold font-mono px-1 rounded ${q.properties.mag > 4.5 ? 'bg-red-500/30 text-red-200' : 'bg-rose-500/20 text-rose-300'}`}>M{q.properties.mag.toFixed(1)}</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                default: return null;
+            }
+        };
+
+        const getColSpan = (id) => {
+            if (id === 'moon') return 'col-span-12 md:col-span-4';
+            if (id === 'solar') return 'col-span-12 md:col-span-2 lg:col-span-2';
+            if (id === 'sky') return 'col-span-12 md:col-span-3 lg:col-span-3';
+            if (id === 'seismic') return 'col-span-12 md:col-span-3 lg:col-span-3';
+            if (id === 'weather') return 'col-span-12 md:col-span-3 lg:col-span-3';
+            return 'col-span-12 md:col-span-3';
+        };
 
         return (
-            <div className="min-h-screen relative overflow-x-hidden selection:bg-purple-500 selection:text-white pb-20">
-                
-                {/* BACKGROUND */}
-                <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_100%,#1e1b4b,transparent_60%)] z-0"></div>
-                <div className="fixed inset-0 z-0 opacity-20" style={{backgroundImage: 'url("https://www.transparenttextures.com/patterns/stardust.png")'}}></div>
+            <div className={`min-h-screen relative overflow-x-hidden selection:bg-purple-500 selection:text-white pb-20 ${divineMode ? 'divine-mode' : ''}`}>
+                {!divineMode && <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_100%,#1e1b4b,transparent_60%)] z-0"></div>}
+                {!divineMode && <div className="fixed inset-0 z-0 opacity-20" style={{backgroundImage: 'url("https://www.transparenttextures.com/patterns/stardust.png")'}}></div>}
 
                 <main className="relative z-10 max-w-7xl mx-auto p-4 md:p-8 lg:p-12">
                     
                     {/* HEADER */}
-                    <header className="flex flex-col md:flex-row justify-between items-center mb-10 border-b border-white/10 pb-6 gap-6">
+                    <header className="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-white/10 pb-6 gap-6">
                         <div className="text-center md:text-left">
-                            <h1 className="text-5xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-200 via-cyan-200 to-purple-200 animate-pulse-glow">
-                                PORTAL
-                            </h1>
-                            <div className="flex items-center justify-center md:justify-start gap-3 mt-2 text-purple-300/60 font-mono text-sm tracking-widest">
+                            <h1 className="text-5xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-200 via-cyan-200 to-purple-200 animate-pulse-glow">PORTAL</h1>
+                            
+                            {/* CITY SEARCH */}
+                            <div className="flex items-center justify-center md:justify-start gap-3 mt-2 text-purple-300/60 font-mono text-sm tracking-widest relative">
                                 <Icon name="map-pin" size={14} />
-                                <span>SACRAMENTO, CA</span>
-                                <span className="w-1 h-1 rounded-full bg-purple-500"></span>
-                                <span>{LOCATION.lat}° N</span>
+                                {isSearching ? (
+                                    <div className="flex items-center gap-2 animate-in fade-in">
+                                        <input 
+                                            autoFocus
+                                            type="text" 
+                                            placeholder="City Name..." 
+                                            className="bg-black/50 border border-purple-500/50 rounded px-2 py-1 text-white text-xs outline-none w-32"
+                                            value={searchQuery}
+                                            onChange={e => setSearchQuery(e.target.value)}
+                                            onKeyDown={e => e.key === 'Enter' && handleLocationSearch()}
+                                        />
+                                        <button onClick={handleLocationSearch} className="text-green-400 hover:text-green-300"><Icon name="check" size={14} /></button>
+                                        <button onClick={() => setIsSearching(false)} className="text-red-400 hover:text-red-300"><Icon name="x" size={14} /></button>
+                                    </div>
+                                ) : (
+                                    <span onClick={() => setIsSearching(true)} className="cursor-pointer hover:text-purple-200 border-b border-dashed border-transparent hover:border-purple-400 transition-all">
+                                        {location.name.toUpperCase()}
+                                    </span>
+                                )}
+                                {!isSearching && <span className="w-1 h-1 rounded-full bg-purple-500"></span>}
+                                {!isSearching && <span>{location.lat.toFixed(2)}° N</span>}
                             </div>
                         </div>
-
                         <div className="flex flex-col items-center md:items-end">
                             <div className="text-4xl font-mono text-white tracking-widest">
-                                {currentTime.toLocaleTimeString('en-US', { hour12: false })}
+                                {currentTime.toLocaleTimeString('en-US', { hour12: false, timeZone: location.timezone })}
                             </div>
                             <div className="text-purple-300/50 text-xs uppercase tracking-[0.2em] mt-1">
-                                {currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                                {currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: location.timezone })}
+                            </div>
+                            
+                            <div className="flex gap-2 mt-4">
+                                <button 
+                                    onClick={() => setDivineMode(!divineMode)}
+                                    className={`p-2 rounded-full border transition-all ${divineMode ? 'bg-pink-500/20 border-pink-400 text-pink-200 shadow-[0_0_15px_hotpink]' : 'bg-white/5 border-white/10 text-slate-400'}`}
+                                >
+                                    <Icon name={divineMode ? "sparkles" : "moon"} size={16} />
+                                </button>
+                                <button 
+                                    onClick={isSorting ? handleSaveOrder : () => setIsSorting(true)}
+                                    className={`px-4 py-1 rounded-full text-xs font-bold font-mono border transition-all ${isSorting ? 'bg-green-500/20 border-green-500 text-green-300 animate-pulse' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
+                                >
+                                    {isSorting ? "SAVE LAYOUT" : "SORT MODULES"}
+                                </button>
                             </div>
                         </div>
                     </header>
+                    
+                    {isSorting && <div className="text-center text-purple-300 text-xs font-mono mb-4 animate-pulse">TAP A MODULE TO SELECT, TAP ANOTHER TO SWAP</div>}
 
-                    {/* GRID */}
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    {/* DYNAMIC GRID */}
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-min">
+                        {moduleOrder.filter(id => id !== 'gcp').map(id => (
+                            <ModuleWrapper key={id} id={id} colSpan={getColSpan(id)}>
+                                {renderModule(id)}
+                            </ModuleWrapper>
+                        ))}
 
-                        {/* 1. MOON PHASE */}
-                        <div 
-                            onClick={() => setMoonExpanded(true)}
-                            className="md:col-span-4 glass-panel rounded-3xl p-8 flex flex-col items-center justify-center relative overflow-hidden group cursor-pointer"
-                        >
-                            <div className="absolute top-4 right-4 opacity-50"><Icon name="maximize-2" size={16} className="text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity" /></div>
-                            
-                            <div className="w-48 h-48 rounded-full bg-slate-900 relative shadow-[0_0_50px_rgba(168,85,247,0.2)] mb-6 animate-float">
-                                <div className="absolute inset-0 rounded-full border border-white/10"></div>
-                                <div 
-                                    className="absolute inset-0 rounded-full bg-gradient-to-tr from-black via-transparent to-transparent transition-all duration-1000"
-                                    style={{
-                                        opacity: moonInfo.type === 'New' ? 0.9 : 0.2,
-                                        transform: `rotate(${moonInfo.rawProgress * 360}deg)`
-                                    }}
-                                ></div>
-                                <div className="absolute inset-0 flex items-center justify-center text-5xl filter drop-shadow-[0_0_10px_white]">
-                                    {moonInfo.icon}
-                                </div>
-                            </div>
-
-                            <h2 className="text-2xl font-cinzel text-purple-100 mb-1">{moonInfo.name}</h2>
-                            <div className="flex items-center gap-4 text-xs font-mono text-purple-300/70 mt-4">
-                                <div className="px-3 py-1 rounded-full border border-purple-500/30">
-                                    ILLUM: {moonInfo.illumination}%
-                                </div>
-                                <div className="px-3 py-1 rounded-full border border-purple-500/30">
-                                    AGE: {moonInfo.age}D
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* 2. CENTER STACK */}
-                        <div className="md:col-span-5 flex flex-col gap-6">
-                            
-                            {/* Solar Flare */}
-                            <div 
-                                onClick={() => setSolarExpanded(true)}
-                                className="glass-panel rounded-3xl p-6 relative overflow-hidden flex-1 cursor-pointer group"
-                            >
-                                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-50 transition-opacity"><Icon name="maximize-2" size={16} className="text-orange-400" /></div>
-                                <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-orange-500/10 rounded-full blur-3xl"></div>
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="flex items-center gap-2 text-orange-300">
-                                        <Icon name="sun" size={18} />
-                                        <span className="text-xs font-bold tracking-widest uppercase">Solar Activity</span>
-                                    </div>
-                                    <span className="text-xs font-mono text-orange-400/60">14D MAX</span>
-                                </div>
-                                <div className="text-center py-2">
-                                    <div className={`text-6xl font-black font-mono ${peakFlare?.classType.startsWith('X') ? 'text-red-500 drop-shadow-[0_0_15px_red]' : 'text-orange-400'}`}>
-                                        {peakFlare ? peakFlare.classType : "QUIET"}
-                                    </div>
-                                    <div className="text-xs text-orange-300/50 mt-1 font-mono uppercase">
-                                        {peakFlare ? `Active Region ${peakFlare.activeRegionNum}` : "No Activity Detected"}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* GCP 2.0 */}
-                            <div className="glass-panel rounded-3xl p-6 relative overflow-hidden h-48">
-                                <div className="flex justify-between items-center mb-2">
-                                    <div className="flex items-center gap-2 text-emerald-300">
-                                        <Icon name="globe-2" size={18} />
-                                        <span className="text-xs font-bold tracking-widest uppercase">GCP 2.0</span>
-                                    </div>
-                                    <span className="text-[10px] font-mono text-emerald-400/60">LIVE VARIANCE</span>
-                                </div>
-                                <GCPGraph />
-                            </div>
-
-                        </div>
-
-                        {/* 3. RIGHT STACK */}
-                        <div className="md:col-span-3 flex flex-col gap-6">
-                            
-                            {/* Astrology */}
-                            <div 
-                                onClick={() => setSkyExpanded(true)}
-                                className="glass-panel rounded-3xl p-6 relative cursor-pointer group"
-                            >
-                                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-50 transition-opacity"><Icon name="maximize-2" size={16} className="text-cyan-400" /></div>
-                                <div className="flex items-center gap-2 text-cyan-300 mb-4">
-                                    <Icon name="star" size={18} />
-                                    <span className="text-xs font-bold tracking-widest uppercase">Sky</span>
-                                </div>
-                                <div className="space-y-3">
-                                    {planetInfo.slice(0, 3).map((p, i) => (
-                                        <div key={i} className="flex justify-between text-sm border-b border-white/5 pb-2">
-                                            <span className="text-slate-300 font-bold">{p.name}</span>
-                                            <span className="text-cyan-200/70 font-mono">{p.sign}</span>
-                                        </div>
-                                    ))}
-                                    <div className="text-xs text-center text-cyan-500/50 pt-2">Tap for full alignment</div>
-                                </div>
-                            </div>
-
-                            {/* Weather (New) */}
-                            {weatherData && (
-                                <div 
-                                    onClick={() => setWeatherExpanded(true)}
-                                    className="glass-panel rounded-3xl p-6 relative cursor-pointer group overflow-hidden"
-                                >
-                                    <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-50 transition-opacity"><Icon name="maximize-2" size={16} className="text-yellow-400" /></div>
-                                    <div className="flex items-center justify-between mb-2">
-                                        <div className="flex items-center gap-2 text-yellow-300">
-                                            <Icon name="cloud-sun" size={18} />
-                                            <span className="text-xs font-bold tracking-widest uppercase">Local</span>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <div className="weather-icon-anim text-4xl text-yellow-100">
-                                            <Icon name={getWeatherIcon(weatherData.current_weather.weathercode)} size={36} />
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="text-3xl font-mono font-bold text-white">{weatherData.current_weather.temperature}°C</div>
-                                            <div className="text-[10px] text-slate-400">WIND: {weatherData.current_weather.windspeed} km/h</div>
-                                        </div>
-                                    </div>
-                                    <div className="flex justify-between mt-3 pt-3 border-t border-white/10 text-[10px] text-slate-400 font-mono">
-                                        <div className="flex items-center gap-1"><Icon name="sunrise" size={10} /> {formatTime(weatherData.daily.sunrise[0])}</div>
-                                        <div className="flex items-center gap-1"><Icon name="sunset" size={10} /> {formatTime(weatherData.daily.sunset[0])}</div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Seismic */}
-                            <div className="glass-panel rounded-3xl p-6 relative overflow-hidden flex flex-col">
-                                <div className="flex items-center gap-2 text-rose-300 mb-4">
-                                    <Icon name="activity" size={18} />
-                                    <span className="text-xs font-bold tracking-widest uppercase">Seismic</span>
-                                </div>
-                                <SeismicGraph data={quakeData} />
-                                <div className="space-y-2 h-24 overflow-y-auto custom-scrollbar pr-1">
-                                    {quakeData.map((q, i) => (
-                                        <div key={i} className="flex flex-col text-xs bg-black/20 p-2 rounded border border-white/5 gap-1">
-                                            <div className="flex justify-between items-center">
-                                                <div className="truncate max-w-[70%] text-rose-100/80">
-                                                    {q.properties.place}
-                                                </div>
-                                                <div className={`font-bold font-mono px-1.5 rounded ${q.properties.mag > 4.5 ? 'bg-red-500/30 text-red-200' : 'bg-rose-500/20 text-rose-300'}`}>
-                                                    M{q.properties.mag.toFixed(1)}
-                                                </div>
-                                            </div>
-                                            <div className="text-[10px] text-slate-500 font-mono text-right">
-                                                {formatTime(q.properties.time)}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                        </div>
-
-                        {/* 4. NEWS TICKER */}
-                        <div className="md:col-span-12 mt-2">
-                            <div 
-                                onClick={() => setNewsExpanded(true)}
-                                className="relative glass-panel rounded-full h-12 flex items-center overflow-hidden border-pink-500/20 cursor-pointer hover:bg-slate-800/80 transition-colors"
-                            >
+                        {/* News Ticker */}
+                        <div className="col-span-12 mt-2">
+                            <div onClick={() => toggleExpand('news', true)} className="relative glass-panel rounded-full h-12 flex items-center overflow-hidden border-pink-500/20 cursor-pointer hover:bg-slate-800/80 transition-colors">
                                 <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-[#0f172a] to-transparent z-20 flex items-center pl-6 gap-2">
                                     <div className="w-2 h-2 bg-pink-500 rounded-full animate-pulse"></div>
                                     <span className="text-xs font-bold text-pink-400 tracking-widest hidden md:inline">NOOSPHERE</span>
                                 </div>
-                                
                                 <div className="flex w-full overflow-hidden">
                                     <div className="flex animate-marquee gap-8 items-center whitespace-nowrap pl-32 hover:pause">
                                         {[...newsData, ...newsData].map((item, i) => (
                                             <div key={i} className="flex items-center gap-3 text-sm font-mono text-pink-100/70">
                                                 <span className="text-pink-500/50">✦</span>
-                                                <span className={item.source === "NOOSPHERE NET" || item.source === "GAIA PULSE" ? "text-purple-300 font-bold" : ""}>
-                                                    {item.title}
-                                                </span>
+                                                <span className={item.source === "NOOSPHERE" || item.source === "GAIA" ? "text-purple-300 font-bold" : ""}>{item.title}</span>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
-                                
-                                <div className="absolute right-4 top-0 bottom-0 flex items-center z-30">
-                                    <Icon name="chevron-up" size={16} className="text-pink-400" />
-                                </div>
+                                <div className="absolute right-4 top-0 bottom-0 flex items-center z-30"><Icon name="chevron-up" size={16} className="text-pink-400" /></div>
                             </div>
                         </div>
-
                     </div>
 
-                    {/* --- MODALS --- */}
-
-                    {/* MOON */}
-                    {moonExpanded && (
-                        <Overlay title="Lunar Calendar" onClose={() => setMoonExpanded(false)}>
-                            <div className="grid grid-cols-7 gap-2 text-center text-xs font-mono mb-4 text-purple-300/50">
-                                <div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div><div>S</div>
-                            </div>
-                            <div className="grid grid-cols-7 gap-2">
-                                {monthlyMoons.map((m, i) => (
-                                    <div key={i} className={`aspect-square rounded-lg flex flex-col items-center justify-center border ${m.date === currentTime.getDate() ? 'bg-purple-500/20 border-purple-400' : 'bg-white/5 border-white/5'}`}>
-                                        <div className="text-[10px] text-slate-500 mb-1">{m.date}</div>
-                                        <div className="text-xl" title={m.name}>{m.icon}</div>
-                                    </div>
-                                ))}
-                            </div>
-                        </Overlay>
-                    )}
-
-                    {/* SOLAR */}
-                    {solarExpanded && (
-                        <Overlay title="Solar Activity (14 Days)" onClose={() => setSolarExpanded(false)}>
-                            <div className="space-y-4">
-                                {solarData && solarData.length > 0 ? solarData.map((flare, i) => (
-                                    <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5">
-                                        <div className="flex items-center gap-4">
-                                            <div className={`w-3 h-3 rounded-full ${flare.classType.startsWith('X') ? 'bg-red-500 shadow-[0_0_10px_red]' : flare.classType.startsWith('M') ? 'bg-orange-500' : 'bg-yellow-400'}`}></div>
-                                            <div>
-                                                <div className="font-bold text-slate-200">{flare.classType}</div>
-                                                <div className="text-xs text-slate-500">Region {flare.activeRegionNum}</div>
-                                            </div>
-                                        </div>
-                                        <div className="text-right font-mono text-sm text-slate-400">
-                                            <div>{new Date(flare.beginTime).toLocaleDateString()}</div>
-                                            <div className="text-xs opacity-50">{new Date(flare.beginTime).toLocaleTimeString()}</div>
-                                        </div>
-                                    </div>
-                                )) : (
-                                    <div className="text-center py-10 text-slate-500">No recent major flares detected.</div>
-                                )}
-                            </div>
-                        </Overlay>
-                    )}
-
-                    {/* SKY */}
-                    {skyExpanded && (
-                        <Overlay title="Full Planetary Alignment" onClose={() => setSkyExpanded(false)}>
-                            <div className="grid gap-3">
-                                {planetInfo.map((p, i) => (
-                                    <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-black/40 border border-white/10 hover:border-cyan-500/50 transition-colors">
-                                        <div className="flex items-center gap-4">
-                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-slate-900 ${
-                                                p.element === 'Fire' ? 'bg-red-400' :
-                                                p.element === 'Water' ? 'bg-blue-400' :
-                                                p.element === 'Air' ? 'bg-yellow-200' : 'bg-green-400'
-                                            }`}>
-                                                {p.name[0]}
-                                            </div>
-                                            <div>
-                                                <div className="font-bold text-slate-200">{p.name}</div>
-                                                <div className="text-xs text-cyan-300/70 uppercase tracking-widest">{p.element}</div>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="text-lg font-mono text-cyan-200">{p.sign}</div>
-                                            <div className="text-xs text-slate-500 font-mono">
-                                                {p.degree}° {p.isRetrograde ? <span className="text-red-400 ml-2 font-bold tracking-widest">RETROGRADE</span> : ""}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </Overlay>
-                    )}
-
-                    {/* WEATHER */}
-                    {weatherExpanded && weatherData && (
-                        <Overlay title="Sacramento Forecast" onClose={() => setWeatherExpanded(false)}>
-                            <div className="grid gap-4">
-                                {weatherData.daily.time.slice(0, 3).map((t, i) => (
-                                    <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-black/40 border border-white/10">
-                                        <div className="flex items-center gap-4">
-                                            <Icon name={getWeatherIcon(weatherData.daily.weathercode[i])} size={32} className="text-yellow-200" />
-                                            <div>
-                                                <div className="font-bold text-slate-200">
-                                                    {i === 0 ? "Today" : new Date(t + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' })}
-                                                </div>
-                                                <div className="text-xs text-slate-500">
-                                                    H: {weatherData.daily.temperature_2m_max[i]}° L: {weatherData.daily.temperature_2m_min[i]}°
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="text-right text-xs font-mono text-slate-400">
-                                            <div>Rise: {formatTime(weatherData.daily.sunrise[i])}</div>
-                                            <div>Set: {formatTime(weatherData.daily.sunset[i])}</div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </Overlay>
-                    )}
-
-                    {/* NEWS */}
-                    {newsExpanded && (
-                        <Overlay title="Global & Cosmic Signals" onClose={() => setNewsExpanded(false)}>
-                            <div className="space-y-4">
-                                {newsData.map((item, i) => (
-                                    <a key={i} href={item.link || "#"} target="_blank" rel="noreferrer" className="block p-4 rounded-xl bg-white/5 hover:bg-pink-500/10 border border-white/5 hover:border-pink-500/30 transition-all group">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/10 text-slate-300">
-                                                {item.source || "UNKNOWN SOURCE"}
-                                            </span>
-                                        </div>
-                                        <div className="font-bold text-pink-100 group-hover:text-pink-300 mb-2">
-                                            {item.title}
-                                        </div>
-                                    </a>
-                                ))}
-                            </div>
-                        </Overlay>
-                    )}
+                    {/* OVERLAYS */}
+                    {expanded.moon && <Overlay title="Lunar Calendar" onClose={() => toggleExpand('moon', false)}>
+                        <div className="grid grid-cols-7 gap-2 text-center text-xs font-mono mb-4 text-purple-300/50"><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div><div>S</div></div>
+                        <div className="grid grid-cols-7 gap-2">
+                            {monthlyMoons.map((m, i) => (
+                                <div key={i} className={`aspect-square rounded-lg flex flex-col items-center justify-center border ${m.date === currentTime.getDate() ? 'bg-purple-500/20 border-purple-400' : 'bg-white/5 border-white/5'}`}>
+                                    <div className="text-[10px] text-slate-500 mb-1">{m.date}</div><div className="text-xl" title={m.name}>{m.icon}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </Overlay>}
                     
-                    <footer className="mt-16 text-center opacity-40 hover:opacity-100 transition-opacity">
-                        <p className="text-[10px] font-mono tracking-[0.3em] text-purple-300">
-                            PORTAL ID: SAC-8812 • SYNCHRONIZED
-                        </p>
-                    </footer>
+                    {expanded.solar && <Overlay title="Solar Activity (30 Days)" onClose={() => toggleExpand('solar', false)}>
+                        <div className="space-y-4">
+                            {solarData && solarData.length > 0 ? solarData.map((flare, i) => (
+                                <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5">
+                                    <div className="flex items-center gap-4"><div className={`w-3 h-3 rounded-full ${flare.classType[0] === 'X' ? 'bg-red-500' : 'bg-orange-500'}`}></div><div><div className="font-bold text-slate-200">{flare.classType}</div><div className="text-xs text-slate-500">Region {flare.activeRegionNum}</div></div></div>
+                                    <div className="text-right font-mono text-sm text-slate-400"><div>{new Date(flare.beginTime).toLocaleDateString()}</div></div>
+                                </div>
+                            )) : <div className="text-center py-10 text-slate-500">No recent major flares.</div>}
+                        </div>
+                    </Overlay>}
+                    
+                    {expanded.sky && <Overlay title="Full Planetary Alignment" onClose={() => toggleExpand('sky', false)}>
+                        <div className="grid gap-3">
+                            {planetInfo.map((p, i) => (
+                                <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-black/40 border border-white/10">
+                                    <div className="flex items-center gap-4"><div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-slate-900 ${p.element==='Fire'?'bg-red-400':p.element==='Water'?'bg-blue-400':p.element==='Air'?'bg-yellow-200':'bg-green-400'}`}>{p.name[0]}</div><div><div className="font-bold text-slate-200">{p.name}</div><div className="text-xs text-cyan-300/70 uppercase">{p.element}</div></div></div>
+                                    <div className="text-right"><div className="text-lg font-mono text-cyan-200">{p.sign}</div><div className="text-xs text-slate-500 font-mono">{p.degree}° {p.isRetrograde&&<span className="text-red-400 ml-2 font-bold bg-red-900/40 px-2 py-0.5 rounded">RETROGRADE</span>}</div></div>
+                                </div>
+                            ))}
+                        </div>
+                    </Overlay>}
+                    
+                    {expanded.weather && weatherData && <Overlay title={`Forecast: ${location.name.split(',')[0]}`} onClose={() => toggleExpand('weather', false)}>
+                        <div className="grid gap-4">
+                            {weatherData.daily.time.slice(0, 3).map((t, i) => (
+                                <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-black/40 border border-white/10">
+                                    <div className="flex items-center gap-4"><Icon name={getWeatherIcon(weatherData.daily.weathercode[i])} size={32} className="text-yellow-200" /><div><div className="font-bold text-slate-200">{i === 0 ? "Today" : new Date(t + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' })}</div><div className="text-xs text-slate-500">H: {weatherData.daily.temperature_2m_max[i]}°F L: {weatherData.daily.temperature_2m_min[i]}°F</div></div></div>
+                                    <div className="text-right text-xs font-mono text-slate-400"><div>Rise: {formatTime(weatherData.daily.sunrise[i])}</div><div>Set: {formatTime(weatherData.daily.sunset[i])}</div></div>
+                                </div>
+                            ))}
+                        </div>
+                    </Overlay>}
+                    
+                    {expanded.news && <Overlay title="Global & Cosmic Signals" onClose={() => toggleExpand('news', false)}>
+                        <div className="space-y-4">
+                            {newsData.map((item, i) => (
+                                <a key={i} href={item.link !== "#" ? item.link : null} target="_blank" rel="noreferrer" className="block p-4 rounded-xl bg-white/5 hover:bg-pink-500/10 border border-white/5 hover:border-pink-500/30 transition-all">
+                                    <div className="flex justify-between items-start mb-2"><span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/10 text-slate-300">{item.source || "SIGNAL"}</span></div>
+                                    <div className="font-bold text-pink-100">{item.title}</div>
+                                </a>
+                            ))}
+                        </div>
+                    </Overlay>}
 
+                    <footer className="mt-16 text-center opacity-40 hover:opacity-100 transition-opacity">
+                        <p className="text-[10px] font-mono tracking-[0.3em] text-purple-300">PORTAL ID: SAC-8812 • SYNCHRONIZED</p>
+                    </footer>
                 </main>
             </div>
         );
