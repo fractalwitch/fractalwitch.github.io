@@ -237,6 +237,63 @@
         );
     });
 
+    // --- ISOLATED CLOCK COMPONENT (prevents page-wide re-renders) ---
+    const ClockDisplay = memo(({ timezone, location }) => {
+        const [currentTime, setCurrentTime] = useState(new Date());
+        const [timeFormat, setTimeFormat] = useState(() => {
+            const saved = localStorage.getItem('portal_time_format');
+            return saved || '24hr';
+        });
+
+        useEffect(() => {
+            const t = setInterval(() => setCurrentTime(new Date()), 1000);
+            return () => clearInterval(t);
+        }, []);
+
+        useEffect(() => {
+            localStorage.setItem('portal_time_format', timeFormat);
+        }, [timeFormat]);
+
+        const toggleTimeFormat = () => {
+            setTimeFormat(prev => prev === '24hr' ? '12hr' : '24hr');
+        };
+
+        const getFormattedTime = () => {
+            if (timeFormat === '24hr') {
+                return currentTime.toLocaleTimeString('en-US', { 
+                    hour12: false, 
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    timeZone: timezone 
+                });
+            } else {
+                return currentTime.toLocaleTimeString('en-US', { 
+                    hour12: true, 
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    timeZone: timezone 
+                });
+            }
+        };
+
+        return (
+            <div className="flex flex-col items-center md:items-end">
+                <div 
+                    onClick={toggleTimeFormat}
+                    className="time-clock text-4xl font-mono text-white tracking-widest"
+                    title={`Click to switch to ${timeFormat === '24hr' ? '12-hour' : '24-hour'} format`}
+                >
+                    {getFormattedTime()}
+                </div>
+                <div className="flex items-center gap-2 text-purple-300/50 text-xs uppercase tracking-[0.2em] mt-1">
+                    <span>{currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: timezone })}</span>
+                    <span className="text-[8px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300/70">{timeFormat === '24hr' ? 'MIL' : 'STD'}</span>
+                </div>
+            </div>
+        );
+    });
+
     // --- DAILY DESIRES COMPONENT ---
     const DailyDesires = memo(({ desires, setDesires }) => {
         const [newDesire, setNewDesire] = useState('');
@@ -354,12 +411,9 @@
             country: "US"
         });
         
-        // Time state with format toggle
-        const [currentTime, setCurrentTime] = useState(new Date());
-        const [timeFormat, setTimeFormat] = useState(() => {
-            const saved = localStorage.getItem('portal_time_format');
-            return saved || '24hr'; // Default to 24hr military
-        });
+        // Static calculation time - only updates every 5 minutes for astronomical calculations
+        // (Moon phase and planets don't change noticeably every second)
+        const [calcTime, setCalcTime] = useState(new Date());
         
         const [solarData, setSolarData] = useState(null);
         const [quakeData, setQuakeData] = useState([]);
@@ -401,19 +455,14 @@
             localStorage.setItem('portal_desires', JSON.stringify(desires));
         }, [desires]);
 
-        // Save time format preference
-        useEffect(() => {
-            localStorage.setItem('portal_time_format', timeFormat);
-        }, [timeFormat]);
-
         useEffect(() => {
             if (divineMode) document.body.classList.add('divine-mode');
             else document.body.classList.remove('divine-mode');
         }, [divineMode]);
 
-        // Clock Tick
+        // Update calculation time every 5 minutes (astronomical data doesn't need second-by-second updates)
         useEffect(() => {
-            const t = setInterval(() => setCurrentTime(new Date()), 1000);
+            const t = setInterval(() => setCalcTime(new Date()), 300000); // 5 minutes
             return () => clearInterval(t);
         }, []);
 
@@ -475,7 +524,7 @@
 
         // Planetary Engine (Keplerian -> Geocentric)
         const planetInfo = useMemo(() => {
-            const date = currentTime;
+            const date = calcTime;
             const time = date.getTime();
             const jd = (time / 86400000) - (date.getTimezoneOffset() / 1440) + 2440587.5;
             const D = jd - 2451543.5;
@@ -545,16 +594,16 @@
                     isRetrograde: isRetro
                 };
             });
-        }, [currentTime]);
+        }, [calcTime]);
 
         const moonInfo = useMemo(() => {
-            const jd = (currentTime.getTime() / 86400000) - (currentTime.getTimezoneOffset() / 1440) + 2440587.5;
+            const jd = (calcTime.getTime() / 86400000) - (calcTime.getTimezoneOffset() / 1440) + 2440587.5;
             const daysSinceNew = jd - 2451549.5; 
             const progress = (daysSinceNew % 29.53059) / 29.53059;
             const phaseIndex = Math.floor(progress * 8);
             const phases = [{name:"New Moon",icon:"🌑"},{name:"Waxing Crescent",icon:"🌒"},{name:"First Quarter",icon:"🌓"},{name:"Waxing Gibbous",icon:"🌔"},{name:"Full Moon",icon:"🌕"},{name:"Waning Gibbous",icon:"🌖"},{name:"Last Quarter",icon:"🌗"},{name:"Waning Crescent",icon:"🌘"}];
             return { ...phases[phaseIndex], illumination: ((Math.sin(progress * Math.PI * 2 - Math.PI / 2) + 1) * 50).toFixed(1), age: (progress * 29.53).toFixed(1), rawProgress: progress };
-        }, [currentTime]);
+        }, [calcTime]);
 
         const getMonthlyMoons = () => {
             const moons = [];
@@ -571,37 +620,10 @@
             }
             return moons;
         };
-        const monthlyMoons = useMemo(() => getMonthlyMoons(), [currentTime]);
+        const monthlyMoons = useMemo(() => getMonthlyMoons(), [calcTime]);
 
         const formatTime = (t) => new Date(t).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: location.timezone });
         const getWeatherIcon = (c) => c === 0 ? "sun" : c < 3 ? "cloud-sun" : c < 50 ? "cloud" : c < 80 ? "cloud-rain" : "cloud-lightning";
-
-        // Time format toggle function
-        const toggleTimeFormat = () => {
-            setTimeFormat(prev => prev === '24hr' ? '12hr' : '24hr');
-        };
-
-        // Format time based on current setting
-        const getFormattedTime = () => {
-            if (timeFormat === '24hr') {
-                // Full 24hr military time: HH:MM:SS
-                return currentTime.toLocaleTimeString('en-US', { 
-                    hour12: false, 
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    timeZone: location.timezone 
-                });
-            } else {
-                // Abbreviated 12hr: h:MM AM/PM
-                return currentTime.toLocaleTimeString('en-US', { 
-                    hour12: true, 
-                    hour: 'numeric',
-                    minute: '2-digit',
-                    timeZone: location.timezone 
-                });
-            }
-        };
 
         // --- HANDLERS ---
 
@@ -808,18 +830,8 @@
                             </div>
                         </div>
                         <div className="flex flex-col items-center md:items-end">
-                            {/* CLICKABLE TIME CLOCK */}
-                            <div 
-                                onClick={toggleTimeFormat}
-                                className="time-clock text-4xl font-mono text-white tracking-widest"
-                                title={`Click to switch to ${timeFormat === '24hr' ? '12-hour' : '24-hour'} format`}
-                            >
-                                {getFormattedTime()}
-                            </div>
-                            <div className="flex items-center gap-2 text-purple-300/50 text-xs uppercase tracking-[0.2em] mt-1">
-                                <span>{currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: location.timezone })}</span>
-                                <span className="text-[8px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300/70">{timeFormat === '24hr' ? 'MIL' : 'STD'}</span>
-                            </div>
+                            {/* ISOLATED CLOCK COMPONENT - prevents page-wide re-renders */}
+                            <ClockDisplay timezone={location.timezone} />
                             
                             <div className="flex gap-2 mt-4">
                                 <button 
@@ -875,7 +887,7 @@
                         <div className="grid grid-cols-7 gap-2 text-center text-xs font-mono mb-4 text-purple-300/50"><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div><div>S</div></div>
                         <div className="grid grid-cols-7 gap-2">
                             {monthlyMoons.map((m, i) => (
-                                <div key={i} className={`aspect-square rounded-lg flex flex-col items-center justify-center border ${m.date === currentTime.getDate() ? 'bg-purple-500/20 border-purple-400' : 'bg-white/5 border-white/5'}`}>
+                                <div key={i} className={`aspect-square rounded-lg flex flex-col items-center justify-center border ${m.date === calcTime.getDate() ? 'bg-purple-500/20 border-purple-400' : 'bg-white/5 border-white/5'}`}>
                                     <div className="text-[10px] text-slate-500 mb-1">{m.date}</div><div className="text-xl" title={m.name}>{m.icon}</div>
                                 </div>
                             ))}
