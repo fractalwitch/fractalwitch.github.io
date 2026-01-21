@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐍 VENUS // REVIVED</title>
+    <style>
+        body {
+            margin: 0;
+            background: #000;
+            overflow: hidden;
+            cursor: crosshair;
+            font-family: 'Courier New', monospace;
+        }
+        canvas {
+            display: block;
+        }
+        #ui {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            mix-blend-mode: exclusion;
+            text-align: center;
+            z-index: 10;
+        }
+        h1 {
+            color: #fff;
+            font-size: 4rem;
+            margin: 0;
+            opacity: 0;
+            letter-spacing: 10px;
+            text-shadow: 0 0 20px #ff00ff;
+            transition: opacity 0.1s;
+        }
+        .flash {
+            animation: flashText 0.2s infinite;
+        }
+        @keyframes flashText {
+            0% { opacity: 1; color: #ff00ff; text-shadow: 5px 0 #00ff00; }
+            50% { opacity: 0; }
+            100% { opacity: 1; color: #00ff00; text-shadow: -5px 0 #ff00ff; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui">
+        <h1 id="hiss-text">SSSSSS</h1>
+    </div>
+    <canvas id="c"></canvas>
+
+    <script>
+        const c = document.getElementById('c');
+        const x = c.getContext('2d');
+        const ui = document.getElementById('hiss-text');
+        
+        let w, h;
+        let t = 0;
+        let mouse = { x: 0, y: 0, down: false };
+        const tentacles = [];
+        const N = 60; // Number of serpent limbs
+
+        function resize() {
+            w = c.width = window.innerWidth;
+            h = c.height = window.innerHeight;
+            mouse.x = w/2;
+            mouse.y = h/2;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Segment {
+            constructor(parent, i, len) {
+                this.parent = parent;
+                this.i = i;
+                this.len = len;
+                this.angle = 0;
+                this.phase = i * 0.2;
+            }
+            update(targetX, targetY) {
+                // The Serpent Logic: Follow the hunger (target)
+                let dx = targetX - this.parent.x;
+                let dy = targetY - this.parent.y;
+                let targetAngle = Math.atan2(dy, dx);
+                
+                // Wiggle factor
+                let wiggle = Math.sin(t * 0.1 + this.phase) * (mouse.down ? 0.5 : 0.1);
+                
+                // Mix target angle and wiggle
+                this.angle = this.angle * 0.8 + (targetAngle + wiggle) * 0.2;
+
+                this.x = this.parent.x + Math.cos(this.angle) * this.len;
+                this.y = this.parent.y + Math.sin(this.angle) * this.len;
+            }
+        }
+
+        class Tentacle {
+            constructor() {
+                this.x = w/2; 
+                this.y = h/2;
+                this.segments = [];
+                this.numSegs = 30;
+                
+                let prev = this;
+                for(let i=0; i<this.numSegs; i++) {
+                    let s = new Segment(prev, i, 5 + i/2);
+                    this.segments.push(s);
+                    prev = s;
+                }
+                
+                // Venus Colors: Alien Green to Hot Pink
+                this.baseHue = Math.random() > 0.5 ? 120 : 320; 
+            }
+            
+            update() {
+                // Head follows mouse with delay
+                let dx = mouse.x - this.x;
+                let dy = mouse.y - this.y;
+                
+                // When "Hissing" (mouse down), move faster/chaos
+                let speed = mouse.down ? 0.15 : 0.05;
+                
+                this.x += dx * speed;
+                this.y += dy * speed;
+
+                let targetX = mouse.x;
+                let targetY = mouse.y;
+
+                // Inverse kinematics-ish ripple
+                for(let i=0; i<this.numSegs; i++) {
+                    let s = this.segments[i];
+                    // Each segment targets the one AFTER it in the previous frame
+                    // Creating the drag effect
+                    s.update(targetX, targetY);
+                    targetX = s.x;
+                    targetY = s.y;
+                }
+            }
+
+            draw() {
+                x.beginPath();
+                x.moveTo(this.x, this.y);
+                
+                for(let i=0; i<this.numSegs; i++) {
+                    let s = this.segments[i];
+                    x.lineTo(s.x, s.y);
+                }
+
+                // Dynamic coloring
+                let hue = this.baseHue + Math.sin(t * 0.05) * 40;
+                let sat = 100;
+                let light = mouse.down ? 70 : 50;
+                let alpha = mouse.down ? 0.8 : 0.4;
+                
+                x.strokeStyle = `hsla(${hue}, ${sat}%, ${light}%, ${alpha})`;
+                x.lineWidth = mouse.down ? 3 : 1;
+                x.stroke();
+                
+                // The "Eyes" (Venus Eyes from book cover)
+                if (mouse.down) {
+                    let tip = this.segments[this.numSegs-1];
+                    x.fillStyle = '#fff';
+                    x.beginPath();
+                    x.arc(tip.x, tip.y, 2, 0, Math.PI*2);
+                    x.fill();
+                }
+            }
+        }
+
+        for(let i=0; i<N; i++) tentacles.push(new Tentacle());
+
+        // Interaction
+        ['mousedown', 'touchstart'].forEach(e => 
+            window.addEventListener(e, () => {
+                mouse.down = true;
+                ui.style.opacity = 1;
+                ui.classList.add('flash');
+                document.body.style.background = '#1a001a'; // Dark Velvet
+            })
+        );
+        ['mouseup', 'touchend'].forEach(e => 
+            window.addEventListener(e, () => {
+                mouse.down = false;
+                ui.style.opacity = 0;
+                ui.classList.remove('flash');
+                document.body.style.background = '#000';
+            })
+        );
+        
+        window.addEventListener('mousemove', e => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+        window.addEventListener('touchmove', e => {
+            mouse.x = e.touches[0].clientX;
+            mouse.y = e.touches[0].clientY;
+        });
+
+        function loop() {
+            // Trail effect (The "Slur" of motion)
+            x.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            x.fillRect(0, 0, w, h);
+            
+            x.globalCompositeOperation = 'lighter';
+            
+            t++;
+            
+            tentacles.forEach(tent => {
+                tent.update();
+                tent.draw();
+            });
+            
+            x.globalCompositeOperation = 'source-over';
+            requestAnimationFrame(loop);
+        }
+        loop();
+
+    </script>
+</body>
+</html>
