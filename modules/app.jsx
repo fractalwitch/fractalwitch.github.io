@@ -364,7 +364,7 @@ const CelestialPortal = () => {
                 <div className="absolute w-full animate-marquee whitespace-nowrap">
                   {newsData.length > 0 ? newsData.map((headline, i) => (
                     <span key={i} className="mx-8 text-sm font-mono text-pink-100/80">
-                      <span className="text-pink-500 mr-2">>>></span>
+                      <span className="text-pink-500 mr-2">{'>>>'}</span>
                       {headline}
                     </span>
                   )) : (
