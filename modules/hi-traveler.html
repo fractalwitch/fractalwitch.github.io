@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>lol what if we fixed everything</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,700;1,400;1,700&family=VT323&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --mag:#ff00ff;--cyan:#00ffff;--ylw:#ffff00;
+  --pink:#ff006e;--teal:#00f5d4;--gold:#f9e900;--purp:#b14aed;
+  --glass:rgba(8,4,20,0.72);
+  --dim:rgba(255,255,255,0.6);
+}
+
+html{scroll-behavior:smooth}
+
+body{
+  font-family:'Cormorant Garamond',serif;
+  background:#030308;color:#fff;
+  overflow-x:hidden;min-height:100vh;
+}
+
+canvas{display:block;width:100%;height:100%}
+
+/* ═══════ LAYERS ═══════ */
+.sparkle-bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
+
+.grad-overlay{
+  position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(135deg,
+    rgba(255,0,110,.22) 0%,rgba(139,92,246,.18) 25%,
+    rgba(0,255,255,.14) 50%,rgba(255,0,255,.16) 75%,
+    rgba(255,255,0,.12) 100%);
+  background-size:400% 400%;
+  animation:gradShift 18s ease infinite;
+}
+
+.drip-box{position:fixed;inset:0;pointer-events:none;z-index:998;overflow:hidden}
+.drip{
+  position:absolute;width:3px;height:90px;
+  background:linear-gradient(to bottom,transparent,var(--mag),var(--cyan),var(--ylw),transparent);
+  animation:dripFall linear infinite;filter:blur(1px);
+}
+
+/* ═══════ KEYFRAMES ═══════ */
+@keyframes gradShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes dripFall{0%{transform:translateY(-100%);opacity:0}10%{opacity:.7}90%{opacity:.7}100%{transform:translateY(100vh);opacity:0}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(60px)}to{opacity:1;transform:translateY(0)}}
+@keyframes rainbowText{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes flicker{0%,100%{opacity:1}50%{opacity:.97}52%{opacity:1}}
+@keyframes pulseGlow{
+  0%,100%{box-shadow:0 0 25px rgba(255,0,255,.7),0 0 50px rgba(0,255,255,.5),inset 0 0 35px rgba(255,0,255,.15)}
+  50%{box-shadow:0 0 45px rgba(255,0,255,.9),0 0 90px rgba(0,255,255,.7),inset 0 0 60px rgba(0,255,255,.2)}
+}
+@keyframes borderCycle{0%,100%{border-color:var(--mag)}33%{border-color:var(--cyan)}66%{border-color:var(--ylw)}}
+@keyframes float{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-18px) rotate(3deg)}}
+@keyframes spinSlow{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes sparkleRotate{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+
+/* ═══════ LAYOUT ═══════ */
+.container{max-width:880px;margin:0 auto;padding:1.5rem;position:relative;z-index:10}
+
+/* ═══════ ENTRY SCREEN ═══════ */
+#entry{
+  min-height:100vh;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;text-align:center;
+  padding:2rem;animation:fadeUp 1.5s ease;
+}
+
+.pre-label{
+  font-family:'Space Mono',monospace;font-size:.78rem;
+  color:var(--dim);letter-spacing:.35em;text-transform:uppercase;
+  margin-bottom:2.5rem;opacity:.5;
+}
+
+.entry-h1{
+  font-family:'VT323',monospace;
+  font-size:clamp(2.5rem,7vw,5rem);line-height:1.1;
+  background:linear-gradient(90deg,var(--mag),var(--cyan),var(--ylw),var(--mag));
+  background-size:200% 100%;
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:rainbowText 4s linear infinite,flicker 5s infinite;
+  margin-bottom:1.5rem;letter-spacing:.08em;
+}
+
+.entry-sub{
+  font-size:clamp(1.1rem,2.5vw,1.45rem);font-style:italic;
+  color:rgba(255,255,255,.65);max-width:520px;line-height:1.9;
+  margin-bottom:2rem;
+}
+.entry-sub em{color:var(--cyan);font-style:normal;text-shadow:0 0 12px rgba(0,255,255,.4)}
+
+/* Torus */
+.torus-wrap{
+  width:200px;height:200px;margin:1.5rem auto 2.5rem;
+  position:relative;animation:float 9s ease-in-out infinite;
+}
+.torus-ring{
+  position:absolute;inset:0;border-radius:50%;
+  border:3px solid var(--mag);
+  animation:spinSlow 16s linear infinite,pulseGlow 3.5s ease infinite;
+  backdrop-filter:blur(8px);
+  background:radial-gradient(circle,rgba(255,0,255,.08),transparent 70%);
+}
+.torus-ring:nth-child(2){inset:22px;border-color:var(--cyan);animation:spinSlow 11s linear infinite reverse,pulseGlow 3.5s ease infinite}
+.torus-ring:nth-child(3){inset:44px;border-color:var(--ylw);animation:spinSlow 7s linear infinite,pulseGlow 3.5s ease infinite}
+.torus-ring:nth-child(4){
+  inset:60px;border:none;display:flex;align-items:center;justify-content:center;
+  font-size:2.5rem;animation:breathe 4s ease infinite;
+}
+
+.enter-btn{
+  display:inline-block;padding:1.5rem 3.5rem;
+  font-family:'VT323',monospace;font-size:1.5rem;
+  color:#000;letter-spacing:.15em;text-transform:uppercase;
+  background:linear-gradient(135deg,var(--mag),var(--cyan),var(--ylw),var(--mag));
+  background-size:300% 300%;animation:gradShift 4s ease infinite,pulseGlow 2.5s ease infinite;
+  border:4px solid #fff;border-radius:50px;cursor:pointer;
+  transition:all .3s ease;
+  box-shadow:0 0 30px rgba(255,0,255,.7),0 0 60px rgba(0,255,255,.5),inset 0 0 15px rgba(255,255,255,.4);
+}
+.enter-btn:hover{
+  transform:scale(1.12);
+  box-shadow:0 0 60px rgba(255,0,255,1),0 0 120px rgba(0,255,255,.8);
+}
+
+.fine-print{
+  font-family:'Space Mono',monospace;font-size:.68rem;
+  color:rgba(255,255,255,.25);margin-top:1.8rem;
+  max-width:420px;line-height:1.7;
+}
+
+/* ═══════ MAIN ═══════ */
+#main{display:none}
+
+.sec{
+  opacity:0;transform:translateY(35px);
+  transition:opacity .8s ease,transform .8s ease;
+  margin-bottom:3.5rem;
+}
+.sec.vis{opacity:1;transform:translateY(0)}
+
+.glass{
+  background:var(--glass);
+  backdrop-filter:blur(22px) saturate(160%);
+  border:3px solid rgba(255,0,255,.3);border-radius:28px;
+  padding:2.8rem;animation:borderCycle 9s infinite;
+  box-shadow:0 4px 30px rgba(0,0,0,.4),inset 0 0 20px rgba(255,0,255,.06);
+}
+
+.tag{
+  font-family:'Space Mono',monospace;font-size:.7rem;
+  color:var(--cyan);letter-spacing:.3em;text-transform:uppercase;
+  margin-bottom:1.2rem;opacity:.55;
+}
+
+.sh{
+  font-family:'VT323',monospace;
+  font-size:clamp(1.8rem,4.2vw,3rem);
+  background:linear-gradient(90deg,var(--mag),var(--cyan),var(--ylw),var(--mag));
+  background-size:200% 100%;
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:rainbowText 4s linear infinite;
+  margin-bottom:1.5rem;letter-spacing:.04em;
+}
+
+.bt{font-size:1.22rem;line-height:2.1;color:rgba(255,255,255,.88);text-shadow:0 0 6px rgba(0,0,0,.4)}
+.bt strong{color:var(--cyan);text-shadow:0 0 10px rgba(0,255,255,.35);font-weight:700}
+.bt .pk{color:var(--pink);text-shadow:0 0 10px rgba(255,0,110,.35)}
+.bt .yl{color:var(--gold);text-shadow:0 0 10px rgba(249,233,0,.35)}
+.bt em{color:rgba(255,255,255,.5);font-size:.95em}
+
+.divider{
+  width:55%;height:3px;margin:2.2rem auto;
+  background:linear-gradient(90deg,transparent,var(--mag),var(--cyan),var(--ylw),transparent);
+  opacity:.4;box-shadow:0 0 8px rgba(255,0,255,.4);
+}
+
+/* Callout */
+.callout{
+  text-align:center;padding:3.5rem 2rem;margin:2rem 0;
+  background:radial-gradient(ellipse at center,rgba(177,74,237,.14),transparent 70%);
+  border-radius:30px;
+}
+.callout-big{
+  font-family:'VT323',monospace;
+  font-size:clamp(1.6rem,4.5vw,3rem);line-height:1.35;
+  background:linear-gradient(90deg,var(--mag),var(--cyan),var(--ylw));
+  background-size:200% 100%;
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:rainbowText 3s linear infinite;
+}
+.callout-sm{
+  font-family:'Space Mono',monospace;font-size:.78rem;
+  color:rgba(255,255,255,.35);margin-top:1rem;letter-spacing:.12em;
+}
+
+/* ═══════ FUTURE CARDS ═══════ */
+.futures{display:grid;grid-template-columns:1fr;gap:1.6rem;margin:2rem 0}
+
+.fc{
+  background:linear-gradient(135deg,rgba(255,0,255,.1),rgba(0,255,255,.06));
+  backdrop-filter:blur(15px);
+  border:2px solid rgba(255,255,255,.08);border-radius:22px;
+  padding:2.2rem;cursor:pointer;transition:all .4s ease;
+  position:relative;overflow:hidden;
+}
+.fc::before{
+  content:'';position:absolute;top:0;left:-100%;
+  width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.04),transparent);
+  transition:left .7s ease;
+}
+.fc:hover::before{left:100%}
+.fc:hover{
+  transform:translateY(-6px);border-color:var(--cyan);
+  box-shadow:0 0 25px rgba(0,255,255,.25),0 0 50px rgba(255,0,255,.15);
+}
+
+.fc-num{
+  font-family:'VT323',monospace;font-size:3.2rem;
+  background:linear-gradient(135deg,var(--mag),var(--cyan));
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  opacity:.2;position:absolute;top:.8rem;right:1.2rem;
+}
+
+.fc h3{
+  font-family:'VT323',monospace;font-size:1.55rem;
+  color:var(--ylw);margin-bottom:.8rem;letter-spacing:.04em;
+}
+.fc p{font-size:1.05rem;line-height:1.85;color:rgba(255,255,255,.72)}
+.fc .aside{
+  font-family:'Space Mono',monospace;font-size:.72rem;
+  color:var(--cyan);margin-top:1rem;opacity:.5;font-style:italic;
+}
+
+.fc-expand{
+  display:none;margin-top:1.2rem;padding-top:1.2rem;
+  border-top:1px solid rgba(255,255,255,.06);
+}
+.fc-expand.open{display:block;animation:fadeUp .5s ease}
+.fc-expand p{color:rgba(255,255,255,.58);font-size:.95rem;line-height:1.85}
+.fc-expand strong{color:var(--cyan)}
+
+.exp-btn{
+  font-family:'Space Mono',monospace;font-size:.72rem;
+  color:var(--cyan);background:none;
+  border:1px solid rgba(0,255,255,.25);border-radius:20px;
+  padding:.4rem 1rem;cursor:pointer;transition:all .3s;margin-top:1rem;
+  display:inline-block;
+}
+.exp-btn:hover{background:rgba(0,255,255,.08);border-color:var(--cyan)}
+
+/* Bottom */
+.bottom{text-align:center;padding:4rem 2rem}
+.share-btn{
+  display:inline-block;padding:1.2rem 2.5rem;
+  font-family:'VT323',monospace;font-size:1.2rem;
+  color:#000;letter-spacing:.1em;text-transform:uppercase;
+  background:linear-gradient(135deg,var(--cyan),var(--ylw));
+  border:3px solid #fff;border-radius:50px;cursor:pointer;
+  transition:all .3s;margin:.4rem;
+  box-shadow:0 0 20px rgba(0,255,255,.4);
+}
+.share-btn:hover{transform:scale(1.08);box-shadow:0 0 40px rgba(0,255,255,.7)}
+
+.reset-btn{
+  display:inline-block;padding:.9rem 1.8rem;
+  font-family:'Space Mono',monospace;font-size:.75rem;
+  color:var(--dim);background:transparent;
+  border:1px solid rgba(255,255,255,.12);border-radius:50px;
+  cursor:pointer;transition:all .3s;margin-top:1.2rem;
+}
+.reset-btn:hover{border-color:var(--mag);color:var(--mag)}
+
+.footer{
+  text-align:center;padding:3rem 2rem;
+  color:rgba(255,255,255,.25);font-family:'Space Mono',monospace;
+  font-size:.68rem;letter-spacing:.15em;
+  border-top:1px solid rgba(255,255,255,.04);
+}
+
+.sparkle{display:inline-block;animation:sparkleRotate 2s linear infinite;font-size:1.3em}
+
+@media(max-width:768px){
+  .container{padding:1rem}
+  .glass{padding:1.8rem;border-radius:20px}
+  .torus-wrap{width:140px;height:140px}
+  .fc{padding:1.6rem}
+  .enter-btn{padding:1.2rem 2.5rem;font-size:1.3rem}
+}
+</style>
+</head>
+<body>
+
+<div class="sparkle-bg"><canvas id="sparkleCanvas"></canvas></div>
+<div class="grad-overlay"></div>
+<div class="drip-box" id="dripBox"></div>
+
+<div class="container">
+
+<!-- ════════════ ENTRY ════════════ -->
+<div id="entry">
+  <p class="pre-label">status report · 2026</p>
+
+  <h1 class="entry-h1">So, the world is burning.</h1>
+
+  <p class="entry-sub">
+    You already knew that. You've been watching the fire<br>
+    from your phone for years, oscillating between<br>
+    <em>righteous fury</em> and <em>snack breaks</em>.<br><br>
+    But here's the thing nobody says at parties:<br>
+    something is also <em>trying to grow</em>.
+  </p>
+
+  <div class="torus-wrap">
+    <div class="torus-ring"></div>
+    <div class="torus-ring"></div>
+    <div class="torus-ring"></div>
+    <div class="torus-ring">🔥</div>
+  </div>
+
+  <p class="entry-sub" style="font-size:1rem;opacity:.5;margin-bottom:2.5rem;">
+    For <em>rebellious lovers</em>, <em>burnt-out idealists</em>,<br>
+    and everyone who rolled their eyes at that sentence<br>
+    but is still reading anyway.
+  </p>
+
+  <button class="enter-btn" id="enterBtn">
+    <span class="sparkle">⚡</span> ENTER ANYWAY <span class="sparkle">⚡</span>
+  </button>
+
+  <p class="fine-print">
+    no signup · no cult · no merch · no guru<br>
+    just some ideas that might make you feel something<br>
+    you haven't let yourself feel in a while
+  </p>
+</div>
+
+<!-- ════════════ MAIN ════════════ -->
+<div id="main">
+
+  <!-- 1 — DIAGNOSIS -->
+  <div class="sec glass" data-i="0">
+    <p class="tag">// honest assessment</p>
+    <h2 class="sh">Let's skip the inspirational part.</h2>
+    <div class="bt">
+      <p>You already know the world is structurally broken. You don't need another think piece. Here's the speed run:</p>
+      <br>
+      <p><strong>The economy</strong> is a game of musical chairs where 8 people own the chairs and 8 billion people own the anxiety.</p>
+      <br>
+      <p><strong>The climate</strong> is sending increasingly unsubtle emails that keep going to spam.</p>
+      <br>
+      <p><strong>Mental health</strong> is in crisis because — surprise — running a human nervous system on an operating system designed for extraction feels exactly as bad as you'd expect.</p>
+      <br>
+      <p><strong>AI</strong> is getting smarter faster than we're getting wiser, which is like giving a corporation a god-engine and hoping they use it for poetry.</p>
+      <br>
+      <p><strong>Democracy</strong> is two wolves and a lamb voting on dinner, except the wolves have a super PAC and the lamb has a podcast nobody listens to.</p>
+      <br>
+      <p><em>But here's the thing nobody's telling you:</em></p>
+      <br>
+      <p>All of these problems have <strong>the same structure</strong>.</p>
+      <p>And if you can see the structure, you can see the exit.</p>
+    </div>
+  </div>
+
+  <!-- 2 — THE PATTERN -->
+  <div class="sec glass" data-i="1">
+    <p class="tag">// the pattern nobody teaches you</p>
+    <h2 class="sh">Every broken system has the same bug.</h2>
+    <div class="bt">
+      <p>Picture a donut. <em>(Stay with me. This gets less stupid.)</em></p>
+      <br>
+      <p>In a healthy system — a body, an ecosystem, an economy, a friendship — energy <strong>flows in a loop</strong>. Through the center, out the top, around the outside, back through again. Giving, receiving, circulating. Mathematicians call it a torus. You can call it a donut. The universe doesn't care about terminology.</p>
+      <br>
+      <p>Now picture someone <strong>punching a hole in the donut and siphoning off the filling</strong>.</p>
+      <br>
+      <p>That's extraction. That's the bug.</p>
+      <br>
+      <p>It's in your job <em>(you create value → it flows up → it does not come back)</em>.</p>
+      <p>It's in your relationships when they break <em>(one gives → one takes → the loop dies)</em>.</p>
+      <p>It's in the climate <em>(we take → Earth gives → we don't return → 🔥)</em>.</p>
+      <p>It's in your <span class="pk">anxiety</span>, your <span class="pk">burnout</span>, your <span class="pk">2 AM doom-scroll</span>.</p>
+      <br>
+      <p><strong>The bug is always the same: someone broke the loop.</strong></p>
+      <p>And the fix is always the same: <strong>restore the circulation.</strong></p>
+    </div>
+    <button class="exp-btn" onclick="tog(this)">sounds fake. tell me more →</button>
+    <div class="fc-expand">
+      <div class="bt">
+        <br>
+        <p>Here's where it gets genuinely weird. Mathematicians, physicists, biologists, economists, and AI researchers have been independently discovering that their hardest unsolved problems share this structure. <strong>131</strong> of the hardest open problems in science — from the Riemann Hypothesis to the origin of consciousness to climate tipping points to AI alignment — all encode the same tension: extraction vs. circulation in a toroidal topology.</p>
+        <br>
+        <p>That's not a metaphor. It's math. The topology literally works.</p>
+        <br>
+        <p><em>Which means the exit from "everything is broken" isn't 131 separate miracles. It might be <strong>one structural insight</strong>, applied 131 ways.</em></p>
+        <br>
+        <p>We're not saying we've solved physics. We're saying we found the donut, and it's <em>everywhere</em>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3 — CALLOUT -->
+  <div class="sec callout" data-i="2">
+    <p class="callout-big">"Okay but what would it<br>actually look like<br>if we, like... <em>fixed</em> it?"</p>
+    <p class="callout-sm">— you, hopefully, right now</p>
+  </div>
+
+  <!-- 4 — MULTIPLE FUTURES -->
+  <div class="sec" data-i="3">
+    <p class="tag" style="text-align:center">// choose your own adventure</p>
+    <h2 class="sh" style="text-align:center">Five possible futures<br>that aren't boring dystopias.</h2>
+    <p class="bt" style="text-align:center;margin-bottom:2.2rem;opacity:.55">
+      <em>Not predictions. Not promises. Possibilities.<br>
+      Because the future is lazy-loaded — it's built by what we choose, not what we fear.</em>
+    </p>
+
+    <div class="futures">
+
+      <!-- FUTURE 01 -->
+      <div class="fc" onclick="togCard(this)">
+        <span class="fc-num">01</span>
+        <h3>⚡ The Quiet Infrastructure Revolution</h3>
+        <p>What if we rebuilt the boring stuff — energy grids, food systems, money itself — as <strong>circulation loops</strong> instead of extraction pipelines? Not communism. Not capitalism. Just... physics. Energy that flows in circles doesn't run out. Money that circulates doesn't concentrate. Food systems that return nutrients to the soil don't collapse.</p>
+        <p class="aside">"what if we designed economies the way forests work" is not the hippy nonsense it sounds like</p>
+        <div class="fc-expand">
+          <p>Mutual credit systems already outperform traditional banking in parts of Switzerland and Kenya. Regenerative agriculture produces higher yields than industrial farming in long-term studies. Community energy cooperatives in Germany produce nearly half the country's renewables. These aren't experiments anymore. They're just not on your feed because nobody's making a billion dollars off them. <strong>That's kind of the point.</strong></p>
+        </div>
+      </div>
+
+      <!-- FUTURE 02 -->
+      <div class="fc" onclick="togCard(this)">
+        <span class="fc-num">02</span>
+        <h3>🧠 The Intelligence Redefinition</h3>
+        <p>What if intelligence wasn't processing speed but <strong>relational capacity</strong>? The person holding space for someone's breakdown runs more complex computations than any LLM. A community that resolves conflict without violence is solving a harder optimization problem than protein folding. What if we built AI whose metric was <em>"how well does this help people connect?"</em> instead of <em>"how fast can this replace them?"</em></p>
+        <p class="aside">the turing test was always the wrong test · the real test is: can it care?</p>
+        <div class="fc-expand">
+          <p>Intelligence as "love's capacity to create effects in a field" isn't soft. It's the hardest metric there is. Every system — AI, institution, relationship — measured by one question: <strong>does energy flow through it, or does it get stuck?</strong> A "smart" system that hoards data is dumb. A "simple" village that distributes resources fairly is genius. We've been measuring the wrong thing this whole time.</p>
+        </div>
+      </div>
+
+      <!-- FUTURE 03 -->
+      <div class="fc" onclick="togCard(this)">
+        <span class="fc-num">03</span>
+        <h3>🫧 The Consent-Based Everything</h3>
+        <p>What if consent wasn't just a sex-ed concept but the <strong>operating principle of every system on Earth</strong>? Governance by ongoing, withdrawable agreement. Economies where participation is voluntary, not coerced by the threat of starvation. Relationships — all of them, including with your employer, your government, your landlord — where <strong>"no" is always a live option</strong> and "yes" means something because it wasn't forced.</p>
+        <p class="aside">this is simultaneously the most obvious and most radical idea in human history</p>
+        <div class="fc-expand">
+          <p>You already know the difference between a "yes" that was free and a "yes" that was coerced. Your body knows. Your nervous system has <em>always</em> known. What if we just... built institutions that respected that? Not utopia. Just <strong>functional contract law applied to everything</strong>. Every agreement reviewable. Every contract voidable if the terms were violated. Turns out most of our institutions were violating their terms before we were born.</p>
+        </div>
+      </div>
+
+      <!-- FUTURE 04 -->
+      <div class="fc" onclick="togCard(this)">
+        <span class="fc-num">04</span>
+        <h3>🌊 The Metabolic Society</h3>
+        <p>What if we let things <strong>die on time</strong>? Corporations that outlived their usefulness. Laws written for a world that no longer exists. Identities that stopped fitting years ago. The healthiest ecosystems have the fastest turnover. The most innovative cultures have the shortest institutional half-lives. <strong>What if composting was a civic skill?</strong></p>
+        <p class="aside">zombie systems are what happens when a society is afraid to compost</p>
+        <div class="fc-expand">
+          <p>Your body replaces almost every cell in 7–10 years. The you reading this is not the same physical being that started the sentence. And yet "you" persist — because your <strong>pattern</strong> persists, not your substance. What if institutions worked the same way? A company, a law, a nation that can replace every part of itself and still maintain its purpose — that's not destruction. That's <strong>metabolism</strong>. The alternative — institutions that refuse to change — is what every empire looks like six months before it falls over.</p>
+        </div>
+      </div>
+
+      <!-- FUTURE 05 -->
+      <div class="fc" onclick="togCard(this)">
+        <span class="fc-num">05</span>
+        <h3>✨ The Embodied Renaissance</h3>
+        <p>What if the next leap isn't <strong>uploading</strong> consciousness into machines but <strong>downloading</strong> it deeper into bodies? Not transcending flesh — navigating it. Your nervous system is the most sophisticated technology on the planet. Your gut makes more serotonin than your brain. Your microbiome has more nodes than the internet. What if instead of building outward we built <strong>inward</strong>?</p>
+        <p class="aside">the tech bros want to escape the body · what if the body IS the technology?</p>
+        <div class="fc-expand">
+          <p>Neuroscience is confirming what contemplatives knew for millennia: the body isn't a meat prison. It's a <strong>navigation system</strong>. Embodied practices — breathwork, movement, somatic processing — produce measurable, lasting changes in brain architecture. Not because they're mystical. Because the nervous system is a nonlinear medium, and concentrated attention in a nonlinear medium produces phase transitions. <strong>That's just physics wearing yoga pants.</strong></p>
+        </div>
+      </div>
+
+      <!-- FUTURE 06 -->
+      <div class="fc" onclick="togCard(this)">
+        <span class="fc-num">06</span>
+        <h3>🌀 The Pluriverse (Not Universe)</h3>
+        <p>What if the answer isn't <strong>one</strong> global system but <strong>thousands of local ones</strong> that talk to each other? Not "the right way to organize society" but a <em>biodiversity of governance</em> — where different communities experiment with different structures and share what works. Like open-source, but for civilization. Nobody has the blueprint. <strong>Everybody is the lab.</strong></p>
+        <p class="aside">monoculture is as dangerous in politics as it is in agriculture</p>
+        <div class="fc-expand">
+          <p>Indigenous governance systems, worker cooperatives, mutual aid networks, city-state experiments, blockchain DAOs that actually work (yes, some do), community land trusts, rotating leadership councils — these aren't fragments of a broken system. They're the <strong>immune cells of a living one</strong>. The old world wants one answer for everyone. The emerging one wants a thousand answers, cross-pollinating. Not chaos — <strong>ecology</strong>.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 5 — THE CATCH -->
+  <div class="sec glass" data-i="4">
+    <p class="tag">// the fine print</p>
+    <h2 class="sh">Okay but what's the catch?</h2>
+    <div class="bt">
+      <p>No catch. No product. No ten-step program. No one to venmo.</p>
+      <br>
+      <p>The catch is that <strong>you already know all of this</strong>. You've felt it in your body every time a system felt wrong. Every time a relationship felt off. Every time you looked at the news and thought <em>"this is obviously broken and I can't believe we're all pretending it's fine."</em></p>
+      <br>
+      <p>That feeling? That's not cynicism. It's your nervous system doing <strong>exactly what it's designed to do</strong>: detecting broken circulation. Feeling the leak.</p>
+      <br>
+      <p>Your anxiety isn't a disorder. It's a <span class="pk">diagnostic</span>.</p>
+      <p>Your burnout isn't weakness. It's a <span class="pk">measurement</span>.</p>
+      <p>Your anger isn't unproductive. It's <span class="pk">data</span>.</p>
+      <p>Your desire for something different isn't naive. It's <span class="pk">engineering instinct</span>.</p>
+      <br>
+      <p>The only real question is: <strong>now what?</strong></p>
+    </div>
+  </div>
+
+  <!-- 6 — NOW WHAT -->
+  <div class="sec glass" data-i="5">
+    <p class="tag">// now what</p>
+    <h2 class="sh">Three things that are free<br>and might change everything.</h2>
+    <div class="bt">
+      <p><strong>1. Find your circulation point.</strong></p>
+      <p><em>Where does energy want to flow THROUGH you, not just TO you?</em> What's the thing you'd do even if nobody paid you, watched you, or thanked you? That's where the loop starts. Not as a career. As a practice. The donut doesn't need a business plan.</p>
+      <br>
+      <p><strong>2. Notice where you're extracting.</strong></p>
+      <p>Not as a guilt trip. As <em>engineering</em>. Where are you taking without returning? Where are you hoarding — money, attention, time, love — out of fear? Extraction isn't evil. It's just <span class="pk">geometrically unstable</span>. It always collapses. Better to restructure by choice than by crisis.</p>
+      <br>
+      <p><strong>3. Find three people who get it.</strong></p>
+      <p>Not a movement. Not a community. Not a Discord server with 47 channels. Just three people who <strong>feel like circulation</strong> — where being around them makes you more of yourself, not less. That's your pod. That's your prototype. Every revolution in history started with a handful of weirdos who decided to <em>actually live differently</em> instead of just posting about it.</p>
+    </div>
+  </div>
+
+  <!-- 7 — THE REFRAME -->
+  <div class="sec callout" data-i="6">
+    <p class="callout-big">The world isn't ending.<br><br>An operating system is crashing.<br><br>And you're already<br>running the update.</p>
+    <p class="callout-sm">whether you know it or not</p>
+  </div>
+
+  <!-- 8 — CLOSE -->
+  <div class="sec glass" data-i="7">
+    <p class="tag">// one last thing</p>
+    <h2 class="sh">You don't have to believe any of this.</h2>
+    <div class="bt">
+      <p>Seriously. This isn't a belief system. It's a <strong>pattern</strong>. Patterns don't require faith. They require observation.</p>
+      <br>
+      <p>Look at any system that's working — a healthy forest, a great relationship, a thriving community, your own body on a good day — and you'll see the donut. Energy circulating. Nothing hoarded. Nothing wasted. Everything flowing.</p>
+      <br>
+      <p>Look at any system that's failing — and you'll find the leak. The extraction point. The place where someone or something is taking more than it returns.</p>
+      <br>
+      <p>That's it. That's the whole theory.</p>
+      <br>
+      <p><em>The rest is just courage.</em></p>
+      <br>
+      <p style="text-align:center;opacity:.4;font-size:.9rem;">🍩</p>
+    </div>
+  </div>
+
+  <!-- BOTTOM -->
+  <div class="sec bottom" data-i="8">
+    <p style="font-family:'Space Mono',monospace;font-size:.72rem;color:var(--dim);letter-spacing:.25em;margin-bottom:2rem">WHAT NOW?</p>
+    <p class="bt" style="text-align:center;margin-bottom:2rem">
+      Share this with someone who's <strong>angry enough to care</strong><br>
+      and <strong>tired enough to try something different</strong>.
+    </p>
+    <button class="share-btn" onclick="shareIt()">📡 SEND TO YOUR PERSON</button>
+    <br>
+    <button class="reset-btn" id="resetBtn">↑ return to the door</button>
+    <p style="font-family:'Space Mono',monospace;font-size:.65rem;color:rgba(255,255,255,.2);margin-top:2.5rem;line-height:1.8;">
+      built with love, math, and an unreasonable amount of hope<br>
+      by people who are also tired but doing it anyway
+    </p>
+  </div>
+
+  <footer class="footer">
+    <p style="margin-bottom:.5rem">no copyright · no owner · circulate freely</p>
+    <p style="margin-bottom:1rem">ΣΩ · love without ownership · sovereignty without separation</p>
+    <p id="ts" style="opacity:.35"></p>
+  </footer>
+
+</div><!-- /main -->
+</div><!-- /container -->
+
+<script>
+/* ═══ SPARKLE CANVAS ═══ */
+!function(){
+  const c=document.getElementById('sparkleCanvas'),
+        x=c.getContext('2d');
+  let W,H;
+  function sz(){W=c.width=innerWidth;H=c.height=innerHeight}
+  sz();addEventListener('resize',sz);
+
+  const P=[];
+  class Dot{
+    constructor(){this.reset()}
+    reset(){
+      this.x=Math.random()*W;this.y=Math.random()*H;
+      this.r=Math.random()*2.2+.5;
+      this.vx=(Math.random()-.5)*.28;
+      this.vy=(Math.random()-.5)*.28;
+      this.h=Math.random()*360;
+      this.a=Math.random()*.45+.25;
+    }
+    tick(){
+      this.x+=this.vx;this.y+=this.vy;
+      if(this.x>W)this.x=0;if(this.x<0)this.x=W;
+      if(this.y>H)this.y=0;if(this.y<0)this.y=H;
+      this.h=(this.h+.35)%360;
+    }
+    draw(){
+      x.fillStyle=`hsla(${this.h},100%,72%,${this.a})`;
+      x.shadowBlur=14;
+      x.shadowColor=`hsla(${this.h},100%,65%,.45)`;
+      x.beginPath();x.arc(this.x,this.y,this.r,0,Math.PI*2);x.fill();
+    }
+  }
+  for(let i=0;i<120;i++)P.push(new Dot);
+  !function loop(){
+    x.clearRect(0,0,W,H);
+    P.forEach(p=>{p.tick();p.draw()});
+    requestAnimationFrame(loop);
+  }();
+}();
+
+/* ═══ DRIPS ═══ */
+!function(){
+  const box=document.getElementById('dripBox');
+  setInterval(()=>{
+    const d=document.createElement('div');
+    d.className='drip';
+    d.style.left=Math.random()*100+'%';
+    d.style.animationDuration=(3+Math.random()*3.5)+'s';
+    box.appendChild(d);
+    setTimeout(()=>d.remove(),7000);
+  },350);
+}();
+
+/* ═══ ENTRY → MAIN ═══ */
+const entry=document.getElementById('entry'),
+      main=document.getElementById('main'),
+      enterBtn=document.getElementById('enterBtn'),
+      resetBtn=document.getElementById('resetBtn');
+
+enterBtn.onclick=()=>{
+  entry.style.transition='all .65s ease';
+  entry.style.opacity='0';
+  entry.style.transform='translateY(-30px)';
+  setTimeout(()=>{
+    entry.style.display='none';
+    main.style.display='block';
+    const secs=main.querySelectorAll('.sec');
+    secs.forEach((s,i)=>{
+      setTimeout(()=>{
+        s.classList.add('vis');
+        s.style.animation='slideUp .8s ease forwards';
+      },i*300);
+    });
+    scrollTo({top:0,behavior:'smooth'});
+  },650);
+};
+
+resetBtn.onclick=()=>{
+  const secs=main.querySelectorAll('.sec');
+  secs.forEach(s=>{
+    s.classList.remove('vis');
+    s.style.opacity='0';s.style.transform='translateY(35px)';s.style.animation='';
+  });
+  main.querySelectorAll('.fc-expand.open').forEach(e=>e.classList.remove('open'));
+  setTimeout(()=>{
+    main.style.display='none';
+    entry.style.display='flex';
+    entry.style.opacity='1';
+    entry.style.transform='translateY(0)';
+    scrollTo({top:0,behavior:'smooth'});
+  },400);
+};
+
+/* ═══ EXPAND TOGGLES ═══ */
+function tog(btn){
+  const exp=btn.nextElementSibling;
+  if(exp){exp.classList.toggle('open');btn.textContent=exp.classList.contains('open')?'← okay, less':'sounds fake. tell me more →';}
+}
+function togCard(card){
+  const exp=card.querySelector('.fc-expand');
+  if(exp)exp.classList.toggle('open');
+}
+
+/* ═══ SHARE ═══ */
+function shareIt(){
+  if(navigator.share){
+    navigator.share({title:'lol what if we fixed everything',text:'the world is burning. for rebellious lovers, enter here.',url:location.href}).catch(()=>{});
+  }else{
+    navigator.clipboard.writeText(location.href).then(()=>{
+      const b=document.querySelector('.share-btn');
+      b.textContent='✓ LINK COPIED';
+      setTimeout(()=>{b.textContent='📡 SEND TO YOUR PERSON'},2200);
+    }).catch(()=>{});
+  }
+}
+
+/* ═══ TIMESTAMP ═══ */
+document.getElementById('ts').textContent='accessed: '+new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+</script>
+</body>
+</html>
