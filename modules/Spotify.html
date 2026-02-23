@@ -982,7 +982,13 @@ async function parseToken(){
 // SPOTIFY API
 // ═══════════════════════════════════════════════════
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
+let _lastApiCall=0;
 async function apiGet(url, _retries=0){
+  // enforce minimum 400ms between ALL requests (stay well under 180/min)
+  const now=Date.now(), gap=now-_lastApiCall;
+  if(gap<400) await delay(400-gap);
+  _lastApiCall=Date.now();
+
   let r;
   try{
     const controller=new AbortController();
@@ -995,11 +1001,13 @@ async function apiGet(url, _retries=0){
   }
   if(r.status===401||r.status===403) throw new Error('auth_expired');
   if(r.status===429){
-    if(_retries>=4) throw new Error('Spotify rate limiting too aggressive — wait a few minutes and try again');
-    const retryAfter=parseInt(r.headers.get('Retry-After')||'1');
-    const wait=Math.max(retryAfter, Math.pow(2,_retries))*1000; // exponential backoff
-    setLoadStatus(`rate limited — waiting ${Math.round(wait/1000)}s (retry ${_retries+1}/4)...`,0.01);
+    if(_retries>=5) throw new Error('Still rate limited — wait 2 minutes then try again');
+    const retryAfter=parseInt(r.headers.get('Retry-After')||'30');
+    const wait=Math.max(retryAfter*1000, 30000); // minimum 30s wait on 429
+    const secs=Math.round(wait/1000);
+    setLoadStatus(`rate limited — cooling down ${secs}s (${_retries+1}/5)...`,0.01);
     await delay(wait);
+    _lastApiCall=0; // reset throttle after long wait
     return apiGet(url, _retries+1);
   }
   if(!r.ok) throw new Error(`Spotify API ${r.status}`);
@@ -1026,7 +1034,6 @@ async function fetchAllLiked(){
     })));
     setLoadStatus(`RECEIVING TRANSMISSIONS... ${tracks.length} / ${total}`,tracks.length/total);
     url=d.next;
-    if(tracks.length%500===0) await delay(80);
   }
   return tracks;
 }
