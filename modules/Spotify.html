@@ -649,6 +649,11 @@
     <div class="redirect-hint">add <span>http://localhost:3000</span> (desktop) or your hosted URL to Spotify redirect URIs</div>
   </div>
 
+  <div class="input-group">
+    <div class="input-label">Last.fm API Key <span style="color:rgba(255,255,255,0.2);font-size:0.55rem;letter-spacing:0.1em">FREE at last.fm/api/account/create</span></div>
+    <input type="text" id="lastfm-key-input" class="input-field" placeholder="paste last.fm key for real genre data ✦" autocomplete="off" spellcheck="false"/>
+  </div>
+
   <button class="btn-conjure" onclick="initiateAuth().catch(e => showError(e.message))">
     <span>✦ OPEN THE PORTAL ✦</span>
   </button>
@@ -736,770 +741,600 @@
 
 <script>
 // ═══════════════════════════════════════════════════
-// CONFIG & STATE
+// STATE
 // ═══════════════════════════════════════════════════
 const SCOPES = 'user-library-read';
-let accessToken = null;
-let clientId = null;
-let songs = []; // { id, name, artist, uri, features }
-let colorMode = 'genre';
-let searchQuery = '';
+let accessToken=null, clientId=null, lastfmKey=null;
+let songs=[], colorMode='genre', searchQuery='';
 
-// Camera/viewport
-let camX = 0, camY = 0, camZoom = 1;
-let isDragging = false, dragStartX = 0, dragStartY = 0, dragCamX = 0, dragCamY = 0;
-let animFrame = null;
-let hoveredSong = null;
-let mouseX = 0, mouseY = 0;
+// Camera
+let camX=0, camY=0, camZoom=1;
+let isDragging=false, dragStartX=0, dragStartY=0, dragCamX=0, dragCamY=0;
+let hoveredSong=null, mouseX=0, mouseY=0;
 
-// Touch state
-const isMobile = () => window.matchMedia('(max-width: 768px)').matches || ('ontouchstart' in window);
-let lastTouchDist = null; // for pinch zoom
-let touchStartX = 0, touchStartY = 0;
-let touchMoved = false;
-let pinnedSong = -1; // tapped song on mobile
-let songCardUrl = null;
+// Touch
+const isMobile=()=>('ontouchstart' in window)||window.matchMedia('(max-width:768px)').matches;
+let lastTouchDist=null, touchStartX=0, touchStartY=0, touchMoved=false;
+let pinnedSong=-1, songCardUrl=null;
+
+// Positions + animated transitions
+let worldPositions=null;
+let posTransitions={};
+
+// ── FEATURE CACHE ─────────────────────────────────
+const CACHE_KEY='rs_features_v4';
+let featureCache={};
+
+function loadFeatureCache(){
+  try{featureCache=JSON.parse(localStorage.getItem(CACHE_KEY)||'{}');}
+  catch{featureCache={};}
+}
+let _saveTimer=null;
+function queueSave(){
+  clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(()=>{try{localStorage.setItem(CACHE_KEY,JSON.stringify(featureCache));}catch{}},2500);
+}
+
+// ── SYNTHETIC (deterministic seed) ───────────────
+function synth(track){
+  let h=0;
+  for(let i=0;i<track.id.length;i++) h=Math.imul(31,h)+track.id.charCodeAt(i)|0;
+  const r=(o=0)=>{let x=Math.sin(h+o)*43758.5453123;return x-Math.floor(x);};
+  const pop=(track.popularity||50)/100;
+  return{
+    valence:Math.max(.02,Math.min(.98,pop*.4+r(1)*.65)),
+    energy:Math.max(.02,Math.min(.98,pop*.3+r(2)*.72)),
+    danceability:Math.max(.02,Math.min(.98,pop*.35+r(3)*.62)),
+    tempo:80+r(4)*120, source:'synthetic',
+  };
+}
+
+// ── LASTFM TAG → FEATURES ─────────────────────────
+const TAG_MAP={
+  happy:{v:.85},upbeat:{v:.82},'feel good':{v:.80},cheerful:{v:.84},joyful:{v:.88},
+  fun:{v:.78},uplifting:{v:.82},euphoric:{v:.92},blissful:{v:.9},carefree:{v:.82},
+  sunny:{v:.82},playful:{v:.8},optimistic:{v:.78},bright:{v:.78},
+  sad:{v:.15},melancholy:{v:.14},melancholic:{v:.14},depressing:{v:.1},
+  heartbreak:{v:.14},grief:{v:.1},gloomy:{v:.12},somber:{v:.18},
+  dark:{v:.22,e:.55},haunting:{v:.25,e:.45},ominous:{v:.2,e:.55},
+  emotional:{v:.35},nostalgic:{v:.42},bittersweet:{v:.45},
+  romantic:{v:.65},love:{v:.72},dreamy:{v:.58,e:.32},ethereal:{v:.55,e:.3},
+  angry:{v:.2,e:.88},aggressive:{v:.22,e:.9},tense:{v:.3,e:.75},
+  mysterious:{v:.4,e:.45},eerie:{v:.25,e:.4},
+  hopeful:{v:.68},longing:{v:.42},wistful:{v:.45},yearning:{v:.38},
+  peaceful:{v:.72,e:.18},serene:{v:.75,e:.15},tranquil:{v:.73,e:.16},
+  energetic:{e:.88},intense:{e:.85},powerful:{e:.82},heavy:{e:.8},
+  driving:{e:.78},explosive:{e:.92},frantic:{e:.9},relentless:{e:.85},
+  calm:{e:.2},relaxing:{e:.15},chill:{e:.25},mellow:{e:.28},soft:{e:.22},
+  gentle:{e:.22},quiet:{e:.2},ambient:{e:.2,d:.25},meditative:{e:.15},
+  hypnotic:{e:.5,d:.65},atmospheric:{e:.3},soothing:{e:.18},
+  dance:{d:.85,e:.78},danceable:{d:.85},groovy:{d:.82},funky:{d:.8,v:.72},
+  rhythmic:{d:.75},bouncy:{d:.8,v:.78},infectious:{d:.82,v:.75},
+  electronic:{e:.72,d:.72},electro:{e:.75,d:.75},
+  techno:{e:.88,d:.88,v:.38},house:{e:.78,d:.85,v:.62},
+  'deep house':{e:.65,d:.82,v:.58},trance:{e:.82,d:.82,v:.55},
+  'drum and bass':{e:.9,d:.82},dnb:{e:.9,d:.82},
+  dubstep:{e:.85,d:.72,v:.35},edm:{e:.82,d:.82},
+  synthwave:{e:.65,d:.72,v:.55},retrowave:{e:.65,d:.7,v:.55},
+  darkwave:{e:.55,v:.25,d:.45},coldwave:{e:.5,v:.22,d:.42},
+  industrial:{e:.82,v:.22,d:.55},ebm:{e:.78,v:.28,d:.72},noise:{e:.9,v:.18},
+  'hip hop':{e:.65,d:.78},'hip-hop':{e:.65,d:.78},
+  rap:{e:.7,d:.75},trap:{e:.72,d:.82,v:.42},
+  'r&b':{e:.55,d:.72,v:.62},rnb:{e:.55,d:.72,v:.62},
+  soul:{e:.55,d:.65,v:.65},funk:{e:.65,d:.82,v:.72},
+  jazz:{e:.42,d:.55,v:.62},'jazz fusion':{e:.62,d:.62,v:.58},bebop:{e:.68,d:.58,v:.55},
+  blues:{e:.5,v:.35},classical:{e:.35,d:.25},orchestral:{e:.55,d:.3},
+  minimalism:{e:.28,d:.2,v:.55},neoclassical:{e:.42,d:.28},
+  acoustic:{e:.35},folk:{e:.38,v:.55},country:{e:.55,v:.62},bluegrass:{e:.62,v:.65,d:.58},
+  rock:{e:.78,d:.55},'classic rock':{e:.75,d:.58},'indie rock':{e:.65,d:.55,v:.52},
+  metal:{e:.92,d:.42,v:.28},'heavy metal':{e:.92,d:.4,v:.25},
+  'death metal':{e:.95,d:.38,v:.15},doom:{e:.6,d:.25,v:.18},stoner:{e:.55,v:.42},
+  punk:{e:.88,d:.55,v:.45},'post-punk':{e:.62,v:.32},hardcore:{e:.92,v:.28},
+  emo:{e:.65,v:.25},shoegaze:{e:.55,v:.42},'dream pop':{e:.45,v:.62,d:.45},
+  'post-rock':{e:.65,v:.45},indie:{e:.55,d:.52},alternative:{e:.58},
+  pop:{e:.65,d:.72,v:.65},'indie pop':{e:.58,d:.62,v:.62},
+  'lo-fi':{e:.28,d:.55,v:.52},lofi:{e:.28,d:.55,v:.52},chillhop:{e:.28,d:.58,v:.55},
+  latin:{e:.72,d:.82,v:.72},reggae:{e:.48,d:.75,v:.68},
+  reggaeton:{e:.78,d:.88,v:.65},cumbia:{e:.7,d:.85,v:.72},
+  salsa:{e:.75,d:.88,v:.78},'bossa nova':{e:.42,d:.62,v:.68},bossa:{e:.42,d:.62,v:.68},
+  samba:{e:.72,d:.88,v:.75},afrobeat:{e:.72,d:.82,v:.72},
+  gospel:{e:.65,d:.65,v:.82},spiritual:{e:.45,v:.72},
+  'new age':{e:.18,d:.2,v:.62},meditation:{e:.12,d:.15,v:.65},
+  psychedelic:{e:.62,v:.52},experimental:{e:.55},'avant-garde':{e:.52},
+  '80s':{v:.62,d:.72,e:.65},'90s':{v:.55,d:.68,e:.62},oldies:{v:.65,d:.62},
+  goth:{e:.55,v:.22},gothic:{e:.55,v:.22},witch:{e:.5,v:.3},
+  tribal:{e:.7,d:.78},ceremonial:{e:.5,v:.5},ritual:{e:.48,v:.42},
+  shamanic:{e:.52,v:.45},occult:{e:.45,v:.25},
+};
+
+function tagsToFeatures(tags){
+  let vS=0,eS=0,dS=0,vW=0,eW=0,dW=0;
+  for(const tag of tags.slice(0,10)){
+    const key=tag.name.toLowerCase().trim();
+    const w=Math.max(1,parseInt(tag.count)||1)/100;
+    const m=TAG_MAP[key]; if(!m) continue;
+    if(m.v!=null){vS+=m.v*w;vW+=w;}
+    if(m.e!=null){eS+=m.e*w;eW+=w;}
+    if(m.d!=null){dS+=m.d*w;dW+=w;}
+  }
+  return{valence:vW>0?vS/vW:null,energy:eW>0?eS/eW:null,danceability:dW>0?dS/dW:null};
+}
+
+// ── AUDIO PREVIEW ANALYSIS ────────────────────────
+async function analyzePreview(previewUrl){
+  if(!previewUrl) return null;
+  try{
+    const res=await fetch(previewUrl,{mode:'cors'});
+    if(!res.ok) return null;
+    const buf=await res.arrayBuffer();
+    const actx=new OfflineAudioContext(1,44100*30,44100);
+    const decoded=await actx.decodeAudioData(buf);
+    const data=decoded.getChannelData(0);
+    const len=data.length,sr=decoded.sampleRate;
+    // RMS energy
+    let rmsSum=0;
+    for(let i=0;i<len;i++) rmsSum+=data[i]*data[i];
+    const rms=Math.sqrt(rmsSum/len);
+    const energy=Math.min(1,rms*10);
+    // ZCR → brightness
+    let zcr=0;
+    for(let i=1;i<len;i++) if((data[i]>=0)!==(data[i-1]>=0)) zcr++;
+    const brightness=Math.min(1,(zcr/len)*15);
+    // Onset → tempo
+    const fSize=512,fE=[];
+    for(let i=0;i+fSize<len;i+=fSize){let e=0;for(let j=i;j<i+fSize;j++)e+=data[j]*data[j];fE.push(Math.sqrt(e/fSize));}
+    const onsets=[];
+    for(let i=2;i<fE.length-2;i++){const d=fE[i]-fE[i-1];if(d>0.015&&fE[i]>fE[i-2]&&(!onsets.length||onsets[onsets.length-1]!==i-1))onsets.push(i);}
+    let tempo=120;
+    if(onsets.length>3){
+      const intervals=[];
+      for(let i=1;i<Math.min(onsets.length,24);i++) intervals.push(onsets[i]-onsets[i-1]);
+      const med=intervals.sort((a,b)=>a-b)[Math.floor(intervals.length/2)];
+      let raw=60/((med*fSize)/sr);
+      while(raw<60)raw*=2;while(raw>180)raw/=2;
+      tempo=Math.max(60,Math.min(180,raw));
+    }
+    return{energy,brightness,tempo};
+  }catch{return null;}
+}
+
+// ── COMBINED FEATURES ─────────────────────────────
+function getFeatures(track){
+  const s=synth(track);
+  const c=featureCache[track.id]||{};
+  const lf=c.lastfm,au=c.audio;
+  if(!lf&&!au) return s;
+  let v=s.valence,e=s.energy,d=s.danceability,t=s.tempo;
+  if(lf){
+    if(lf.valence!=null)      v=s.valence*.12+lf.valence*.88;
+    if(lf.energy!=null)       e=s.energy*.12+lf.energy*.88;
+    if(lf.danceability!=null) d=s.danceability*.12+lf.danceability*.88;
+  }
+  if(au){
+    e=(lf?e*.35:e*.28)+au.energy*(lf?.65:.72);
+    t=au.tempo;
+    v=Math.max(.02,Math.min(.98,v+(au.brightness-.5)*.08));
+  }
+  return{
+    valence:Math.max(.02,Math.min(.98,v)),
+    energy:Math.max(.02,Math.min(.98,e)),
+    danceability:Math.max(.02,Math.min(.98,d)),
+    tempo:t,
+    source:au?'audio'+(lf?'+lastfm':''):(lf?'lastfm':'synthetic'),
+  };
+}
 
 // ═══════════════════════════════════════════════════
 // AMBIENT STARS
 // ═══════════════════════════════════════════════════
-(function initBgStars() {
-  const c = document.getElementById('bg-stars');
-  const ctx = c.getContext('2d');
-  let stars = [];
-
-  function resize() {
-    c.width = window.innerWidth;
-    c.height = window.innerHeight;
-    stars = Array.from({length: 200}, () => ({
-      x: Math.random() * c.width,
-      y: Math.random() * c.height,
-      r: Math.random() * 1.2,
-      a: Math.random(),
-      speed: 0.001 + Math.random() * 0.002
-    }));
-  }
-
-  function draw(t) {
-    ctx.clearRect(0, 0, c.width, c.height);
-    stars.forEach(s => {
-      s.a = 0.2 + 0.3 * Math.sin(t * s.speed * 1000);
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(255,255,255,${s.a})`;
-      ctx.fill();
-    });
-    requestAnimationFrame(draw);
-  }
-
-  window.addEventListener('resize', resize);
-  resize();
-  requestAnimationFrame(draw);
+(function(){
+  const c=document.getElementById('bg-stars'),cx=c.getContext('2d');let stars=[];
+  function resize(){c.width=innerWidth;c.height=innerHeight;stars=Array.from({length:200},()=>({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1.2,a:Math.random(),sp:.001+Math.random()*.002}));}
+  function draw(t){cx.clearRect(0,0,c.width,c.height);stars.forEach(s=>{s.a=.2+.3*Math.sin(t*s.sp*1000);cx.beginPath();cx.arc(s.x,s.y,s.r,0,Math.PI*2);cx.fillStyle=`rgba(255,255,255,${s.a})`;cx.fill();});requestAnimationFrame(draw);}
+  window.addEventListener('resize',resize);resize();requestAnimationFrame(draw);
 })();
 
 // ═══════════════════════════════════════════════════
-// AUTH — PKCE flow (implicit grant deprecated by Spotify)
+// AUTH — PKCE
 // ═══════════════════════════════════════════════════
+function generateRandom(n){const c='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~',a=new Uint8Array(n);crypto.getRandomValues(a);return Array.from(a,b=>c[b%c.length]).join('');}
+async function codeChallenge(v){const d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v));return btoa(String.fromCharCode(...new Uint8Array(d))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');}
 
-function generateRandom(length) {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
-  const arr = new Uint8Array(length);
-  crypto.getRandomValues(arr);
-  return Array.from(arr, b => chars[b % chars.length]).join('');
-}
-
-async function generateCodeChallenge(verifier) {
-  const data = new TextEncoder().encode(verifier);
-  const digest = await crypto.subtle.digest('SHA-256', data);
-  return btoa(String.fromCharCode(...new Uint8Array(digest)))
-    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-}
-
-async function initiateAuth() {
-  const input = document.getElementById('client-id-input').value.trim();
-  if (!input || input.length < 20) {
-    showError('please paste your Spotify Client ID above ✨');
-    return;
-  }
-  clientId = input;
-  localStorage.setItem('rs_client_id', clientId);
-
-  const verifier = generateRandom(64);
-  const challenge = await generateCodeChallenge(verifier);
-  localStorage.setItem('rs_verifier', verifier);
-
-  const redirectUri = `${window.location.origin}${window.location.pathname}`;
-  const params = new URLSearchParams({
-    client_id: clientId,
-    response_type: 'code',
-    redirect_uri: redirectUri,
-    scope: SCOPES,
-    code_challenge_method: 'S256',
-    code_challenge: challenge,
+async function initiateAuth(){
+  const id=document.getElementById('client-id-input').value.trim();
+  if(!id||id.length<20){showError('paste your Client ID above ✨');return;}
+  clientId=id;lastfmKey=document.getElementById('lastfm-key-input').value.trim()||null;
+  localStorage.setItem('rs_client_id',clientId);
+  if(lastfmKey) localStorage.setItem('rs_lastfm_key',lastfmKey);
+  const verifier=generateRandom(64);localStorage.setItem('rs_verifier',verifier);
+  const challenge=await codeChallenge(verifier);
+  window.location='https://accounts.spotify.com/authorize?'+new URLSearchParams({
+    client_id:clientId,response_type:'code',
+    redirect_uri:location.origin+location.pathname,scope:SCOPES,
+    code_challenge_method:'S256',code_challenge:challenge,
   });
-  window.location = `https://accounts.spotify.com/authorize?${params}`;
 }
-
-async function exchangeCodeForToken(code) {
-  const verifier = localStorage.getItem('rs_verifier');
-  const redirectUri = `${window.location.origin}${window.location.pathname}`;
-  const body = new URLSearchParams({
-    client_id: clientId,
-    grant_type: 'authorization_code',
-    code,
-    redirect_uri: redirectUri,
-    code_verifier: verifier,
-  });
-  const res = await fetch('https://accounts.spotify.com/api/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body,
-  });
-  const data = await res.json();
-  if (data.access_token) {
-    accessToken = data.access_token;
-    // store with expiry
-    localStorage.setItem('rs_token', accessToken);
-    localStorage.setItem('rs_token_exp', Date.now() + (data.expires_in - 60) * 1000);
-    localStorage.removeItem('rs_verifier');
-    return true;
-  }
+async function exchangeCode(code){
+  const r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_id:clientId,grant_type:'authorization_code',code,redirect_uri:location.origin+location.pathname,code_verifier:localStorage.getItem('rs_verifier')})});
+  const d=await r.json();
+  if(d.access_token){accessToken=d.access_token;localStorage.setItem('rs_token',accessToken);localStorage.setItem('rs_token_exp',Date.now()+(d.expires_in-60)*1000);localStorage.removeItem('rs_verifier');return true;}
   return false;
 }
-
-function showError(msg) {
-  const el = document.getElementById('error-msg');
-  el.textContent = msg;
-  el.style.display = 'block';
-}
-
-async function parseToken() {
-  // Check for PKCE callback code
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get('code');
-  const error = params.get('error');
-
-  if (error) {
-    showError(`Spotify error: ${error} — check your redirect URI matches exactly 💫`);
-    return false;
-  }
-
-  if (code) {
-    clientId = clientId || localStorage.getItem('rs_client_id');
-    window.history.replaceState({}, '', window.location.pathname);
-    show('loading-screen'); hide('login-screen');
-    setLoadStatus('AUTHENTICATING...', 0);
-    const ok = await exchangeCodeForToken(code);
-    if (!ok) {
-      hide('loading-screen'); show('login-screen');
-      showError('token exchange failed — try again 💫');
-      return false;
-    }
+function showError(msg){const e=document.getElementById('error-msg');e.textContent=msg;e.style.display='block';}
+async function parseToken(){
+  const p=new URLSearchParams(location.search),code=p.get('code'),err=p.get('error');
+  if(err){showError(`Spotify: ${err}`);return false;}
+  if(code){
+    clientId=localStorage.getItem('rs_client_id');
+    history.replaceState({},'',location.pathname);
+    show('loading-screen');hide('login-screen');
+    setLoadStatus('AUTHENTICATING...',0);
+    if(!await exchangeCode(code)){hide('loading-screen');show('login-screen');showError('auth failed — try again 💫');return false;}
     return true;
   }
-
-  // Check stored token
-  const stored = localStorage.getItem('rs_token');
-  const exp = parseInt(localStorage.getItem('rs_token_exp') || '0');
-  if (stored && Date.now() < exp) {
-    accessToken = stored;
-    clientId = clientId || localStorage.getItem('rs_client_id');
-    return true;
-  }
-
+  const stored=localStorage.getItem('rs_token'),exp=parseInt(localStorage.getItem('rs_token_exp')||'0');
+  if(stored&&Date.now()<exp){accessToken=stored;clientId=localStorage.getItem('rs_client_id');return true;}
   return false;
 }
 
 // ═══════════════════════════════════════════════════
-// DATA FETCHING
+// SPOTIFY API
 // ═══════════════════════════════════════════════════
-async function apiGet(url) {
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
-  if (res.status === 401) throw new Error('auth_expired');
-  if (res.status === 429) {
-    const retry = parseInt(res.headers.get('Retry-After') || '2');
-    await delay(retry * 1000);
-    return apiGet(url);
-  }
-  return res.json();
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+async function apiGet(url){
+  const r=await fetch(url,{headers:{Authorization:`Bearer ${accessToken}`}});
+  if(r.status===401) throw new Error('auth_expired');
+  if(r.status===429){await delay(parseInt(r.headers.get('Retry-After')||'2')*1000);return apiGet(url);}
+  return r.json();
 }
-
-const delay = ms => new Promise(r => setTimeout(r, ms));
-
-async function fetchAllLiked() {
-  setLoadStatus('SCANNING YOUR LIBRARY...', 0);
-  let url = 'https://api.spotify.com/v1/me/tracks?limit=50&offset=0';
-  let total = null;
-  let tracks = [];
-
-  while (url) {
-    const data = await apiGet(url);
-    if (!total) total = data.total;
-    tracks.push(...data.items.map(i => ({
-      id: i.track.id,
-      name: i.track.name,
-      artist: i.track.artists.map(a => a.name).join(', '),
-      uri: i.track.uri,
-      url: i.track.external_urls.spotify
+async function fetchAllLiked(){
+  setLoadStatus('SCANNING YOUR LIBRARY...',0);
+  let url='https://api.spotify.com/v1/me/tracks?limit=50',total=null,tracks=[];
+  while(url){
+    const d=await apiGet(url);
+    if(!total) total=d.total;
+    tracks.push(...d.items.map(i=>({
+      id:i.track.id,name:i.track.name,
+      artist:i.track.artists.map(a=>a.name).join(', '),
+      uri:i.track.uri,url:i.track.external_urls.spotify,
+      preview_url:i.track.preview_url,
+      popularity:i.track.popularity||50,
+      duration_ms:i.track.duration_ms||200000,
     })));
-    setLoadStatus(`RECEIVING TRANSMISSIONS... ${tracks.length} / ${total}`, tracks.length / total);
-    url = data.next;
-    if (tracks.length % 500 === 0) await delay(100); // gentle rate limit
+    setLoadStatus(`RECEIVING TRANSMISSIONS... ${tracks.length} / ${total}`,tracks.length/total);
+    url=d.next;
+    if(tracks.length%500===0) await delay(80);
   }
   return tracks;
 }
 
-async function fetchAudioFeatures(trackIds) {
-  const features = [];
-  const chunks = [];
-  for (let i = 0; i < trackIds.length; i += 100)
-    chunks.push(trackIds.slice(i, i + 100));
-
-  for (let i = 0; i < chunks.length; i++) {
-    const ids = chunks[i].join(',');
-    const data = await apiGet(`https://api.spotify.com/v1/audio-features?ids=${ids}`);
-    if (data.audio_features) features.push(...data.audio_features);
-    setLoadStatus(`ANALYZING SONIC SIGNATURES... ${Math.min((i+1)*100, trackIds.length)} / ${trackIds.length}`,
-      ((i+1) / chunks.length) * 1);
-    if (i % 5 === 0) await delay(50);
+// ═══════════════════════════════════════════════════
+// LASTFM PROGRESSIVE ENRICHMENT
+// ═══════════════════════════════════════════════════
+let enrichActive=false;
+async function runEnrichment(){
+  if(!lastfmKey||enrichActive) return;
+  enrichActive=true;
+  const toProcess=songs.filter(s=>!featureCache[s.id]?.lastfm);
+  updateHUD();
+  for(let i=0;i<toProcess.length;i++){
+    const s=toProcess[i];
+    try{
+      const url=`https://ws.audioscrobbler.com/2.0/?method=track.getTopTags&artist=${encodeURIComponent(s.artist)}&track=${encodeURIComponent(s.name)}&api_key=${lastfmKey}&format=json&autocorrect=1`;
+      const r=await fetch(url);
+      if(r.ok){
+        const d=await r.json();
+        const tags=d?.toptags?.tag;
+        if(tags&&tags.length){
+          const lf=tagsToFeatures(tags);
+          if(!featureCache[s.id]) featureCache[s.id]={};
+          featureCache[s.id].lastfm=lf;
+          featureCache[s.id].tags=tags.slice(0,5).map(t=>t.name);
+          const idx=songs.indexOf(s);
+          if(idx>=0&&worldPositions){
+            const oldPos={...worldPositions[idx]};
+            s.f=getFeatures(s);
+            const newPos=computeWorldPos(s);
+            if(Math.hypot(newPos.wx-oldPos.wx,newPos.wy-oldPos.wy)>.008){
+              startTransition(idx,oldPos,newPos);
+              worldPositions[idx]=newPos;
+            }
+          }
+          queueSave();
+        }
+      }
+    }catch{}
+    if(i%50===0) updateHUD();
+    await delay(340);
   }
-  return features;
+  enrichActive=false;updateHUD();
 }
 
-function setLoadStatus(msg, progress) {
-  document.getElementById('load-status').textContent = msg;
-  document.getElementById('load-progress-fill').style.width = `${Math.round(progress * 100)}%`;
-  document.getElementById('load-count').textContent = `${Math.round(progress * 100)}% complete`;
-}
-
-// ═══════════════════════════════════════════════════
-// MAIN BOOT
-// ═══════════════════════════════════════════════════
-async function boot() {
-  // restore clientId early
-  clientId = localStorage.getItem('rs_client_id');
-  if (clientId) document.getElementById('client-id-input').value = clientId;
-
-  const hasToken = await parseToken();
-  if (!hasToken) return; // stay on login
-
-  show('loading-screen');
-  hide('login-screen');
-
-  try {
-    const tracks = await fetchAllLiked();
-    const ids = tracks.map(t => t.id).filter(Boolean);
-    const features = await fetchAudioFeatures(ids);
-
-    // merge
-    const featureMap = {};
-    features.forEach(f => { if (f) featureMap[f.id] = f; });
-
-    songs = tracks
-      .filter(t => featureMap[t.id])
-      .map(t => ({ ...t, f: featureMap[t.id] }));
-
-    setLoadStatus('MAPPING THE CONSTELLATION...', 1);
-    await delay(600);
-    launchViz();
-
-  } catch(e) {
-    if (e.message === 'auth_expired') {
-      localStorage.removeItem('rs_token');
-      localStorage.removeItem('rs_token_exp');
-      show('login-screen');
-      hide('loading-screen');
-      showError('session expired — tap the portal again 💫');
-    } else {
-      document.getElementById('load-status').textContent = `ERROR: ${e.message}`;
+// ── ON-DEMAND AUDIO ANALYSIS ──────────────────────
+let audioQueue=new Set();
+async function requestAudioAnalysis(songIdx){
+  if(audioQueue.has(songIdx)) return;
+  const s=songs[songIdx];
+  if(!s?.preview_url||featureCache[s.id]?.audio) return;
+  audioQueue.add(songIdx);
+  const au=await analyzePreview(s.preview_url);
+  if(au){
+    if(!featureCache[s.id]) featureCache[s.id]={};
+    featureCache[s.id].audio=au;
+    const oldPos=worldPositions?{...worldPositions[songIdx]}:null;
+    s.f=getFeatures(s);
+    if(oldPos&&worldPositions){
+      const newPos=computeWorldPos(s);
+      if(Math.hypot(newPos.wx-oldPos.wx,newPos.wy-oldPos.wy)>.005){startTransition(songIdx,oldPos,newPos);worldPositions[songIdx]=newPos;}
     }
+    queueSave();
+    if(hoveredSong===songIdx) showTooltip(s,mouseX,mouseY);
+    if(pinnedSong===songIdx) showSongCard(s);
   }
+  audioQueue.delete(songIdx);
 }
 
 // ═══════════════════════════════════════════════════
 // VISUALIZATION
 // ═══════════════════════════════════════════════════
-const canvas = document.getElementById('viz-canvas');
-const ctx = canvas.getContext('2d');
+const canvas=document.getElementById('viz-canvas');
+const ctx=canvas.getContext('2d');
 
-function launchViz() {
-  hide('loading-screen');
-  canvas.classList.remove('hidden');
-  showHUD();
-
-  document.getElementById('hud-count').textContent = `${songs.length.toLocaleString()} songs mapped`;
-
-  resizeCanvas();
-  window.addEventListener('resize', () => { resizeCanvas(); render(); });
-  setupInteraction();
-  resetView();
-  renderLoop();
+function launchViz(){
+  hide('loading-screen');canvas.classList.remove('hidden');showHUD();
+  songs.forEach(s=>{s.f=getFeatures(s);});
+  worldPositions=songs.map(computeWorldPos);
+  updateHUD();resizeCanvas();
+  window.addEventListener('resize',resizeCanvas);
+  setupInteraction();resetView();renderLoop();
+  if(lastfmKey) setTimeout(runEnrichment,2000);
 }
+function resizeCanvas(){canvas.width=innerWidth;canvas.height=innerHeight;}
 
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+function computeWorldPos(s){
+  const f=s.f||getFeatures(s),m=.07;
+  let hx=0,hy=0;
+  for(let c of s.id){hx=Math.imul(31,hx)+c.charCodeAt(0)|0;hy=Math.imul(37,hy)+c.charCodeAt(0)|0;}
+  const jx=(Math.sin(hx*7.3)*43758.5%1-.5)*.016;
+  const jy=(Math.sin(hy*3.7)*43758.5%1-.5)*.016;
+  return{wx:m+f.valence*(1-m*2)+jx,wy:(1-m)-f.energy*(1-m*2)+jy};
 }
+function startTransition(idx,from,to){
+  posTransitions[idx]={fx:from.wx,fy:from.wy,tx:to.wx,ty:to.wy,start:performance.now(),dur:1800+Math.random()*600};
+}
+function getPos(idx){
+  const t=posTransitions[idx];if(!t) return worldPositions[idx];
+  const p=Math.min(1,(performance.now()-t.start)/t.dur);
+  const e=p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
+  if(p>=1){delete posTransitions[idx];return worldPositions[idx];}
+  return{wx:t.fx+(t.tx-t.fx)*e,wy:t.fy+(t.ty-t.fy)*e};
+}
+function worldToScreen(wx,wy){
+  const cx=canvas.width/2,cy=canvas.height/2,sz=Math.min(canvas.width,canvas.height)*.85;
+  return{sx:cx+(wx-.5)*sz*camZoom+camX,sy:cy+(wy-.5)*sz*camZoom+camY};
+}
+function getColor(s,mode){
+  const f=s.f;if(!f) return '#888';
+  const v=f.valence,e=f.energy,d=f.danceability,t=(f.tempo-60)/140;
+  if(mode==='energy'){const h=250-e*220;return`hsl(${h},80%,${40+e*30}%)`;}
+  if(mode==='tempo'){const h=240-t*200;return`hsl(${h},75%,${45+t*25}%)`;}
+  if(mode==='dance'){const h=130-d*100+20;return`hsl(${h},80%,${40+d*30}%)`;}
+  const hue=(v*200+e*80+d*60)%360;
+  return`hsl(${hue},${60+d*30}%,${35+e*30}%)`;
+}
+function getSize(s){return 1.5+(s.f?.danceability||.5)*3.5;}
 
-// ── COLOR ──
-function getSongColor(s, mode) {
-  const f = s.f;
-  if (!f) return '#888';
-  const v = f.valence;
-  const e = f.energy;
-  const d = f.danceability;
-  const t = (f.tempo - 60) / 140; // normalize 60-200 bpm
-
-  if (mode === 'energy') {
-    const h = 250 - e * 220; // purple→red
-    return `hsl(${h},80%,${40 + e*30}%)`;
+function render(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const q=searchQuery.toLowerCase();
+  ctx.strokeStyle='rgba(255,255,255,0.03)';ctx.lineWidth=1;
+  for(let g=.1;g<1;g+=.1){
+    const{sx}=worldToScreen(g,0),{sy}=worldToScreen(0,g);
+    ctx.beginPath();ctx.moveTo(sx,0);ctx.lineTo(sx,canvas.height);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,sy);ctx.lineTo(canvas.width,sy);ctx.stroke();
   }
-  if (mode === 'tempo') {
-    const h = 240 - t * 200;
-    return `hsl(${h},75%,${45 + t*25}%)`;
-  }
-  if (mode === 'dance') {
-    const h = 130 - d * 100 + 20;
-    return `hsl(${h},80%,${40 + d*30}%)`;
-  }
-
-  // 'genre' / sonic signature: blended composite
-  // color = hue derived from valence*energy*dance triangle
-  // creates natural clustering by feel
-  const hue = (v * 200 + e * 80 + d * 60) % 360;
-  const sat = 60 + d * 30;
-  const lig = 35 + e * 30;
-  return `hsl(${hue},${sat}%,${lig}%)`;
-}
-
-function getSongSize(s) {
-  const d = s.f ? s.f.danceability : 0.5;
-  return 1.5 + d * 3.5;
-}
-
-// ── WORLD COORDS ──
-function songToWorld(s) {
-  const margin = 0.08;
-  const v = s.f ? s.f.valence : 0.5;
-  const e = s.f ? s.f.energy : 0.5;
-  const jx = (Math.random() - 0.5) * 0.02;
-  const jy = (Math.random() - 0.5) * 0.02;
-  return {
-    wx: margin + v * (1 - margin*2) + jx,
-    wy: (1 - margin) - e * (1 - margin*2) + jy
-  };
-}
-
-// cache world coords once
-let worldPositions = null;
-function getWorldPositions() {
-  if (!worldPositions) {
-    worldPositions = songs.map(songToWorld);
-  }
-  return worldPositions;
-}
-
-// ── CAMERA ──
-function worldToScreen(wx, wy) {
-  const cx = canvas.width / 2, cy = canvas.height / 2;
-  const size = Math.min(canvas.width, canvas.height) * 0.85;
-  return {
-    sx: cx + (wx - 0.5) * size * camZoom + camX,
-    sy: cy + (wy - 0.5) * size * camZoom + camY
-  };
-}
-
-function screenToWorld(sx, sy) {
-  const cx = canvas.width / 2, cy = canvas.height / 2;
-  const size = Math.min(canvas.width, canvas.height) * 0.85;
-  return {
-    wx: (sx - cx - camX) / (size * camZoom) + 0.5,
-    wy: (sy - cy - camY) / (size * camZoom) + 0.5
-  };
-}
-
-// ── RENDER ──
-function render() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  const positions = getWorldPositions();
-  const query = searchQuery.toLowerCase();
-
-  // draw grid lines subtly
-  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
-  ctx.lineWidth = 1;
-  for (let g = 0.1; g < 1; g += 0.1) {
-    const {sx: gx1} = worldToScreen(g, 0);
-    const {sy: gy1} = worldToScreen(0, g);
-    // vertical
-    ctx.beginPath();
-    ctx.moveTo(gx1, 0);
-    ctx.lineTo(gx1, canvas.height);
-    ctx.stroke();
-    // horizontal
-    ctx.beginPath();
-    ctx.moveTo(0, gy1);
-    ctx.lineTo(canvas.width, gy1);
-    ctx.stroke();
-  }
-
-  // center crosshair
-  ctx.strokeStyle = 'rgba(167,139,250,0.12)';
-  ctx.lineWidth = 1.5;
-  const {sx: cx05, sy: cy05} = worldToScreen(0.5, 0.5);
-  ctx.beginPath(); ctx.moveTo(0, cy05); ctx.lineTo(canvas.width, cy05); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx05, 0); ctx.lineTo(cx05, canvas.height); ctx.stroke();
-
-  // draw songs
-  for (let i = 0; i < songs.length; i++) {
-    const s = songs[i];
-    const {wx, wy} = positions[i];
-    const {sx, sy} = worldToScreen(wx, wy);
-
-    if (sx < -20 || sx > canvas.width + 20 || sy < -20 || sy > canvas.height + 20) continue;
-
-    const r = getSongSize(s) * Math.max(0.5, Math.min(2, camZoom * 0.8));
-    const color = getSongColor(s, colorMode);
-    const isHovered = hoveredSong === i || pinnedSong === i;
-    const isSearchMatch = query && (s.name.toLowerCase().includes(query) || s.artist.toLowerCase().includes(query));
-    const isSearchDim = query && !isSearchMatch;
-
-    if (isSearchDim) {
-      ctx.globalAlpha = 0.06;
-    } else if (isHovered) {
-      ctx.globalAlpha = 1;
-    } else {
-      ctx.globalAlpha = 0.7;
+  ctx.strokeStyle='rgba(167,139,250,0.1)';ctx.lineWidth=1.5;
+  const{sx:cx,sy:cy}=worldToScreen(.5,.5);
+  ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(canvas.width,cy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,canvas.height);ctx.stroke();
+  for(let i=0;i<songs.length;i++){
+    const s=songs[i];
+    const{wx,wy}=getPos(i);
+    const{sx,sy}=worldToScreen(wx,wy);
+    if(sx<-20||sx>canvas.width+20||sy<-20||sy>canvas.height+20) continue;
+    const r=getSize(s)*Math.max(.5,Math.min(2,camZoom*.8));
+    const color=getColor(s,colorMode);
+    const isHov=hoveredSong===i||pinnedSong===i;
+    const isMatch=q&&(s.name.toLowerCase().includes(q)||s.artist.toLowerCase().includes(q));
+    const isDim=q&&!isMatch;
+    const isCryst=!!(featureCache[s.id]?.lastfm||featureCache[s.id]?.audio);
+    const inTransit=!!posTransitions[i];
+    ctx.globalAlpha=isDim?.04:isHov?1:isCryst?.88:.62;
+    ctx.shadowBlur=isHov?22:(isMatch?14:(isCryst?4:0));
+    ctx.shadowColor=color;
+    ctx.beginPath();ctx.arc(sx,sy,isHov?r*2.2:r,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();
+    if(isHov){
+      ctx.globalAlpha=.28;ctx.beginPath();ctx.arc(sx,sy,r*4.5,0,Math.PI*2);
+      ctx.strokeStyle=color;ctx.lineWidth=.8;ctx.stroke();
     }
-
-    // glow for hovered
-    if (isHovered || isSearchMatch) {
-      ctx.shadowColor = color;
-      ctx.shadowBlur = isHovered ? 20 : 10;
-    } else {
-      ctx.shadowBlur = 0;
-    }
-
-    ctx.beginPath();
-    ctx.arc(sx, sy, isHovered ? r * 2 : r, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-    ctx.fill();
-
-    // outer ring for hovered
-    if (isHovered) {
-      ctx.globalAlpha = 0.4;
-      ctx.beginPath();
-      ctx.arc(sx, sy, r * 3.5, 0, Math.PI * 2);
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 1;
-      ctx.stroke();
+    if(inTransit){
+      ctx.globalAlpha=.4+.3*Math.sin(performance.now()*.004);
+      ctx.beginPath();ctx.arc(sx,sy,r*2,0,Math.PI*2);
+      ctx.strokeStyle='rgba(255,255,255,0.7)';ctx.lineWidth=.5;ctx.stroke();
     }
   }
-
-  ctx.globalAlpha = 1;
-  ctx.shadowBlur = 0;
+  ctx.globalAlpha=1;ctx.shadowBlur=0;
 }
+let _raf=null;
+function renderLoop(){render();_raf=requestAnimationFrame(renderLoop);}
 
-let _rafId = null;
-function renderLoop() {
-  render();
-  _rafId = requestAnimationFrame(renderLoop);
+// ═══════════════════════════════════════════════════
+// INTERACTION
+// ═══════════════════════════════════════════════════
+function setupInteraction(){
+  canvas.addEventListener('mousemove',onMouseMove);
+  canvas.addEventListener('mousedown',onMouseDown);
+  canvas.addEventListener('mouseup',onMouseUp);
+  canvas.addEventListener('mouseleave',()=>{isDragging=false;hideTooltip();hoveredSong=null;});
+  canvas.addEventListener('wheel',onWheel,{passive:false});
+  canvas.addEventListener('click',onCanvasClick);
+  canvas.addEventListener('touchstart',onTouchStart,{passive:false});
+  canvas.addEventListener('touchmove',onTouchMove,{passive:false});
+  canvas.addEventListener('touchend',onTouchEnd,{passive:false});
+  document.getElementById('sc-open-btn').addEventListener('click',()=>{if(songCardUrl)window.open(songCardUrl,'_blank');});
 }
-
-// ── INTERACTION ──
-function setupInteraction() {
-  // Mouse
-  canvas.addEventListener('mousemove', onMouseMove);
-  canvas.addEventListener('mousedown', onMouseDown);
-  canvas.addEventListener('mouseup', onMouseUp);
-  canvas.addEventListener('mouseleave', () => { isDragging = false; hideTooltip(); hoveredSong = null; });
-  canvas.addEventListener('wheel', onWheel, { passive: false });
-  canvas.addEventListener('click', onCanvasClick);
-
-  // Touch
-  canvas.addEventListener('touchstart', onTouchStart, { passive: false });
-  canvas.addEventListener('touchmove', onTouchMove, { passive: false });
-  canvas.addEventListener('touchend', onTouchEnd, { passive: false });
-
-  // Song card open button
-  document.getElementById('sc-open-btn').addEventListener('click', () => {
-    if (songCardUrl) window.open(songCardUrl, '_blank');
-  });
-
-  // Tap outside card to dismiss
-  canvas.addEventListener('touchstart', (e) => {
-    const card = document.getElementById('song-card');
-    if (card.classList.contains('visible') && e.touches.length === 1) {
-      hideSongCard();
-      pinnedSong = -1;
-    }
-  }, { passive: true, capture: true });
+function getTouchCenter(ts){return ts.length===1?{x:ts[0].clientX,y:ts[0].clientY}:{x:(ts[0].clientX+ts[1].clientX)/2,y:(ts[0].clientY+ts[1].clientY)/2};}
+function getTouchDist(ts){return Math.hypot(ts[0].clientX-ts[1].clientX,ts[0].clientY-ts[1].clientY);}
+function onTouchStart(e){
+  e.preventDefault();touchMoved=false;
+  if(e.touches.length===1){const t=e.touches[0];isDragging=true;dragStartX=touchStartX=t.clientX;dragStartY=touchStartY=t.clientY;dragCamX=camX;dragCamY=camY;lastTouchDist=null;}
+  else if(e.touches.length===2){isDragging=false;lastTouchDist=getTouchDist(e.touches);const c=getTouchCenter(e.touches);dragStartX=c.x;dragStartY=c.y;dragCamX=camX;dragCamY=camY;}
 }
-
-// ── TOUCH HANDLERS ──
-function getTouchCenter(touches) {
-  if (touches.length === 1) return { x: touches[0].clientX, y: touches[0].clientY };
-  return {
-    x: (touches[0].clientX + touches[1].clientX) / 2,
-    y: (touches[0].clientY + touches[1].clientY) / 2
-  };
+function onTouchMove(e){
+  e.preventDefault();touchMoved=true;
+  if(e.touches.length===1&&isDragging){const t=e.touches[0];camX=dragCamX+(t.clientX-dragStartX);camY=dragCamY+(t.clientY-dragStartY);hideSongCard();hoveredSong=-1;}
+  else if(e.touches.length===2){
+    const nd=getTouchDist(e.touches),c=getTouchCenter(e.touches);
+    if(lastTouchDist!==null){const f=nd/lastTouchDist,wx=c.x-canvas.width/2,wy=c.y-canvas.height/2;camX=(camX-wx)*f+wx;camY=(camY-wy)*f+wy;camZoom=Math.max(.3,Math.min(30,camZoom*f));}
+    camX=dragCamX+(c.x-dragStartX);camY=dragCamY+(c.y-dragStartY);
+    lastTouchDist=nd;dragCamX=camX-(c.x-dragStartX);dragCamY=camY-(c.y-dragStartY);dragStartX=c.x;dragStartY=c.y;
+  }
 }
-
-function getTouchDist(touches) {
-  return Math.hypot(
-    touches[0].clientX - touches[1].clientX,
-    touches[0].clientY - touches[1].clientY
-  );
+function onTouchEnd(e){
+  e.preventDefault();isDragging=false;lastTouchDist=null;
+  if(!touchMoved&&e.changedTouches.length===1){const t=e.changedTouches[0];if(Math.abs(t.clientX-touchStartX)<8&&Math.abs(t.clientY-touchStartY)<8)handleTap(t.clientX,t.clientY);}
 }
-
-function onTouchStart(e) {
+function handleTap(x,y){
+  let closest=-1,bestD=Infinity;
+  for(let i=0;i<songs.length;i++){const{sx,sy}=worldToScreen(getPos(i).wx,getPos(i).wy);const d=Math.hypot(x-sx,y-sy);if(d<32&&d<bestD){bestD=d;closest=i;}}
+  if(closest>=0){pinnedSong=closest;hoveredSong=closest;showSongCard(songs[closest]);requestAudioAnalysis(closest);}
+  else{pinnedSong=-1;hoveredSong=-1;hideSongCard();}
+}
+let hoverAudioTimer=null;
+function onMouseMove(e){
+  mouseX=e.clientX;mouseY=e.clientY;
+  if(isDragging){camX=dragCamX+(e.clientX-dragStartX);camY=dragCamY+(e.clientY-dragStartY);hideTooltip();hoveredSong=null;return;}
+  let closest=-1,bestD=Infinity;
+  for(let i=0;i<songs.length;i++){const{sx,sy}=worldToScreen(getPos(i).wx,getPos(i).wy);const d=Math.hypot(e.clientX-sx,e.clientY-sy);if(d<18&&d<bestD){bestD=d;closest=i;}}
+  if(closest!==hoveredSong){
+    hoveredSong=closest;clearTimeout(hoverAudioTimer);
+    if(closest>=0){showTooltip(songs[closest],e.clientX,e.clientY);canvas.style.cursor='pointer';hoverAudioTimer=setTimeout(()=>requestAudioAnalysis(closest),600);}
+    else{hideTooltip();canvas.style.cursor='crosshair';}
+  }else if(closest>=0) moveTooltip(e.clientX,e.clientY);
+}
+function onMouseDown(e){isDragging=true;dragStartX=e.clientX;dragStartY=e.clientY;dragCamX=camX;dragCamY=camY;canvas.style.cursor='grabbing';}
+function onMouseUp(){isDragging=false;canvas.style.cursor='crosshair';}
+function onWheel(e){
   e.preventDefault();
-  touchMoved = false;
-
-  if (e.touches.length === 1) {
-    const t = e.touches[0];
-    isDragging = true;
-    dragStartX = touchStartX = t.clientX;
-    dragStartY = touchStartY = t.clientY;
-    dragCamX = camX;
-    dragCamY = camY;
-    lastTouchDist = null;
-  } else if (e.touches.length === 2) {
-    isDragging = false;
-    lastTouchDist = getTouchDist(e.touches);
-    const c = getTouchCenter(e.touches);
-    dragStartX = c.x; dragStartY = c.y;
-    dragCamX = camX; dragCamY = camY;
-  }
+  const f=e.deltaY<0?1.12:.89,wx=e.clientX-canvas.width/2,wy=e.clientY-canvas.height/2;
+  camX=(camX-wx)*f+wx;camY=(camY-wy)*f+wy;camZoom=Math.max(.3,Math.min(30,camZoom*f));
 }
-
-function onTouchMove(e) {
-  e.preventDefault();
-  touchMoved = true;
-
-  if (e.touches.length === 1 && isDragging) {
-    const t = e.touches[0];
-    camX = dragCamX + (t.clientX - dragStartX);
-    camY = dragCamY + (t.clientY - dragStartY);
-    hideSongCard();
-    hoveredSong = -1;
-
-  } else if (e.touches.length === 2) {
-    // pinch zoom
-    const newDist = getTouchDist(e.touches);
-    const center = getTouchCenter(e.touches);
-
-    if (lastTouchDist !== null) {
-      const factor = newDist / lastTouchDist;
-      const wx = center.x - canvas.width / 2;
-      const wy = center.y - canvas.height / 2;
-      camX = (camX - wx) * factor + wx;
-      camY = (camY - wy) * factor + wy;
-      camZoom *= factor;
-      camZoom = Math.max(0.3, Math.min(30, camZoom));
-    }
-
-    // also pan with two-finger drag
-    camX = dragCamX + (center.x - dragStartX);
-    camY = dragCamY + (center.y - dragStartY);
-
-    lastTouchDist = newDist;
-    dragCamX = camX - (center.x - dragStartX);
-    dragCamY = camY - (center.y - dragStartY);
-    dragStartX = center.x;
-    dragStartY = center.y;
-  }
-}
-
-function onTouchEnd(e) {
-  e.preventDefault();
-  isDragging = false;
-  lastTouchDist = null;
-
-  // treat as tap if didn't move much
-  if (!touchMoved && e.changedTouches.length === 1) {
-    const t = e.changedTouches[0];
-    const dx = Math.abs(t.clientX - touchStartX);
-    const dy = Math.abs(t.clientY - touchStartY);
-    if (dx < 8 && dy < 8) {
-      handleTap(t.clientX, t.clientY);
-    }
-  }
-}
-
-function handleTap(x, y) {
-  const positions = getWorldPositions();
-  let closest = -1, closestDist = Infinity;
-  const threshold = 32; // bigger tap target for fingers
-
-  for (let i = 0; i < songs.length; i++) {
-    const {sx, sy} = worldToScreen(positions[i].wx, positions[i].wy);
-    const d = Math.hypot(x - sx, y - sy);
-    if (d < threshold && d < closestDist) {
-      closestDist = d;
-      closest = i;
-    }
-  }
-
-  if (closest >= 0) {
-    pinnedSong = closest;
-    hoveredSong = closest;
-    showSongCard(songs[closest]);
-  } else {
-    pinnedSong = -1;
-    hoveredSong = -1;
-    hideSongCard();
-  }
-}
-
-// ── SONG CARD (mobile) ──
-function showSongCard(s) {
-  const card = document.getElementById('song-card');
-  card.style.display = 'block';
-  document.getElementById('sc-artist').textContent = s.artist;
-  document.getElementById('sc-track').textContent = s.name;
-  const f = s.f;
-  document.getElementById('sc-stats').innerHTML = `
-    <div class="sc-stat">ENERGY <span>${Math.round(f.energy*100)}%</span></div>
-    <div class="sc-stat">VALENCE <span>${Math.round(f.valence*100)}%</span></div>
-    <div class="sc-stat">DANCE <span>${Math.round(f.danceability*100)}%</span></div>
-    <div class="sc-stat">BPM <span>${Math.round(f.tempo)}</span></div>
-  `;
-  songCardUrl = s.url;
-  requestAnimationFrame(() => card.classList.add('visible'));
-}
-
-function hideSongCard() {
-  const card = document.getElementById('song-card');
-  card.classList.remove('visible');
-  setTimeout(() => { if (!card.classList.contains('visible')) card.style.display = 'none'; }, 350);
-}
-
-function onMouseMove(e) {
-  mouseX = e.clientX;
-  mouseY = e.clientY;
-
-  if (isDragging) {
-    camX = dragCamX + (e.clientX - dragStartX);
-    camY = dragCamY + (e.clientY - dragStartY);
-    hideTooltip();
-    hoveredSong = null;
-    return;
-  }
-
-  // hover detection
-  const positions = getWorldPositions();
-  let closest = -1, closestDist = Infinity;
-  const threshold = 18;
-
-  for (let i = 0; i < songs.length; i++) {
-    const {sx, sy} = worldToScreen(positions[i].wx, positions[i].wy);
-    const d = Math.hypot(e.clientX - sx, e.clientY - sy);
-    if (d < threshold && d < closestDist) {
-      closestDist = d;
-      closest = i;
-    }
-  }
-
-  if (closest !== hoveredSong) {
-    hoveredSong = closest;
-    if (closest >= 0) {
-      showTooltip(songs[closest], e.clientX, e.clientY);
-      canvas.style.cursor = 'pointer';
-    } else {
-      hideTooltip();
-      canvas.style.cursor = isDragging ? 'grabbing' : 'crosshair';
-    }
-  } else if (closest >= 0) {
-    moveTooltip(e.clientX, e.clientY);
-  }
-}
-
-function onMouseDown(e) {
-  isDragging = true;
-  dragStartX = e.clientX;
-  dragStartY = e.clientY;
-  dragCamX = camX;
-  dragCamY = camY;
-  canvas.style.cursor = 'grabbing';
-}
-
-function onMouseUp() {
-  isDragging = false;
-  canvas.style.cursor = 'crosshair';
-}
-
-function onWheel(e) {
-  e.preventDefault();
-  const factor = e.deltaY < 0 ? 1.12 : 0.89;
-  // zoom toward mouse
-  const wx = e.clientX - canvas.width / 2;
-  const wy = e.clientY - canvas.height / 2;
-  camX = (camX - wx) * factor + wx;
-  camY = (camY - wy) * factor + wy;
-  camZoom *= factor;
-  camZoom = Math.max(0.3, Math.min(30, camZoom));
-}
-
-function onCanvasClick(e) {
-  if (Math.abs(e.clientX - dragStartX) > 5 || Math.abs(e.clientY - dragStartY) > 5) return;
-  if (hoveredSong >= 0) {
-    window.open(songs[hoveredSong].url, '_blank');
-  }
+function onCanvasClick(e){
+  if(Math.abs(e.clientX-dragStartX)>5||Math.abs(e.clientY-dragStartY)>5) return;
+  if(hoveredSong>=0) window.open(songs[hoveredSong].url,'_blank');
 }
 
 // ── TOOLTIP ──
-const tooltip = document.getElementById('tooltip');
-function showTooltip(s, x, y) {
-  document.getElementById('tt-artist').textContent = s.artist;
-  document.getElementById('tt-track').textContent = s.name;
-  const f = s.f;
-  document.getElementById('tt-stats').innerHTML = `
+const tooltip=document.getElementById('tooltip');
+function getSourceLabel(s){
+  const c=featureCache[s.id];
+  if(!c) return '⬡ seeded · hover to analyze audio';
+  const parts=[];
+  if(c.lastfm&&c.tags) parts.push('◈ '+c.tags.slice(0,3).join(' · '));
+  if(c.audio) parts.push('◉ audio analyzed');
+  const idx=songs.indexOf(s);
+  if(audioQueue.has(idx)) parts.push('⟳ analyzing...');
+  else if(s.preview_url&&!c.audio) parts.push('· hover to analyze');
+  return parts.join(' ')||'⬡ seeded';
+}
+function showTooltip(s,x,y){
+  document.getElementById('tt-artist').textContent=s.artist;
+  document.getElementById('tt-track').textContent=s.name;
+  const f=s.f;
+  document.getElementById('tt-stats').innerHTML=`
     <div class="tt-stat">ENERGY <span>${Math.round(f.energy*100)}%</span></div>
     <div class="tt-stat">VALENCE <span>${Math.round(f.valence*100)}%</span></div>
     <div class="tt-stat">DANCE <span>${Math.round(f.danceability*100)}%</span></div>
-    <div class="tt-stat">BPM <span>${Math.round(f.tempo)}</span></div>
-  `;
-  moveTooltip(x, y);
-  tooltip.classList.add('visible');
+    <div class="tt-stat">BPM <span>${Math.round(f.tempo)}</span></div>`;
+  document.querySelector('.tt-hint').textContent=getSourceLabel(s);
+  moveTooltip(x,y);tooltip.classList.add('visible');
+}
+function moveTooltip(x,y){
+  const w=260;let tx=x;
+  if(tx+w/2>innerWidth-10)tx=innerWidth-10-w/2;
+  if(tx-w/2<10)tx=10+w/2;
+  tooltip.style.left=tx+'px';tooltip.style.top=(y-15)+'px';
+}
+function hideTooltip(){tooltip.classList.remove('visible');}
+
+function showSongCard(s){
+  const card=document.getElementById('song-card');card.style.display='block';
+  document.getElementById('sc-artist').textContent=s.artist;
+  document.getElementById('sc-track').textContent=s.name;
+  const f=s.f,c=featureCache[s.id];
+  const tags=c?.tags?`<div class="sc-stat" style="width:100%;margin-top:.4rem;color:rgba(255,255,255,0.35)">${c.tags.slice(0,4).join(' · ')}</div>`:'';
+  document.getElementById('sc-stats').innerHTML=`
+    <div class="sc-stat">ENERGY <span>${Math.round(f.energy*100)}%</span></div>
+    <div class="sc-stat">VALENCE <span>${Math.round(f.valence*100)}%</span></div>
+    <div class="sc-stat">DANCE <span>${Math.round(f.danceability*100)}%</span></div>
+    <div class="sc-stat">BPM <span>${Math.round(f.tempo)}</span></div>${tags}`;
+  songCardUrl=s.url;
+  requestAnimationFrame(()=>card.classList.add('visible'));
+}
+function hideSongCard(){
+  const card=document.getElementById('song-card');card.classList.remove('visible');
+  setTimeout(()=>{if(!card.classList.contains('visible'))card.style.display='none';},350);
 }
 
-function moveTooltip(x, y) {
-  let tx = x;
-  let ty = y;
-  // keep in bounds
-  const w = 260;
-  if (tx + w/2 > window.innerWidth - 10) tx = window.innerWidth - 10 - w/2;
-  if (tx - w/2 < 10) tx = 10 + w/2;
-  tooltip.style.left = tx + 'px';
-  tooltip.style.top = (ty - 15) + 'px';
+// ── HELPERS ──
+function updateHUD(){
+  const el=document.getElementById('hud-count');if(!el)return;
+  const total=songs.length;
+  const done=songs.filter(s=>featureCache[s.id]?.lastfm).length;
+  const audio=songs.filter(s=>featureCache[s.id]?.audio).length;
+  if(!lastfmKey) el.textContent=`${total.toLocaleString()} songs mapped · hover stars to analyze audio`;
+  else if(done>=total) el.textContent=`${total.toLocaleString()} songs · ✦ crystallized${audio?` · ${audio} audio`:''}`;
+  else el.textContent=`${total.toLocaleString()} songs · crystallizing ${done.toLocaleString()} / ${total.toLocaleString()}`;
 }
-
-function hideTooltip() { tooltip.classList.remove('visible'); }
-
-// ── CONTROLS ──
-function resetView() { camX = 0; camY = 0; camZoom = 1; }
-function zoomIn() { camZoom = Math.min(30, camZoom * 1.4); }
-function zoomOut() { camZoom = Math.max(0.3, camZoom / 1.4); }
-
-function setColorMode(mode) {
-  colorMode = mode;
-  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById(`cm-${mode}`).classList.add('active');
+function setLoadStatus(msg,progress){
+  document.getElementById('load-status').textContent=msg;
+  document.getElementById('load-progress-fill').style.width=`${Math.round(progress*100)}%`;
+  document.getElementById('load-count').textContent=`${Math.round(progress*100)}% complete`;
 }
-
-function handleSearch(val) { searchQuery = val; }
-
-// ── SHOW/HIDE HELPERS ──
-function show(id) { document.getElementById(id).classList.remove('hidden'); }
-function hide(id) { document.getElementById(id).classList.add('hidden'); }
-function showHUD() {
-  ['hud','legend','controls','color-mode','search-wrap','ax-top','ax-bottom','ax-left'].forEach(show);
-}
+function resetView(){camX=0;camY=0;camZoom=1;}
+function zoomIn(){camZoom=Math.min(30,camZoom*1.4);}
+function zoomOut(){camZoom=Math.max(.3,camZoom/1.4);}
+function setColorMode(mode){colorMode=mode;document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));document.getElementById(`cm-${mode}`).classList.add('active');}
+function handleSearch(val){searchQuery=val;}
+function show(id){document.getElementById(id).classList.remove('hidden');}
+function hide(id){document.getElementById(id).classList.add('hidden');}
+function showHUD(){['hud','legend','controls','color-mode','search-wrap','ax-top','ax-bottom','ax-left'].forEach(show);}
 
 // ═══════════════════════════════════════════════════
-// INIT
+// BOOT
 // ═══════════════════════════════════════════════════
+async function boot(){
+  loadFeatureCache();
+  clientId=localStorage.getItem('rs_client_id');
+  lastfmKey=localStorage.getItem('rs_lastfm_key');
+  if(clientId) document.getElementById('client-id-input').value=clientId;
+  if(lastfmKey) document.getElementById('lastfm-key-input').value=lastfmKey;
+  const hasToken=await parseToken();
+  if(!hasToken) return;
+  show('loading-screen');hide('login-screen');
+  try{
+    const tracks=await fetchAllLiked();
+    setLoadStatus('CRYSTALLIZING...',.95);
+    songs=tracks.map(t=>({...t,f:getFeatures(t)}));
+    await delay(400);
+    launchViz();
+  }catch(e){
+    if(e.message==='auth_expired'){
+      localStorage.removeItem('rs_token');localStorage.removeItem('rs_token_exp');
+      show('login-screen');hide('loading-screen');showError('session expired — tap the portal again 💫');
+    }else document.getElementById('load-status').textContent=`ERROR: ${e.message}`;
+  }
+}
 boot();
 </script>
 </body>
