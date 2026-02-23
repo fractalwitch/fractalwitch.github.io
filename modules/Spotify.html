@@ -957,7 +957,7 @@ async function initiateAuth(){
 async function exchangeCode(code){
   const r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_id:clientId,grant_type:'authorization_code',code,redirect_uri:location.origin+location.pathname,code_verifier:localStorage.getItem('rs_verifier')})});
   const d=await r.json();
-  if(d.access_token){accessToken=d.access_token;localStorage.setItem('rs_token',accessToken);localStorage.setItem('rs_token_exp',Date.now()+(d.expires_in-60)*1000);localStorage.removeItem('rs_verifier');return true;}
+  if(d.access_token){accessToken=d.access_token;localStorage.setItem('rs_token',accessToken);localStorage.setItem('rs_token_exp',Date.now()+(d.expires_in-600)*1000);localStorage.removeItem('rs_verifier');return true;}
   return false;
 }
 function showError(msg){const e=document.getElementById('error-msg');e.textContent=msg;e.style.display='block';}
@@ -982,9 +982,12 @@ async function parseToken(){
 // ═══════════════════════════════════════════════════
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 async function apiGet(url){
-  const r=await fetch(url,{headers:{Authorization:`Bearer ${accessToken}`}});
-  if(r.status===401) throw new Error('auth_expired');
+  let r;
+  try{ r=await fetch(url,{headers:{Authorization:`Bearer ${accessToken}`}}); }
+  catch(e){ throw new Error('auth_expired'); }
+  if(r.status===401||r.status===403) throw new Error('auth_expired');
   if(r.status===429){await delay(parseInt(r.headers.get('Retry-After')||'2')*1000);return apiGet(url);}
+  if(!r.ok) throw new Error(`Spotify API error ${r.status}`);
   return r.json();
 }
 async function fetchAllLiked(){
@@ -1329,10 +1332,13 @@ async function boot(){
     await delay(400);
     launchViz();
   }catch(e){
-    if(e.message==='auth_expired'){
-      localStorage.removeItem('rs_token');localStorage.removeItem('rs_token_exp');
-      show('login-screen');hide('loading-screen');showError('session expired — tap the portal again 💫');
-    }else document.getElementById('load-status').textContent=`ERROR: ${e.message}`;
+    localStorage.removeItem('rs_token');localStorage.removeItem('rs_token_exp');
+    hide('loading-screen');show('login-screen');
+    if(e.message==='auth_expired'||e.message==='Failed to fetch'||e.message.includes('fetch')){
+      showError('session expired ✨ just tap the portal again — your feature cache is saved, constellation loads instantly');
+    }else{
+      showError(`${e.message} — try opening the portal again 💫`);
+    }
   }
 }
 boot();
