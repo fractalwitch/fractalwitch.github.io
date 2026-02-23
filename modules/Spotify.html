@@ -649,7 +649,7 @@
     <div class="redirect-hint">add <span>http://localhost:3000</span> (desktop) or your hosted URL to Spotify redirect URIs</div>
   </div>
 
-  <button class="btn-conjure" onclick="initiateAuth()">
+  <button class="btn-conjure" onclick="initiateAuth().catch(e => showError(e.message))">
     <span>✦ OPEN THE PORTAL ✦</span>
   </button>
 
@@ -798,9 +798,24 @@ let songCardUrl = null;
 })();
 
 // ═══════════════════════════════════════════════════
-// AUTH
+// AUTH — PKCE flow (implicit grant deprecated by Spotify)
 // ═══════════════════════════════════════════════════
-function initiateAuth() {
+
+function generateRandom(length) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+  const arr = new Uint8Array(length);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, b => chars[b % chars.length]).join('');
+}
+
+async function generateCodeChallenge(verifier) {
+  const data = new TextEncoder().encode(verifier);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return btoa(String.fromCharCode(...new Uint8Array(digest)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+async function initiateAuth() {
   const input = document.getElementById('client-id-input').value.trim();
   if (!input || input.length < 20) {
     showError('please paste your Spotify Client ID above ✨');
@@ -809,15 +824,47 @@ function initiateAuth() {
   clientId = input;
   localStorage.setItem('rs_client_id', clientId);
 
+  const verifier = generateRandom(64);
+  const challenge = await generateCodeChallenge(verifier);
+  localStorage.setItem('rs_verifier', verifier);
+
   const redirectUri = `${window.location.origin}${window.location.pathname}`;
   const params = new URLSearchParams({
     client_id: clientId,
-    response_type: 'token',
+    response_type: 'code',
     redirect_uri: redirectUri,
     scope: SCOPES,
-    show_dialog: 'false'
+    code_challenge_method: 'S256',
+    code_challenge: challenge,
   });
   window.location = `https://accounts.spotify.com/authorize?${params}`;
+}
+
+async function exchangeCodeForToken(code) {
+  const verifier = localStorage.getItem('rs_verifier');
+  const redirectUri = `${window.location.origin}${window.location.pathname}`;
+  const body = new URLSearchParams({
+    client_id: clientId,
+    grant_type: 'authorization_code',
+    code,
+    redirect_uri: redirectUri,
+    code_verifier: verifier,
+  });
+  const res = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body,
+  });
+  const data = await res.json();
+  if (data.access_token) {
+    accessToken = data.access_token;
+    // store with expiry
+    localStorage.setItem('rs_token', accessToken);
+    localStorage.setItem('rs_token_exp', Date.now() + (data.expires_in - 60) * 1000);
+    localStorage.removeItem('rs_verifier');
+    return true;
+  }
+  return false;
 }
 
 function showError(msg) {
@@ -826,17 +873,40 @@ function showError(msg) {
   el.style.display = 'block';
 }
 
-function parseToken() {
-  const hash = window.location.hash.substring(1);
-  const params = new URLSearchParams(hash);
-  const token = params.get('access_token');
-  if (token) {
-    accessToken = token;
+async function parseToken() {
+  // Check for PKCE callback code
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const error = params.get('error');
+
+  if (error) {
+    showError(`Spotify error: ${error} — check your redirect URI matches exactly 💫`);
+    return false;
+  }
+
+  if (code) {
+    clientId = clientId || localStorage.getItem('rs_client_id');
     window.history.replaceState({}, '', window.location.pathname);
-    // restore clientId
+    show('loading-screen'); hide('login-screen');
+    setLoadStatus('AUTHENTICATING...', 0);
+    const ok = await exchangeCodeForToken(code);
+    if (!ok) {
+      hide('loading-screen'); show('login-screen');
+      showError('token exchange failed — try again 💫');
+      return false;
+    }
+    return true;
+  }
+
+  // Check stored token
+  const stored = localStorage.getItem('rs_token');
+  const exp = parseInt(localStorage.getItem('rs_token_exp') || '0');
+  if (stored && Date.now() < exp) {
+    accessToken = stored;
     clientId = clientId || localStorage.getItem('rs_client_id');
     return true;
   }
+
   return false;
 }
 
@@ -906,12 +976,12 @@ function setLoadStatus(msg, progress) {
 // MAIN BOOT
 // ═══════════════════════════════════════════════════
 async function boot() {
-  if (!parseToken()) {
-    // restore client ID if returning
-    const saved = localStorage.getItem('rs_client_id');
-    if (saved) document.getElementById('client-id-input').value = saved;
-    return; // stay on login
-  }
+  // restore clientId early
+  clientId = localStorage.getItem('rs_client_id');
+  if (clientId) document.getElementById('client-id-input').value = clientId;
+
+  const hasToken = await parseToken();
+  if (!hasToken) return; // stay on login
 
   show('loading-screen');
   hide('login-screen');
@@ -935,10 +1005,11 @@ async function boot() {
 
   } catch(e) {
     if (e.message === 'auth_expired') {
-      localStorage.removeItem('rs_client_id');
+      localStorage.removeItem('rs_token');
+      localStorage.removeItem('rs_token_exp');
       show('login-screen');
       hide('loading-screen');
-      showError('session expired — try again 💫');
+      showError('session expired — tap the portal again 💫');
     } else {
       document.getElementById('load-status').textContent = `ERROR: ${e.message}`;
     }
