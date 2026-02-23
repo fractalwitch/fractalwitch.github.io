@@ -672,6 +672,7 @@
   <div id="load-status">INITIATING RESONANCE SCAN...</div>
   <div id="load-progress-bar"><div id="load-progress-fill"></div></div>
   <div id="load-count">preparing to receive transmission</div>
+  <div id="load-detail" style="margin-top:.6rem;font-family:var(--mono);font-size:.58rem;color:rgba(255,100,100,0.6);letter-spacing:.08em;min-height:1.2em;text-align:center;max-width:80%;"></div>
   <button id="load-back-btn" onclick="abortAndReturn()" style="display:none;margin-top:2rem;padding:.6rem 1.5rem;background:transparent;border:1px solid rgba(167,139,250,0.3);border-radius:4px;color:rgba(255,255,255,0.4);font-family:var(--mono);font-size:.65rem;letter-spacing:.15em;cursor:pointer;">← back to portal</button>
 </div>
 
@@ -983,11 +984,17 @@ async function parseToken(){
 // ═══════════════════════════════════════════════════
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 let _lastApiCall=0;
+let _reqCount=0; // total requests made this session
+
+function jitter(ms){ return ms + Math.floor(Math.random()*ms*0.3); } // ±30% jitter
+
 async function apiGet(url, _retries=0){
-  // enforce minimum 400ms between ALL requests (stay well under 180/min)
+  // 700ms + jitter between requests — jitter avoids synchronized bursts
+  const minGap=jitter(700);
   const now=Date.now(), gap=now-_lastApiCall;
-  if(gap<400) await delay(400-gap);
+  if(gap<minGap) await delay(minGap-gap);
   _lastApiCall=Date.now();
+  _reqCount++;
 
   let r;
   try{
@@ -996,45 +1003,131 @@ async function apiGet(url, _retries=0){
     r=await fetch(url,{headers:{Authorization:`Bearer ${accessToken}`},signal:controller.signal});
     clearTimeout(tid);
   }catch(e){
-    if(e.name==='AbortError') throw new Error('Request timed out — check connection');
+    if(e.name==='AbortError') throw new Error('Request timed out — check connection and try again');
     throw new Error('auth_expired');
   }
+
   if(r.status===401||r.status===403) throw new Error('auth_expired');
+
   if(r.status===429){
-    if(_retries>=5) throw new Error('Still rate limited — wait 2 minutes then try again');
-    const retryAfter=parseInt(r.headers.get('Retry-After')||'30');
-    const wait=Math.max(retryAfter*1000, 30000); // minimum 30s wait on 429
-    const secs=Math.round(wait/1000);
-    setLoadStatus(`rate limited — cooling down ${secs}s (${_retries+1}/5)...`,0.01);
-    await delay(wait);
-    _lastApiCall=0; // reset throttle after long wait
+    const retryAfterHeader=r.headers.get('Retry-After');
+    let waitSecs;
+    if(retryAfterHeader){
+      // Spotify told us exactly how long — respect it precisely
+      waitSecs=parseInt(retryAfterHeader);
+      const cooldownType=waitSecs>=1800?'30-MIN COOLDOWN':waitSecs>=300?'EXTENDED COOLDOWN':'SHORT COOLDOWN';
+      setLoadDetail(`HTTP 429 · Retry-After: ${waitSecs}s · ${cooldownType}`);
+    } else {
+      // No header = use exponential backoff with jitter per Spotify docs
+      waitSecs=jitter(Math.pow(2,_retries+1)*10); // 20s, 40s, 80s + jitter
+      setLoadDetail(`HTTP 429 · no Retry-After header · exponential backoff ${waitSecs}s`);
+    }
+
+    if(_retries>=3) throw new Error('rate_limited_hard');
+
+    // live countdown
+    for(let i=waitSecs;i>0;i--){
+      const bar='█'.repeat(Math.floor((waitSecs-i)/waitSecs*20))+'░'.repeat(Math.floor(i/waitSecs*20));
+      setLoadStatus(`⏳ RATE LIMITED · resuming in ${i}s  [${bar}]`, 0.01);
+      await delay(1000);
+    }
+    setLoadStatus('RESUMING SCAN...',0.01);
+    setLoadDetail('');
+    _lastApiCall=0; // reset after long wait
     return apiGet(url, _retries+1);
   }
-  if(!r.ok) throw new Error(`Spotify API ${r.status}`);
+
+  if(!r.ok) throw new Error(`Spotify HTTP ${r.status} — ${r.statusText||'unknown error'}`);
   try{ return await r.json(); }
   catch(e){ throw new Error('auth_expired'); }
+}
+
+// detail line below main status
+function setLoadDetail(msg){
+  let el=document.getElementById('load-detail');
+  if(!el) return;
+  el.textContent=msg;
 }
 function abortAndReturn(){
   localStorage.removeItem('rs_token');localStorage.removeItem('rs_token_exp');
   hide('loading-screen');show('login-screen');
 }
-async function fetchAllLiked(){
-  setLoadStatus('SCANNING YOUR LIBRARY...',0);
-  let url='https://api.spotify.com/v1/me/tracks?limit=50',total=null,tracks=[];
-  while(url){
-    const d=await apiGet(url);
-    if(!total) total=d.total;
-    tracks.push(...d.items.map(i=>({
-      id:i.track.id,name:i.track.name,
-      artist:i.track.artists.map(a=>a.name).join(', '),
-      uri:i.track.uri,url:i.track.external_urls.spotify,
-      preview_url:i.track.preview_url,
-      popularity:i.track.popularity||50,
-      duration_ms:i.track.duration_ms||200000,
-    })));
-    setLoadStatus(`RECEIVING TRANSMISSIONS... ${tracks.length} / ${total}`,tracks.length/total);
-    url=d.next;
+const SCAN_CACHE_KEY='rs_scan_v1';
+
+function saveScanProgress(tracks, nextUrl, total){
+  try{
+    localStorage.setItem(SCAN_CACHE_KEY, JSON.stringify({tracks,nextUrl,total,savedAt:Date.now()}));
+  }catch(e){
+    // storage full — save just IDs+minimal data
+    try{
+      const slim=tracks.map(t=>({id:t.id,name:t.name,artist:t.artist,uri:t.uri,url:t.url,preview_url:t.preview_url,popularity:t.popularity,duration_ms:t.duration_ms}));
+      localStorage.setItem(SCAN_CACHE_KEY, JSON.stringify({tracks:slim,nextUrl,total,savedAt:Date.now()}));
+    }catch{}
   }
+}
+
+function loadScanProgress(){
+  try{
+    const raw=localStorage.getItem(SCAN_CACHE_KEY);
+    if(!raw) return null;
+    const p=JSON.parse(raw);
+    // discard if older than 23 hours (token lifetime)
+    if(Date.now()-p.savedAt > 23*60*60*1000){ localStorage.removeItem(SCAN_CACHE_KEY); return null; }
+    return p;
+  }catch{ return null; }
+}
+
+async function fetchAllLiked(){
+  // resume from saved progress if available
+  const saved=loadScanProgress();
+  let tracks=saved?.tracks||[];
+  let nextUrl=saved?.nextUrl||('https://api.spotify.com/v1/me/tracks?limit=50');
+  let total=saved?.total||null;
+
+  if(tracks.length>0 && saved?.nextUrl){
+    setLoadStatus(`RESUMING SCAN FROM ${tracks.length} TRACKS...`,tracks.length/(total||10000));
+    await delay(1000);
+  } else if(tracks.length>0 && !saved?.nextUrl){
+    // already complete!
+    setLoadStatus(`LIBRARY LOADED FROM CACHE (${tracks.length} tracks)`,1);
+    await delay(500);
+    return tracks;
+  } else {
+    setLoadStatus('SCANNING YOUR LIBRARY...',0);
+  }
+
+  while(nextUrl){
+    try{
+      const d=await apiGet(nextUrl);
+      if(!total) total=d.total;
+      const newTracks=d.items
+        .filter(i=>i.track&&i.track.id)
+        .map(i=>({
+          id:i.track.id, name:i.track.name,
+          artist:i.track.artists.map(a=>a.name).join(', '),
+          uri:i.track.uri, url:i.track.external_urls.spotify,
+          preview_url:i.track.preview_url,
+          popularity:i.track.popularity||50,
+          duration_ms:i.track.duration_ms||200000,
+        }));
+      tracks.push(...newTracks);
+      nextUrl=d.next||null;
+      const pagesLeft=nextUrl?Math.ceil((total-tracks.length)/50):0;
+      const eta=pagesLeft>0?` · ~${Math.round(pagesLeft*0.7/60)}min left`:'';
+      setLoadStatus(`RECEIVING TRANSMISSIONS... ${tracks.length.toLocaleString()} / ${total.toLocaleString()}${eta}`,tracks.length/total);
+      setLoadDetail(nextUrl?`page ${Math.ceil(tracks.length/50)} of ${Math.ceil(total/50)} · ${_reqCount} requests made`:'');
+      if(tracks.length%500===0) saveScanProgress(tracks, nextUrl, total);
+    }catch(e){
+      if(e.message==='rate_limited_hard'){
+        // save where we are and ask user to come back
+        saveScanProgress(tracks, nextUrl, total);
+        throw new Error(`Rate limited after ${tracks.length} tracks. Progress saved! Open the portal again in a few minutes to continue.`);
+      }
+      throw e;
+    }
+  }
+  // complete — save with null nextUrl so we know it's done
+  saveScanProgress(tracks, null, total);
   return tracks;
 }
 
@@ -1329,7 +1422,9 @@ function updateHUD(){
 function setLoadStatus(msg,progress){
   document.getElementById('load-status').textContent=msg;
   document.getElementById('load-progress-fill').style.width=`${Math.round(progress*100)}%`;
-  document.getElementById('load-count').textContent=`${Math.round(progress*100)}% complete`;
+  const pct=Math.round(progress*100);
+  const reqInfo=_reqCount>0?` · ${_reqCount} API calls`:'';
+  document.getElementById('load-count').textContent=`${pct}% complete${reqInfo}`;
 }
 function resetView(){camX=0;camY=0;camZoom=1;}
 function zoomIn(){camZoom=Math.min(30,camZoom*1.4);}
@@ -1362,12 +1457,16 @@ async function boot(){
     await delay(400);
     launchViz();
   }catch(e){
-    localStorage.removeItem('rs_token');localStorage.removeItem('rs_token_exp');
     hide('loading-screen');show('login-screen');
     if(e.message==='auth_expired'||e.message==='Failed to fetch'||e.message.includes('fetch')){
-      showError('session expired ✨ just tap the portal again — your feature cache is saved, constellation loads instantly');
+      localStorage.removeItem('rs_token');localStorage.removeItem('rs_token_exp');
+      showError('session expired ✨ tap the portal again — cache preserved');
+    }else if(e.message.includes('Rate limited after')){
+      // don't clear token — just let them retry, progress is saved
+      showError(e.message);
     }else{
-      showError(`${e.message} — try opening the portal again 💫`);
+      localStorage.removeItem('rs_token');localStorage.removeItem('rs_token_exp');
+      showError(`${e.message} — try again 💫`);
     }
   }
 }
