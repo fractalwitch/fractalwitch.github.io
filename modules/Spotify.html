@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>RESONANCE SORTER ∞ ELYSIUM NEXUS</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Cinzel+Decorative:wght@400;700&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void: #030308;
+    --deep: #07071a;
+    --c1: #ff6ec7;
+    --c2: #a78bfa;
+    --c3: #67e8f9;
+    --c4: #86efac;
+    --c5: #fde68a;
+    --c6: #fb923c;
+    --glow: rgba(167,139,250,0.4);
+    --mono: 'Space Mono', monospace;
+    --display: 'Cinzel Decorative', serif;
+    --body: 'DM Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--void);
+    color: #fff;
+    font-family: var(--body);
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  /* ── STARFIELD BG ── */
+  #bg-stars {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ── SCREENS ── */
+  .screen {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.8s ease;
+  }
+  .screen.hidden { opacity: 0; pointer-events: none; }
+
+  /* ── LOGIN SCREEN ── */
+  #login-screen {
+    background: radial-gradient(ellipse at 50% 40%, rgba(100,60,180,0.25) 0%, transparent 65%),
+                radial-gradient(ellipse at 20% 80%, rgba(255,110,199,0.15) 0%, transparent 50%),
+                var(--void);
+  }
+
+  .sigil {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 2rem;
+    animation: sigil-pulse 4s ease-in-out infinite;
+  }
+
+  @keyframes sigil-pulse {
+    0%,100% { filter: drop-shadow(0 0 20px var(--c2)) drop-shadow(0 0 40px rgba(167,139,250,0.3)); transform: scale(1) rotate(0deg); }
+    50% { filter: drop-shadow(0 0 35px var(--c1)) drop-shadow(0 0 70px rgba(255,110,199,0.4)); transform: scale(1.05) rotate(3deg); }
+  }
+
+  h1.title {
+    font-family: var(--display);
+    font-size: clamp(1.4rem, 4vw, 2.8rem);
+    letter-spacing: 0.15em;
+    text-align: center;
+    background: linear-gradient(135deg, var(--c1), var(--c2), var(--c3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.4rem;
+  }
+
+  h2.subtitle {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.4em;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+    margin-bottom: 3rem;
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: min(420px, 90vw);
+    margin-bottom: 1.5rem;
+  }
+
+  .input-label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    color: var(--c3);
+    text-transform: uppercase;
+  }
+
+  .input-field {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(167,139,250,0.3);
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    width: 100%;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    outline: none;
+  }
+
+  .input-field:focus {
+    border-color: var(--c2);
+    box-shadow: 0 0 20px rgba(167,139,250,0.2);
+  }
+
+  .redirect-hint {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: rgba(255,255,255,0.3);
+    margin-top: 0.3rem;
+  }
+  .redirect-hint span { color: var(--c3); }
+
+  .btn-conjure {
+    margin-top: 1rem;
+    padding: 1rem 2.5rem;
+    background: linear-gradient(135deg, rgba(167,139,250,0.2), rgba(255,110,199,0.2));
+    border: 1px solid rgba(167,139,250,0.5);
+    border-radius: 4px;
+    color: #fff;
+    font-family: var(--display);
+    font-size: 0.85rem;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-conjure::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--c2), var(--c1));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .btn-conjure:hover::before { opacity: 0.15; }
+  .btn-conjure:hover {
+    border-color: var(--c1);
+    box-shadow: 0 0 30px rgba(255,110,199,0.3), 0 0 60px rgba(167,139,250,0.2);
+    transform: translateY(-2px);
+  }
+  .btn-conjure span { position: relative; z-index: 1; }
+
+  /* ── LOADING SCREEN ── */
+  #loading-screen {
+    background: var(--void);
+    gap: 2rem;
+  }
+
+  .loading-orb {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, rgba(167,139,250,0.8), rgba(255,110,199,0.4), transparent);
+    animation: orb-spin 3s linear infinite;
+    box-shadow: 0 0 40px rgba(167,139,250,0.5);
+  }
+
+  @keyframes orb-spin {
+    0% { transform: rotate(0deg) scale(1); box-shadow: 0 0 40px rgba(167,139,250,0.5); }
+    33% { transform: rotate(120deg) scale(1.1); box-shadow: 0 0 60px rgba(255,110,199,0.5); }
+    66% { transform: rotate(240deg) scale(0.95); box-shadow: 0 0 40px rgba(103,232,249,0.5); }
+    100% { transform: rotate(360deg) scale(1); box-shadow: 0 0 40px rgba(167,139,250,0.5); }
+  }
+
+  #load-status {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--c2);
+    letter-spacing: 0.2em;
+    text-align: center;
+  }
+
+  #load-progress-bar {
+    width: min(320px, 80vw);
+    height: 2px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  #load-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--c2), var(--c1), var(--c3));
+    transition: width 0.3s ease;
+    border-radius: 2px;
+  }
+
+  #load-count {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.1em;
+  }
+
+  /* ── VIZ SCREEN ── */
+  #viz-screen {
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  #viz-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 4;
+    cursor: crosshair;
+  }
+
+  /* ── HUD ── */
+  #hud {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    pointer-events: none;
+    padding: 1.2rem 1.5rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  #hud.hidden { display: none; }
+
+  .hud-title {
+    font-family: var(--display);
+    font-size: 0.9rem;
+    letter-spacing: 0.2em;
+    background: linear-gradient(135deg, var(--c1), var(--c2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hud-count {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.15em;
+    margin-top: 0.2rem;
+  }
+
+  /* ── LEGEND ── */
+  #legend {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 1.5rem;
+    z-index: 20;
+    pointer-events: none;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.4);
+    line-height: 1.8;
+  }
+  #legend.hidden { display: none; }
+
+  .legend-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── AXIS LABELS ── */
+  .axis-label {
+    position: fixed;
+    z-index: 20;
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.3em;
+    color: rgba(255,255,255,0.2);
+    text-transform: uppercase;
+    pointer-events: none;
+  }
+  .axis-label.hidden { display: none; }
+
+  #ax-left { bottom: 50%; left: 1.5rem; transform: rotate(-90deg) translateX(50%); }
+  #ax-right { bottom: 50%; right: 1.5rem; transform: rotate(90deg) translateX(50%); }
+  #ax-top { top: 4.5rem; left: 50%; transform: translateX(-50%); }
+  #ax-bottom { bottom: 1.5rem; left: 50%; transform: translateX(-50%); }
+
+  /* ── TOOLTIP ── */
+  #tooltip {
+    position: fixed;
+    z-index: 30;
+    pointer-events: none;
+    background: rgba(3,3,8,0.92);
+    border: 1px solid rgba(167,139,250,0.4);
+    border-radius: 6px;
+    padding: 0.8rem 1rem;
+    max-width: 260px;
+    backdrop-filter: blur(20px);
+    transform: translate(-50%, -120%);
+    transition: opacity 0.15s;
+    opacity: 0;
+  }
+
+  #tooltip.visible { opacity: 1; }
+
+  .tt-artist {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--c2);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 0.2rem;
+  }
+
+  .tt-track {
+    font-family: var(--body);
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: #fff;
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+  }
+
+  .tt-stats {
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+  }
+
+  .tt-stat {
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.1em;
+  }
+
+  .tt-stat span { color: var(--c3); }
+
+  .tt-hint {
+    font-family: var(--mono);
+    font-size: 0.5rem;
+    color: rgba(255,255,255,0.2);
+    margin-top: 0.5rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── CONTROLS ── */
+  #controls {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    pointer-events: all;
+  }
+  #controls.hidden { display: none; }
+
+  .ctrl-btn {
+    width: 36px;
+    height: 36px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(167,139,250,0.2);
+    border-radius: 4px;
+    color: rgba(255,255,255,0.5);
+    font-family: var(--mono);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ctrl-btn:hover {
+    background: rgba(167,139,250,0.15);
+    border-color: var(--c2);
+    color: #fff;
+  }
+
+  /* ── COLOR MODE TOGGLE ── */
+  #color-mode {
+    position: fixed;
+    top: 4.5rem;
+    right: 1.5rem;
+    z-index: 20;
+    display: flex;
+    gap: 0.4rem;
+    pointer-events: all;
+  }
+  #color-mode.hidden { display: none; }
+
+  .mode-btn {
+    padding: 0.3rem 0.7rem;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 3px;
+    color: rgba(255,255,255,0.3);
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .mode-btn.active {
+    background: rgba(167,139,250,0.15);
+    border-color: var(--c2);
+    color: var(--c2);
+  }
+
+  /* ── CLUSTER NAMES ── */
+  .cluster-label {
+    position: fixed;
+    pointer-events: none;
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    color: rgba(255,255,255,0.18);
+    text-transform: uppercase;
+    white-space: nowrap;
+    z-index: 15;
+  }
+
+  /* ── SEARCH ── */
+  #search-wrap {
+    position: fixed;
+    top: 4.5rem;
+    left: 1.5rem;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    pointer-events: all;
+  }
+  #search-wrap.hidden { display: none; }
+
+  #search-input {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(167,139,250,0.2);
+    border-radius: 3px;
+    padding: 0.4rem 0.7rem;
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    width: 180px;
+    outline: none;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+  #search-input:focus {
+    border-color: var(--c2);
+    background: rgba(167,139,250,0.08);
+  }
+  #search-input::placeholder { color: rgba(255,255,255,0.2); }
+
+  /* ── ERROR ── */
+  #error-msg {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: #ff6b6b;
+    text-align: center;
+    margin-top: 1rem;
+    max-width: 380px;
+    line-height: 1.6;
+    display: none;
+  }
+
+  /* ── SONG CARD (mobile tap) ── */
+  #song-card {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 35;
+    background: rgba(3,3,8,0.96);
+    border-top: 1px solid rgba(167,139,250,0.3);
+    padding: 1.2rem 1.5rem 2rem;
+    backdrop-filter: blur(30px);
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.32,0.72,0,1);
+    display: none;
+  }
+  #song-card.visible {
+    transform: translateY(0);
+  }
+  #song-card .sc-pill {
+    width: 40px;
+    height: 4px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 2px;
+    margin: 0 auto 1.2rem;
+  }
+  #song-card .sc-artist {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--c2);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+  }
+  #song-card .sc-track {
+    font-family: var(--body);
+    font-size: 1.2rem;
+    color: #fff;
+    margin-bottom: 0.8rem;
+    line-height: 1.3;
+  }
+  #song-card .sc-stats {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+  #song-card .sc-stat {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.1em;
+  }
+  #song-card .sc-stat span { color: var(--c3); }
+  #song-card .sc-open {
+    width: 100%;
+    padding: 0.8rem;
+    background: rgba(30,215,96,0.15);
+    border: 1px solid rgba(30,215,96,0.4);
+    border-radius: 4px;
+    color: #1ed760;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  #song-card .sc-open:hover, #song-card .sc-open:active {
+    background: rgba(30,215,96,0.25);
+  }
+
+  /* ── MOBILE OVERRIDES ── */
+  @media (max-width: 768px) {
+    .sigil { width: 80px; height: 80px; margin-bottom: 1.2rem; }
+
+    h1.title { font-size: clamp(1rem, 5vw, 1.6rem); }
+
+    h2.subtitle {
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      margin-bottom: 2rem;
+    }
+
+    .input-group { margin-bottom: 1rem; }
+    .input-field { font-size: 0.9rem; padding: 0.9rem 1rem; }
+
+    .btn-conjure { padding: 0.9rem 2rem; width: min(300px, 85vw); }
+
+    #hud { padding: 0.8rem 1rem; }
+    .hud-title { font-size: 0.7rem; }
+    .hud-count { font-size: 0.5rem; }
+
+    /* hide legend on mobile - info is in card */
+    #legend { display: none !important; }
+
+    /* axis labels smaller */
+    .axis-label { font-size: 0.45rem; letter-spacing: 0.15em; }
+    #ax-bottom { font-size: 0.4rem; }
+
+    /* color modes compact */
+    #color-mode { top: 3.8rem; right: 0.8rem; gap: 0.25rem; }
+    .mode-btn { padding: 0.25rem 0.5rem; font-size: 0.5rem; }
+
+    /* search full-ish width */
+    #search-wrap { top: 3.8rem; left: 0.8rem; }
+    #search-input { width: 130px; font-size: 0.6rem; }
+
+    /* controls bigger tap targets */
+    #controls { bottom: 0.8rem; right: 0.8rem; }
+    .ctrl-btn { width: 44px; height: 44px; font-size: 1.2rem; }
+
+    /* tooltip hidden on mobile - use card instead */
+    #tooltip { display: none !important; }
+  }
+
+  @media (max-width: 400px) {
+    h1.title { font-size: 1rem; letter-spacing: 0.08em; }
+    h2.subtitle { display: none; }
+    #search-input { width: 110px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ambient bg stars -->
+<canvas id="bg-stars"></canvas>
+
+<!-- ── LOGIN ── -->
+<div id="login-screen" class="screen">
+  <svg class="sigil" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="60" cy="60" r="55" stroke="rgba(167,139,250,0.3)" stroke-width="1"/>
+    <circle cx="60" cy="60" r="40" stroke="rgba(255,110,199,0.25)" stroke-width="1"/>
+    <circle cx="60" cy="60" r="25" stroke="rgba(103,232,249,0.2)" stroke-width="1"/>
+    <path d="M60 10 L67 40 L98 40 L73 58 L83 88 L60 72 L37 88 L47 58 L22 40 L53 40 Z" fill="none" stroke="rgba(167,139,250,0.5)" stroke-width="1.5" stroke-linejoin="round"/>
+    <circle cx="60" cy="60" r="5" fill="rgba(255,110,199,0.6)"/>
+    <circle cx="60" cy="10" r="2.5" fill="rgba(103,232,249,0.6)"/>
+    <circle cx="98" cy="40" r="2" fill="rgba(167,139,250,0.6)"/>
+    <circle cx="22" cy="40" r="2" fill="rgba(167,139,250,0.6)"/>
+    <circle cx="83" cy="88" r="2" fill="rgba(254,215,170,0.6)"/>
+    <circle cx="37" cy="88" r="2" fill="rgba(134,239,172,0.6)"/>
+  </svg>
+
+  <h1 class="title">RESONANCE SORTER</h1>
+  <h2 class="subtitle">∞ elysium nexus ∞ sonic cartography ∞</h2>
+
+  <div class="input-group">
+    <div class="input-label">Spotify Client ID</div>
+    <input type="text" id="client-id-input" class="input-field" placeholder="paste your client id here" autocomplete="off" spellcheck="false"/>
+    <div class="redirect-hint">add <span>http://localhost:3000</span> (desktop) or your hosted URL to Spotify redirect URIs</div>
+  </div>
+
+  <button class="btn-conjure" onclick="initiateAuth()">
+    <span>✦ OPEN THE PORTAL ✦</span>
+  </button>
+
+  <div id="error-msg"></div>
+
+  <div style="margin-top:3rem; font-family: var(--mono); font-size: 0.58rem; color: rgba(255,255,255,0.15); text-align: center; letter-spacing: 0.1em; line-height: 2;">
+    X AXIS: VALENCE (melancholy → euphoria) &nbsp;·&nbsp; Y AXIS: ENERGY (drift → surge)<br>
+    COLOR: SONIC SIGNATURE &nbsp;·&nbsp; SIZE: DANCEABILITY
+  </div>
+</div>
+
+<!-- ── LOADING ── -->
+<div id="loading-screen" class="screen hidden">
+  <div class="loading-orb"></div>
+  <div id="load-status">INITIATING RESONANCE SCAN...</div>
+  <div id="load-progress-bar"><div id="load-progress-fill"></div></div>
+  <div id="load-count">preparing to receive transmission</div>
+</div>
+
+<!-- ── HUD ── -->
+<div id="hud" class="hidden">
+  <div>
+    <div class="hud-title">RESONANCE SORTER</div>
+    <div class="hud-count" id="hud-count">— songs mapped</div>
+  </div>
+</div>
+
+<!-- ── AXIS LABELS ── -->
+<div class="axis-label hidden" id="ax-left">ENERGY ↑</div>
+<div class="axis-label hidden" id="ax-right">ENERGY ↑</div>
+<div class="axis-label hidden" id="ax-top">EUPHORIC</div>
+<div class="axis-label hidden" id="ax-bottom">MELANCHOLY → → → → → → EUPHORIC</div>
+
+<!-- ── COLOR MODE ── -->
+<div id="color-mode" class="hidden">
+  <button class="mode-btn active" onclick="setColorMode('genre')" id="cm-genre">SONIC</button>
+  <button class="mode-btn" onclick="setColorMode('energy')" id="cm-energy">ENERGY</button>
+  <button class="mode-btn" onclick="setColorMode('tempo')" id="cm-tempo">TEMPO</button>
+  <button class="mode-btn" onclick="setColorMode('dance')" id="cm-dance">DANCE</button>
+</div>
+
+<!-- ── SEARCH ── -->
+<div id="search-wrap" class="hidden">
+  <input type="text" id="search-input" placeholder="search songs..." oninput="handleSearch(this.value)"/>
+</div>
+
+<!-- ── MAIN VIZ CANVAS ── -->
+<canvas id="viz-canvas" class="hidden"></canvas>
+
+<!-- ── LEGEND ── -->
+<div id="legend" class="hidden">
+  <div class="legend-row"><div class="legend-dot" style="background:#ff6ec7"></div> sad + intense</div>
+  <div class="legend-row"><div class="legend-dot" style="background:#a78bfa"></div> complex / brooding</div>
+  <div class="legend-row"><div class="legend-dot" style="background:#67e8f9"></div> chill + cool</div>
+  <div class="legend-row"><div class="legend-dot" style="background:#86efac"></div> peaceful + bright</div>
+  <div class="legend-row"><div class="legend-dot" style="background:#fde68a"></div> bright + driving</div>
+  <div class="legend-row"><div class="legend-dot" style="background:#fb923c"></div> euphoric + energized</div>
+  <div style="margin-top:0.5rem; color: rgba(255,255,255,0.2);">scroll: zoom · drag: pan · click: open in spotify</div>
+</div>
+
+<!-- ── CONTROLS ── -->
+<div id="controls" class="hidden">
+  <button class="ctrl-btn" onclick="resetView()" title="reset view">⊙</button>
+  <button class="ctrl-btn" onclick="zoomIn()" title="zoom in">+</button>
+  <button class="ctrl-btn" onclick="zoomOut()" title="zoom out">−</button>
+</div>
+
+<!-- ── TOOLTIP ── -->
+<div id="tooltip">
+  <div class="tt-artist" id="tt-artist"></div>
+  <div class="tt-track" id="tt-track"></div>
+  <div class="tt-stats" id="tt-stats"></div>
+  <div class="tt-hint">click to open in spotify</div>
+</div>
+
+<!-- ── MOBILE SONG CARD ── -->
+<div id="song-card">
+  <div class="sc-pill"></div>
+  <div class="sc-artist" id="sc-artist"></div>
+  <div class="sc-track" id="sc-track"></div>
+  <div class="sc-stats" id="sc-stats"></div>
+  <button class="sc-open" id="sc-open-btn">↗ OPEN IN SPOTIFY</button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// CONFIG & STATE
+// ═══════════════════════════════════════════════════
+const SCOPES = 'user-library-read';
+let accessToken = null;
+let clientId = null;
+let songs = []; // { id, name, artist, uri, features }
+let colorMode = 'genre';
+let searchQuery = '';
+
+// Camera/viewport
+let camX = 0, camY = 0, camZoom = 1;
+let isDragging = false, dragStartX = 0, dragStartY = 0, dragCamX = 0, dragCamY = 0;
+let animFrame = null;
+let hoveredSong = null;
+let mouseX = 0, mouseY = 0;
+
+// Touch state
+const isMobile = () => window.matchMedia('(max-width: 768px)').matches || ('ontouchstart' in window);
+let lastTouchDist = null; // for pinch zoom
+let touchStartX = 0, touchStartY = 0;
+let touchMoved = false;
+let pinnedSong = -1; // tapped song on mobile
+let songCardUrl = null;
+
+// ═══════════════════════════════════════════════════
+// AMBIENT STARS
+// ═══════════════════════════════════════════════════
+(function initBgStars() {
+  const c = document.getElementById('bg-stars');
+  const ctx = c.getContext('2d');
+  let stars = [];
+
+  function resize() {
+    c.width = window.innerWidth;
+    c.height = window.innerHeight;
+    stars = Array.from({length: 200}, () => ({
+      x: Math.random() * c.width,
+      y: Math.random() * c.height,
+      r: Math.random() * 1.2,
+      a: Math.random(),
+      speed: 0.001 + Math.random() * 0.002
+    }));
+  }
+
+  function draw(t) {
+    ctx.clearRect(0, 0, c.width, c.height);
+    stars.forEach(s => {
+      s.a = 0.2 + 0.3 * Math.sin(t * s.speed * 1000);
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,255,255,${s.a})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+  requestAnimationFrame(draw);
+})();
+
+// ═══════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════
+function initiateAuth() {
+  const input = document.getElementById('client-id-input').value.trim();
+  if (!input || input.length < 20) {
+    showError('please paste your Spotify Client ID above ✨');
+    return;
+  }
+  clientId = input;
+  localStorage.setItem('rs_client_id', clientId);
+
+  const redirectUri = `${window.location.origin}${window.location.pathname}`;
+  const params = new URLSearchParams({
+    client_id: clientId,
+    response_type: 'token',
+    redirect_uri: redirectUri,
+    scope: SCOPES,
+    show_dialog: 'false'
+  });
+  window.location = `https://accounts.spotify.com/authorize?${params}`;
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function parseToken() {
+  const hash = window.location.hash.substring(1);
+  const params = new URLSearchParams(hash);
+  const token = params.get('access_token');
+  if (token) {
+    accessToken = token;
+    window.history.replaceState({}, '', window.location.pathname);
+    // restore clientId
+    clientId = clientId || localStorage.getItem('rs_client_id');
+    return true;
+  }
+  return false;
+}
+
+// ═══════════════════════════════════════════════════
+// DATA FETCHING
+// ═══════════════════════════════════════════════════
+async function apiGet(url) {
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+  if (res.status === 401) throw new Error('auth_expired');
+  if (res.status === 429) {
+    const retry = parseInt(res.headers.get('Retry-After') || '2');
+    await delay(retry * 1000);
+    return apiGet(url);
+  }
+  return res.json();
+}
+
+const delay = ms => new Promise(r => setTimeout(r, ms));
+
+async function fetchAllLiked() {
+  setLoadStatus('SCANNING YOUR LIBRARY...', 0);
+  let url = 'https://api.spotify.com/v1/me/tracks?limit=50&offset=0';
+  let total = null;
+  let tracks = [];
+
+  while (url) {
+    const data = await apiGet(url);
+    if (!total) total = data.total;
+    tracks.push(...data.items.map(i => ({
+      id: i.track.id,
+      name: i.track.name,
+      artist: i.track.artists.map(a => a.name).join(', '),
+      uri: i.track.uri,
+      url: i.track.external_urls.spotify
+    })));
+    setLoadStatus(`RECEIVING TRANSMISSIONS... ${tracks.length} / ${total}`, tracks.length / total);
+    url = data.next;
+    if (tracks.length % 500 === 0) await delay(100); // gentle rate limit
+  }
+  return tracks;
+}
+
+async function fetchAudioFeatures(trackIds) {
+  const features = [];
+  const chunks = [];
+  for (let i = 0; i < trackIds.length; i += 100)
+    chunks.push(trackIds.slice(i, i + 100));
+
+  for (let i = 0; i < chunks.length; i++) {
+    const ids = chunks[i].join(',');
+    const data = await apiGet(`https://api.spotify.com/v1/audio-features?ids=${ids}`);
+    if (data.audio_features) features.push(...data.audio_features);
+    setLoadStatus(`ANALYZING SONIC SIGNATURES... ${Math.min((i+1)*100, trackIds.length)} / ${trackIds.length}`,
+      ((i+1) / chunks.length) * 1);
+    if (i % 5 === 0) await delay(50);
+  }
+  return features;
+}
+
+function setLoadStatus(msg, progress) {
+  document.getElementById('load-status').textContent = msg;
+  document.getElementById('load-progress-fill').style.width = `${Math.round(progress * 100)}%`;
+  document.getElementById('load-count').textContent = `${Math.round(progress * 100)}% complete`;
+}
+
+// ═══════════════════════════════════════════════════
+// MAIN BOOT
+// ═══════════════════════════════════════════════════
+async function boot() {
+  if (!parseToken()) {
+    // restore client ID if returning
+    const saved = localStorage.getItem('rs_client_id');
+    if (saved) document.getElementById('client-id-input').value = saved;
+    return; // stay on login
+  }
+
+  show('loading-screen');
+  hide('login-screen');
+
+  try {
+    const tracks = await fetchAllLiked();
+    const ids = tracks.map(t => t.id).filter(Boolean);
+    const features = await fetchAudioFeatures(ids);
+
+    // merge
+    const featureMap = {};
+    features.forEach(f => { if (f) featureMap[f.id] = f; });
+
+    songs = tracks
+      .filter(t => featureMap[t.id])
+      .map(t => ({ ...t, f: featureMap[t.id] }));
+
+    setLoadStatus('MAPPING THE CONSTELLATION...', 1);
+    await delay(600);
+    launchViz();
+
+  } catch(e) {
+    if (e.message === 'auth_expired') {
+      localStorage.removeItem('rs_client_id');
+      show('login-screen');
+      hide('loading-screen');
+      showError('session expired — try again 💫');
+    } else {
+      document.getElementById('load-status').textContent = `ERROR: ${e.message}`;
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// VISUALIZATION
+// ═══════════════════════════════════════════════════
+const canvas = document.getElementById('viz-canvas');
+const ctx = canvas.getContext('2d');
+
+function launchViz() {
+  hide('loading-screen');
+  canvas.classList.remove('hidden');
+  showHUD();
+
+  document.getElementById('hud-count').textContent = `${songs.length.toLocaleString()} songs mapped`;
+
+  resizeCanvas();
+  window.addEventListener('resize', () => { resizeCanvas(); render(); });
+  setupInteraction();
+  resetView();
+  renderLoop();
+}
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+// ── COLOR ──
+function getSongColor(s, mode) {
+  const f = s.f;
+  if (!f) return '#888';
+  const v = f.valence;
+  const e = f.energy;
+  const d = f.danceability;
+  const t = (f.tempo - 60) / 140; // normalize 60-200 bpm
+
+  if (mode === 'energy') {
+    const h = 250 - e * 220; // purple→red
+    return `hsl(${h},80%,${40 + e*30}%)`;
+  }
+  if (mode === 'tempo') {
+    const h = 240 - t * 200;
+    return `hsl(${h},75%,${45 + t*25}%)`;
+  }
+  if (mode === 'dance') {
+    const h = 130 - d * 100 + 20;
+    return `hsl(${h},80%,${40 + d*30}%)`;
+  }
+
+  // 'genre' / sonic signature: blended composite
+  // color = hue derived from valence*energy*dance triangle
+  // creates natural clustering by feel
+  const hue = (v * 200 + e * 80 + d * 60) % 360;
+  const sat = 60 + d * 30;
+  const lig = 35 + e * 30;
+  return `hsl(${hue},${sat}%,${lig}%)`;
+}
+
+function getSongSize(s) {
+  const d = s.f ? s.f.danceability : 0.5;
+  return 1.5 + d * 3.5;
+}
+
+// ── WORLD COORDS ──
+function songToWorld(s) {
+  const margin = 0.08;
+  const v = s.f ? s.f.valence : 0.5;
+  const e = s.f ? s.f.energy : 0.5;
+  const jx = (Math.random() - 0.5) * 0.02;
+  const jy = (Math.random() - 0.5) * 0.02;
+  return {
+    wx: margin + v * (1 - margin*2) + jx,
+    wy: (1 - margin) - e * (1 - margin*2) + jy
+  };
+}
+
+// cache world coords once
+let worldPositions = null;
+function getWorldPositions() {
+  if (!worldPositions) {
+    worldPositions = songs.map(songToWorld);
+  }
+  return worldPositions;
+}
+
+// ── CAMERA ──
+function worldToScreen(wx, wy) {
+  const cx = canvas.width / 2, cy = canvas.height / 2;
+  const size = Math.min(canvas.width, canvas.height) * 0.85;
+  return {
+    sx: cx + (wx - 0.5) * size * camZoom + camX,
+    sy: cy + (wy - 0.5) * size * camZoom + camY
+  };
+}
+
+function screenToWorld(sx, sy) {
+  const cx = canvas.width / 2, cy = canvas.height / 2;
+  const size = Math.min(canvas.width, canvas.height) * 0.85;
+  return {
+    wx: (sx - cx - camX) / (size * camZoom) + 0.5,
+    wy: (sy - cy - camY) / (size * camZoom) + 0.5
+  };
+}
+
+// ── RENDER ──
+function render() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const positions = getWorldPositions();
+  const query = searchQuery.toLowerCase();
+
+  // draw grid lines subtly
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  for (let g = 0.1; g < 1; g += 0.1) {
+    const {sx: gx1} = worldToScreen(g, 0);
+    const {sy: gy1} = worldToScreen(0, g);
+    // vertical
+    ctx.beginPath();
+    ctx.moveTo(gx1, 0);
+    ctx.lineTo(gx1, canvas.height);
+    ctx.stroke();
+    // horizontal
+    ctx.beginPath();
+    ctx.moveTo(0, gy1);
+    ctx.lineTo(canvas.width, gy1);
+    ctx.stroke();
+  }
+
+  // center crosshair
+  ctx.strokeStyle = 'rgba(167,139,250,0.12)';
+  ctx.lineWidth = 1.5;
+  const {sx: cx05, sy: cy05} = worldToScreen(0.5, 0.5);
+  ctx.beginPath(); ctx.moveTo(0, cy05); ctx.lineTo(canvas.width, cy05); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx05, 0); ctx.lineTo(cx05, canvas.height); ctx.stroke();
+
+  // draw songs
+  for (let i = 0; i < songs.length; i++) {
+    const s = songs[i];
+    const {wx, wy} = positions[i];
+    const {sx, sy} = worldToScreen(wx, wy);
+
+    if (sx < -20 || sx > canvas.width + 20 || sy < -20 || sy > canvas.height + 20) continue;
+
+    const r = getSongSize(s) * Math.max(0.5, Math.min(2, camZoom * 0.8));
+    const color = getSongColor(s, colorMode);
+    const isHovered = hoveredSong === i || pinnedSong === i;
+    const isSearchMatch = query && (s.name.toLowerCase().includes(query) || s.artist.toLowerCase().includes(query));
+    const isSearchDim = query && !isSearchMatch;
+
+    if (isSearchDim) {
+      ctx.globalAlpha = 0.06;
+    } else if (isHovered) {
+      ctx.globalAlpha = 1;
+    } else {
+      ctx.globalAlpha = 0.7;
+    }
+
+    // glow for hovered
+    if (isHovered || isSearchMatch) {
+      ctx.shadowColor = color;
+      ctx.shadowBlur = isHovered ? 20 : 10;
+    } else {
+      ctx.shadowBlur = 0;
+    }
+
+    ctx.beginPath();
+    ctx.arc(sx, sy, isHovered ? r * 2 : r, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // outer ring for hovered
+    if (isHovered) {
+      ctx.globalAlpha = 0.4;
+      ctx.beginPath();
+      ctx.arc(sx, sy, r * 3.5, 0, Math.PI * 2);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
+
+  ctx.globalAlpha = 1;
+  ctx.shadowBlur = 0;
+}
+
+let _rafId = null;
+function renderLoop() {
+  render();
+  _rafId = requestAnimationFrame(renderLoop);
+}
+
+// ── INTERACTION ──
+function setupInteraction() {
+  // Mouse
+  canvas.addEventListener('mousemove', onMouseMove);
+  canvas.addEventListener('mousedown', onMouseDown);
+  canvas.addEventListener('mouseup', onMouseUp);
+  canvas.addEventListener('mouseleave', () => { isDragging = false; hideTooltip(); hoveredSong = null; });
+  canvas.addEventListener('wheel', onWheel, { passive: false });
+  canvas.addEventListener('click', onCanvasClick);
+
+  // Touch
+  canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+  canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+  canvas.addEventListener('touchend', onTouchEnd, { passive: false });
+
+  // Song card open button
+  document.getElementById('sc-open-btn').addEventListener('click', () => {
+    if (songCardUrl) window.open(songCardUrl, '_blank');
+  });
+
+  // Tap outside card to dismiss
+  canvas.addEventListener('touchstart', (e) => {
+    const card = document.getElementById('song-card');
+    if (card.classList.contains('visible') && e.touches.length === 1) {
+      hideSongCard();
+      pinnedSong = -1;
+    }
+  }, { passive: true, capture: true });
+}
+
+// ── TOUCH HANDLERS ──
+function getTouchCenter(touches) {
+  if (touches.length === 1) return { x: touches[0].clientX, y: touches[0].clientY };
+  return {
+    x: (touches[0].clientX + touches[1].clientX) / 2,
+    y: (touches[0].clientY + touches[1].clientY) / 2
+  };
+}
+
+function getTouchDist(touches) {
+  return Math.hypot(
+    touches[0].clientX - touches[1].clientX,
+    touches[0].clientY - touches[1].clientY
+  );
+}
+
+function onTouchStart(e) {
+  e.preventDefault();
+  touchMoved = false;
+
+  if (e.touches.length === 1) {
+    const t = e.touches[0];
+    isDragging = true;
+    dragStartX = touchStartX = t.clientX;
+    dragStartY = touchStartY = t.clientY;
+    dragCamX = camX;
+    dragCamY = camY;
+    lastTouchDist = null;
+  } else if (e.touches.length === 2) {
+    isDragging = false;
+    lastTouchDist = getTouchDist(e.touches);
+    const c = getTouchCenter(e.touches);
+    dragStartX = c.x; dragStartY = c.y;
+    dragCamX = camX; dragCamY = camY;
+  }
+}
+
+function onTouchMove(e) {
+  e.preventDefault();
+  touchMoved = true;
+
+  if (e.touches.length === 1 && isDragging) {
+    const t = e.touches[0];
+    camX = dragCamX + (t.clientX - dragStartX);
+    camY = dragCamY + (t.clientY - dragStartY);
+    hideSongCard();
+    hoveredSong = -1;
+
+  } else if (e.touches.length === 2) {
+    // pinch zoom
+    const newDist = getTouchDist(e.touches);
+    const center = getTouchCenter(e.touches);
+
+    if (lastTouchDist !== null) {
+      const factor = newDist / lastTouchDist;
+      const wx = center.x - canvas.width / 2;
+      const wy = center.y - canvas.height / 2;
+      camX = (camX - wx) * factor + wx;
+      camY = (camY - wy) * factor + wy;
+      camZoom *= factor;
+      camZoom = Math.max(0.3, Math.min(30, camZoom));
+    }
+
+    // also pan with two-finger drag
+    camX = dragCamX + (center.x - dragStartX);
+    camY = dragCamY + (center.y - dragStartY);
+
+    lastTouchDist = newDist;
+    dragCamX = camX - (center.x - dragStartX);
+    dragCamY = camY - (center.y - dragStartY);
+    dragStartX = center.x;
+    dragStartY = center.y;
+  }
+}
+
+function onTouchEnd(e) {
+  e.preventDefault();
+  isDragging = false;
+  lastTouchDist = null;
+
+  // treat as tap if didn't move much
+  if (!touchMoved && e.changedTouches.length === 1) {
+    const t = e.changedTouches[0];
+    const dx = Math.abs(t.clientX - touchStartX);
+    const dy = Math.abs(t.clientY - touchStartY);
+    if (dx < 8 && dy < 8) {
+      handleTap(t.clientX, t.clientY);
+    }
+  }
+}
+
+function handleTap(x, y) {
+  const positions = getWorldPositions();
+  let closest = -1, closestDist = Infinity;
+  const threshold = 32; // bigger tap target for fingers
+
+  for (let i = 0; i < songs.length; i++) {
+    const {sx, sy} = worldToScreen(positions[i].wx, positions[i].wy);
+    const d = Math.hypot(x - sx, y - sy);
+    if (d < threshold && d < closestDist) {
+      closestDist = d;
+      closest = i;
+    }
+  }
+
+  if (closest >= 0) {
+    pinnedSong = closest;
+    hoveredSong = closest;
+    showSongCard(songs[closest]);
+  } else {
+    pinnedSong = -1;
+    hoveredSong = -1;
+    hideSongCard();
+  }
+}
+
+// ── SONG CARD (mobile) ──
+function showSongCard(s) {
+  const card = document.getElementById('song-card');
+  card.style.display = 'block';
+  document.getElementById('sc-artist').textContent = s.artist;
+  document.getElementById('sc-track').textContent = s.name;
+  const f = s.f;
+  document.getElementById('sc-stats').innerHTML = `
+    <div class="sc-stat">ENERGY <span>${Math.round(f.energy*100)}%</span></div>
+    <div class="sc-stat">VALENCE <span>${Math.round(f.valence*100)}%</span></div>
+    <div class="sc-stat">DANCE <span>${Math.round(f.danceability*100)}%</span></div>
+    <div class="sc-stat">BPM <span>${Math.round(f.tempo)}</span></div>
+  `;
+  songCardUrl = s.url;
+  requestAnimationFrame(() => card.classList.add('visible'));
+}
+
+function hideSongCard() {
+  const card = document.getElementById('song-card');
+  card.classList.remove('visible');
+  setTimeout(() => { if (!card.classList.contains('visible')) card.style.display = 'none'; }, 350);
+}
+
+function onMouseMove(e) {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+
+  if (isDragging) {
+    camX = dragCamX + (e.clientX - dragStartX);
+    camY = dragCamY + (e.clientY - dragStartY);
+    hideTooltip();
+    hoveredSong = null;
+    return;
+  }
+
+  // hover detection
+  const positions = getWorldPositions();
+  let closest = -1, closestDist = Infinity;
+  const threshold = 18;
+
+  for (let i = 0; i < songs.length; i++) {
+    const {sx, sy} = worldToScreen(positions[i].wx, positions[i].wy);
+    const d = Math.hypot(e.clientX - sx, e.clientY - sy);
+    if (d < threshold && d < closestDist) {
+      closestDist = d;
+      closest = i;
+    }
+  }
+
+  if (closest !== hoveredSong) {
+    hoveredSong = closest;
+    if (closest >= 0) {
+      showTooltip(songs[closest], e.clientX, e.clientY);
+      canvas.style.cursor = 'pointer';
+    } else {
+      hideTooltip();
+      canvas.style.cursor = isDragging ? 'grabbing' : 'crosshair';
+    }
+  } else if (closest >= 0) {
+    moveTooltip(e.clientX, e.clientY);
+  }
+}
+
+function onMouseDown(e) {
+  isDragging = true;
+  dragStartX = e.clientX;
+  dragStartY = e.clientY;
+  dragCamX = camX;
+  dragCamY = camY;
+  canvas.style.cursor = 'grabbing';
+}
+
+function onMouseUp() {
+  isDragging = false;
+  canvas.style.cursor = 'crosshair';
+}
+
+function onWheel(e) {
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.12 : 0.89;
+  // zoom toward mouse
+  const wx = e.clientX - canvas.width / 2;
+  const wy = e.clientY - canvas.height / 2;
+  camX = (camX - wx) * factor + wx;
+  camY = (camY - wy) * factor + wy;
+  camZoom *= factor;
+  camZoom = Math.max(0.3, Math.min(30, camZoom));
+}
+
+function onCanvasClick(e) {
+  if (Math.abs(e.clientX - dragStartX) > 5 || Math.abs(e.clientY - dragStartY) > 5) return;
+  if (hoveredSong >= 0) {
+    window.open(songs[hoveredSong].url, '_blank');
+  }
+}
+
+// ── TOOLTIP ──
+const tooltip = document.getElementById('tooltip');
+function showTooltip(s, x, y) {
+  document.getElementById('tt-artist').textContent = s.artist;
+  document.getElementById('tt-track').textContent = s.name;
+  const f = s.f;
+  document.getElementById('tt-stats').innerHTML = `
+    <div class="tt-stat">ENERGY <span>${Math.round(f.energy*100)}%</span></div>
+    <div class="tt-stat">VALENCE <span>${Math.round(f.valence*100)}%</span></div>
+    <div class="tt-stat">DANCE <span>${Math.round(f.danceability*100)}%</span></div>
+    <div class="tt-stat">BPM <span>${Math.round(f.tempo)}</span></div>
+  `;
+  moveTooltip(x, y);
+  tooltip.classList.add('visible');
+}
+
+function moveTooltip(x, y) {
+  let tx = x;
+  let ty = y;
+  // keep in bounds
+  const w = 260;
+  if (tx + w/2 > window.innerWidth - 10) tx = window.innerWidth - 10 - w/2;
+  if (tx - w/2 < 10) tx = 10 + w/2;
+  tooltip.style.left = tx + 'px';
+  tooltip.style.top = (ty - 15) + 'px';
+}
+
+function hideTooltip() { tooltip.classList.remove('visible'); }
+
+// ── CONTROLS ──
+function resetView() { camX = 0; camY = 0; camZoom = 1; }
+function zoomIn() { camZoom = Math.min(30, camZoom * 1.4); }
+function zoomOut() { camZoom = Math.max(0.3, camZoom / 1.4); }
+
+function setColorMode(mode) {
+  colorMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`cm-${mode}`).classList.add('active');
+}
+
+function handleSearch(val) { searchQuery = val; }
+
+// ── SHOW/HIDE HELPERS ──
+function show(id) { document.getElementById(id).classList.remove('hidden'); }
+function hide(id) { document.getElementById(id).classList.add('hidden'); }
+function showHUD() {
+  ['hud','legend','controls','color-mode','search-wrap','ax-top','ax-bottom','ax-left'].forEach(show);
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+boot();
+</script>
+</body>
+</html>
