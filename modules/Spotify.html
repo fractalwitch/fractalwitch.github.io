@@ -982,24 +982,27 @@ async function parseToken(){
 // SPOTIFY API
 // ═══════════════════════════════════════════════════
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
-async function apiGet(url){
+async function apiGet(url, _retries=0){
   let r;
   try{
     const controller=new AbortController();
-    const tid=setTimeout(()=>controller.abort(),15000); // 15s timeout
+    const tid=setTimeout(()=>controller.abort(),20000);
     r=await fetch(url,{headers:{Authorization:`Bearer ${accessToken}`},signal:controller.signal});
     clearTimeout(tid);
   }catch(e){
-    if(e.name==='AbortError') throw new Error('Request timed out — check your connection and try again');
+    if(e.name==='AbortError') throw new Error('Request timed out — check connection');
     throw new Error('auth_expired');
   }
   if(r.status===401||r.status===403) throw new Error('auth_expired');
   if(r.status===429){
-    const wait=parseInt(r.headers.get('Retry-After')||'2')*1000;
-    setLoadStatus(`rate limited — waiting ${Math.round(wait/1000)}s...`,0);
-    await delay(wait);return apiGet(url);
+    if(_retries>=4) throw new Error('Spotify rate limiting too aggressive — wait a few minutes and try again');
+    const retryAfter=parseInt(r.headers.get('Retry-After')||'1');
+    const wait=Math.max(retryAfter, Math.pow(2,_retries))*1000; // exponential backoff
+    setLoadStatus(`rate limited — waiting ${Math.round(wait/1000)}s (retry ${_retries+1}/4)...`,0.01);
+    await delay(wait);
+    return apiGet(url, _retries+1);
   }
-  if(!r.ok) throw new Error(`Spotify API ${r.status} — try refreshing`);
+  if(!r.ok) throw new Error(`Spotify API ${r.status}`);
   try{ return await r.json(); }
   catch(e){ throw new Error('auth_expired'); }
 }
@@ -1008,14 +1011,7 @@ function abortAndReturn(){
   hide('loading-screen');show('login-screen');
 }
 async function fetchAllLiked(){
-  setLoadStatus('TESTING CONNECTION...',0);
-  // Quick profile check to verify token works before big scan
-  try{
-    const me=await apiGet('https://api.spotify.com/v1/me');
-    setLoadStatus(`CONNECTED AS ${(me.display_name||me.id||'unknown').toUpperCase()} — SCANNING...`,0.02);
-  }catch(e){
-    throw e; // will be caught by boot
-  }
+  setLoadStatus('SCANNING YOUR LIBRARY...',0);
   let url='https://api.spotify.com/v1/me/tracks?limit=50',total=null,tracks=[];
   while(url){
     const d=await apiGet(url);
@@ -1349,8 +1345,9 @@ async function boot(){
   const hasToken=await parseToken();
   if(!hasToken) return;
   show('loading-screen');hide('login-screen');
-  // show bail-out button after 8s in case scan hangs
-  setTimeout(()=>{const b=document.getElementById('load-back-btn');if(b)b.style.display='block';},8000);
+  setTimeout(()=>{const b=document.getElementById('load-back-btn');if(b)b.style.display='block';},10000);
+  setLoadStatus('OPENING CHANNEL...',0);
+  await delay(1500); // brief pause so Spotify rate limit window resets
   try{
     const tracks=await fetchAllLiked();
     setLoadStatus('CRYSTALLIZING...',.95);
