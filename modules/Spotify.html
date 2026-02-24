@@ -681,6 +681,7 @@
   <div>
     <div class="hud-title">RESONANCE SORTER</div>
     <div class="hud-count" id="hud-count">— songs mapped</div>
+    <button onclick="rescanLibrary()" title="rescan library from Spotify" style="background:transparent;border:none;color:rgba(255,255,255,0.12);font-family:var(--mono);font-size:.48rem;letter-spacing:.1em;cursor:pointer;padding:.15rem 0;display:block;margin-top:.1rem">⟳ rescan library</button>
   </div>
 </div>
 
@@ -963,6 +964,29 @@ async function exchangeCode(code){
   return false;
 }
 function showError(msg){const e=document.getElementById('error-msg');e.textContent=msg;e.style.display='block';}
+
+function showBlockedError(){
+  const e=document.getElementById('error-msg');
+  e.innerHTML=`
+    <div style="color:#ff6b6b;margin-bottom:.8rem">⚠ CLIENT ID PUNISHMENT BLOCK DETECTED</div>
+    <div style="color:rgba(255,255,255,0.5);font-size:.75rem;line-height:1.7;margin-bottom:1rem">
+      Spotify has extended your app's timeout — possibly up to 24 hours.<br>
+      Every retry makes it longer. <strong style="color:rgba(255,255,255,0.7)">Stop retrying immediately.</strong>
+    </div>
+    <div style="color:#a78bfa;font-size:.8rem;line-height:1.8">
+      ✦ fastest fix: create a fresh Spotify app (2 min)<br>
+      &nbsp;&nbsp;<a href="https://developer.spotify.com/dashboard" target="_blank" style="color:#67e8f9">developer.spotify.com/dashboard</a><br>
+      &nbsp;&nbsp;→ Create App → paste new Client ID above<br>
+      &nbsp;&nbsp;→ add your redirect URI to the new app<br><br>
+      ✦ alternative: wait ~24hrs for this Client ID to unblock
+    </div>`;
+  e.style.display='block';
+  e.style.textAlign='left';
+  e.style.padding='1.2rem';
+  e.style.background='rgba(255,50,50,0.05)';
+  e.style.border='1px solid rgba(255,100,100,0.2)';
+  e.style.borderRadius='8px';
+}
 async function parseToken(){
   const p=new URLSearchParams(location.search),code=p.get('code'),err=p.get('error');
   if(err){showError(`Spotify: ${err}`);return false;}
@@ -984,15 +1008,23 @@ async function parseToken(){
 // ═══════════════════════════════════════════════════
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 let _lastApiCall=0;
-let _reqCount=0; // total requests made this session
+let _reqCount=0;
+let _tracksLoadedSoFar=0; // so we can detect if we're blocked before any data
 
-function jitter(ms){ return ms + Math.floor(Math.random()*ms*0.3); } // ±30% jitter
+function jitter(ms){ return ms + Math.floor(Math.random()*ms*0.4); } // ±40% jitter
+
+// Adaptive throttle — starts cautious, backs off hard on any 429
+let _throttleMs = 2000; // start at 2s = 30 req/min (bulletproof conservative)
+const THROTTLE_MIN = 1500;
+const THROTTLE_MAX = 8000;
+function onSuccess(){ _throttleMs = Math.max(THROTTLE_MIN, _throttleMs * 0.98); } // slowly speed up if all good
+function onRateLimit(){ _throttleMs = Math.min(THROTTLE_MAX, _throttleMs * 2.5); } // back off hard on 429
 
 async function apiGet(url, _retries=0){
-  // 700ms + jitter between requests — jitter avoids synchronized bursts
-  const minGap=jitter(700);
+  const minGap=jitter(_throttleMs);
   const now=Date.now(), gap=now-_lastApiCall;
   if(gap<minGap) await delay(minGap-gap);
+  setLoadDetail(`throttle: ${(_throttleMs/1000).toFixed(1)}s/req · ${_reqCount} calls made`);
   _lastApiCall=Date.now();
   _reqCount++;
 
@@ -1003,7 +1035,7 @@ async function apiGet(url, _retries=0){
     r=await fetch(url,{headers:{Authorization:`Bearer ${accessToken}`},signal:controller.signal});
     clearTimeout(tid);
   }catch(e){
-    if(e.name==='AbortError') throw new Error('Request timed out — check connection and try again');
+    if(e.name==='AbortError') throw new Error('Request timed out — check connection');
     throw new Error('auth_expired');
   }
 
@@ -1011,42 +1043,51 @@ async function apiGet(url, _retries=0){
 
   if(r.status===429){
     const retryAfterHeader=r.headers.get('Retry-After');
+    const isPunishmentBlock=(_tracksLoadedSoFar===0 && _reqCount<=2);
+
+    onRateLimit(); // back throttle off hard
+    if(isPunishmentBlock){
+      // blocked before even starting = Client ID punishment block
+      // do NOT retry — that makes it worse. bail immediately.
+      throw new Error('CLIENT_ID_BLOCKED');
+    }
+
     let waitSecs;
     if(retryAfterHeader){
-      // Spotify told us exactly how long — respect it precisely
       waitSecs=parseInt(retryAfterHeader);
-      const cooldownType=waitSecs>=1800?'30-MIN COOLDOWN':waitSecs>=300?'EXTENDED COOLDOWN':'SHORT COOLDOWN';
-      setLoadDetail(`HTTP 429 · Retry-After: ${waitSecs}s · ${cooldownType}`);
+      if(waitSecs>=3600) throw new Error('CLIENT_ID_BLOCKED'); // >1hr = punishment block, bail
+      setLoadDetail(`HTTP 429 · Retry-After: ${waitSecs}s`);
     } else {
-      // No header = use exponential backoff with jitter per Spotify docs
-      waitSecs=jitter(Math.pow(2,_retries+1)*10); // 20s, 40s, 80s + jitter
-      setLoadDetail(`HTTP 429 · no Retry-After header · exponential backoff ${waitSecs}s`);
+      waitSecs=jitter(Math.pow(2,_retries+1)*10);
+      setLoadDetail(`HTTP 429 · no header · backoff ${waitSecs}s`);
     }
 
     if(_retries>=3) throw new Error('rate_limited_hard');
 
-    // live countdown
     for(let i=waitSecs;i>0;i--){
-      const bar='█'.repeat(Math.floor((waitSecs-i)/waitSecs*20))+'░'.repeat(Math.floor(i/waitSecs*20));
+      const pct=(waitSecs-i)/waitSecs;
+      const filled=Math.floor(pct*20);
+      const bar='█'.repeat(filled)+'░'.repeat(20-filled);
       setLoadStatus(`⏳ RATE LIMITED · resuming in ${i}s  [${bar}]`, 0.01);
       await delay(1000);
     }
     setLoadStatus('RESUMING SCAN...',0.01);
     setLoadDetail('');
-    _lastApiCall=0; // reset after long wait
+    _lastApiCall=0;
     return apiGet(url, _retries+1);
   }
 
-  if(!r.ok) throw new Error(`Spotify HTTP ${r.status} — ${r.statusText||'unknown error'}`);
-  try{ return await r.json(); }
-  catch(e){ throw new Error('auth_expired'); }
+  if(!r.ok) throw new Error(`Spotify HTTP ${r.status}`);
+  try{
+    const json = await r.json();
+    onSuccess(); // gradually tighten throttle on clean responses
+    return json;
+  }catch(e){ throw new Error('auth_expired'); }
 }
 
-// detail line below main status
 function setLoadDetail(msg){
-  let el=document.getElementById('load-detail');
-  if(!el) return;
-  el.textContent=msg;
+  const el=document.getElementById('load-detail');
+  if(el) el.textContent=msg;
 }
 function abortAndReturn(){
   localStorage.removeItem('rs_token');localStorage.removeItem('rs_token_exp');
@@ -1071,8 +1112,8 @@ function loadScanProgress(){
     const raw=localStorage.getItem(SCAN_CACHE_KEY);
     if(!raw) return null;
     const p=JSON.parse(raw);
-    // discard if older than 23 hours (token lifetime)
-    if(Date.now()-p.savedAt > 23*60*60*1000){ localStorage.removeItem(SCAN_CACHE_KEY); return null; }
+    // scan cache is permanent — only expires if explicitly cleared
+    // tracks don't change often; user can manually rescan via button
     return p;
   }catch{ return null; }
 }
@@ -1111,11 +1152,14 @@ async function fetchAllLiked(){
           duration_ms:i.track.duration_ms||200000,
         }));
       tracks.push(...newTracks);
+      _tracksLoadedSoFar=tracks.length;
       nextUrl=d.next||null;
       const pagesLeft=nextUrl?Math.ceil((total-tracks.length)/50):0;
-      const eta=pagesLeft>0?` · ~${Math.round(pagesLeft*0.7/60)}min left`:'';
+      const etaSecs=pagesLeft*(_throttleMs/1000);
+      const etaStr=etaSecs>60?`~${Math.round(etaSecs/60)}min left`:`~${Math.round(etaSecs)}s left`;
+      const eta=pagesLeft>0?` · ${etaStr}`:'';
       setLoadStatus(`RECEIVING TRANSMISSIONS... ${tracks.length.toLocaleString()} / ${total.toLocaleString()}${eta}`,tracks.length/total);
-      setLoadDetail(nextUrl?`page ${Math.ceil(tracks.length/50)} of ${Math.ceil(total/50)} · ${_reqCount} requests made`:'');
+      setLoadDetail(`page ${Math.ceil(tracks.length/50)} of ${Math.ceil(total/50)} · throttle: ${(_throttleMs/1000).toFixed(1)}s/req`);
       if(tracks.length%500===0) saveScanProgress(tracks, nextUrl, total);
     }catch(e){
       if(e.message==='rate_limited_hard'){
@@ -1415,9 +1459,16 @@ function updateHUD(){
   const total=songs.length;
   const done=songs.filter(s=>featureCache[s.id]?.lastfm).length;
   const audio=songs.filter(s=>featureCache[s.id]?.audio).length;
-  if(!lastfmKey) el.textContent=`${total.toLocaleString()} songs mapped · hover stars to analyze audio`;
+  if(!lastfmKey) el.textContent=`${total.toLocaleString()} songs · hover stars to analyze audio`;
   else if(done>=total) el.textContent=`${total.toLocaleString()} songs · ✦ crystallized${audio?` · ${audio} audio`:''}`;
   else el.textContent=`${total.toLocaleString()} songs · crystallizing ${done.toLocaleString()} / ${total.toLocaleString()}`;
+}
+
+function rescanLibrary(){
+  if(!confirm('Clear library cache and rescan from Spotify? This only affects the track list, not your Last.fm or audio analysis data.')) return;
+  localStorage.removeItem(SCAN_CACHE_KEY);
+  localStorage.removeItem('rs_token'); localStorage.removeItem('rs_token_exp');
+  location.reload();
 }
 function setLoadStatus(msg,progress){
   document.getElementById('load-status').textContent=msg;
@@ -1458,11 +1509,13 @@ async function boot(){
     launchViz();
   }catch(e){
     hide('loading-screen');show('login-screen');
-    if(e.message==='auth_expired'||e.message==='Failed to fetch'||e.message.includes('fetch')){
+    if(e.message==='CLIENT_ID_BLOCKED'){
       localStorage.removeItem('rs_token');localStorage.removeItem('rs_token_exp');
-      showError('session expired ✨ tap the portal again — cache preserved');
+      showBlockedError();
+    }else if(e.message==='auth_expired'||e.message.includes('fetch')){
+      localStorage.removeItem('rs_token');localStorage.removeItem('rs_token_exp');
+      showError('session expired ✨ tap the portal again');
     }else if(e.message.includes('Rate limited after')){
-      // don't clear token — just let them retry, progress is saved
       showError(e.message);
     }else{
       localStorage.removeItem('rs_token');localStorage.removeItem('rs_token_exp');
