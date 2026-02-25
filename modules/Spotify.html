@@ -1343,8 +1343,9 @@ async function fetchAllLiked(){
 // LASTFM PROGRESSIVE ENRICHMENT
 // ═══════════════════════════════════════════════════
 let enrichActive=false;
-let enrichError=null; // null = ok, string = error message
+let enrichError=null;
 let enrichConsecFails=0;
+let _enrichToken=0;
 
 function setEnrichError(msg){
   enrichError=msg;
@@ -1357,63 +1358,79 @@ function setEnrichError(msg){
   updateSettingsPanel();
 }
 
+async function lastfmFetch(url){
+  const controller=new AbortController();
+  const tid=setTimeout(()=>controller.abort(),10000);
+  try{
+    const r=await fetch(url,{signal:controller.signal});
+    clearTimeout(tid); return r;
+  }catch(e){
+    clearTimeout(tid);
+    if(e.name==='AbortError') throw new Error('timeout');
+    throw e;
+  }
+}
+
 async function runEnrichment(){
   if(!lastfmKey||enrichActive) return;
   enrichActive=true;
   enrichConsecFails=0;
+  const myToken=++_enrichToken;
   setEnrichError(null);
   const toProcess=songs.filter(s=>!featureCache[s.id]?.lastfm);
   updateHUD();
 
   for(let i=0;i<toProcess.length;i++){
+    if(_enrichToken!==myToken){ enrichActive=false; return; } // cancelled
     const s=toProcess[i];
     try{
       const url=`https://ws.audioscrobbler.com/2.0/?method=track.getTopTags&artist=${encodeURIComponent(s.artist)}&track=${encodeURIComponent(s.name)}&api_key=${lastfmKey}&format=json&autocorrect=1`;
-      const r=await fetch(url);
+      let r;
+      try{ r=await lastfmFetch(url); }
+      catch(fetchErr){
+        // timeout or network error
+        enrichConsecFails++;
+        if(enrichConsecFails>=15){
+          setEnrichError('Network issues — check connection. Open Settings → Retry to resume.');
+          enrichActive=false; return;
+        }
+        await delay(1500); continue;
+      }
 
       if(r.status===401||r.status===403){
-        setEnrichError(`Last.fm API key rejected (HTTP ${r.status}) — check your key in the login screen`);
+        setEnrichError(`Last.fm API key rejected (HTTP ${r.status}) — check your key`);
         enrichActive=false; return;
       }
       if(r.status===429){
-        setEnrichError('Last.fm rate limited — crystallization paused, will auto-resume in 60s');
-        await delay(60000);
-        setEnrichError(null);
-        i--; continue; // retry same song
+        setEnrichError('Last.fm rate limited — auto-resuming in 60s...');
+        await delay(60000); setEnrichError(null);
+        i--; continue;
       }
       if(!r.ok){
         enrichConsecFails++;
-        if(enrichConsecFails>=5){
-          setEnrichError(`Last.fm API unresponsive (HTTP ${r.status}) after 5 attempts — crystallization paused`);
+        if(enrichConsecFails>=10){
+          setEnrichError(`Last.fm unresponsive (HTTP ${r.status}) — Open Settings → Retry`);
           enrichActive=false; return;
         }
-        await delay(2000); continue;
+        await delay(1500); continue;
       }
 
-      const d=await r.json();
+      let d;
+      try{ d=await r.json(); }catch{ enrichConsecFails++; await delay(500); continue; }
 
-      // Last.fm returns error codes in JSON too
       if(d.error){
-        // error 6 = track not found (normal for obscure tracks — skip silently)
-        // error 7 = invalid format (skip)
-        // error 8 = operation failed temporarily (skip)
-        const SKIP=[6,7,8,11,16]; // transient / track-not-found errors, just continue
-        const FATAL=[4,9,10,13,14,26]; // actual key/auth errors
-        if(SKIP.includes(d.error)){
-          // totally normal — just no Last.fm data for this track
-          continue;
-        }
+        const SKIP=[6,7,8,11,16];
+        const FATAL=[4,9,10,13,14,26];
+        if(SKIP.includes(d.error)){ continue; }
         if(FATAL.includes(d.error)){
-          const msg=`Last.fm key error ${d.error}: ${d.message||'unknown'}`;
-          setEnrichError(msg+' — check your Last.fm API key');
+          setEnrichError(`Last.fm key error ${d.error}: ${d.message||'unknown'}`);
           enrichActive=false; return;
         }
-        // unknown error — count as soft fail, keep going
         enrichConsecFails++;
         await delay(500); continue;
       }
 
-      enrichConsecFails=0; // reset on success
+      enrichConsecFails=0;
       const tags=d?.toptags?.tag;
       if(tags&&tags.length){
         const lf=tagsToFeatures(tags);
@@ -1442,18 +1459,20 @@ async function runEnrichment(){
     if(i%50===0) updateHUD();
     await delay(340);
   }
-  enrichActive=false;
-  setEnrichError(null);
-  updateHUD();
+  if(_enrichToken===myToken){
+    enrichActive=false;
+    setEnrichError(null);
+    updateHUD();
+  }
 }
 
 function retryEnrichment(){
-  enrichError=null;
+  _enrichToken++;
   enrichActive=false;
   enrichConsecFails=0;
   setEnrichError(null);
   toggleSettings();
-  setTimeout(runEnrichment, 500);
+  setTimeout(runEnrichment,600);
 }
 
 // ── ON-DEMAND AUDIO ANALYSIS ──────────────────────
