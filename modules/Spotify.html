@@ -549,8 +549,11 @@
     color: rgba(255,255,255,0.35);
     letter-spacing: .05em;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  }
+  .sp-value div {
+    white-space: pre;
+    line-height: 1.8;
+    font-size: .53rem;
   }
   .sp-btn {
     width: 100%;
@@ -1175,23 +1178,36 @@ const artistGenreCache = {};
 async function runGenreEnrichment(){
   if(!accessToken){ dbg('no access token — genre enrichment skipped','warn'); return; }
 
-  // collect unique artist IDs that need fetching
+  // Check for missing artistIds (old scan cache pre-dates artistId field)
+  const missingArtistId = songs.filter(s=>!s.artistId&&!featureCache[s.id]?._v?.g);
+  if(missingArtistId.length>0){
+    dbg(`⚠ ${missingArtistId.length} songs missing artistId — scan cache is old. Hit RESCAN LIBRARY to fix.`,'warn');
+    // Mark them as processed so counter reflects reality
+    for(const s of missingArtistId){
+      if(!featureCache[s.id]) featureCache[s.id]={};
+      if(!featureCache[s.id]._v) featureCache[s.id]._v={};
+      featureCache[s.id]._v.g='no-id'; // special marker — not real genre data
+    }
+  }
+
+  // Collect unique artist IDs that still need fetching
   const needsFetch = new Set();
   for(const s of songs){
-    if(featureCache[s.id]?._v?.g) continue; // already done
+    if(featureCache[s.id]?._v?.g) continue;
     if(s.artistId && !artistGenreCache[s.artistId]) needsFetch.add(s.artistId);
   }
 
+  const alreadyCached = songs.filter(s=>featureCache[s.id]?._v?.g&&featureCache[s.id]._v.g!=='no-id').length;
+  dbg(`▶ genre: ${needsFetch.size} artists to fetch, ${alreadyCached} already cached, ${missingArtistId.length} need rescan`,'info');
+  updateHUD();
+
   if(!needsFetch.size){
-    dbg('genre: all artists already cached','info');
     applyGenresToAll();
     return;
   }
 
   const ids=[...needsFetch];
-  dbg(`▶ genre fetch: ${ids.length} unique artists in ${Math.ceil(ids.length/50)} calls`,'info');
-
-  // batch 50 at a time
+  let fetched=0;
   for(let i=0;i<ids.length;i+=50){
     const batch=ids.slice(i,i+50);
     try{
@@ -1199,15 +1215,21 @@ async function runGenreEnrichment(){
       for(const artist of data.artists||[]){
         if(artist) artistGenreCache[artist.id]={genres:artist.genres||[],name:artist.name};
       }
-      dbg(`genres: ${Math.min(i+50,ids.length)}/${ids.length} artists fetched`,'info');
+      fetched+=batch.length;
+      if(fetched%200===0||fetched===ids.length) dbg(`genre artists: ${fetched}/${ids.length} fetched`,'info');
+      applyGenresToAll(); // apply progressively
+      updateHUD();
     }catch(e){
-      if(e.message==='auth_expired'){ dbg('genre: token expired','warn'); return; }
-      dbg(`genre batch error: ${e.message}`,'warn');
+      if(e.message==='auth_expired'||e.message==='forbidden'){ dbg(`genre: stopped — ${e.message}`,'err'); return; }
+      dbg(`genre batch ${i}-${i+50} error: ${e.message}`,'warn');
     }
-    await delay(jitter(700));
+    await delay(jitter(600));
   }
 
   applyGenresToAll();
+  const cs=getGenreChecksum();
+  dbg(`✦ genre complete — ${cs.genreDone}/${cs.total} tracks enriched`,'ok');
+  updateHUD();
 }
 
 function applyGenresToAll(){
@@ -1244,9 +1266,11 @@ function applyGenresToAll(){
 
 function getGenreChecksum(){
   const total=songs.length;
-  const done=songs.filter(s=>featureCache[s.id]?._v?.g).length;
+  const done=songs.filter(s=>featureCache[s.id]?._v?.g).length; // includes no-id
+  const real=songs.filter(s=>featureCache[s.id]?._v?.g&&featureCache[s.id]._v.g!=='no-id').length;
+  const noId=songs.filter(s=>featureCache[s.id]?._v?.g==='no-id').length;
   const audio=songs.filter(s=>featureCache[s.id]?._v?.a).length;
-  return {total,genreDone:done,audioDone:audio};
+  return {total,genreDone:done,genreReal:real,genreNoId:noId,audioDone:audio};
 }
 
 // ══════════════════════════════════════════════════
@@ -1342,23 +1366,102 @@ async function analyzePreview(s, songIdx){
   }
 }
 
+// iTunes preview lookup — no key, CORS-friendly
+async function itunesPreview(artist, track){
+  try{
+    const q=encodeURIComponent(`${cleanArtist(artist)} ${cleanTrack(track)}`);
+    const r=await fetch(`https://itunes.apple.com/search?term=${q}&entity=song&limit=3`,
+      {signal:AbortSignal.timeout(8000)});
+    if(!r.ok) return null;
+    const d=await r.json();
+    if(!d.results?.length) return null;
+    // pick best match — prefer exact artist name match
+    const al=cleanArtist(artist).toLowerCase();
+    const tl=cleanTrack(track).toLowerCase();
+    const ranked=d.results
+      .filter(x=>x.previewUrl)
+      .map(x=>({
+        url:x.previewUrl,
+        score:(x.artistName?.toLowerCase().includes(al)?2:0)+
+              (x.trackName?.toLowerCase().includes(tl)?2:0)
+      }))
+      .sort((a,b)=>b.score-a.score);
+    return ranked[0]?.url||null;
+  }catch{ return null; }
+}
+
+// Deezer fallback — CORS proxy needed; use only if iTunes fails
+async function deezerPreview(artist, track){
+  try{
+    const q=encodeURIComponent(`artist:"${cleanArtist(artist)}" track:"${cleanTrack(track)}"`);
+    const r=await fetch(`https://api.deezer.com/search?q=${q}&limit=1&output=json`,
+      {signal:AbortSignal.timeout(8000)});
+    if(!r.ok) return null;
+    const d=await r.json();
+    return d.data?.[0]?.preview||null;
+  }catch{ return null; }
+}
+
+async function resolvePreview(s){
+  // use cached Spotify url if present
+  if(s.preview_url) return s.preview_url;
+  // check local cache
+  if(featureCache[s.id]?.previewUrl) return featureCache[s.id].previewUrl;
+  // try iTunes
+  const itUrl=await itunesPreview(s.artist, s.name);
+  if(itUrl){
+    if(!featureCache[s.id]) featureCache[s.id]={};
+    featureCache[s.id].previewUrl=itUrl;
+    return itUrl;
+  }
+  // try Deezer
+  const dzUrl=await deezerPreview(s.artist, s.name);
+  if(dzUrl){
+    if(!featureCache[s.id]) featureCache[s.id]={};
+    featureCache[s.id].previewUrl=dzUrl;
+    return dzUrl;
+  }
+  return null;
+}
+
 async function runPassiveAudioAnalysis(){
   const toAnalyze=songs
     .map((s,i)=>({s,i}))
-    .filter(({s})=>s.preview_url&&!featureCache[s.id]?._v?.a);
-  
-  if(!toAnalyze.length){ dbg('audio: all tracks already analyzed','info'); return; }
-  dbg(`▶ audio: queuing ${toAnalyze.length} tracks for passive analysis`,'info');
-  
-  // shuffle so we get a representative sample early
+    .filter(({s})=>!featureCache[s.id]?._v?.a);
+
+  if(!toAnalyze.length){ dbg('audio: all tracks already analyzed ✓','ok'); return; }
+
+  // shuffle for representative early sample
   toAnalyze.sort(()=>Math.random()-.5);
-  for(const {i} of toAnalyze) queueAudioAnalysis(i);
+
+  dbg(`▶ audio: ${toAnalyze.length} tracks to analyze (iTunes + Deezer preview lookup)`,'info');
+
+  let resolved=0, failed=0, analyzed=0;
+  for(const {s,i} of toAnalyze){
+    if(_enrichToken !== _enrichToken) break; // cancelled check
+    const url=await resolvePreview(s);
+    if(url){
+      resolved++;
+      s.preview_url=url; // patch the live song object too
+      queueAudioAnalysis(i);
+      if(resolved%50===0){
+        dbg(`audio: resolved ${resolved} previews — ${analyzed} analyzed, ${failed} not found`,'info');
+        updateHUD();
+      }
+    } else {
+      failed++;
+    }
+    await delay(250); // gentle pacing for iTunes API
+  }
+  dbg(`audio preview resolution done — resolved:${resolved} failed:${failed}`,'ok');
 }
 
 function getAudioStats(){
-  const withPreview=songs.filter(s=>s.preview_url).length;
+  // count tracks that have a preview URL from any source
+  const withPreview=songs.filter(s=>s.preview_url||featureCache[s.id]?.previewUrl).length;
   const analyzed=songs.filter(s=>featureCache[s.id]?._v?.a).length;
-  return {withPreview, analyzed};
+  const resolvedExternal=songs.filter(s=>!s.preview_url&&featureCache[s.id]?.previewUrl).length;
+  return {withPreview, analyzed, resolvedExternal};
 }
 
 function getFeatures(track){
@@ -1578,7 +1681,7 @@ function saveScanProgress(tracks, nextUrl, total){
   }catch(e){
     // storage full — save just IDs+minimal data
     try{
-      const slim=tracks.map(t=>({id:t.id,name:t.name,artist:t.artist,uri:t.uri,url:t.url,preview_url:t.preview_url,popularity:t.popularity,duration_ms:t.duration_ms}));
+      const slim=tracks.map(t=>({id:t.id,name:t.name,artist:t.artist,artistId:t.artistId||null,uri:t.uri,url:t.url,preview_url:t.preview_url,popularity:t.popularity,duration_ms:t.duration_ms}));
       localStorage.setItem(SCAN_CACHE_KEY, JSON.stringify({tracks:slim,nextUrl,total,savedAt:Date.now()}));
     }catch{}
   }
@@ -1891,8 +1994,9 @@ function launchViz(){
     // Passive audio — start after genre to avoid API collision
     setTimeout(()=>{
       const ast=getAudioStats();
-      if(ast.analyzed < ast.withPreview) runPassiveAudioAnalysis();
-      else dbg(`audio: fully cached ✓ (${ast.analyzed} tracks)`,'ok');
+      dbg(`audio check: ${ast.analyzed} analyzed, ${ast.withPreview} have preview_url (will also try iTunes/Deezer)`,'info');
+      if(ast.analyzed >= songs.length) dbg('audio: all tracks analyzed ✓','ok');
+      else runPassiveAudioAnalysis(); // always run — will resolve via iTunes/Deezer for missing previews
     }, cs.genreDone < cs.total ? 30000 : 2000); // wait for genre if it's running
 
     // Last.fm still runs if key present (catches anything genre misses)
@@ -2141,13 +2245,22 @@ function updateHUD(){
   const total=songs.length;
   const cs=getGenreChecksum();
   const ast=getAudioStats();
+  const lfDone=songs.filter(s=>featureCache[s.id]?.lastfm).length;
 
   let parts=[`${total.toLocaleString()} songs`];
-  if(cs.genreDone>=total) parts.push('✦ genres crystallized');
-  else if(cs.genreDone>0) parts.push(`genres ${cs.genreDone.toLocaleString()}/${total.toLocaleString()}`);
 
-  if(ast.analyzed>=ast.withPreview&&ast.withPreview>0) parts.push(`✦ ${ast.analyzed.toLocaleString()} audio`);
-  else if(ast.analyzed>0) parts.push(`audio ${ast.analyzed.toLocaleString()}/${ast.withPreview.toLocaleString()}`);
+  // Last.fm line
+  if(lfDone>0) parts.push(lfDone>=total?`✦ lastfm`:`lastfm ${lfDone.toLocaleString()}/${total.toLocaleString()}`);
+
+  // Genre line
+  if(cs.genreReal>=total) parts.push('✦ genres');
+  else if(cs.genreNoId>0) parts.push(`genres ${cs.genreReal.toLocaleString()}/${total.toLocaleString()} ⚠ rescan needed`);
+  else if(cs.genreReal>0) parts.push(`genres ${cs.genreReal.toLocaleString()}/${total.toLocaleString()}`);
+
+  // Audio line
+  if(ast.analyzed>=ast.withPreview&&ast.withPreview>0) parts.push('✦ audio');
+  else if(ast.analyzed>0||_audioRunning) parts.push(`audio ${ast.analyzed.toLocaleString()}${ast.withPreview>0?'/'+ast.withPreview.toLocaleString():''}`)
+  else if(ast.resolvedExternal>0) parts.push(`audio resolving ${ast.resolvedExternal.toLocaleString()}`);
 
   el.textContent=parts.join(' · ');
 }
@@ -2230,14 +2343,1464 @@ function updateSettingsPanel(){
   if(cst){
     const cs=getGenreChecksum();
     const ast=getAudioStats();
-    const lines=[];
-    if(cs.genreDone>=cs.total) lines.push(`genres ✦ complete`);
-    else lines.push(`genres ${cs.genreDone}/${cs.total}${_audioRunning?'':enrichActive?' · running':' · idle'}`);
-    if(ast.withPreview>0){
-      if(ast.analyzed>=ast.withPreview) lines.push(`audio ✦ complete`);
-      else lines.push(`audio ${ast.analyzed}/${ast.withPreview}${_audioRunning?' · analyzing':' · queued'}`);
+    const lfDone=songs.filter(s=>featureCache[s.id]?.lastfm).length;
+    const total=songs.length;
+    const rows=[];
+    rows.push(`last.fm   ${lfDone.toLocaleString()} / ${total.toLocaleString()}${enrichActive?' · running':''}`);
+    const gnote=cs.genreNoId>0?` ⚠ ${cs.genreNoId} need rescan`:'';
+    rows.push(`genre     ${cs.genreReal.toLocaleString()} / ${total.toLocaleString()}${gnote}`);
+    if(ast.withPreview===0&&ast.resolvedExternal===0) rows.push(`audio     resolving via iTunes/Deezer...`);
+    else rows.push(`audio     ${ast.analyzed.toLocaleString()} analyzed · ${ast.resolvedExternal.toLocaleString()} via iTunes${_audioRunning?' · running':''}`);
+    cst.innerHTML=rows.map(r=>`<div>${r}</div>`).join('');
+  }
+}
+
+function logOut(){
+  // clear auth tokens only — preserve ALL cache data
+  localStorage.removeItem('rs_token');
+  localStorage.removeItem('rs_token_exp');
+  // keep: rs_client_id, rs_lastfm_key, rs_features_v4, rs_scan_v1
+  settingsOpen=false;
+  document.getElementById('settings-panel').style.display='none';
+  // hide viz, show login
+  const canvas=document.getElementById('viz-canvas');
+  canvas.style.transition='opacity 0.4s';
+  canvas.style.opacity='0';
+  setTimeout(()=>{
+    canvas.classList.add('hidden');
+    canvas.style.opacity='1';
+    canvas.style.transition='';
+    ['hud','legend','controls','color-mode','search-wrap','ax-top','ax-bottom','ax-left','ax-right','settings-btn'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el){ el.classList.add('hidden'); el.style.display=''; }
+    });
+    document.getElementById('settings-btn').style.display='none';
+    show('login-screen');
+  },420);
+}
+
+// close settings panel when clicking outside
+document.addEventListener('click',(e)=>{
+  if(!settingsOpen) return;
+  const panel=document.getElementById('settings-panel');
+  const btn=document.getElementById('settings-btn');
+  if(panel&&btn&&!panel.contains(e.target)&&!btn.contains(e.target)){
+    settingsOpen=false;
+    panel.style.display='none';
+  }
+});
+
+function resetView(){camX=0;camY=0;camZoom=1;}
+function zoomIn(){camZoom=Math.min(30,camZoom*1.4);}
+function zoomOut(){camZoom=Math.max(.3,camZoom/1.4);}
+let _modeTransitioning=false;
+
+function setColorMode(mode){
+  if(colorMode===mode||_modeTransitioning) return;
+  _modeTransitioning=true;
+  const prev=colorMode;
+  colorMode=mode;
+
+  // Update button states with pulse
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active','switching'));
+  const activeBtn=document.getElementById(`cm-${mode}`);
+  activeBtn.classList.add('active','switching');
+  setTimeout(()=>activeBtn.classList.remove('switching'),400);
+
+  // Update axis labels immediately
+  updateAxisLabels(mode);
+
+  // Shimmer fade-out, reposition, fade back in
+  const canvas=document.getElementById('viz-canvas');
+  canvas.style.transition='opacity 0.25s ease';
+  canvas.style.opacity='0.15';
+
+  // Stagger star transitions — recompute all positions for new mode
+  setTimeout(()=>{
+    if(worldPositions){
+      songs.forEach((s,i)=>{
+        // add slight stagger per star so they ripple outward
+        const delay=Math.random()*400;
+        setTimeout(()=>{
+          const oldPos={...getPos(i)};
+          const newPos=computeWorldPos(s,mode);
+          const dist=Math.hypot(newPos.wx-oldPos.wx,newPos.wy-oldPos.wy);
+          if(dist>.002){
+            posTransitions[i]={
+              fx:oldPos.wx,fy:oldPos.wy,
+              tx:newPos.wx,ty:newPos.wy,
+              start:performance.now(),
+              dur:600+Math.random()*800, // 600-1400ms per star
+            };
+            worldPositions[i]=newPos;
+          }
+        }, delay);
+      });
     }
-    cst.textContent=lines.join(' | ')||'—';
+    // fade back in
+    canvas.style.opacity='1';
+    setTimeout(()=>{ canvas.style.transition=''; _modeTransitioning=false; },500);
+  },260);
+}
+function handleSearch(val){searchQuery=val;}
+function show(id){document.getElementById(id).classList.remove('hidden');}
+function hide(id){document.getElementById(id).classList.add('hidden');}
+function showHUD(){
+  ['hud','legend','controls','color-mode','search-wrap','ax-top','ax-bottom','ax-left','ax-right'].forEach(show);
+  const sb=document.getElementById('settings-btn');
+  if(sb) sb.style.display='flex';
+}
+
+// ═══════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════
+async function boot(){
+  loadFeatureCache();
+  clientId=localStorage.getItem('rs_client_id');
+  lastfmKey=localStorage.getItem('rs_lastfm_key');
+  if(clientId) document.getElementById('client-id-input').value=clientId;
+  if(lastfmKey) document.getElementById('lastfm-key-input').value=lastfmKey;
+  const hasToken=await parseToken();
+  if(!hasToken) return;
+  show('loading-screen');hide('login-screen');
+  setTimeout(()=>{const b=document.getElementById('load-back-btn');if(b)b.style.display='block';},10000);
+  setLoadStatus('OPENING CHANNEL...',0);
+  await delay(1500); // brief pause so Spotify rate limit window resets
+  try{
+    const tracks=await fetchAllLiked();
+    setLoadStatus('CRYSTALLIZING...',.95);
+    songs=tracks.map(t=>({...t,f:getFeatures(t)}));
+    await delay(400);
+    launchViz();
+  }catch(e){
+    hide('loading-screen');show('login-screen');
+    if(e.message==='CLIENT_ID_BLOCKED'){
+      localStorage.removeItem('rs_token');localStorage.removeItem('rs_token_exp');
+      showBlockedError();
+    }else if(e.message==='auth_expired'||e.message.includes('fetch')){
+      localStorage.removeItem('rs_token');localStorage.removeItem('rs_token_exp');
+      showError('session expired ✨ tap the portal again');
+    }else if(e.message.includes('Rate limited after')){
+      showError(e.message);
+    }else{
+      localStorage.removeItem('rs_token');localStorage.removeItem('rs_token_exp');
+      showError(`${e.message} — try again 💫`);
+    }
+  }
+}
+boot();
+</script>
+</body>
+</html>async function apiGet(url,retry=0){
+  if(!accessToken) throw new Error('auth_expired');
+  if(Date.now()>tokenExp){ dbg('Spotify token expired — re-auth needed','err'); throw new Error('auth_expired'); }
+  await enforceThrottle();
+  const r=await fetch(url,{headers:{Authorization:`Bearer ${accessToken}`},signal:AbortSignal.timeout(15000)});
+  if(r.status===401){ dbg('Spotify 401 — token rejected','err'); throw new Error('auth_expired'); }
+  if(r.status===403){ dbg(`Spotify 403 forbidden: ${url.slice(0,60)}`,'err'); throw new Error('forbidden'); }
+  if(r.status===429){
+    const wait=(parseInt(r.headers.get('Retry-After')||'10')+1)*1000;
+    dbg(`Spotify 429 rate limit — waiting ${Math.round(wait/1000)}s`,'warn');
+    _throttleMs=Math.min(_throttleMs*2.5,8000);
+    await delay(wait); return apiGet(url,retry);
+  }
+  if(!r.ok){
+    dbg(`Spotify HTTP ${r.status} for ${url.slice(0,60)}`,'warn');
+    if(retry<3){ await delay(2000); return apiGet(url,retry+1); }
+    throw new Error(`http_${r.status}`);
+  }
+  _throttleMs=Math.max(1500,_throttleMs*.98);
+  return r.json();
+}
+
+
+async function analyzePreview(previewUrl){
+  if(!previewUrl) return null;
+  try{
+    const res=await fetch(previewUrl,{mode:'cors'});
+    if(!res.ok) return null;
+    const buf=await res.arrayBuffer();
+    const actx=new OfflineAudioContext(1,44100*30,44100);
+    const decoded=await actx.decodeAudioData(buf);
+    const data=decoded.getChannelData(0);
+    const len=data.length,sr=decoded.sampleRate;
+    // RMS energy
+    let rmsSum=0;
+    for(let i=0;i<len;i++) rmsSum+=data[i]*data[i];
+    const rms=Math.sqrt(rmsSum/len);
+    const energy=Math.min(1,rms*10);
+    // ZCR → brightness
+    let zcr=0;
+    for(let i=1;i<len;i++) if((data[i]>=0)!==(data[i-1]>=0)) zcr++;
+    const brightness=Math.min(1,(zcr/len)*15);
+    // Onset → tempo
+    const fSize=512,fE=[];
+    for(let i=0;i+fSize<len;i+=fSize){let e=0;for(let j=i;j<i+fSize;j++)e+=data[j]*data[j];fE.push(Math.sqrt(e/fSize));}
+    const onsets=[];
+    for(let i=2;i<fE.length-2;i++){const d=fE[i]-fE[i-1];if(d>0.015&&fE[i]>fE[i-2]&&(!onsets.length||onsets[onsets.length-1]!==i-1))onsets.push(i);}
+    let tempo=120;
+    if(onsets.length>3){
+      const intervals=[];
+      for(let i=1;i<Math.min(onsets.length,24);i++) intervals.push(onsets[i]-onsets[i-1]);
+      const med=intervals.sort((a,b)=>a-b)[Math.floor(intervals.length/2)];
+      let raw=60/((med*fSize)/sr);
+      while(raw<60)raw*=2;while(raw>180)raw/=2;
+      tempo=Math.max(60,Math.min(180,raw));
+    }
+    return{energy,brightness,tempo};
+  }catch{return null;}
+}
+
+// ── COMBINED FEATURES ─────────────────────────────
+// ══════════════════════════════════════════════════
+// SPOTIFY GENRE ENGINE
+// ══════════════════════════════════════════════════
+
+// Spotify genre string → feature weights
+// Format: [valence, energy, danceability]  (null = don't influence)
+const GENRE_MAP = {
+  // emotional valence
+  'happy':         [.82,.65,.70], 'sad':           [.18,.35,.40],
+  'melancholy':    [.22,.38,.35], 'euphoric':       [.88,.80,.75],
+  'dark':          [.20,.60,.40], 'uplifting':      [.78,.72,.68],
+  'romantic':      [.62,.45,.55], 'aggressive':     [.35,.88,.60],
+  'peaceful':      [.65,.25,.35], 'anxious':        [.30,.65,.45],
+
+  // energy
+  'ambient':       [.55,.18,.25], 'drone':          [.40,.15,.20],
+  'noise':         [.35,.85,.40], 'industrial':     [.28,.80,.50],
+  'shoegaze':      [.45,.55,.38], 'post-rock':      [.48,.60,.38],
+  'metal':         [.30,.90,.55], 'hardcore':       [.28,.92,.60],
+  'punk':          [.45,.85,.65], 'grunge':         [.35,.75,.55],
+  'classical':     [.58,.30,.25], 'orchestral':     [.55,.42,.28],
+  'acoustic':      [.60,.32,.42], 'folk':           [.58,.35,.45],
+
+  // dance / rhythm
+  'dance':         [.70,.78,.88], 'techno':         [.45,.82,.85],
+  'house':         [.65,.80,.88], 'trance':         [.68,.82,.82],
+  'drum and bass': [.50,.88,.80], 'jungle':         [.48,.85,.80],
+  'dubstep':       [.42,.85,.75], 'trap':           [.40,.78,.80],
+  'hip hop':       [.52,.68,.78], 'r&b':            [.62,.60,.72],
+  'funk':          [.72,.72,.88], 'soul':           [.65,.58,.68],
+  'disco':         [.78,.75,.88], 'reggae':         [.70,.55,.70],
+  'dancehall':     [.68,.72,.82], 'afrobeats':      [.72,.78,.88],
+
+  // vibe / texture
+  'lo-fi':         [.58,.35,.48], 'chillwave':      [.62,.32,.45],
+  'vaporwave':     [.55,.30,.42], 'hyperpop':       [.72,.82,.80],
+  'glitch':        [.40,.70,.55], 'experimental':   [.45,.58,.40],
+  'electronic':    [.52,.68,.65], 'synth':          [.58,.62,.62],
+  'pop':           [.72,.68,.72], 'indie':          [.58,.55,.58],
+  'alternative':   [.48,.60,.55], 'post-punk':      [.38,.68,.52],
+  'goth':          [.25,.62,.45], 'emo':            [.28,.65,.50],
+  'jazz':          [.62,.48,.58], 'blues':          [.45,.52,.58],
+  'country':       [.62,.52,.60], 'gospel':         [.72,.65,.62],
+  'new age':       [.65,.22,.30], 'meditation':     [.60,.15,.25],
+  'club':          [.65,.82,.88], 'party':          [.78,.82,.88],
+  'workout':       [.62,.88,.78], 'study':          [.58,.28,.35],
+};
+
+function genresToFeatures(genres){
+  if(!genres||!genres.length) return null;
+  let v=0,e=0,d=0,wt=0;
+  for(const g of genres){
+    const gl=g.toLowerCase();
+    // direct match
+    for(const [key,[gv,ge,gd]] of Object.entries(GENRE_MAP)){
+      if(gl.includes(key)){
+        const w=1;
+        v+=gv*w; e+=ge*w; d+=gd*w; wt+=w;
+      }
+    }
+  }
+  if(!wt) return null;
+  return {
+    valence: Math.max(.05,Math.min(.95,v/wt)),
+    energy:  Math.max(.05,Math.min(.95,e/wt)),
+    danceability: Math.max(.05,Math.min(.95,d/wt)),
+  };
+}
+
+// artist ID → genres cache (shared across tracks)
+const artistGenreCache = {};
+
+async function runGenreEnrichment(){
+  if(!accessToken){ dbg('no access token — genre enrichment skipped','warn'); return; }
+
+  // Check for missing artistIds (old scan cache pre-dates artistId field)
+  const missingArtistId = songs.filter(s=>!s.artistId&&!featureCache[s.id]?._v?.g);
+  if(missingArtistId.length>0){
+    dbg(`⚠ ${missingArtistId.length} songs missing artistId — scan cache is old. Hit RESCAN LIBRARY to fix.`,'warn');
+    // Mark them as processed so counter reflects reality
+    for(const s of missingArtistId){
+      if(!featureCache[s.id]) featureCache[s.id]={};
+      if(!featureCache[s.id]._v) featureCache[s.id]._v={};
+      featureCache[s.id]._v.g='no-id'; // special marker — not real genre data
+    }
+  }
+
+  // Collect unique artist IDs that still need fetching
+  const needsFetch = new Set();
+  for(const s of songs){
+    if(featureCache[s.id]?._v?.g) continue;
+    if(s.artistId && !artistGenreCache[s.artistId]) needsFetch.add(s.artistId);
+  }
+
+  const alreadyCached = songs.filter(s=>featureCache[s.id]?._v?.g&&featureCache[s.id]._v.g!=='no-id').length;
+  dbg(`▶ genre: ${needsFetch.size} artists to fetch, ${alreadyCached} already cached, ${missingArtistId.length} need rescan`,'info');
+  updateHUD();
+
+  if(!needsFetch.size){
+    applyGenresToAll();
+    return;
+  }
+
+  const ids=[...needsFetch];
+  let fetched=0;
+  for(let i=0;i<ids.length;i+=50){
+    const batch=ids.slice(i,i+50);
+    try{
+      const data=await apiGet(`https://api.spotify.com/v1/artists?ids=${batch.join(',')}`);
+      for(const artist of data.artists||[]){
+        if(artist) artistGenreCache[artist.id]={genres:artist.genres||[],name:artist.name};
+      }
+      fetched+=batch.length;
+      if(fetched%200===0||fetched===ids.length) dbg(`genre artists: ${fetched}/${ids.length} fetched`,'info');
+      applyGenresToAll(); // apply progressively
+      updateHUD();
+    }catch(e){
+      if(e.message==='auth_expired'||e.message==='forbidden'){ dbg(`genre: stopped — ${e.message}`,'err'); return; }
+      dbg(`genre batch ${i}-${i+50} error: ${e.message}`,'warn');
+    }
+    await delay(jitter(600));
+  }
+
+  applyGenresToAll();
+  const cs=getGenreChecksum();
+  dbg(`✦ genre complete — ${cs.genreDone}/${cs.total} tracks enriched`,'ok');
+  updateHUD();
+}
+
+function applyGenresToAll(){
+  let applied=0, skipped=0;
+  for(const s of songs){
+    if(featureCache[s.id]?._v?.g) continue;
+    const gdata=artistGenreCache[s.artistId];
+    if(!gdata){ skipped++; continue; }
+    const features=genresToFeatures(gdata.genres);
+    if(!featureCache[s.id]) featureCache[s.id]={};
+    featureCache[s.id].genre=features;
+    featureCache[s.id].genreTags=gdata.genres.slice(0,6);
+    if(!featureCache[s.id]._v) featureCache[s.id]._v={};
+    featureCache[s.id]._v.g=true;
+    if(features){
+      // update position
+      const idx=songs.indexOf(s);
+      if(idx>=0&&worldPositions){
+        const oldPos={...worldPositions[idx]};
+        s.f=getFeatures(s);
+        const newPos=computeWorldPos(s,colorMode);
+        if(Math.hypot(newPos.wx-oldPos.wx,newPos.wy-oldPos.wy)>.005){
+          startTransition(idx,oldPos,newPos);
+          worldPositions[idx]=newPos;
+        }
+      }
+      applied++;
+    } else { skipped++; }
+  }
+  queueSave();
+  updateHUD();
+  dbg(`✦ genres applied: ${applied} tracks enriched, ${skipped} no genre data`,'ok');
+}
+
+function getGenreChecksum(){
+  const total=songs.length;
+  const done=songs.filter(s=>featureCache[s.id]?._v?.g).length; // includes no-id
+  const real=songs.filter(s=>featureCache[s.id]?._v?.g&&featureCache[s.id]._v.g!=='no-id').length;
+  const noId=songs.filter(s=>featureCache[s.id]?._v?.g==='no-id').length;
+  const audio=songs.filter(s=>featureCache[s.id]?._v?.a).length;
+  return {total,genreDone:done,genreReal:real,genreNoId:noId,audioDone:audio};
+}
+
+// ══════════════════════════════════════════════════
+// PASSIVE AUDIO ANALYSIS
+// ══════════════════════════════════════════════════
+
+let audioCtx=null;
+let _audioQueue=[];
+let _audioRunning=false;
+
+function queueAudioAnalysis(songIdx){
+  if(_audioQueue.includes(songIdx)) return;
+  _audioQueue.push(songIdx);
+  if(!_audioRunning) drainAudioQueue();
+}
+
+async function drainAudioQueue(){
+  _audioRunning=true;
+  while(_audioQueue.length){
+    const idx=_audioQueue.shift();
+    const s=songs[idx];
+    if(!s||!s.preview_url||featureCache[s.id]?._v?.a){ continue; }
+    await analyzePreview(s, idx);
+    await delay(200); // breathe between analyses
+  }
+  _audioRunning=false;
+}
+
+async function analyzePreview(s, songIdx){
+  if(!s.preview_url) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    const resp=await fetch(s.preview_url);
+    if(!resp.ok) return;
+    const buf=await resp.arrayBuffer();
+    const offline=new OfflineAudioContext(1,audioCtx.sampleRate*15,audioCtx.sampleRate);
+    const src=offline.createBufferSource();
+    src.buffer=await audioCtx.decodeAudioData(buf);
+    src.connect(offline.destination);
+    src.start(0);
+    const rendered=await offline.startRendering();
+    const data=rendered.getChannelData(0);
+
+    // RMS energy
+    let sum=0; for(let i=0;i<data.length;i++) sum+=data[i]*data[i];
+    const rms=Math.sqrt(sum/data.length);
+    const energy=Math.min(1,rms*8);
+
+    // Zero crossing rate → brightness proxy
+    let zc=0; for(let i=1;i<data.length;i++) if(data[i-1]*data[i]<0) zc++;
+    const brightness=Math.min(1,zc/data.length*200);
+
+    // Onset detection → tempo
+    const frameSize=1024, hopSize=512;
+    const onsets=[];
+    let prevEnergy=0;
+    for(let i=0;i<data.length-frameSize;i+=hopSize){
+      let fe=0; for(let j=i;j<i+frameSize;j++) fe+=data[j]*data[j];
+      fe/=frameSize;
+      if(fe-prevEnergy>0.002&&onsets.length&&(i-onsets[onsets.length-1])>hopSize*3) onsets.push(i);
+      if(fe-prevEnergy>0.002&&!onsets.length) onsets.push(i);
+      prevEnergy=fe;
+    }
+    let tempo=120;
+    if(onsets.length>1){
+      const iois=onsets.slice(1).map((o,i)=>(o-onsets[i])/audioCtx.sampleRate*1000);
+      const med=iois.sort((a,b)=>a-b)[Math.floor(iois.length/2)];
+      tempo=Math.round(60000/med);
+      if(tempo<60) tempo*=2;
+      if(tempo>180) tempo=Math.round(tempo/2);
+      tempo=Math.max(60,Math.min(180,tempo));
+    }
+
+    const au={energy,brightness,tempo};
+    if(!featureCache[s.id]) featureCache[s.id]={};
+    featureCache[s.id].audio=au;
+    if(!featureCache[s.id]._v) featureCache[s.id]._v={};
+    featureCache[s.id]._v.a=true;
+
+    // update position
+    if(worldPositions){
+      const oldPos={...worldPositions[songIdx]};
+      s.f=getFeatures(s);
+      const newPos=computeWorldPos(s,colorMode);
+      if(Math.hypot(newPos.wx-oldPos.wx,newPos.wy-oldPos.wy)>.005){
+        startTransition(songIdx,oldPos,newPos);
+        worldPositions[songIdx]=newPos;
+      }
+    }
+    queueSave();
+  }catch(e){
+    // silent fail — preview might be unavailable or CORS blocked
+  }
+}
+
+// iTunes preview lookup — no key, CORS-friendly
+async function itunesPreview(artist, track){
+  try{
+    const q=encodeURIComponent(`${cleanArtist(artist)} ${cleanTrack(track)}`);
+    const r=await fetch(`https://itunes.apple.com/search?term=${q}&entity=song&limit=3`,
+      {signal:AbortSignal.timeout(8000)});
+    if(!r.ok) return null;
+    const d=await r.json();
+    if(!d.results?.length) return null;
+    // pick best match — prefer exact artist name match
+    const al=cleanArtist(artist).toLowerCase();
+    const tl=cleanTrack(track).toLowerCase();
+    const ranked=d.results
+      .filter(x=>x.previewUrl)
+      .map(x=>({
+        url:x.previewUrl,
+        score:(x.artistName?.toLowerCase().includes(al)?2:0)+
+              (x.trackName?.toLowerCase().includes(tl)?2:0)
+      }))
+      .sort((a,b)=>b.score-a.score);
+    return ranked[0]?.url||null;
+  }catch{ return null; }
+}
+
+// Deezer fallback — CORS proxy needed; use only if iTunes fails
+async function deezerPreview(artist, track){
+  try{
+    const q=encodeURIComponent(`artist:"${cleanArtist(artist)}" track:"${cleanTrack(track)}"`);
+    const r=await fetch(`https://api.deezer.com/search?q=${q}&limit=1&output=json`,
+      {signal:AbortSignal.timeout(8000)});
+    if(!r.ok) return null;
+    const d=await r.json();
+    return d.data?.[0]?.preview||null;
+  }catch{ return null; }
+}
+
+async function resolvePreview(s){
+  // use cached Spotify url if present
+  if(s.preview_url) return s.preview_url;
+  // check local cache
+  if(featureCache[s.id]?.previewUrl) return featureCache[s.id].previewUrl;
+  // try iTunes
+  const itUrl=await itunesPreview(s.artist, s.name);
+  if(itUrl){
+    if(!featureCache[s.id]) featureCache[s.id]={};
+    featureCache[s.id].previewUrl=itUrl;
+    return itUrl;
+  }
+  // try Deezer
+  const dzUrl=await deezerPreview(s.artist, s.name);
+  if(dzUrl){
+    if(!featureCache[s.id]) featureCache[s.id]={};
+    featureCache[s.id].previewUrl=dzUrl;
+    return dzUrl;
+  }
+  return null;
+}
+
+async function runPassiveAudioAnalysis(){
+  const toAnalyze=songs
+    .map((s,i)=>({s,i}))
+    .filter(({s})=>!featureCache[s.id]?._v?.a);
+
+  if(!toAnalyze.length){ dbg('audio: all tracks already analyzed ✓','ok'); return; }
+
+  // shuffle for representative early sample
+  toAnalyze.sort(()=>Math.random()-.5);
+
+  dbg(`▶ audio: ${toAnalyze.length} tracks to analyze (iTunes + Deezer preview lookup)`,'info');
+
+  let resolved=0, failed=0, analyzed=0;
+  for(const {s,i} of toAnalyze){
+    if(_enrichToken !== _enrichToken) break; // cancelled check
+    const url=await resolvePreview(s);
+    if(url){
+      resolved++;
+      s.preview_url=url; // patch the live song object too
+      queueAudioAnalysis(i);
+      if(resolved%50===0){
+        dbg(`audio: resolved ${resolved} previews — ${analyzed} analyzed, ${failed} not found`,'info');
+        updateHUD();
+      }
+    } else {
+      failed++;
+    }
+    await delay(250); // gentle pacing for iTunes API
+  }
+  dbg(`audio preview resolution done — resolved:${resolved} failed:${failed}`,'ok');
+}
+
+function getAudioStats(){
+  // count tracks that have a preview URL from any source
+  const withPreview=songs.filter(s=>s.preview_url||featureCache[s.id]?.previewUrl).length;
+  const analyzed=songs.filter(s=>featureCache[s.id]?._v?.a).length;
+  const resolvedExternal=songs.filter(s=>!s.preview_url&&featureCache[s.id]?.previewUrl).length;
+  return {withPreview, analyzed, resolvedExternal};
+}
+
+function getFeatures(track){
+  const s=synth(track);
+  const cached=featureCache[track.id]||{};
+  const gn=cached.genre, lf=cached.lastfm, au=cached.audio;
+  if(!gn&&!lf&&!au) return s;
+
+  let v=s.valence, e=s.energy, d=s.danceability, t=s.tempo;
+  let sources=[];
+
+  // genre is highest trust — Spotify's own taxonomy
+  if(gn){
+    if(gn.valence!=null)      v=s.valence*.08+gn.valence*.92;
+    if(gn.energy!=null)       e=s.energy*.08+gn.energy*.92;
+    if(gn.danceability!=null) d=s.danceability*.08+gn.danceability*.92;
+    sources.push('genre');
+  }
+  // lastfm blends on top if present
+  if(lf){
+    const w=gn?.5:.88; // less weight if genre already set
+    if(lf.valence!=null) v=v*(1-w)+lf.valence*w;
+    if(lf.energy!=null)  e=e*(1-w)+lf.energy*w;
+    if(lf.danceability!=null) d=d*(1-w)+lf.danceability*w;
+    sources.push('lastfm');
+  }
+  // audio analysis refines energy + tempo
+  if(au){
+    const ew=gn?.30:.65;
+    e=e*(1-ew)+au.energy*ew;
+    t=au.tempo;
+    v=Math.max(.02,Math.min(.98,v+(au.brightness-.5)*.06));
+    sources.push('audio');
+  }
+
+  return{
+    valence:Math.max(.02,Math.min(.98,v)),
+    energy:Math.max(.02,Math.min(.98,e)),
+    danceability:Math.max(.02,Math.min(.98,d)),
+    tempo:t,
+    genreTags:cached.genreTags||[],
+    source:sources.join('+')||'synthetic',
+  };
+}
+
+// ═══════════════════════════════════════════════════
+// AMBIENT STARS
+// ═══════════════════════════════════════════════════
+(function(){
+  const c=document.getElementById('bg-stars'),cx=c.getContext('2d');let stars=[];
+  function resize(){c.width=innerWidth;c.height=innerHeight;stars=Array.from({length:200},()=>({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1.2,a:Math.random(),sp:.001+Math.random()*.002}));}
+  function draw(t){cx.clearRect(0,0,c.width,c.height);stars.forEach(s=>{s.a=.2+.3*Math.sin(t*s.sp*1000);cx.beginPath();cx.arc(s.x,s.y,s.r,0,Math.PI*2);cx.fillStyle=`rgba(255,255,255,${s.a})`;cx.fill();});requestAnimationFrame(draw);}
+  window.addEventListener('resize',resize);resize();requestAnimationFrame(draw);
+})();
+
+// ═══════════════════════════════════════════════════
+// AUTH — PKCE
+// ═══════════════════════════════════════════════════
+function generateRandom(n){const c='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~',a=new Uint8Array(n);crypto.getRandomValues(a);return Array.from(a,b=>c[b%c.length]).join('');}
+async function codeChallenge(v){const d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v));return btoa(String.fromCharCode(...new Uint8Array(d))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');}
+
+async function initiateAuth(){
+  const id=document.getElementById('client-id-input').value.trim();
+  if(!id||id.length<20){showError('paste your Client ID above ✨');return;}
+  clientId=id;lastfmKey=document.getElementById('lastfm-key-input').value.trim()||null;
+  localStorage.setItem('rs_client_id',clientId);
+  if(lastfmKey) localStorage.setItem('rs_lastfm_key',lastfmKey);
+  const verifier=generateRandom(64);localStorage.setItem('rs_verifier',verifier);
+  const challenge=await codeChallenge(verifier);
+  window.location='https://accounts.spotify.com/authorize?'+new URLSearchParams({
+    client_id:clientId,response_type:'code',
+    redirect_uri:location.origin+location.pathname,scope:SCOPES,
+    code_challenge_method:'S256',code_challenge:challenge,
+  });
+}
+async function exchangeCode(code){
+  const r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_id:clientId,grant_type:'authorization_code',code,redirect_uri:location.origin+location.pathname,code_verifier:localStorage.getItem('rs_verifier')})});
+  const d=await r.json();
+  if(d.access_token){accessToken=d.access_token;localStorage.setItem('rs_token',accessToken);localStorage.setItem('rs_token_exp',Date.now()+(d.expires_in-600)*1000);localStorage.removeItem('rs_verifier');return true;}
+  return false;
+}
+function showError(msg){const e=document.getElementById('error-msg');e.textContent=msg;e.style.display='block';}
+
+function showBlockedError(){
+  const e=document.getElementById('error-msg');
+  e.innerHTML=`
+    <div style="color:#ff6b6b;margin-bottom:.8rem">⚠ CLIENT ID PUNISHMENT BLOCK DETECTED</div>
+    <div style="color:rgba(255,255,255,0.5);font-size:.75rem;line-height:1.7;margin-bottom:1rem">
+      Spotify has extended your app's timeout — possibly up to 24 hours.<br>
+      Every retry makes it longer. <strong style="color:rgba(255,255,255,0.7)">Stop retrying immediately.</strong>
+    </div>
+    <div style="color:#a78bfa;font-size:.8rem;line-height:1.8">
+      ✦ fastest fix: create a fresh Spotify app (2 min)<br>
+      &nbsp;&nbsp;<a href="https://developer.spotify.com/dashboard" target="_blank" style="color:#67e8f9">developer.spotify.com/dashboard</a><br>
+      &nbsp;&nbsp;→ Create App → paste new Client ID above<br>
+      &nbsp;&nbsp;→ add your redirect URI to the new app<br><br>
+      ✦ alternative: wait ~24hrs for this Client ID to unblock
+    </div>`;
+  e.style.display='block';
+  e.style.textAlign='left';
+  e.style.padding='1.2rem';
+  e.style.background='rgba(255,50,50,0.05)';
+  e.style.border='1px solid rgba(255,100,100,0.2)';
+  e.style.borderRadius='8px';
+}
+async function parseToken(){
+  const p=new URLSearchParams(location.search),code=p.get('code'),err=p.get('error');
+  if(err){showError(`Spotify: ${err}`);return false;}
+  if(code){
+    clientId=localStorage.getItem('rs_client_id');
+    history.replaceState({},'',location.pathname);
+    show('loading-screen');hide('login-screen');
+    setLoadStatus('AUTHENTICATING...',0);
+    if(!await exchangeCode(code)){hide('loading-screen');show('login-screen');showError('auth failed — try again 💫');return false;}
+    return true;
+  }
+  const stored=localStorage.getItem('rs_token'),exp=parseInt(localStorage.getItem('rs_token_exp')||'0');
+  if(stored&&Date.now()<exp){accessToken=stored;clientId=localStorage.getItem('rs_client_id');return true;}
+  return false;
+}
+
+// ═══════════════════════════════════════════════════
+// SPOTIFY API
+// ═══════════════════════════════════════════════════
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+let _lastApiCall=0;
+let _reqCount=0;
+let _tracksLoadedSoFar=0; // so we can detect if we're blocked before any data
+
+function jitter(ms){ return ms + Math.floor(Math.random()*ms*0.4); } // ±40% jitter
+
+// Adaptive throttle — starts cautious, backs off hard on any 429
+let _throttleMs = 2000; // start at 2s = 30 req/min (bulletproof conservative)
+const THROTTLE_MIN = 1500;
+const THROTTLE_MAX = 8000;
+function onSuccess(){ _throttleMs = Math.max(THROTTLE_MIN, _throttleMs * 0.98); } // slowly speed up if all good
+function onRateLimit(){ _throttleMs = Math.min(THROTTLE_MAX, _throttleMs * 2.5); } // back off hard on 429
+
+async function apiGet(url, _retries=0){
+  const minGap=jitter(_throttleMs);
+  const now=Date.now(), gap=now-_lastApiCall;
+  if(gap<minGap) await delay(minGap-gap);
+  setLoadDetail(`throttle: ${(_throttleMs/1000).toFixed(1)}s/req · ${_reqCount} calls made`);
+  _lastApiCall=Date.now();
+  _reqCount++;
+
+  let r;
+  try{
+    const controller=new AbortController();
+    const tid=setTimeout(()=>controller.abort(),20000);
+    r=await fetch(url,{headers:{Authorization:`Bearer ${accessToken}`},signal:controller.signal});
+    clearTimeout(tid);
+  }catch(e){
+    if(e.name==='AbortError') throw new Error('Request timed out — check connection');
+    throw new Error('auth_expired');
+  }
+
+  if(r.status===401||r.status===403) throw new Error('auth_expired');
+
+  if(r.status===429){
+    const retryAfterHeader=r.headers.get('Retry-After');
+    const isPunishmentBlock=(_tracksLoadedSoFar===0 && _reqCount<=2);
+
+    onRateLimit(); // back throttle off hard
+    if(isPunishmentBlock){
+      // blocked before even starting = Client ID punishment block
+      // do NOT retry — that makes it worse. bail immediately.
+      throw new Error('CLIENT_ID_BLOCKED');
+    }
+
+    let waitSecs;
+    if(retryAfterHeader){
+      waitSecs=parseInt(retryAfterHeader);
+      if(waitSecs>=3600) throw new Error('CLIENT_ID_BLOCKED'); // >1hr = punishment block, bail
+      setLoadDetail(`HTTP 429 · Retry-After: ${waitSecs}s`);
+    } else {
+      waitSecs=jitter(Math.pow(2,_retries+1)*10);
+      setLoadDetail(`HTTP 429 · no header · backoff ${waitSecs}s`);
+    }
+
+    if(_retries>=3) throw new Error('rate_limited_hard');
+
+    for(let i=waitSecs;i>0;i--){
+      const pct=(waitSecs-i)/waitSecs;
+      const filled=Math.floor(pct*20);
+      const bar='█'.repeat(filled)+'░'.repeat(20-filled);
+      setLoadStatus(`⏳ RATE LIMITED · resuming in ${i}s  [${bar}]`, 0.01);
+      await delay(1000);
+    }
+    setLoadStatus('RESUMING SCAN...',0.01);
+    setLoadDetail('');
+    _lastApiCall=0;
+    return apiGet(url, _retries+1);
+  }
+
+  if(!r.ok) throw new Error(`Spotify HTTP ${r.status}`);
+  try{
+    const json = await r.json();
+    onSuccess(); // gradually tighten throttle on clean responses
+    return json;
+  }catch(e){ throw new Error('auth_expired'); }
+}
+
+function setLoadDetail(msg){
+  const el=document.getElementById('load-detail');
+  if(el) el.textContent=msg;
+}
+function abortAndReturn(){
+  localStorage.removeItem('rs_token');localStorage.removeItem('rs_token_exp');
+  hide('loading-screen');show('login-screen');
+}
+const SCAN_CACHE_KEY='rs_scan_v1';
+
+function saveScanProgress(tracks, nextUrl, total){
+  try{
+    localStorage.setItem(SCAN_CACHE_KEY, JSON.stringify({tracks,nextUrl,total,savedAt:Date.now()}));
+  }catch(e){
+    // storage full — save just IDs+minimal data
+    try{
+      const slim=tracks.map(t=>({id:t.id,name:t.name,artist:t.artist,artistId:t.artistId||null,uri:t.uri,url:t.url,preview_url:t.preview_url,popularity:t.popularity,duration_ms:t.duration_ms}));
+      localStorage.setItem(SCAN_CACHE_KEY, JSON.stringify({tracks:slim,nextUrl,total,savedAt:Date.now()}));
+    }catch{}
+  }
+}
+
+function loadScanProgress(){
+  try{
+    const raw=localStorage.getItem(SCAN_CACHE_KEY);
+    if(!raw) return null;
+    const p=JSON.parse(raw);
+    // scan cache is permanent — only expires if explicitly cleared
+    // tracks don't change often; user can manually rescan via button
+    return p;
+  }catch{ return null; }
+}
+
+async function fetchAllLiked(){
+  // resume from saved progress if available
+  const saved=loadScanProgress();
+  let tracks=saved?.tracks||[];
+  let nextUrl=saved?.nextUrl||('https://api.spotify.com/v1/me/tracks?limit=50');
+  let total=saved?.total||null;
+
+  if(tracks.length>0 && saved?.nextUrl){
+    setLoadStatus(`RESUMING SCAN FROM ${tracks.length} TRACKS...`,tracks.length/(total||10000));
+    await delay(1000);
+  } else if(tracks.length>0 && !saved?.nextUrl){
+    // already complete!
+    setLoadStatus(`LIBRARY LOADED FROM CACHE (${tracks.length} tracks)`,1);
+    await delay(500);
+    return tracks;
+  } else {
+    setLoadStatus('SCANNING YOUR LIBRARY...',0);
+  }
+
+  while(nextUrl){
+    try{
+      const d=await apiGet(nextUrl);
+      if(!total) total=d.total;
+      const newTracks=d.items
+        .filter(i=>i.track&&i.track.id)
+        .map(i=>({
+          id:i.track.id, name:i.track.name,
+          artist:i.track.artists.map(a=>a.name).join(', '),
+          artistId:i.track.artists[0]?.id||null,  // primary artist ID for genre fetch
+          uri:i.track.uri, url:i.track.external_urls.spotify,
+          preview_url:i.track.preview_url,
+          popularity:i.track.popularity||50,
+          duration_ms:i.track.duration_ms||200000,
+        }));
+      tracks.push(...newTracks);
+      _tracksLoadedSoFar=tracks.length;
+      nextUrl=d.next||null;
+      const pagesLeft=nextUrl?Math.ceil((total-tracks.length)/50):0;
+      const etaSecs=pagesLeft*(_throttleMs/1000);
+      const etaStr=etaSecs>60?`~${Math.round(etaSecs/60)}min left`:`~${Math.round(etaSecs)}s left`;
+      const eta=pagesLeft>0?` · ${etaStr}`:'';
+      setLoadStatus(`RECEIVING TRANSMISSIONS... ${tracks.length.toLocaleString()} / ${total.toLocaleString()}${eta}`,tracks.length/total);
+      setLoadDetail(`page ${Math.ceil(tracks.length/50)} of ${Math.ceil(total/50)} · throttle: ${(_throttleMs/1000).toFixed(1)}s/req`);
+      if(tracks.length%500===0) saveScanProgress(tracks, nextUrl, total);
+    }catch(e){
+      if(e.message==='rate_limited_hard'){
+        // save where we are and ask user to come back
+        saveScanProgress(tracks, nextUrl, total);
+        throw new Error(`Rate limited after ${tracks.length} tracks. Progress saved! Open the portal again in a few minutes to continue.`);
+      }
+      throw e;
+    }
+  }
+  // complete — save with null nextUrl so we know it's done
+  saveScanProgress(tracks, null, total);
+  return tracks;
+}
+
+// ═══════════════════════════════════════════════════
+// LASTFM PROGRESSIVE ENRICHMENT
+// ═══════════════════════════════════════════════════
+let enrichActive=false;
+let enrichError=null;
+let enrichConsecFails=0;
+let _enrichToken=0;
+
+function setEnrichError(msg){
+  enrichError=msg;
+  const btn=document.getElementById('settings-btn');
+  const block=document.getElementById('sp-error-block');
+  const msgEl=document.getElementById('sp-error-msg');
+  if(btn) { btn.classList.toggle('has-error', !!msg); btn.textContent=msg?'⚑':'⚙'; }
+  if(block) block.style.display=msg?'block':'none';
+  if(msgEl&&msg) msgEl.textContent=msg;
+  updateSettingsPanel();
+}
+
+// Clean Spotify's messy naming for Last.fm queries
+function cleanArtist(artist){
+  return artist
+    .split(/,|feat\.|ft\.|&|\//i)[0]  // take only first artist
+    .replace(/\s*\(.*?\)\s*/g,'')      // remove parentheticals
+    .replace(/\s*\[.*?\]\s*/g,'')      // remove brackets
+    .trim();
+}
+
+function cleanTrack(track){
+  return track
+    .replace(/\s*[\(\[].*(feat|ft|with|prod|remix|edit|remaster|version|live|acoustic|radio|bonus|explicit|clean|mono|stereo|demo|single|extended|original|alt|alternate|anniversary|deluxe|session|cover|tribute|instrumental|karaoke|reprise|interlude).*[\)\]]/gi,'')
+    .replace(/\s*-\s*(feat|ft|with|prod|remix|edit|remaster|version|live|acoustic|radio|bonus|explicit|mono|stereo|demo|single|extended|original|alt|alternate|anniversary|deluxe|session|cover|tribute|instrumental|karaoke|reprise|interlude).*/gi,'')
+    .replace(/\s*[\(\[].*[\)\]]$/g,'') // remove any remaining trailing parens
+    .trim();
+}
+
+// Build Last.fm URL with cleaned names
+function lastfmTagUrl(artist, track, apiKey){
+  const a=encodeURIComponent(cleanArtist(artist));
+  const t=encodeURIComponent(cleanTrack(track));
+  return `https://ws.audioscrobbler.com/2.0/?method=track.getTopTags&artist=${a}&track=${t}&api_key=${apiKey}&format=json&autocorrect=1`;
+}
+
+async function lastfmFetch(url){
+  const controller=new AbortController();
+  const tid=setTimeout(()=>controller.abort(),10000);
+  try{
+    const r=await fetch(url,{signal:controller.signal});
+    clearTimeout(tid); return r;
+  }catch(e){
+    clearTimeout(tid);
+    if(e.name==='AbortError') throw new Error('timeout');
+    throw e;
+  }
+}
+
+async function runEnrichment(){
+  if(!lastfmKey){ dbg('no lastfmKey — enrichment skipped','warn'); return; }
+  if(enrichActive){ dbg(`already active (token ${_enrichToken}) — ignoring`,'warn'); return; }
+  enrichActive=true;
+  enrichConsecFails=0;
+  const myToken=++_enrichToken;
+  setEnrichError(null);
+  const toProcess=songs.filter(s=>!featureCache[s.id]?.lastfm);
+  dbg(`▶ start: ${toProcess.length} tracks (token ${myToken})`,'info');
+  updateHUD();
+
+  let foundCount=0, skippedCount=0;
+  const skipReasons={}; // aggregate skip reasons
+  let sampleLogged=0;   // log first 5 queries so we can see what's being sent
+
+  function logSkip(reason){
+    skipReasons[reason]=(skipReasons[reason]||0)+1;
+    // every 50 skips, dump the aggregate
+    const total=Object.values(skipReasons).reduce((a,b)=>a+b,0);
+    if(total%50===0){
+      const summary=Object.entries(skipReasons).map(([k,v])=>`${k}:${v}`).join(' | ');
+      dbg(`skip breakdown — ${summary}`,'warn');
+    }
+  }
+
+  for(let i=0;i<toProcess.length;i++){
+    if(_enrichToken!==myToken){ dbg(`cancelled at ${i} — found:${foundCount} skipped:${skippedCount}`,'warn'); enrichActive=false; return; }
+    const s=toProcess[i];
+    if(i===0||i%25===0){
+      dbg(`${i}/${toProcess.length} found:${foundCount} skipped:${skippedCount} fails:${enrichConsecFails}`,'info');
+      updateHUD();
+    }
+
+    try{
+      const attempts=[
+        ()=>lastfmTagUrl(s.artist, s.name, lastfmKey),
+        ()=>lastfmTagUrl(cleanArtist(s.artist), s.name, lastfmKey),
+        ()=>lastfmTagUrl(s.artist, s.name.split(/[\(\[-]/)[0], lastfmKey),
+      ];
+
+      // log first 5 queries + every 200th so we can see what's being sent
+      if(sampleLogged<5 || i%200===0){
+        const ca=cleanArtist(s.artist), ct=cleanTrack(s.name);
+        dbg(`sample query — raw:"${s.artist.slice(0,18)}" → "${ca.slice(0,18)}" | track:"${s.name.slice(0,18)}" → "${ct.slice(0,18)}"`,'info');
+        sampleLogged++;
+      }
+
+      let d=null, fetchOk=false;
+
+      for(let attempt=0; attempt<attempts.length; attempt++){
+        const url=attempts[attempt]();
+        let r;
+        try{ r=await lastfmFetch(url); }
+        catch(fe){
+          dbg(`fetch err [${i}] attempt ${attempt}: ${fe.message}`,'warn');
+          enrichConsecFails++;
+          if(enrichConsecFails>=15){ dbg('15 consecutive fetch failures — stopping','err'); setEnrichError('Network issues — Open Settings → Retry.'); enrichActive=false; return; }
+          await delay(1000); break;
+        }
+        if(r.status===401||r.status===403){ dbg(`HTTP ${r.status} — key rejected`,'err'); setEnrichError(`Last.fm key rejected (HTTP ${r.status})`); enrichActive=false; return; }
+        if(r.status===429){ dbg('HTTP 429 — rate limited 60s','warn'); setEnrichError('Last.fm rate limited — resuming in 60s...'); await delay(60000); setEnrichError(null); i--; break; }
+        if(!r.ok){ enrichConsecFails++; logSkip(`http-${r.status}`); fetchOk=true; break; }
+
+        let parsed;
+        try{ parsed=await r.json(); }catch(je){ dbg(`JSON fail: ${je.message}`,'warn'); await delay(340); break; }
+
+        if(parsed.error){
+          const FATAL=[4,9,10,13,14,26];
+          if(FATAL.includes(parsed.error)){ dbg(`FATAL lfm err ${parsed.error}: ${parsed.message}`,'err'); setEnrichError(`Last.fm error ${parsed.error}: ${parsed.message||'?'}`); enrichActive=false; return; }
+          if(parsed.error===6){
+            if(attempt<attempts.length-1){ await delay(80); continue; } // try next cleanup
+            logSkip('err6-not-found');
+            fetchOk=true; break;
+          }
+          logSkip(`err${parsed.error}`);
+          fetchOk=true; break;
+        }
+
+        // success — check if tags actually present
+        const tags=parsed?.toptags?.tag;
+        if(!tags||!tags.length){
+          logSkip('no-tags');
+          fetchOk=true; break;
+        }
+
+        d=parsed; fetchOk=true; break;
+      }
+
+      if(!fetchOk){ await delay(340); continue; }
+      if(!d){ skippedCount++; await delay(100); continue; }
+
+      // got valid tags!
+      enrichConsecFails=0; foundCount++;
+      const tags=d.toptags.tag;
+      const lf=tagsToFeatures(tags);
+      if(!featureCache[s.id]) featureCache[s.id]={};
+      featureCache[s.id].lastfm=lf;
+      featureCache[s.id].tags=tags.slice(0,5).map(t=>t.name);
+      if(foundCount<=3||foundCount%50===0) dbg(`✦ found tags [${i}] "${s.name.slice(0,25)}" → ${featureCache[s.id].tags.join(', ')}`,'ok');
+      const sidx=songs.indexOf(s);
+      if(sidx>=0&&worldPositions){
+        const oldPos={...worldPositions[sidx]};
+        s.f=getFeatures(s);
+        const newPos=computeWorldPos(s,colorMode);
+        if(Math.hypot(newPos.wx-oldPos.wx,newPos.wy-oldPos.wy)>.008){ startTransition(sidx,oldPos,newPos); worldPositions[sidx]=newPos; }
+      }
+      queueSave();
+
+    }catch(e){
+      dbg(`exception [${i}] "${s.name.slice(0,20)}": ${e.message}`,'err');
+      enrichConsecFails++;
+    }
+    await delay(340);
+  }
+
+  if(_enrichToken===myToken){
+    const summary=Object.entries(skipReasons).map(([k,v])=>`${k}:${v}`).join(' | ');
+    dbg(`✦ complete — found:${foundCount} skipped:${skippedCount} | ${summary||'no skips'}`, 'ok');
+    enrichActive=false; setEnrichError(null); updateHUD();
+  } else {
+    dbg(`loop ended, token changed ${myToken}→${_enrichToken}`,'warn');
+  }
+}
+function retryEnrichment(){
+  _enrichToken++;
+  enrichActive=false;
+  enrichConsecFails=0;
+  setEnrichError(null);
+  toggleSettings();
+  setTimeout(runEnrichment,600);
+}
+
+// ── ON-DEMAND AUDIO ANALYSIS ──────────────────────
+let audioQueue=new Set();
+async function requestAudioAnalysis(songIdx){
+  if(audioQueue.has(songIdx)) return;
+  const s=songs[songIdx];
+  if(!s?.preview_url||featureCache[s.id]?.audio) return;
+  audioQueue.add(songIdx);
+  const au=await analyzePreview(s.preview_url);
+  if(au){
+    if(!featureCache[s.id]) featureCache[s.id]={};
+    featureCache[s.id].audio=au;
+    const oldPos=worldPositions?{...worldPositions[songIdx]}:null;
+    s.f=getFeatures(s);
+    if(oldPos&&worldPositions){
+      const newPos=computeWorldPos(s,colorMode);
+      if(Math.hypot(newPos.wx-oldPos.wx,newPos.wy-oldPos.wy)>.005){startTransition(songIdx,oldPos,newPos);worldPositions[songIdx]=newPos;}
+    }
+    queueSave();
+    if(hoveredSong===songIdx) showTooltip(s,mouseX,mouseY);
+    if(pinnedSong===songIdx) showSongCard(s);
+  }
+  audioQueue.delete(songIdx);
+}
+
+// ═══════════════════════════════════════════════════
+// VISUALIZATION
+// ═══════════════════════════════════════════════════
+const canvas=document.getElementById('viz-canvas');
+const ctx=canvas.getContext('2d');
+
+function launchViz(){
+  hide('loading-screen');canvas.classList.remove('hidden');showHUD();
+  songs.forEach(s=>{s.f=getFeatures(s);});
+  worldPositions=songs.map(s=>computeWorldPos(s,colorMode));
+  updateAxisLabels(colorMode);
+  updateHUD();resizeCanvas();
+  window.addEventListener('resize',resizeCanvas);
+  setupInteraction();resetView();renderLoop();
+  // Checksum: determine what enrichment pipelines still need to run
+  setTimeout(()=>{
+    const cs=getGenreChecksum();
+    dbg(`checksum — genre:${cs.genreDone}/${cs.total} audio:${cs.audioDone}/${cs.total}`,'info');
+
+    // Always try genre enrichment (fast, uses Spotify token we already have)
+    if(cs.genreDone < cs.total) runGenreEnrichment();
+    else dbg('genre: fully cached ✓','ok');
+
+    // Passive audio — start after genre to avoid API collision
+    setTimeout(()=>{
+      const ast=getAudioStats();
+      dbg(`audio check: ${ast.analyzed} analyzed, ${ast.withPreview} have preview_url (will also try iTunes/Deezer)`,'info');
+      if(ast.analyzed >= songs.length) dbg('audio: all tracks analyzed ✓','ok');
+      else runPassiveAudioAnalysis(); // always run — will resolve via iTunes/Deezer for missing previews
+    }, cs.genreDone < cs.total ? 30000 : 2000); // wait for genre if it's running
+
+    // Last.fm still runs if key present (catches anything genre misses)
+    if(lastfmKey) setTimeout(runEnrichment, 5000);
+  }, 2000);
+}
+function resizeCanvas(){canvas.width=innerWidth;canvas.height=innerHeight;}
+
+// Axis config per mode — what each filter maps to X and Y
+const MODE_AXES = {
+  genre: { x:'valence', y:'energy',      xl:'MELANCHOLY', xr:'EUPHORIC',  yb:'MELLOW',  yt:'ENERGETIC' },
+  energy:{ x:'valence', y:'energy',      xl:'MELANCHOLY', xr:'EUPHORIC',  yb:'MELLOW',  yt:'ENERGETIC' },
+  tempo: { x:'valence', y:'tempo',       xl:'MELANCHOLY', xr:'EUPHORIC',  yb:'SLOW',    yt:'FAST'      },
+  dance: { x:'danceability', y:'energy', xl:'STILL',      xr:'DANCEABLE', yb:'MELLOW',  yt:'ENERGETIC' },
+};
+
+function getAxisFeature(f, key){
+  if(key==='tempo') return Math.max(0,Math.min(1,(f.tempo-60)/140));
+  return f[key]||0;
+}
+
+function computeWorldPos(s, mode){
+  const f=s.f||getFeatures(s), m=.07;
+  const ax=MODE_AXES[mode||colorMode]||MODE_AXES.genre;
+  let hx=0,hy=0;
+  for(let ch of s.id){hx=Math.imul(31,hx)+ch.charCodeAt(0)|0;hy=Math.imul(37,hy)+ch.charCodeAt(0)|0;}
+  const jx=(Math.sin(hx*7.3)*43758.5%1-.5)*.016;
+  const jy=(Math.sin(hy*3.7)*43758.5%1-.5)*.016;
+  const xv=getAxisFeature(f,ax.x);
+  const yv=getAxisFeature(f,ax.y);
+  return{wx:m+xv*(1-m*2)+jx, wy:(1-m)-yv*(1-m*2)+jy};
+}
+
+function updateAxisLabels(mode){
+  const ax=MODE_AXES[mode]||MODE_AXES.genre;
+  document.getElementById('ax-left').textContent=ax.xl;
+  document.getElementById('ax-right').textContent=ax.xr;
+  document.getElementById('ax-bottom').textContent=ax.yb;
+  document.getElementById('ax-top').textContent=ax.yt;
+}
+function startTransition(idx,from,to){
+  posTransitions[idx]={fx:from.wx,fy:from.wy,tx:to.wx,ty:to.wy,start:performance.now(),dur:1800+Math.random()*600};
+}
+function getPos(idx){
+  const t=posTransitions[idx];if(!t) return worldPositions[idx];
+  const p=Math.min(1,(performance.now()-t.start)/t.dur);
+  const e=p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
+  if(p>=1){delete posTransitions[idx];return worldPositions[idx];}
+  return{wx:t.fx+(t.tx-t.fx)*e,wy:t.fy+(t.ty-t.fy)*e};
+}
+function worldToScreen(wx,wy){
+  const cx=canvas.width/2,cy=canvas.height/2,sz=Math.min(canvas.width,canvas.height)*.85;
+  return{sx:cx+(wx-.5)*sz*camZoom+camX,sy:cy+(wy-.5)*sz*camZoom+camY};
+}
+function getColor(s,mode){
+  const f=s.f;if(!f) return '#888';
+  const v=f.valence,e=f.energy,d=f.danceability,t=Math.max(0,Math.min(1,(f.tempo-60)/140));
+  if(mode==='energy'){
+    // blue (calm) → purple → magenta → orange → yellow (intense)
+    const h=260-e*220; const sat=60+e*35; const lit=30+e*35;
+    return`hsl(${h},${sat}%,${lit}%)`;
+  }
+  if(mode==='tempo'){
+    // deep blue (slow) → teal → green → yellow → red (fast)
+    const h=240-t*240; return`hsl(${h},80%,${40+t*25}%)`;
+  }
+  if(mode==='dance'){
+    // full spectrum rainbow by danceability + energy brightness
+    // still=cool blues, danceable=hot pinks/oranges/yellows
+    const h=(d*300+e*60)%360;
+    const sat=55+d*40;
+    const lit=30+d*25+e*15;
+    return`hsl(${h},${sat}%,${lit}%)`;
+  }
+  // SONIC: hue from valence (blue=sad→red/orange=happy), brightness from energy
+  const hue=220+v*160; // 220=blue(melancholy) → 380=red/pink(euphoric)
+  return`hsl(${hue%360},${55+d*30}%,${30+e*35}%)`;
+}
+function getSize(s){return 1.5+(s.f?.danceability||.5)*3.5;}
+
+function render(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const q=searchQuery.toLowerCase();
+  ctx.strokeStyle='rgba(255,255,255,0.03)';ctx.lineWidth=1;
+  for(let g=.1;g<1;g+=.1){
+    const{sx}=worldToScreen(g,0),{sy}=worldToScreen(0,g);
+    ctx.beginPath();ctx.moveTo(sx,0);ctx.lineTo(sx,canvas.height);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,sy);ctx.lineTo(canvas.width,sy);ctx.stroke();
+  }
+  ctx.strokeStyle='rgba(167,139,250,0.1)';ctx.lineWidth=1.5;
+  const{sx:cx,sy:cy}=worldToScreen(.5,.5);
+  ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(canvas.width,cy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,canvas.height);ctx.stroke();
+  for(let i=0;i<songs.length;i++){
+    const s=songs[i];
+    const{wx,wy}=getPos(i);
+    const{sx,sy}=worldToScreen(wx,wy);
+    if(sx<-20||sx>canvas.width+20||sy<-20||sy>canvas.height+20) continue;
+    const r=getSize(s)*Math.max(.5,Math.min(2,camZoom*.8));
+    const color=getColor(s,colorMode);
+    const isHov=hoveredSong===i||pinnedSong===i;
+    const isMatch=q&&(s.name.toLowerCase().includes(q)||s.artist.toLowerCase().includes(q));
+    const isDim=q&&!isMatch;
+    const isCryst=!!(featureCache[s.id]?.lastfm||featureCache[s.id]?.audio);
+    const inTransit=!!posTransitions[i];
+    ctx.globalAlpha=isDim?.04:isHov?1:isCryst?.88:.62;
+    ctx.shadowBlur=isHov?22:(isMatch?14:(isCryst?4:0));
+    ctx.shadowColor=color;
+    ctx.beginPath();ctx.arc(sx,sy,isHov?r*2.2:r,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();
+    if(isHov){
+      ctx.globalAlpha=.28;ctx.beginPath();ctx.arc(sx,sy,r*4.5,0,Math.PI*2);
+      ctx.strokeStyle=color;ctx.lineWidth=.8;ctx.stroke();
+    }
+    if(inTransit){
+      ctx.globalAlpha=.4+.3*Math.sin(performance.now()*.004);
+      ctx.beginPath();ctx.arc(sx,sy,r*2,0,Math.PI*2);
+      ctx.strokeStyle='rgba(255,255,255,0.7)';ctx.lineWidth=.5;ctx.stroke();
+    }
+  }
+  ctx.globalAlpha=1;ctx.shadowBlur=0;
+}
+let _raf=null;
+function renderLoop(){render();_raf=requestAnimationFrame(renderLoop);}
+
+// ═══════════════════════════════════════════════════
+// INTERACTION
+// ═══════════════════════════════════════════════════
+function setupInteraction(){
+  canvas.addEventListener('mousemove',onMouseMove);
+  canvas.addEventListener('mousedown',onMouseDown);
+  canvas.addEventListener('mouseup',onMouseUp);
+  canvas.addEventListener('mouseleave',()=>{isDragging=false;hideTooltip();hoveredSong=null;});
+  canvas.addEventListener('wheel',onWheel,{passive:false});
+  canvas.addEventListener('click',onCanvasClick);
+  canvas.addEventListener('touchstart',onTouchStart,{passive:false});
+  canvas.addEventListener('touchmove',onTouchMove,{passive:false});
+  canvas.addEventListener('touchend',onTouchEnd,{passive:false});
+  document.getElementById('sc-open-btn').addEventListener('click',()=>{if(songCardUrl)window.open(songCardUrl,'_blank');});
+}
+function getTouchCenter(ts){return ts.length===1?{x:ts[0].clientX,y:ts[0].clientY}:{x:(ts[0].clientX+ts[1].clientX)/2,y:(ts[0].clientY+ts[1].clientY)/2};}
+function getTouchDist(ts){return Math.hypot(ts[0].clientX-ts[1].clientX,ts[0].clientY-ts[1].clientY);}
+function onTouchStart(e){
+  e.preventDefault();touchMoved=false;
+  if(e.touches.length===1){const t=e.touches[0];isDragging=true;dragStartX=touchStartX=t.clientX;dragStartY=touchStartY=t.clientY;dragCamX=camX;dragCamY=camY;lastTouchDist=null;}
+  else if(e.touches.length===2){isDragging=false;lastTouchDist=getTouchDist(e.touches);const c=getTouchCenter(e.touches);dragStartX=c.x;dragStartY=c.y;dragCamX=camX;dragCamY=camY;}
+}
+function onTouchMove(e){
+  e.preventDefault();touchMoved=true;
+  if(e.touches.length===1&&isDragging){const t=e.touches[0];camX=dragCamX+(t.clientX-dragStartX);camY=dragCamY+(t.clientY-dragStartY);hideSongCard();hoveredSong=-1;}
+  else if(e.touches.length===2){
+    const nd=getTouchDist(e.touches),c=getTouchCenter(e.touches);
+    if(lastTouchDist!==null){const f=nd/lastTouchDist,wx=c.x-canvas.width/2,wy=c.y-canvas.height/2;camX=(camX-wx)*f+wx;camY=(camY-wy)*f+wy;camZoom=Math.max(.3,Math.min(30,camZoom*f));}
+    camX=dragCamX+(c.x-dragStartX);camY=dragCamY+(c.y-dragStartY);
+    lastTouchDist=nd;dragCamX=camX-(c.x-dragStartX);dragCamY=camY-(c.y-dragStartY);dragStartX=c.x;dragStartY=c.y;
+  }
+}
+function onTouchEnd(e){
+  e.preventDefault();isDragging=false;lastTouchDist=null;
+  if(!touchMoved&&e.changedTouches.length===1){const t=e.changedTouches[0];if(Math.abs(t.clientX-touchStartX)<8&&Math.abs(t.clientY-touchStartY)<8)handleTap(t.clientX,t.clientY);}
+}
+function handleTap(x,y){
+  let closest=-1,bestD=Infinity;
+  for(let i=0;i<songs.length;i++){const{sx,sy}=worldToScreen(getPos(i).wx,getPos(i).wy);const d=Math.hypot(x-sx,y-sy);if(d<32&&d<bestD){bestD=d;closest=i;}}
+  if(closest>=0){pinnedSong=closest;hoveredSong=closest;showSongCard(songs[closest]);requestAudioAnalysis(closest);}
+  else{pinnedSong=-1;hoveredSong=-1;hideSongCard();}
+}
+let hoverAudioTimer=null;
+function onMouseMove(e){
+  mouseX=e.clientX;mouseY=e.clientY;
+  if(isDragging){camX=dragCamX+(e.clientX-dragStartX);camY=dragCamY+(e.clientY-dragStartY);hideTooltip();hoveredSong=null;return;}
+  let closest=-1,bestD=Infinity;
+  for(let i=0;i<songs.length;i++){const{sx,sy}=worldToScreen(getPos(i).wx,getPos(i).wy);const d=Math.hypot(e.clientX-sx,e.clientY-sy);if(d<18&&d<bestD){bestD=d;closest=i;}}
+  if(closest!==hoveredSong){
+    hoveredSong=closest;clearTimeout(hoverAudioTimer);
+    if(closest>=0){showTooltip(songs[closest],e.clientX,e.clientY);canvas.style.cursor='pointer';hoverAudioTimer=setTimeout(()=>requestAudioAnalysis(closest),600);}
+    else{hideTooltip();canvas.style.cursor='crosshair';}
+  }else if(closest>=0) moveTooltip(e.clientX,e.clientY);
+}
+function onMouseDown(e){isDragging=true;dragStartX=e.clientX;dragStartY=e.clientY;dragCamX=camX;dragCamY=camY;canvas.style.cursor='grabbing';}
+function onMouseUp(){isDragging=false;canvas.style.cursor='crosshair';}
+function onWheel(e){
+  e.preventDefault();
+  const f=e.deltaY<0?1.12:.89,wx=e.clientX-canvas.width/2,wy=e.clientY-canvas.height/2;
+  camX=(camX-wx)*f+wx;camY=(camY-wy)*f+wy;camZoom=Math.max(.3,Math.min(30,camZoom*f));
+}
+function onCanvasClick(e){
+  if(Math.abs(e.clientX-dragStartX)>5||Math.abs(e.clientY-dragStartY)>5) return;
+  if(hoveredSong>=0) window.open(songs[hoveredSong].url,'_blank');
+}
+
+// ── TOOLTIP ──
+const tooltip=document.getElementById('tooltip');
+function getSourceLabel(s){
+  const c=featureCache[s.id];
+  if(!c) return '⬡ seeded · hover to analyze audio';
+  const parts=[];
+  if(c.lastfm&&c.tags) parts.push('◈ '+c.tags.slice(0,3).join(' · '));
+  if(c.audio) parts.push('◉ audio analyzed');
+  const idx=songs.indexOf(s);
+  if(audioQueue.has(idx)) parts.push('⟳ analyzing...');
+  else if(s.preview_url&&!c.audio) parts.push('· hover to analyze');
+  return parts.join(' ')||'⬡ seeded';
+}
+function showTooltip(s,x,y){
+  document.getElementById('tt-artist').textContent=s.artist;
+  document.getElementById('tt-track').textContent=s.name;
+  const f=s.f;
+  document.getElementById('tt-stats').innerHTML=`
+    <div class="tt-stat">ENERGY <span>${Math.round(f.energy*100)}%</span></div>
+    <div class="tt-stat">VALENCE <span>${Math.round(f.valence*100)}%</span></div>
+    <div class="tt-stat">DANCE <span>${Math.round(f.danceability*100)}%</span></div>
+    <div class="tt-stat">BPM <span>${Math.round(f.tempo)}</span></div>`;
+  document.querySelector('.tt-hint').textContent=getSourceLabel(s);
+  moveTooltip(x,y);tooltip.classList.add('visible');
+}
+function moveTooltip(x,y){
+  const w=260;let tx=x;
+  if(tx+w/2>innerWidth-10)tx=innerWidth-10-w/2;
+  if(tx-w/2<10)tx=10+w/2;
+  tooltip.style.left=tx+'px';tooltip.style.top=(y-15)+'px';
+}
+function hideTooltip(){tooltip.classList.remove('visible');}
+
+function showSongCard(s){
+  const card=document.getElementById('song-card');card.style.display='block';
+  document.getElementById('sc-artist').textContent=s.artist;
+  document.getElementById('sc-track').textContent=s.name;
+  const f=s.f,c=featureCache[s.id];
+  const tags=c?.tags?`<div class="sc-stat" style="width:100%;margin-top:.4rem;color:rgba(255,255,255,0.35)">${c.tags.slice(0,4).join(' · ')}</div>`:'';
+  document.getElementById('sc-stats').innerHTML=`
+    <div class="sc-stat">ENERGY <span>${Math.round(f.energy*100)}%</span></div>
+    <div class="sc-stat">VALENCE <span>${Math.round(f.valence*100)}%</span></div>
+    <div class="sc-stat">DANCE <span>${Math.round(f.danceability*100)}%</span></div>
+    <div class="sc-stat">BPM <span>${Math.round(f.tempo)}</span></div>${tags}`;
+  songCardUrl=s.url;
+  requestAnimationFrame(()=>card.classList.add('visible'));
+}
+function hideSongCard(){
+  const card=document.getElementById('song-card');card.classList.remove('visible');
+  setTimeout(()=>{if(!card.classList.contains('visible'))card.style.display='none';},350);
+}
+
+// ── HELPERS ──
+function updateHUD(){
+  const el=document.getElementById('hud-count');if(!el)return;
+  const total=songs.length;
+  const cs=getGenreChecksum();
+  const ast=getAudioStats();
+  const lfDone=songs.filter(s=>featureCache[s.id]?.lastfm).length;
+
+  let parts=[`${total.toLocaleString()} songs`];
+
+  // Last.fm line
+  if(lfDone>0) parts.push(lfDone>=total?`✦ lastfm`:`lastfm ${lfDone.toLocaleString()}/${total.toLocaleString()}`);
+
+  // Genre line
+  if(cs.genreReal>=total) parts.push('✦ genres');
+  else if(cs.genreNoId>0) parts.push(`genres ${cs.genreReal.toLocaleString()}/${total.toLocaleString()} ⚠ rescan needed`);
+  else if(cs.genreReal>0) parts.push(`genres ${cs.genreReal.toLocaleString()}/${total.toLocaleString()}`);
+
+  // Audio line
+  if(ast.analyzed>=ast.withPreview&&ast.withPreview>0) parts.push('✦ audio');
+  else if(ast.analyzed>0||_audioRunning) parts.push(`audio ${ast.analyzed.toLocaleString()}${ast.withPreview>0?'/'+ast.withPreview.toLocaleString():''}`)
+  else if(ast.resolvedExternal>0) parts.push(`audio resolving ${ast.resolvedExternal.toLocaleString()}`);
+
+  el.textContent=parts.join(' · ');
+}
+
+function rescanLibrary(){
+  if(!confirm('Clear library cache and rescan from Spotify? This only affects the track list, not your Last.fm or audio analysis data.')) return;
+  localStorage.removeItem(SCAN_CACHE_KEY);
+  localStorage.removeItem('rs_token'); localStorage.removeItem('rs_token_exp');
+  location.reload();
+}
+function setLoadStatus(msg,progress){
+  document.getElementById('load-status').textContent=msg;
+  document.getElementById('load-progress-fill').style.width=`${Math.round(progress*100)}%`;
+  const pct=Math.round(progress*100);
+  const reqInfo=_reqCount>0?` · ${_reqCount} API calls`:'';
+  document.getElementById('load-count').textContent=`${pct}% complete${reqInfo}`;
+}
+// ── SETTINGS PANEL ──────────────────────────────
+let settingsOpen=false;
+
+// ── DEBUG LOG ──
+const _dbgLines=[];
+let _debugOpen=false;
+
+function dbg(msg, type='info'){
+  const t=new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const line={t,msg,type};
+  _dbgLines.push(line);
+  if(_dbgLines.length>120) _dbgLines.shift();
+  console.log(`[RS ${type.toUpperCase()}] ${msg}`); // also goes to browser console
+  if(_debugOpen) renderDebugLog();
+  // surface errors automatically — show flag even if panel closed
+  if(type==='err') setEnrichError(msg);
+}
+
+function renderDebugLog(){
+  const el=document.getElementById('sp-debug');
+  if(!el) return;
+  el.innerHTML=_dbgLines.slice().reverse().map(l=>
+    `<div class="dbg-line dbg-${l.type}">${l.t} ${l.msg}</div>`
+  ).join('');
+}
+
+function toggleDebugLog(){
+  _debugOpen=!_debugOpen;
+  const el=document.getElementById('sp-debug');
+  const btn=document.getElementById('sp-debug-toggle');
+  if(!el||!btn) return;
+  if(_debugOpen){
+    el.style.display='block';
+    btn.textContent='▾ HIDE DEBUG LOG';
+    renderDebugLog();
+    setTimeout(()=>el.scrollTop=0,50);
+  } else {
+    el.style.display='none';
+    btn.textContent='▸ SHOW DEBUG LOG';
+  }
+}
+
+function toggleSettings(){
+  settingsOpen=!settingsOpen;
+  const panel=document.getElementById('settings-panel');
+  if(!panel) return;
+  if(settingsOpen){
+    updateSettingsPanel();
+    panel.style.display='block';
+  } else {
+    panel.style.display='none';
+  }
+}
+
+function updateSettingsPanel(){
+  const cid=document.getElementById('sp-client-id');
+  const lfk=document.getElementById('sp-lastfm-key');
+  const cst=document.getElementById('sp-crystal-status');
+  const stored_cid=localStorage.getItem('rs_client_id')||clientId;
+  const stored_lfk=localStorage.getItem('rs_lastfm_key')||lastfmKey;
+  if(cid) cid.textContent=stored_cid?stored_cid.slice(0,8)+'...'+ stored_cid.slice(-4):'not set';
+  if(lfk) lfk.textContent=stored_lfk?stored_lfk.slice(0,6)+'...'+ stored_lfk.slice(-4):'not set — crystallization disabled';
+  if(cst){
+    const cs=getGenreChecksum();
+    const ast=getAudioStats();
+    const lfDone=songs.filter(s=>featureCache[s.id]?.lastfm).length;
+    const total=songs.length;
+    const rows=[];
+    rows.push(`last.fm   ${lfDone.toLocaleString()} / ${total.toLocaleString()}${enrichActive?' · running':''}`);
+    const gnote=cs.genreNoId>0?` ⚠ ${cs.genreNoId} need rescan`:'';
+    rows.push(`genre     ${cs.genreReal.toLocaleString()} / ${total.toLocaleString()}${gnote}`);
+    if(ast.withPreview===0&&ast.resolvedExternal===0) rows.push(`audio     resolving via iTunes/Deezer...`);
+    else rows.push(`audio     ${ast.analyzed.toLocaleString()} analyzed · ${ast.resolvedExternal.toLocaleString()} via iTunes${_audioRunning?' · running':''}`);
+    cst.innerHTML=rows.map(r=>`<div>${r}</div>`).join('');
   }
 }
 
