@@ -1392,6 +1392,30 @@ function setEnrichError(msg){
   updateSettingsPanel();
 }
 
+// Clean Spotify's messy naming for Last.fm queries
+function cleanArtist(artist){
+  return artist
+    .split(/,|feat\.|ft\.|&|\//i)[0]  // take only first artist
+    .replace(/\s*\(.*?\)\s*/g,'')      // remove parentheticals
+    .replace(/\s*\[.*?\]\s*/g,'')      // remove brackets
+    .trim();
+}
+
+function cleanTrack(track){
+  return track
+    .replace(/\s*[\(\[].*(feat|ft|with|prod|remix|edit|remaster|version|live|acoustic|radio|bonus|explicit|clean|mono|stereo|demo|single|extended|original|alt|alternate|anniversary|deluxe|session|cover|tribute|instrumental|karaoke|reprise|interlude).*[\)\]]/gi,'')
+    .replace(/\s*-\s*(feat|ft|with|prod|remix|edit|remaster|version|live|acoustic|radio|bonus|explicit|mono|stereo|demo|single|extended|original|alt|alternate|anniversary|deluxe|session|cover|tribute|instrumental|karaoke|reprise|interlude).*/gi,'')
+    .replace(/\s*[\(\[].*[\)\]]$/g,'') // remove any remaining trailing parens
+    .trim();
+}
+
+// Build Last.fm URL with cleaned names
+function lastfmTagUrl(artist, track, apiKey){
+  const a=encodeURIComponent(cleanArtist(artist));
+  const t=encodeURIComponent(cleanTrack(track));
+  return `https://ws.audioscrobbler.com/2.0/?method=track.getTopTags&artist=${a}&track=${t}&api_key=${apiKey}&format=json&autocorrect=1`;
+}
+
 async function lastfmFetch(url){
   const controller=new AbortController();
   const tid=setTimeout(()=>controller.abort(),10000);
@@ -1427,48 +1451,50 @@ async function runEnrichment(){
     if(i%25===0) updateHUD();
 
     try{
-      const url=`https://ws.audioscrobbler.com/2.0/?method=track.getTopTags&artist=${encodeURIComponent(s.artist)}&track=${encodeURIComponent(s.name)}&api_key=${lastfmKey}&format=json&autocorrect=1`;
-      let r;
-      try{ r=await lastfmFetch(url); }
-      catch(fe){
-        dbg(`fetch err [${i}] "${s.name.slice(0,20)}": ${fe.message}`,'warn');
-        enrichConsecFails++;
-        if(enrichConsecFails>=15){ dbg('15 consecutive fetch failures — stopping','err'); setEnrichError('Network issues — check connection. Open Settings → Retry.'); enrichActive=false; return; }
-        await delay(1000); continue;
-      }
+      // Try cleaned name first, fall back to raw if still error 6
+      const attempts=[
+        ()=>lastfmTagUrl(s.artist, s.name, lastfmKey),                    // cleaned
+        ()=>lastfmTagUrl(cleanArtist(s.artist), s.name, lastfmKey),        // raw track, clean artist
+        ()=>lastfmTagUrl(s.artist, s.name.split(/[\(\[-]/)[0], lastfmKey), // truncate track at bracket
+      ];
 
-      if(r.status===401||r.status===403){
-        dbg(`HTTP ${r.status} — key rejected`,'err');
-        setEnrichError(`Last.fm key rejected (HTTP ${r.status})`);
-        enrichActive=false; return;
-      }
-      if(r.status===429){
-        dbg('HTTP 429 — rate limited, waiting 60s','warn');
-        setEnrichError('Last.fm rate limited — auto-resuming in 60s...');
-        await delay(60000); setEnrichError(null); dbg('resuming after rate limit','info');
-        i--; continue;
-      }
-      if(!r.ok){
-        dbg(`HTTP ${r.status} for "${s.name.slice(0,20)}"`,'warn');
-        enrichConsecFails++;
-        if(enrichConsecFails>=10){ dbg('10 HTTP errors — stopping','err'); setEnrichError(`Last.fm HTTP ${r.status} — Open Settings → Retry`); enrichActive=false; return; }
-        await delay(1000); continue;
-      }
+      let d=null;
+      let fetchOk=false;
 
-      let d;
-      try{ d=await r.json(); }
-      catch(je){ dbg(`JSON fail [${i}]: ${je.message}`,'warn'); enrichConsecFails++; await delay(340); continue; }
+      for(let attempt=0; attempt<attempts.length; attempt++){
+        const url=attempts[attempt]();
+        let r;
+        try{ r=await lastfmFetch(url); }
+        catch(fe){
+          dbg(`fetch err [${i}] attempt ${attempt}: ${fe.message}`,'warn');
+          enrichConsecFails++;
+          if(enrichConsecFails>=15){ dbg('15 consecutive fetch failures — stopping','err'); setEnrichError('Network issues — Open Settings → Retry.'); enrichActive=false; return; }
+          await delay(1000); break;
+        }
+        if(r.status===401||r.status===403){ dbg(`HTTP ${r.status} — key rejected`,'err'); setEnrichError(`Last.fm key rejected (HTTP ${r.status})`); enrichActive=false; return; }
+        if(r.status===429){ dbg('HTTP 429 — rate limited 60s','warn'); setEnrichError('Last.fm rate limited — auto-resuming in 60s...'); await delay(60000); setEnrichError(null); i--; break; }
+        if(!r.ok){ enrichConsecFails++; await delay(500); break; }
+
+        let parsed;
+        try{ parsed=await r.json(); }catch{ await delay(340); break; }
+
+        if(parsed.error){
+          const FATAL=[4,9,10,13,14,26];
+          if(FATAL.includes(parsed.error)){ dbg(`FATAL lfm err ${parsed.error}: ${parsed.message}`,'err'); setEnrichError(`Last.fm error ${parsed.error}: ${parsed.message||'?'}`); enrichActive=false; return; }
+          if(parsed.error===6 && attempt<attempts.length-1){
+            await delay(80); continue; // try next attempt
+          }
+          // exhausted attempts or non-retryable skip error
+          skippedCount++; fetchOk=true; break;
+        }
+
+        d=parsed; fetchOk=true; break; // success!
+      }
+      if(!fetchOk){ await delay(340); continue; }
+      if(!d){ await delay(340); continue; } // was a skip
 
       if(d.error){
-        const SKIP=[6,7,8,11,16];
-        const FATAL=[4,9,10,13,14,26];
-        if(SKIP.includes(d.error)){
-          skippedCount++;
-          await delay(100); // small delay even on skips — don't blast Last.fm
-          continue;
-        }
-        if(FATAL.includes(d.error)){ dbg(`FATAL lfm err ${d.error}: ${d.message}`,'err'); setEnrichError(`Last.fm error ${d.error}: ${d.message||'?'}`); enrichActive=false; return; }
-        dbg(`soft lfm err ${d.error}: ${d.message}`,'warn'); enrichConsecFails++; await delay(340); continue;
+        skippedCount++; await delay(100); continue;
       }
 
       enrichConsecFails=0;
