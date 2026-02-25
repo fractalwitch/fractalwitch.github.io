@@ -1413,13 +1413,19 @@ async function runEnrichment(){
   const myToken=++_enrichToken;
   setEnrichError(null);
   const toProcess=songs.filter(s=>!featureCache[s.id]?.lastfm);
-  dbg(`▶ start: ${toProcess.length} tracks (token ${myToken})`,'info');
+  dbg(`▶ start: ${toProcess.length} tracks to process (token ${myToken})`,'info');
   updateHUD();
 
+  let foundCount=0, skippedCount=0;
+
   for(let i=0;i<toProcess.length;i++){
-    if(_enrichToken!==myToken){ dbg(`cancelled at ${i} (new token ${_enrichToken})`,'warn'); enrichActive=false; return; }
+    if(_enrichToken!==myToken){ dbg(`cancelled at ${i} — found:${foundCount} skipped:${skippedCount}`,'warn'); enrichActive=false; return; }
     const s=toProcess[i];
-    if(i===0||i%100===0) dbg(`${i}/${toProcess.length} consec-fails:${enrichConsecFails}`,'info');
+
+    // progress every 25 tracks so we can see movement
+    if(i===0||i%25===0) dbg(`${i}/${toProcess.length} found:${foundCount} skipped:${skippedCount} fails:${enrichConsecFails}`,'info');
+    if(i%25===0) updateHUD();
+
     try{
       const url=`https://ws.audioscrobbler.com/2.0/?method=track.getTopTags&artist=${encodeURIComponent(s.artist)}&track=${encodeURIComponent(s.name)}&api_key=${lastfmKey}&format=json&autocorrect=1`;
       let r;
@@ -1427,8 +1433,8 @@ async function runEnrichment(){
       catch(fe){
         dbg(`fetch err [${i}] "${s.name.slice(0,20)}": ${fe.message}`,'warn');
         enrichConsecFails++;
-        if(enrichConsecFails>=15){ dbg('15 fails — stopping','err'); setEnrichError('Network issues — Open Settings → Retry.'); enrichActive=false; return; }
-        await delay(1500); continue;
+        if(enrichConsecFails>=15){ dbg('15 consecutive fetch failures — stopping','err'); setEnrichError('Network issues — check connection. Open Settings → Retry.'); enrichActive=false; return; }
+        await delay(1000); continue;
       }
 
       if(r.status===401||r.status===403){
@@ -1437,33 +1443,38 @@ async function runEnrichment(){
         enrichActive=false; return;
       }
       if(r.status===429){
-        dbg('HTTP 429 — rate limited 60s','warn');
-        setEnrichError('Last.fm rate limited — resuming in 60s...');
-        await delay(60000); setEnrichError(null); dbg('resuming','info');
+        dbg('HTTP 429 — rate limited, waiting 60s','warn');
+        setEnrichError('Last.fm rate limited — auto-resuming in 60s...');
+        await delay(60000); setEnrichError(null); dbg('resuming after rate limit','info');
         i--; continue;
       }
       if(!r.ok){
         dbg(`HTTP ${r.status} for "${s.name.slice(0,20)}"`,'warn');
         enrichConsecFails++;
         if(enrichConsecFails>=10){ dbg('10 HTTP errors — stopping','err'); setEnrichError(`Last.fm HTTP ${r.status} — Open Settings → Retry`); enrichActive=false; return; }
-        await delay(1500); continue;
+        await delay(1000); continue;
       }
 
       let d;
       try{ d=await r.json(); }
-      catch(je){ dbg(`JSON fail [${i}]: ${je.message}`,'warn'); enrichConsecFails++; await delay(500); continue; }
+      catch(je){ dbg(`JSON fail [${i}]: ${je.message}`,'warn'); enrichConsecFails++; await delay(340); continue; }
 
       if(d.error){
         const SKIP=[6,7,8,11,16];
         const FATAL=[4,9,10,13,14,26];
-        if(SKIP.includes(d.error)){ continue; }
+        if(SKIP.includes(d.error)){
+          skippedCount++;
+          await delay(100); // small delay even on skips — don't blast Last.fm
+          continue;
+        }
         if(FATAL.includes(d.error)){ dbg(`FATAL lfm err ${d.error}: ${d.message}`,'err'); setEnrichError(`Last.fm error ${d.error}: ${d.message||'?'}`); enrichActive=false; return; }
-        dbg(`soft lfm err ${d.error}: ${d.message}`,'warn'); enrichConsecFails++; await delay(500); continue;
+        dbg(`soft lfm err ${d.error}: ${d.message}`,'warn'); enrichConsecFails++; await delay(340); continue;
       }
 
       enrichConsecFails=0;
       const tags=d?.toptags?.tag;
       if(tags&&tags.length){
+        foundCount++;
         const lf=tagsToFeatures(tags);
         if(!featureCache[s.id]) featureCache[s.id]={};
         featureCache[s.id].lastfm=lf;
@@ -1476,19 +1487,21 @@ async function runEnrichment(){
           if(Math.hypot(newPos.wx-oldPos.wx,newPos.wy-oldPos.wy)>.008){ startTransition(sidx,oldPos,newPos); worldPositions[sidx]=newPos; }
         }
         queueSave();
+      } else {
+        skippedCount++; // response ok but no tags
       }
     }catch(e){
       dbg(`exception [${i}] "${s.name.slice(0,20)}": ${e.message}`,'err');
       enrichConsecFails++;
     }
-    if(i%50===0) updateHUD();
-    await delay(340);
+    await delay(340); // always delay at end — SKIP paths have their own smaller delay above
   }
+
   if(_enrichToken===myToken){
-    dbg(`✦ complete — token ${myToken}`,'ok');
+    dbg(`✦ complete — found:${foundCount} skipped:${skippedCount} (token ${myToken})`,'ok');
     enrichActive=false; setEnrichError(null); updateHUD();
   } else {
-    dbg(`ended but token changed ${myToken}→${_enrichToken}`,'warn');
+    dbg(`loop ended, token changed ${myToken}→${_enrichToken}`,'warn');
   }
 }
 function retryEnrichment(){
