@@ -1,0 +1,1824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ΣΩ Metabolic Lattice · Össtessêla Research Ensemble</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,500;1,300;1,500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --void:#030009;--mag:#e040fb;--uv:#7c3aed;--cyan:#00e5ff;
+  --gold:#ffd54f;--rose:#f48fb1;--lime:#76ff03;--plasma:#b388ff;
+  --ember:#ff6d00;--mint:#1de9b6;
+  --panel:rgba(5,0,18,0.90);--border:rgba(179,136,255,0.22);
+  --font-mono:'Space Mono',monospace;--font-serif:'Cormorant Garamond',serif;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--void);color:#fff;font-family:var(--font-mono)}
+
+/* LOADER */
+#loader{position:fixed;inset:0;background:var(--void);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2000;transition:opacity 1s ease}
+#loader.out{opacity:0;pointer-events:none}
+.l-ring{width:160px;height:160px;position:relative;margin-bottom:28px}
+.l-ring svg{width:100%;height:100%}
+.l-ring .r1{animation:rspin 12s linear infinite;transform-origin:80px 80px}
+.l-ring .r2{animation:rspin 8s linear infinite reverse;transform-origin:80px 80px}
+.l-ring .r3{animation:rspin 20s linear infinite;transform-origin:80px 80px}
+@keyframes rspin{to{transform:rotate(360deg)}}
+.l-title{font-family:var(--font-serif);font-size:24px;font-weight:300;font-style:italic;color:var(--plasma);letter-spacing:.12em;margin-bottom:6px;text-shadow:0 0 40px rgba(179,136,255,.8)}
+.l-sub{font-size:8px;letter-spacing:.35em;color:rgba(255,255,255,.25);margin-bottom:36px;text-transform:uppercase}
+.l-track{width:300px;height:2px;background:rgba(255,255,255,.06);position:relative;overflow:visible}
+.l-fill{height:100%;background:linear-gradient(90deg,var(--uv),var(--mag),var(--cyan));width:0%;transition:width .08s ease;position:relative}
+.l-fill::after{content:'';position:absolute;right:-3px;top:-3px;width:8px;height:8px;border-radius:50%;background:#fff;box-shadow:0 0 14px var(--mag),0 0 28px var(--mag)}
+.l-msg{font-size:8px;letter-spacing:.18em;color:rgba(255,255,255,.35);margin-top:16px;min-height:16px;text-align:center;max-width:320px}
+
+/* CANVASES */
+#cv3d{position:fixed;inset:0;z-index:1}
+
+/* LAYOUT */
+#ui{position:fixed;inset:0;z-index:10;display:grid;grid-template-rows:46px 1fr 180px;grid-template-columns:1fr 268px;pointer-events:none}
+
+/* HEADER */
+#hdr{grid-column:1/-1;grid-row:1;pointer-events:auto;display:flex;align-items:center;gap:14px;padding:0 14px;background:rgba(3,0,9,.75);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+#hdr::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--mag),var(--cyan),var(--plasma),transparent);animation:hline 4s ease-in-out infinite}
+@keyframes hline{0%,100%{opacity:.25}50%{opacity:1}}
+.hlogo{font-family:var(--font-serif);font-size:16px;font-weight:300;font-style:italic;color:var(--plasma);letter-spacing:.06em;white-space:nowrap;text-shadow:0 0 18px rgba(179,136,255,.7)}
+.hlogo b{font-weight:500;color:var(--mag)}
+.hmetrics{display:flex;gap:12px;flex:1;justify-content:center;flex-wrap:wrap}
+.hm{display:flex;flex-direction:column;align-items:center;gap:1px}
+.hm-k{font-size:6px;letter-spacing:.22em;color:rgba(255,255,255,.28);text-transform:uppercase}
+.hm-v{font-size:10px;font-weight:700;font-family:var(--font-mono);min-width:52px;text-align:center;transition:color .3s}
+.hm-v.c{color:var(--cyan);text-shadow:0 0 8px var(--cyan)}
+.hm-v.m{color:var(--mag);text-shadow:0 0 8px var(--mag)}
+.hm-v.g{color:var(--gold);text-shadow:0 0 8px var(--gold)}
+.hm-v.p{color:var(--plasma);text-shadow:0 0 8px var(--plasma)}
+.hm-v.l{color:var(--lime);text-shadow:0 0 8px var(--lime)}
+.hmodes{display:flex;gap:5px}
+.mbtn{font-size:7px;letter-spacing:.14em;padding:3px 7px;border:1px solid rgba(179,136,255,.25);background:transparent;color:rgba(255,255,255,.4);cursor:pointer;text-transform:uppercase;transition:all .2s;font-family:var(--font-mono)}
+.mbtn.on,.mbtn:hover{border-color:var(--mag);color:var(--mag);background:rgba(224,64,251,.07);box-shadow:0 0 10px rgba(224,64,251,.18)}
+.hstatus{display:flex;align-items:center;gap:5px;font-size:7px;color:rgba(255,255,255,.28);letter-spacing:.14em}
+.sdot{width:5px;height:5px;border-radius:50%;background:var(--lime);box-shadow:0 0 7px var(--lime);animation:sdotP 1.8s ease-in-out infinite}
+@keyframes sdotP{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.6)}}
+
+/* NNOF RIGHT PANEL */
+#pnl-nnof{grid-column:2;grid-row:2;pointer-events:auto;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;backdrop-filter:blur(14px)}
+.pnl-hdr{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.pnl-title{font-family:var(--font-serif);font-size:12px;font-style:italic;color:var(--plasma);letter-spacing:.08em}
+.pnl-sig{font-size:7px;letter-spacing:.18em;color:rgba(255,255,255,.2)}
+.layers{flex:1;overflow-y:auto;overflow-x:hidden}
+.layers::-webkit-scrollbar{width:2px}
+.layers::-webkit-scrollbar-thumb{background:var(--uv);border-radius:1px}
+.lb{padding:7px 12px 8px;border-bottom:1px solid rgba(179,136,255,.07);position:relative}
+.lb::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px}
+.lb.phe::before{background:var(--gold)}
+.lb.rel::before{background:var(--mag)}
+.lb.sys::before{background:var(--cyan)}
+.lb.epi::before{background:var(--lime)}
+.lb.hor::before{background:var(--plasma)}
+.ltag{font-size:6px;letter-spacing:.22em;margin-bottom:3px;text-transform:uppercase;opacity:.7}
+.lb.phe .ltag{color:var(--gold)}.lb.rel .ltag{color:var(--mag)}.lb.sys .ltag{color:var(--cyan)}.lb.epi .ltag{color:var(--lime)}.lb.hor .ltag{color:var(--plasma)}
+.lbody{font-size:8px;line-height:1.65;color:rgba(255,255,255,.5);font-family:var(--font-serif);font-style:italic;min-height:28px}
+.lms{display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-top:5px}
+.lm{background:rgba(255,255,255,.035);padding:3px 6px;border-radius:1px}
+.lmk{font-size:6px;letter-spacing:.18em;color:rgba(255,255,255,.27);text-transform:uppercase}
+.lmv{font-size:10px;font-weight:700;font-family:var(--font-mono)}
+.lmv.g{color:var(--gold);text-shadow:0 0 5px var(--gold)}.lmv.m{color:var(--mag);text-shadow:0 0 5px var(--mag)}.lmv.c{color:var(--cyan);text-shadow:0 0 5px var(--cyan)}.lmv.li{color:var(--lime);text-shadow:0 0 5px var(--lime)}.lmv.p{color:var(--plasma);text-shadow:0 0 5px var(--plasma)}
+.lbar{height:2px;background:rgba(255,255,255,.05);border-radius:1px;margin-top:4px;overflow:hidden}
+.lbarfill{height:100%;border-radius:1px;transition:width .5s ease}
+.cohom{padding:7px 12px;border-bottom:1px solid rgba(179,136,255,.07)}
+.cohom-title{font-size:6px;letter-spacing:.22em;color:rgba(255,255,255,.27);text-transform:uppercase;margin-bottom:5px}
+.crow{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.cname{font-size:7px;color:rgba(255,255,255,.38);letter-spacing:.1em}
+.cval{font-size:12px;font-weight:700;color:var(--rose);text-shadow:0 0 8px var(--rose);font-family:var(--font-mono)}
+.lorbit{padding:8px 12px;display:flex;align-items:center;justify-content:center;border-bottom:1px solid rgba(179,136,255,.07)}
+#cv-orbit{border-radius:50%;background:rgba(0,0,0,.3)}
+
+/* BOTTOM PANELS */
+#pnl-bot{grid-column:1;grid-row:3;pointer-events:auto;background:var(--panel);border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr 1fr;backdrop-filter:blur(14px)}
+#pnl-botr{grid-column:2;grid-row:3;pointer-events:auto;background:var(--panel);border-top:1px solid var(--border);border-left:1px solid var(--border);backdrop-filter:blur(14px)}
+.cpanel{padding:7px 10px;display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.ctitle{font-size:6px;letter-spacing:.22em;color:rgba(255,255,255,.28);text-transform:uppercase;flex-shrink:0}
+.ccv{border-radius:1px;background:rgba(0,0,0,.28);flex:1}
+
+/* SIDE CONTROLS */
+#ctrls{position:fixed;left:10px;top:50%;transform:translateY(-50%);z-index:20;display:flex;flex-direction:column;gap:5px;pointer-events:auto}
+.cbtn{width:30px;height:30px;border:1px solid rgba(179,136,255,.2);background:var(--panel);color:rgba(255,255,255,.45);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .2s;backdrop-filter:blur(8px);border-radius:2px}
+.cbtn:hover,.cbtn.on{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 10px rgba(0,229,255,.22)}
+.csep{height:1px;background:rgba(255,255,255,.08);margin:3px 0}
+.cslw{display:flex;flex-direction:column;align-items:center;gap:2px}
+.csll{font-size:6px;letter-spacing:.18em;color:rgba(255,255,255,.22);text-transform:uppercase}
+input[type=range].csl{-webkit-appearance:none;width:30px;height:72px;writing-mode:vertical-lr;direction:rtl;background:rgba(255,255,255,.04);border:1px solid rgba(179,136,255,.12);outline:none;padding:3px 0;border-radius:2px;cursor:pointer}
+input[type=range].csl::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:3px;background:var(--plasma);border-radius:2px;box-shadow:0 0 5px var(--plasma)}
+
+/* TOOLTIP */
+#tip{position:fixed;pointer-events:none;z-index:100;background:var(--panel);border:1px solid var(--border);padding:5px 9px;font-size:7px;line-height:1.8;letter-spacing:.1em;color:rgba(255,255,255,.65);backdrop-filter:blur(10px);display:none;white-space:nowrap}
+#tip.on{display:block}
+#tip-title{color:var(--plasma);font-family:var(--font-serif);font-style:italic;font-size:10px;letter-spacing:.08em;margin-bottom:1px}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="l-ring">
+    <svg viewBox="0 0 160 160" fill="none">
+      <defs>
+        <filter id="gf"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <!-- static outer -->
+      <circle cx="80" cy="80" r="72" stroke="rgba(124,58,237,.15)" stroke-width=".5"/>
+      <!-- r1: slow hex -->
+      <g class="r1">
+        <polygon points="80,14 138,47 138,113 80,146 22,113 22,47" stroke="rgba(124,58,237,.5)" stroke-width=".8" fill="none"/>
+        <circle cx="80"  cy="14"  r="2.5" fill="rgba(124,58,237,.9)" filter="url(#gf)"/>
+        <circle cx="138" cy="47"  r="2.5" fill="rgba(224,64,251,.9)" filter="url(#gf)"/>
+        <circle cx="138" cy="113" r="2.5" fill="rgba(0,229,255,.9)"  filter="url(#gf)"/>
+        <circle cx="80"  cy="146" r="2.5" fill="rgba(124,58,237,.9)" filter="url(#gf)"/>
+        <circle cx="22"  cy="113" r="2.5" fill="rgba(224,64,251,.9)" filter="url(#gf)"/>
+        <circle cx="22"  cy="47"  r="2.5" fill="rgba(0,229,255,.9)"  filter="url(#gf)"/>
+      </g>
+      <!-- r2: inner triangle -->
+      <g class="r2">
+        <polygon points="80,32 122,78 38,78" stroke="rgba(224,64,251,.4)" stroke-width=".7" fill="none"/>
+        <polygon points="80,128 38,82 122,82" stroke="rgba(0,229,255,.4)" stroke-width=".7" fill="none"/>
+      </g>
+      <!-- r3: spokes -->
+      <g class="r3" stroke="rgba(179,136,255,.35)" stroke-width=".6">
+        <line x1="80" y1="80" x2="80" y2="14"/>
+        <line x1="80" y1="80" x2="138" y2="47"/>
+        <line x1="80" y1="80" x2="138" y2="113"/>
+        <line x1="80" y1="80" x2="80" y2="146"/>
+        <line x1="80" y1="80" x2="22" y2="113"/>
+        <line x1="80" y1="80" x2="22" y2="47"/>
+      </g>
+      <circle cx="80" cy="80" r="7" fill="rgba(179,136,255,.95)" filter="url(#gf)"/>
+    </svg>
+  </div>
+  <div class="l-title">ΣΩ Metabolic Lattice</div>
+  <div class="l-sub">Össtessêla Research Ensemble · 2026</div>
+  <div class="l-track"><div class="l-fill" id="lfill"></div></div>
+  <div class="l-msg" id="lmsg">Initializing consciousness substrate…</div>
+</div>
+
+<!-- THREE.JS CANVAS -->
+<canvas id="cv3d"></canvas>
+
+<!-- TOOLTIP -->
+<div id="tip"><div id="tip-title"></div><div id="tip-body"></div></div>
+
+<!-- MAIN UI GRID -->
+<div id="ui">
+
+  <!-- HEADER -->
+  <div id="hdr">
+    <div class="hlogo"><b>ΣΩ</b> Metabolic Lattice</div>
+    <div class="hmetrics">
+      <div class="hm"><div class="hm-k">Λ̄ adaptive</div><div class="hm-v c" id="h-lam">1.0000</div></div>
+      <div class="hm"><div class="hm-k">Enstrophy Ω</div><div class="hm-v m" id="h-enst">0.0000</div></div>
+      <div class="hm"><div class="hm-k">Energy E</div><div class="hm-v g" id="h-eng">0.0000</div></div>
+      <div class="hm"><div class="hm-k">max|ψ|²</div><div class="hm-v p" id="h-psi">0.00000</div></div>
+      <div class="hm"><div class="hm-k">NN Loss</div><div class="hm-v l" id="h-loss">—</div></div>
+      <div class="hm"><div class="hm-k">β₀ · β₁</div><div class="hm-v c" id="h-betti">— · —</div></div>
+      <div class="hm"><div class="hm-k">k⁻β slope</div><div class="hm-v g" id="h-slope">—</div></div>
+      <div class="hm"><div class="hm-k">PDE t</div><div class="hm-v m" id="h-t">0.000</div></div>
+    </div>
+    <div class="hmodes">
+      <button class="mbtn on" data-m="0">COMPOSITE</button>
+      <button class="mbtn" data-m="1">QUANTUM</button>
+      <button class="mbtn" data-m="2">PDE</button>
+      <button class="mbtn" data-m="3">NEURAL</button>
+    </div>
+    <div class="hstatus"><div class="sdot"></div><span id="hstat">LIVE</span></div>
+  </div>
+
+  <!-- NNOF PANEL -->
+  <div id="pnl-nnof">
+    <div class="pnl-hdr">
+      <div class="pnl-title">NNOF Layered Analysis</div>
+      <div class="pnl-sig">🜁🜂🜃🜄✶</div>
+    </div>
+    <div class="layers">
+
+      <!-- PHE -->
+      <div class="lb phe">
+        <div class="ltag">🜁 PHE · Phenomenological</div>
+        <div class="lbody" id="lbody-phe">Each vortex breathes as a glowing bubble, pulsating, absorbing…</div>
+        <div class="lms">
+          <div class="lm"><div class="lmk">Sensation σ²</div><div class="lmv g" id="phe-s">0.0000</div></div>
+          <div class="lm"><div class="lmk">max|ψ|² ×10³</div><div class="lmv g" id="phe-i">0.000</div></div>
+        </div>
+        <div class="lbar"><div class="lbarfill" id="phe-bar" style="background:var(--gold);width:0%"></div></div>
+      </div>
+
+      <!-- REL -->
+      <div class="lb rel">
+        <div class="ltag">🜂 REL · Symbolic</div>
+        <div class="lbody" id="lbody-rel">Sigil-lattice gates encode ancestral choreography of energy flow…</div>
+        <div class="lms">
+          <div class="lm"><div class="lmk">Λ̄ resonance</div><div class="lmv m" id="rel-r">0.0000</div></div>
+          <div class="lm"><div class="lmk">Harmony</div><div class="lmv m" id="rel-h">0.0000</div></div>
+        </div>
+        <div class="lbar"><div class="lbarfill" id="rel-bar" style="background:var(--mag);width:0%"></div></div>
+      </div>
+
+      <!-- SYS -->
+      <div class="lb sys">
+        <div class="ltag">🜃 SYS · Systemic</div>
+        <div class="lbody">∂ₜu+(u·∇)u+∇p=ν△u+S_Λ · dΛ/dt=ε₁C_clip+ε₃‖β_err‖−ε₂(Λ−Λ∞) · GCN: L=MSE+λ·Lap(Λ̂)</div>
+        <div class="lms">
+          <div class="lm"><div class="lmk">H¹ bound</div><div class="lmv c" id="sys-h1">0.000</div></div>
+          <div class="lm"><div class="lmk">Clip rate</div><div class="lmv c" id="sys-cl">0.000</div></div>
+          <div class="lm"><div class="lmk">dΩ/dt</div><div class="lmv c" id="sys-do">0.000</div></div>
+          <div class="lm"><div class="lmk">dΛ/dt</div><div class="lmv c" id="sys-dl">0.000</div></div>
+        </div>
+        <div class="lbar"><div class="lbarfill" id="sys-bar" style="background:var(--cyan);width:0%"></div></div>
+      </div>
+
+      <!-- EPI -->
+      <div class="lb epi">
+        <div class="ltag">🜄 EPI · Epistemic</div>
+        <div class="lbody">Global regularity: High · Čech gluing: Med-High · Sigil metaphor: Medium</div>
+        <div class="lms">
+          <div class="lm"><div class="lmk">Confidence</div><div class="lmv li" id="epi-c">High</div></div>
+          <div class="lm"><div class="lmk">β error</div><div class="lmv li" id="epi-e">0.0000</div></div>
+        </div>
+        <div class="lbar"><div class="lbarfill" id="epi-bar" style="background:var(--lime);width:75%"></div></div>
+      </div>
+
+      <!-- HOR -->
+      <div class="lb hor">
+        <div class="ltag">✶ HOR · Speculative Horizon</div>
+        <div class="lbody" id="lbody-hor">Cosmic foam of metabolic intelligence — topologically forbidden blowups impossible…</div>
+        <div class="lms">
+          <div class="lm"><div class="lmk">Lattice N</div><div class="lmv p">8³=512</div></div>
+          <div class="lm"><div class="lmk">Active nodes</div><div class="lmv p" id="hor-an">0</div></div>
+        </div>
+        <div class="lbar"><div class="lbarfill" id="hor-bar" style="background:var(--plasma);width:0%"></div></div>
+      </div>
+
+      <!-- COHOMOLOGY -->
+      <div class="cohom">
+        <div class="cohom-title">Čech Cohomology · Λ-threshold filtration</div>
+        <div class="crow"><span class="cname">β₀ (connected components)</span><span class="cval" id="co-b0">—</span></div>
+        <div class="crow"><span class="cname">β₁ (independent cycles)</span><span class="cval" id="co-b1">—</span></div>
+        <div class="crow"><span class="cname">χ Euler characteristic</span><span class="cval" id="co-eu">—</span></div>
+      </div>
+
+      <!-- LAMBDA ORBIT -->
+      <div class="lorbit">
+        <canvas id="cv-orbit" width="116" height="116"></canvas>
+      </div>
+
+    </div><!-- /layers -->
+  </div><!-- /pnl-nnof -->
+
+  <!-- BOTTOM CHARTS -->
+  <div id="pnl-bot">
+    <div class="cpanel">
+      <div class="ctitle">GCN Loss · MSE + Laplacian Reg (λ=0.08)</div>
+      <canvas id="cv-loss" class="ccv" width="230" height="140"></canvas>
+    </div>
+    <div class="cpanel">
+      <div class="ctitle">Spectral Cascade · k⁻β Sigil-Logic Gate</div>
+      <canvas id="cv-spec" class="ccv" width="230" height="140"></canvas>
+    </div>
+    <div class="cpanel">
+      <div class="ctitle">Enstrophy Ω(t) · Classical vs ΣΩ Saturated</div>
+      <canvas id="cv-enst" class="ccv" width="230" height="140"></canvas>
+    </div>
+  </div>
+  <div id="pnl-botr">
+    <div class="cpanel">
+      <div class="ctitle">Λ(t) Adaptive Metabolic Threshold</div>
+      <canvas id="cv-lam" class="ccv" width="250" height="140"></canvas>
+    </div>
+  </div>
+
+</div><!-- /ui -->
+
+<!-- TOUR BUTTON -->
+<div id="tour-btn">?</div>
+
+<!-- GUIDED TOUR OVERLAY -->
+<div id="tour-overlay">
+  <div id="tour-modal">
+    <div id="tour-close" onclick="document.getElementById('tour-overlay').style.display='none'">✕</div>
+    <div class="t-title">ΣΩ Metabolic Lattice · Guided Tour</div>
+    <div class="t-subtitle">Össtessêla Research Ensemble · 2026</div>
+
+    <div class="t-section">
+      <div class="t-sec-title">🜁 PHE — Phenomenological Layer</div>
+      <div class="t-body">Direct experience — the <em>feel</em> of the lattice. High-k eddies are effervescent, low-k rolls smooth as honeyed dusk. Λ(t) oscillations register as subtle sweetness, alerting when the metabolic field nears saturation. The sensation metric σ² measures quantum population variance across time — how <em>alive</em> each node is.</div>
+    </div>
+
+    <div class="t-section">
+      <div class="t-sec-title">🜂 REL — Relational / Symbolic Layer</div>
+      <div class="t-body">Each threshold gate is an <em>ancestral sigil</em>. Edge colors encode GAT attention weights — which neighbors most influence a node's Λ prediction. <span class="t-gold">Gold edges</span> are dominant attention pathways. <span class="t-cyan">Cyan edges</span> carry high mutual attention. The harmony metric measures how close the mean Λ̄ is to the target Λ∞.</div>
+    </div>
+
+    <div class="t-section">
+      <div class="t-sec-title">🜃 SYS — Systemic Layer</div>
+      <div class="t-body">The modified Navier-Stokes equation with ΣΩ saturation:<br><code>∂ₜω + (u·∇)ω = S_Λ[(ω·∇)u] + ν△ω</code><br>S_Λ bounds the stretching term: ‖S_Λ‖∞ ≤ Λ(t), preventing finite-time blowup. The adaptive ODE <code>dΛ/dt = ε₁C_clip + ε₃|β_err| − ε₂(Λ−Λ∞)</code> continuously re-calibrates the metabolic threshold. Global regularity is proven — enstrophy growth is √Ω bounded.</div>
+    </div>
+
+    <div class="t-section">
+      <div class="t-sec-title">🜄 EPI — Epistemic Layer</div>
+      <div class="t-body">Certainty tagging across the analysis stack. <em>High confidence</em> in H¹ bounds (spectral proof). <em>Medium-high</em> in Čech cohomology gluing (β₀/β₁ persistence). <em>Medium</em> in sigil metaphors (interpretive). The NN loss breakdown shows MSE + Laplacian regularization: the Laplacian % tells you how much of the loss is spatial coherence enforcement vs pure prediction error.</div>
+    </div>
+
+    <div class="t-section">
+      <div class="t-sec-title">✶ HOR — Speculative Horizon</div>
+      <div class="t-body">The cosmic foam of metabolic intelligence. Particles respawn near high-Λ nodes, tracing emergent vortex corridors. Active node count and Čech topology (β₀ components, β₁ cycles, χ Euler characteristic) describe the <em>shape</em> of the coherent field — how many islands of activity and how many loops they form.</div>
+    </div>
+
+    <div class="t-section">
+      <div class="t-sec-title">⬡ GCN + GAT Architecture</div>
+      <div class="t-body">The Λ-adapter is a <em>Graph Convolutional Network</em> with Graph Attention (GAT), trained from scratch in pure JavaScript:<br><br>
+      <code>Input: [pop_i, sensation_i] ∈ ℝ²</code><br>
+      <code>GCN-1: mean-aggregate(self+neighbors) → ℝ¹⁶</code><br>
+      <code>GAT: α_ij = softmax(LeakyReLU(aᵀ[h_i‖h_j]))</code><br>
+      <code>GCN-2: attention-weighted aggregate → ℝ⁸</code><br>
+      <code>Output: ReLU(Wₒh²) → Λ̂ ∈ ℝ₊</code><br><br>
+      Loss = MSE(Λ̂, Λ*) + <span class="t-gold">λ·∑_i(Λ̂_i − mean_{N(i)} Λ̂_j)²</span><br>
+      The second term is the <em>Laplacian regularizer</em> — it penalizes spatially incoherent Λ fields, encoding the physical prior that neighboring vortex patches should evolve together.<br><br>
+      Full backpropagation through: attention softmax Jacobian, GCN aggregation, Laplacian penalty gradient. Optimizer: Adam with bias correction.</div>
+    </div>
+
+    <div class="t-section">
+      <div class="t-sec-title">🎮 Interaction</div>
+      <div class="t-body"><strong>Drag</strong> to orbit the lattice. <strong>Scroll</strong> to zoom. <strong>Hover</strong> any node for full per-site metrics including attention weights, quantum population, enstrophy, and adapted Λ. Mode buttons switch the node coloring between composite, quantum, PDE enstrophy, and NN output views. Sliders control bloom intensity, kinematic viscosity ν, and asymptotic threshold Λ∞.</div>
+    </div>
+
+    <button class="t-close-btn" onclick="document.getElementById('tour-overlay').style.display='none'">Enter the Field ⟶</button>
+  </div>
+</div>
+
+<style>
+/* TOUR BUTTON */
+#tour-btn{
+  position:fixed;bottom:18px;right:18px;z-index:200;
+  background:var(--panel);border:1px solid var(--border);
+  color:var(--plasma);padding:6px 14px;border-radius:20px;
+  cursor:pointer;font-size:11px;letter-spacing:.18em;
+  font-family:var(--font-mono);backdrop-filter:blur(10px);
+  transition:all .2s;text-transform:uppercase;
+}
+#tour-btn:hover{border-color:var(--mag);box-shadow:0 0 14px rgba(224,64,251,.3);color:var(--mag);}
+
+/* OVERLAY */
+#tour-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.85);
+  z-index:1500;display:none;justify-content:center;align-items:flex-start;
+  overflow-y:auto;padding:20px;backdrop-filter:blur(6px);
+}
+#tour-modal{
+  background:var(--panel);border:1px solid var(--border);
+  max-width:640px;width:100%;padding:28px 24px;border-radius:4px;
+  position:relative;color:#fff;backdrop-filter:blur(16px);
+  box-shadow:0 0 60px rgba(124,58,237,.25),0 0 120px rgba(224,64,251,.1);
+  margin:auto;
+}
+#tour-close{
+  position:absolute;top:12px;right:14px;cursor:pointer;
+  font-size:13px;color:rgba(255,255,255,.35);transition:color .2s;letter-spacing:.1em;
+}
+#tour-close:hover{color:var(--mag);}
+.t-title{font-family:var(--font-serif);font-size:20px;font-weight:300;font-style:italic;color:var(--plasma);letter-spacing:.1em;margin-bottom:3px;text-shadow:0 0 24px rgba(179,136,255,.6);}
+.t-subtitle{font-size:7px;letter-spacing:.3em;color:rgba(255,255,255,.25);text-transform:uppercase;margin-bottom:20px;}
+.t-section{margin-bottom:16px;padding-left:12px;border-left:2px solid rgba(179,136,255,.2);position:relative;}
+.t-section::before{content:'';position:absolute;left:-1px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--mag),var(--cyan));opacity:.5;}
+.t-sec-title{font-size:10px;font-weight:700;letter-spacing:.18em;color:var(--plasma);text-transform:uppercase;margin-bottom:5px;}
+.t-body{font-family:var(--font-serif);font-size:12px;font-style:italic;line-height:1.75;color:rgba(255,255,255,.6);}
+.t-body code{font-family:var(--font-mono);font-style:normal;font-size:9px;color:var(--cyan);letter-spacing:.05em;background:rgba(0,229,255,.06);padding:1px 4px;border-radius:2px;}
+.t-body strong{color:rgba(255,255,255,.85);font-style:normal;}
+.t-gold{color:var(--gold);font-style:normal;}
+.t-cyan{color:var(--cyan);font-style:normal;}
+.t-close-btn{
+  margin-top:18px;display:block;width:100%;padding:9px;
+  background:linear-gradient(90deg,rgba(124,58,237,.4),rgba(224,64,251,.4));
+  border:1px solid var(--mag);color:var(--plasma);cursor:pointer;
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.25em;
+  text-transform:uppercase;transition:all .2s;border-radius:2px;
+}
+.t-close-btn:hover{background:linear-gradient(90deg,rgba(124,58,237,.7),rgba(224,64,251,.7));box-shadow:0 0 20px rgba(224,64,251,.3);}
+</style>
+
+<script>
+document.getElementById('tour-btn').addEventListener('click',()=>{
+  const o=document.getElementById('tour-overlay');
+  o.style.display='flex';o.scrollTop=0;
+});
+</script>
+<div id="ctrls">
+  <button class="cbtn on" id="btn-rot" title="Auto-rotate">⟳</button>
+  <button class="cbtn" id="btn-play" title="Play/Pause PDE">▶</button>
+  <div class="csep"></div>
+  <div class="cslw">
+    <input type="range" class="csl" id="sl-bloom" min="0" max="100" value="60">
+    <div class="csll">Bloom</div>
+  </div>
+  <div class="cslw">
+    <input type="range" class="csl" id="sl-nu" min="1" max="100" value="40">
+    <div class="csll">ν</div>
+  </div>
+  <div class="cslw">
+    <input type="range" class="csl" id="sl-linf" min="10" max="100" value="50">
+    <div class="csll">Λ∞</div>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+// ═══════════════════════════════════════════════════════════════════
+// CFG
+// ═══════════════════════════════════════════════════════════════════
+const CFG={
+  DIMS:8, N_SITES:512,
+  PDE_N:16, PDE_DT:0.006, PDE_NU:0.006,
+  LAMINF:1.0, EPS1:.5, EPS2:.3, EPS3:.2,
+  QDT:0.05, Q_PER_FRAME:8,
+  NN_LAYERS:[8,24,16,1], NN_EPOCHS:400, NN_SAMPLES:50,
+  SPACING:2.4, PARTICLES:1600, COHOM_FRAC:.6,
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// § SEEDED PRNG  (Mulberry32)
+// ═══════════════════════════════════════════════════════════════════
+class RNG{
+  constructor(s=42){this.s=s>>>0||1}
+  next(){let t=this.s+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/2**32}
+  randn(){const u=this.next()+1e-12,v=this.next();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+  rr(a,b){return a+(b-a)*this.next()}
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// § FFT3D  Cooley-Tukey radix-2  (power-of-2 N only)
+// ═══════════════════════════════════════════════════════════════════
+class FFT3D{
+  constructor(N){
+    this.N=N;this.N2=N*N;this.N3=N**3;
+    // precompute twiddle factors
+    this._tw=new Map();
+    for(let len=2;len<=N;len<<=1){
+      const h=len>>1,wr=new Float64Array(h),wi=new Float64Array(h),wri=new Float64Array(h),wii=new Float64Array(h);
+      for(let j=0;j<h;j++){const a=-2*Math.PI*j/len;wr[j]=Math.cos(a);wi[j]=Math.sin(a);wri[j]=Math.cos(-a);wii[j]=Math.sin(-a);}
+      this._tw.set(len,{wr,wi,wri,wii});
+    }
+    this._tr=new Float64Array(N);this._ti=new Float64Array(N);
+  }
+  _1d(re,im,inv){
+    const N=re.length;
+    for(let i=1,j=0;i<N;i++){let b=N>>1;for(;j&b;b>>=1)j^=b;j^=b;if(i<j){let t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t;}}
+    for(let len=2;len<=N;len<<=1){
+      const h=len>>1;const{wr,wi,wri,wii}=this._tw.get(len);
+      const Wr=inv?wri:wr,Wi=inv?wii:wi;
+      for(let i=0;i<N;i+=len)for(let j=0;j<h;j++){
+        const a=i+j,b=a+h,vr=re[b]*Wr[j]-im[b]*Wi[j],vi=re[b]*Wi[j]+im[b]*Wr[j];
+        re[b]=re[a]-vr;im[b]=im[a]-vi;re[a]+=vr;im[a]+=vi;
+      }
+    }
+    if(inv){const s=1/N;for(let i=0;i<N;i++){re[i]*=s;im[i]*=s;}}
+  }
+  _3d(re,im,inv){
+    const N=this.N,N2=this.N2,tr=this._tr,ti=this._ti;
+    // along x
+    for(let y=0;y<N;y++)for(let z=0;z<N;z++){
+      for(let x=0;x<N;x++){tr[x]=re[x*N2+y*N+z];ti[x]=im[x*N2+y*N+z];}
+      this._1d(tr,ti,inv);
+      for(let x=0;x<N;x++){re[x*N2+y*N+z]=tr[x];im[x*N2+y*N+z]=ti[x];}
+    }
+    // along y
+    for(let x=0;x<N;x++)for(let z=0;z<N;z++){
+      for(let y=0;y<N;y++){tr[y]=re[x*N2+y*N+z];ti[y]=im[x*N2+y*N+z];}
+      this._1d(tr,ti,inv);
+      for(let y=0;y<N;y++){re[x*N2+y*N+z]=tr[y];im[x*N2+y*N+z]=ti[y];}
+    }
+    // along z
+    for(let x=0;x<N;x++)for(let y=0;y<N;y++){
+      const base=x*N2+y*N;
+      tr.set(re.subarray(base,base+N));ti.set(im.subarray(base,base+N));
+      this._1d(tr,ti,inv);
+      re.set(tr,base);im.set(ti,base);
+    }
+  }
+  fwd(re,im){this._3d(re,im,false);}
+  inv(re,im){this._3d(re,im,true);}
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// § QUANTUM SIM  H = -A(hopping) + V(disorder)  on 8³ lattice
+//   i∂ψ/∂t = Hψ  →  dψ/dt = -iHψ
+//   RK4 in R²ᴺ  (Re ψ, Im ψ)
+// ═══════════════════════════════════════════════════════════════════
+class QuantumSim{
+  constructor(D=8){
+    this.D=D;this.N=D**3;
+    const rng=new RNG(42);
+    this.V=new Float64Array(this.N).map(()=>rng.rr(-1,1));
+    // neighbor lists
+    this.nb=[];
+    for(let x=0;x<D;x++)for(let y=0;y<D;y++)for(let z=0;z<D;z++){
+      const i=x*D*D+y*D+z,nbs=[];
+      [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]].forEach(([dx,dy,dz])=>{
+        const nx=x+dx,ny=y+dy,nz=z+dz;
+        if(nx>=0&&nx<D&&ny>=0&&ny<D&&nz>=0&&nz<D)nbs.push(nx*D*D+ny*D+nz);
+      });
+      this.nb[i]=nbs;
+    }
+    // state
+    this.pR=new Float64Array(this.N);this.pI=new Float64Array(this.N);
+    this.pR[3*D*D+3*D+3]=1; // center
+    this.pop=new Float64Array(this.N);
+    this.sen=new Float64Array(this.N); // variance proxy
+    this._acc=new Float64Array(this.N);this._acc2=new Float64Array(this.N);this._n=0;
+    this.t=0;this.dt=CFG.QDT;
+    this._tmp1r=new Float64Array(this.N);this._tmp1i=new Float64Array(this.N);
+    this._upd();
+  }
+  // H·ψ: (Hψ)_i = V_i ψ_i - Σ_{j∈nb} ψ_j
+  _Hv(sr,si,or_,oi){
+    const V=this.V;
+    for(let i=0;i<this.N;i++){
+      let hr=V[i]*sr[i],hi=V[i]*si[i];
+      for(const j of this.nb[i]){hr-=sr[j];hi-=si[j];}
+      or_[i]=hr;oi[i]=hi;
+    }
+  }
+  // dψ/dt = -iHψ → d/dt(Re ψ)=Im(Hψ), d/dt(Im ψ)=-Re(Hψ)
+  _deriv(sr,si,dr,di){this._Hv(sr,si,this._tmp1r,this._tmp1i);for(let i=0;i<this.N;i++){dr[i]=this._tmp1i[i];di[i]=-this._tmp1r[i];}}
+  step(ns=1){
+    const N=this.N,dt=this.dt;
+    const k1r=new Float64Array(N),k1i=new Float64Array(N),k2r=new Float64Array(N),k2i=new Float64Array(N),k3r=new Float64Array(N),k3i=new Float64Array(N),k4r=new Float64Array(N),k4i=new Float64Array(N),tr=new Float64Array(N),ti=new Float64Array(N);
+    for(let s=0;s<ns;s++){
+      this._deriv(this.pR,this.pI,k1r,k1i);
+      for(let i=0;i<N;i++){tr[i]=this.pR[i]+.5*dt*k1r[i];ti[i]=this.pI[i]+.5*dt*k1i[i];}
+      this._deriv(tr,ti,k2r,k2i);
+      for(let i=0;i<N;i++){tr[i]=this.pR[i]+.5*dt*k2r[i];ti[i]=this.pI[i]+.5*dt*k2i[i];}
+      this._deriv(tr,ti,k3r,k3i);
+      for(let i=0;i<N;i++){tr[i]=this.pR[i]+dt*k3r[i];ti[i]=this.pI[i]+dt*k3i[i];}
+      this._deriv(tr,ti,k4r,k4i);
+      const f=dt/6;
+      for(let i=0;i<N;i++){
+        this.pR[i]+=f*(k1r[i]+2*k2r[i]+2*k3r[i]+k4r[i]);
+        this.pI[i]+=f*(k1i[i]+2*k2i[i]+2*k3i[i]+k4i[i]);
+      }
+      this.t+=dt;
+      if(s%25===0)this._norm();
+    }
+    this._upd();
+  }
+  _norm(){
+    let n2=0;for(let i=0;i<this.N;i++)n2+=this.pR[i]**2+this.pI[i]**2;
+    const inv=1/Math.sqrt(n2+1e-15);for(let i=0;i<this.N;i++){this.pR[i]*=inv;this.pI[i]*=inv;}
+  }
+  _upd(){
+    this._n++;const n=this._n;
+    for(let i=0;i<this.N;i++){
+      const p=this.pR[i]**2+this.pI[i]**2;
+      this.pop[i]=p;
+      const d=p-(this._acc[i]/n||0);
+      this._acc[i]+=p;
+      this._acc2[i]+=d*(p-this._acc[i]/n);
+      this.sen[i]=n>1?this._acc2[i]/(n-1):0;
+    }
+  }
+  get maxPop(){let m=0;for(const p of this.pop)if(p>m)m=p;return m;}
+}
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// § PDE SIM — ΣΩ Modified Navier-Stokes (spectral, vorticity form)
+//   ∂ₜω = S_Λ[(ω·∇)u] - (u·∇)ω + ν△ω
+//   dΛ/dt = ε₁ C_clip + ε₃|β_err| - ε₂(Λ-Λ∞)
+//   Fully spectral, RK4, dealiased (2/3 rule)
+// ═══════════════════════════════════════════════════════════════════
+class PDESim{
+  constructor(N=16){
+    this.N=N;this.N2=N*N;this.N3=N**3;
+    this.fft=new FFT3D(N);
+    this.nu=CFG.PDE_NU;this.dt=CFG.PDE_DT;
+    this.Lambda=1.0;this.LamInf=CFG.LAMINF;
+    this.t=0;this.enstrophy=0;this.energy=0;this.H1=0;this.clipRate=0;
+    this._paused=false;
+    this.eH=[];this.lH=[];this.egH=[];// enstrophy, lambda, energy histories
+    // wavenumbers + dealiasing mask
+    this.KX=new Float64Array(this.N3);this.KY=new Float64Array(this.N3);this.KZ=new Float64Array(this.N3);
+    this.K2=new Float64Array(this.N3);this.DA=new Uint8Array(this.N3);
+    const km=Math.floor(N*2/3)/2;
+    for(let ix=0;ix<N;ix++)for(let iy=0;iy<N;iy++)for(let iz=0;iz<N;iz++){
+      const id=ix*N*N+iy*N+iz;
+      const kx=ix<=N/2?ix:ix-N,ky=iy<=N/2?iy:iy-N,kz=iz<=N/2?iz:iz-N;
+      this.KX[id]=kx;this.KY[id]=ky;this.KZ[id]=kz;
+      this.K2[id]=kx*kx+ky*ky+kz*kz||1e-12;
+      this.DA[id]=Math.max(Math.abs(kx),Math.abs(ky),Math.abs(kz))<=km?1:0;
+    }
+    // vorticity field ω = [ω₀,ω₁,ω₂]
+    this.omega=[new Float64Array(this.N3),new Float64Array(this.N3),new Float64Array(this.N3)];
+    this._initTG();
+    this._diag();
+  }
+  _initTG(){
+    const N=this.N,rng=new RNG(17),L=2*Math.PI;
+    for(let ix=0;ix<N;ix++)for(let iy=0;iy<N;iy++)for(let iz=0;iz<N;iz++){
+      const id=ix*N*N+iy*N+iz,x=ix*L/N,y=iy*L/N,z=iz*L/N;
+      this.omega[0][id]=Math.cos(x)*Math.sin(y)*Math.cos(z)+rng.randn()*.04;
+      this.omega[1][id]=-Math.sin(x)*Math.cos(y)*Math.cos(z)+rng.randn()*.04;
+      this.omega[2][id]=rng.randn()*.04;
+    }
+  }
+  // compute u from ω via Biot-Savart (spectral): û = i(k×ω̂)/k²
+  _biotSavart(oHR,oHI,uHR,uHI){
+    const KX=this.KX,KY=this.KY,KZ=this.KZ,K2=this.K2,N3=this.N3;
+    for(let i=0;i<N3;i++){
+      const k2inv=1/K2[i];
+      const [ox0r,ox0i,ox1r,ox1i,ox2r,ox2i]=[oHR[0][i],oHI[0][i],oHR[1][i],oHI[1][i],oHR[2][i],oHI[2][i]];
+      const kx=KX[i],ky=KY[i],kz=KZ[i];
+      // iu×v: Re(ik×ω)_j = -k_b*ω_c_im, Im(ik×ω)_j = k_b*ω_c_re
+      uHR[0][i]=-(ky*ox2i-kz*ox1i)*k2inv; uHI[0][i]= (ky*ox2r-kz*ox1r)*k2inv;
+      uHR[1][i]=-(kz*ox0i-kx*ox2i)*k2inv; uHI[1][i]= (kz*ox0r-kx*ox2r)*k2inv;
+      uHR[2][i]=-(kx*ox1i-ky*ox0i)*k2inv; uHI[2][i]= (kx*ox1r-ky*ox0r)*k2inv;
+    }
+  }
+  // spectral gradient: ∂f/∂x_d  (in-place overwrites gR)
+  _grad(fHR,fHI,kd,gR){
+    const N3=this.N3;
+    const gI=new Float64Array(N3);
+    for(let i=0;i<N3;i++){gR[i]=-kd[i]*fHI[i];gI[i]=kd[i]*fHR[i];}
+    this.fft.inv(gR,gI);// gR = real-space ∂f/∂x_d
+  }
+  _rhs(omega){
+    const N3=this.N3,N=this.N,fft=this.fft;
+    const KX=this.KX,KY=this.KY,KZ=this.KZ,K2=this.K2,DA=this.DA;
+    // alloc hat arrays
+    const oHR=[new Float64Array(N3),new Float64Array(N3),new Float64Array(N3)];
+    const oHI=[new Float64Array(N3),new Float64Array(N3),new Float64Array(N3)];
+    const uHR=[new Float64Array(N3),new Float64Array(N3),new Float64Array(N3)];
+    const uHI=[new Float64Array(N3),new Float64Array(N3),new Float64Array(N3)];
+    const uR= [new Float64Array(N3),new Float64Array(N3),new Float64Array(N3)];
+    // FFT ω
+    for(let c=0;c<3;c++){
+      oHR[c].set(omega[c]);oHI[c].fill(0);
+      fft.fwd(oHR[c],oHI[c]);
+      for(let i=0;i<N3;i++)if(!DA[i]){oHR[c][i]=0;oHI[c][i]=0;}
+    }
+    // Biot-Savart → û
+    this._biotSavart(oHR,oHI,uHR,uHI);
+    // IFFT û → u
+    for(let c=0;c<3;c++){
+      uR[c].set(uHR[c]);const ui=new Float64Array(N3);ui.set(uHI[c]);fft.inv(uR[c],ui);
+    }
+    // gradients: dudc_d = ∂u_c/∂x_d, dodc_d = ∂ω_c/∂x_d
+    const KD=[KX,KY,KZ];
+    const du=[[],[],[]],dw=[[],[],[]];
+    for(let c=0;c<3;c++)for(let d=0;d<3;d++){
+      du[c][d]=new Float64Array(N3);dw[c][d]=new Float64Array(N3);
+      const hRu=new Float64Array(N3),hIu=new Float64Array(N3);
+      const hRw=new Float64Array(N3),hIw=new Float64Array(N3);
+      for(let i=0;i<N3;i++){hRu[i]=-KD[d][i]*uHI[c][i];hIu[i]=KD[d][i]*uHR[c][i];hRw[i]=-KD[d][i]*oHI[c][i];hIw[i]=KD[d][i]*oHR[c][i];}
+      fft.inv(hRu,hIu);fft.inv(hRw,hIw);
+      du[c][d].set(hRu);dw[c][d].set(hRw);
+    }
+    // stretching (ω·∇)u, advection (u·∇)ω
+    const stR=[new Float64Array(N3),new Float64Array(N3),new Float64Array(N3)];
+    let clips=0;
+    for(let c=0;c<3;c++){
+      for(let i=0;i<N3;i++){
+        const stretch=omega[0][i]*du[c][0][i]+omega[1][i]*du[c][1][i]+omega[2][i]*du[c][2][i];
+        const advect= uR[0][i]*dw[c][0][i]+uR[1][i]*dw[c][1][i]+uR[2][i]*dw[c][2][i];
+        stR[c][i]=stretch-advect;
+      }
+    }
+    // S_Λ saturation
+    const L=this.Lambda;
+    for(let i=0;i<N3;i++){
+      const nm=Math.sqrt(stR[0][i]**2+stR[1][i]**2+stR[2][i]**2);
+      if(nm>L){const sc=L/nm;stR[0][i]*=sc;stR[1][i]*=sc;stR[2][i]*=sc;clips++;}
+    }
+    this.clipRate=clips/N3;
+    // viscous diffusion: -ν k² ω̂ → IFFT
+    const res=[new Float64Array(N3),new Float64Array(N3),new Float64Array(N3)];
+    for(let c=0;c<3;c++){
+      const vR=new Float64Array(N3),vI=new Float64Array(N3);
+      for(let i=0;i<N3;i++){vR[i]=-this.nu*K2[i]*oHR[c][i];vI[i]=-this.nu*K2[i]*oHI[c][i];}
+      fft.inv(vR,vI);
+      for(let i=0;i<N3;i++)res[c][i]=stR[c][i]+vR[i];
+    }
+    return res;
+  }
+  _rk4(omega){
+    const dt=this.dt,N3=this.N3;
+    const add=(o,k,sc)=>o.map((c,ci)=>{const r=new Float64Array(N3);for(let i=0;i<N3;i++)r[i]=c[i]+sc*k[ci][i];return r;});
+    const k1=this._rhs(omega);
+    const k2=this._rhs(add(omega,k1,.5*dt));
+    const k3=this._rhs(add(omega,k2,.5*dt));
+    const k4=this._rhs(add(omega,k3,dt));
+    return omega.map((c,ci)=>{const r=new Float64Array(N3);for(let i=0;i<N3;i++)r[i]=c[i]+(dt/6)*(k1[ci][i]+2*k2[ci][i]+2*k3[ci][i]+k4[ci][i]);return r;});
+  }
+  _updateLambda(){
+    const betaErr=Math.abs(Math.log(this.enstrophy+1e-10)-0);// target log(1)=0
+    const dL=CFG.EPS1*this.clipRate+CFG.EPS3*betaErr-CFG.EPS2*(this.Lambda-this.LamInf);
+    this._dLambda=dL;
+    this.Lambda=Math.max(.05,Math.min(8,this.Lambda+dL*this.dt));
+  }
+  _diag(){
+    const o=this.omega,N3=this.N3;
+    let enst=0;for(let i=0;i<N3;i++)enst+=o[0][i]**2+o[1][i]**2+o[2][i]**2;
+    const prevEnst=this.enstrophy;
+    this.enstrophy=.5*enst/N3;
+    this.energy=this.enstrophy/(this.Lambda+.5);
+    this.H1=this.enstrophy*(1+this.Lambda);
+    this._dEnst=(this.enstrophy-prevEnst)/this.dt;
+  }
+  step(){
+    if(this._paused)return;
+    this.omega=this._rk4(this.omega);
+    this._updateLambda();this._diag();this.t+=this.dt;
+    this.eH.push(this.enstrophy);this.lH.push(this.Lambda);this.egH.push(this.energy);
+    if(this.eH.length>500){this.eH.shift();this.lH.shift();this.egH.shift();}
+  }
+  // enstrophy per 8³ site (coarse-grain from 16³ PDE)
+  enstPerSite(){
+    const N=this.N,P=N/CFG.DIMS,o=this.omega,res=new Float32Array(CFG.N_SITES);
+    let si=0;
+    for(let px=0;px<CFG.DIMS;px++)for(let py=0;py<CFG.DIMS;py++)for(let pz=0;pz<CFG.DIMS;pz++){
+      let s=0,cnt=0;
+      for(let lx=0;lx<P;lx++)for(let ly=0;ly<P;ly++)for(let lz=0;lz<P;lz++){
+        const i=(px*P+lx)*N*N+(py*P+ly)*N+(pz*P+lz);
+        s+=o[0][i]**2+o[1][i]**2+o[2][i]**2;cnt++;
+      }
+      res[si++]=.5*s/cnt;
+    }
+    return res;
+  }
+  powerSpectrum(){
+    const N=this.N,N3=this.N3,K2=this.K2;
+    const bins=new Float64Array(N),cts=new Int32Array(N);
+    for(let c=0;c<3;c++){
+      const hr=new Float64Array(N3);hr.set(this.omega[c]);
+      const hi=new Float64Array(N3);this.fft.fwd(hr,hi);
+      for(let i=0;i<N3;i++){const k=Math.round(Math.sqrt(K2[i]));if(k<N){bins[k]+=hr[i]**2+hi[i]**2;if(c===0)cts[k]++;}}
+    }
+    for(let k=1;k<N;k++)if(cts[k])bins[k]/=cts[k];
+    return bins;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// § GRAPH CONVOLUTIONAL NETWORK (GCN) + GAT ATTENTION
+//   Full-graph forward pass over 8³ lattice
+//
+//   Architecture:
+//     Node features: [pop_i, sensation_i]  → R²
+//     GCN-1:  mean-aggregate(self + neighbors) → R^16  LeakyReLU
+//     GAT:    per-edge attention α_ij = softmax(LeakyReLU(aᵀ[h_i‖h_j]))
+//             — stored as attWeights[i*6+k] for visualization
+//     GCN-2:  attention-weighted aggregate → R^8   LeakyReLU
+//     Output: ReLU(Wₒ h²) → Λ_i  (scalar, non-negative)
+//
+//   Loss = MSE(Λ̂, Λ*) + λ_reg · Laplacian(Λ̂)
+//   Laplacian term:  ∑_i (Λ̂_i − mean_{j∈N(i)} Λ̂_j)²
+//   encourages spatial coherence: adjacent nodes share similar Λ
+//
+//   Optimizer: Adam with bias correction, full backprop through
+//   aggregation, attention softmax, and all linear layers.
+// ═══════════════════════════════════════════════════════════════════
+class GCN{
+  constructor(inD=2,h1D=16,h2D=8,outD=1){
+    this.inD=inD;this.h1D=h1D;this.h2D=h2D;this.outD=outD;
+    const rng=new RNG(1337);
+    const mk=(r,c,sc)=>new Float64Array(r*c).map(()=>rng.randn()*sc);
+    const mkAd=sz=>({m:new Float64Array(sz),v:new Float64Array(sz)});
+
+    // GCN Layer 1: W1[h1D×inD], b1[h1D]
+    // aggregates mean of self+neighbors before linear transform
+    this.W1=mk(h1D,inD,Math.sqrt(2/inD)); this.b1=new Float64Array(h1D);
+    this.mW1=mkAd(h1D*inD);this.mb1=mkAd(h1D);
+
+    // GAT attention vector: a[2*h1D] (shared across all edges)
+    // e_ij = LeakyReLU(aᵀ [h1_i ‖ h1_j])
+    this.a=new Float64Array(2*h1D).map(()=>rng.randn()*.02);
+    this.ma=mkAd(2*h1D);
+
+    // GCN Layer 2: W2[h2D×h1D], b2[h2D]
+    this.W2=mk(h2D,h1D,Math.sqrt(2/h1D)); this.b2=new Float64Array(h2D);
+    this.mW2=mkAd(h2D*h1D);this.mb2=mkAd(h2D);
+
+    // Output layer: Wo[1×h2D], bo[1]
+    this.Wo=mk(outD,h2D,Math.sqrt(2/h2D)); this.bo=new Float64Array(outD);
+    this.mWo=mkAd(outD*h2D);this.mbo=mkAd(outD);
+
+    this.stepN=0;this.lastLoss=0;this.lapLoss=0;this.lossH=[];
+
+    // Attention weights per node-slot for edge visualization
+    // attW[i*6+k] = α_{i→nb[i*6+k]}
+    this.attW=new Float32Array(CFG.N_SITES*6);
+    // Max attention slot per node (for brightest-edge highlight)
+    this.attMax=new Uint8Array(CFG.N_SITES);
+  }
+
+  _lr(x){return x>0?x:.01*x;}
+  _lrg(x){return x>0?1:.01;}
+
+  // Adam param update  (mutates W, m, v in place)
+  _adam(W,dW,ad,lrT,b1=.9,b2=.999,eps=1e-8){
+    for(let i=0;i<W.length;i++){
+      const g=dW[i];
+      ad.m[i]=b1*ad.m[i]+(1-b1)*g;
+      ad.v[i]=b2*ad.v[i]+(1-b2)*g*g;
+      W[i]-=lrT*ad.m[i]/(Math.sqrt(ad.v[i])+eps);
+    }
+  }
+
+  // ── FULL-GRAPH FORWARD ────────────────────────────────────────────
+  // pops[N], sens[N]: node features  |  nb: Int32Array[N*6] neighbor list
+  // Returns Float64Array[N] of predicted Λ
+  forward(pops,sens,nb){
+    const N=CFG.N_SITES,{inD,h1D,h2D}=this;
+
+    // ── Input features x[N×2] ─────────────────────────────────────
+    const x=new Float64Array(N*inD);
+    for(let i=0;i<N;i++){x[i*2]=pops[i];x[i*2+1]=sens[i];}
+    this._x=x;
+
+    // ── GCN-1: mean aggregate self+neighbors → linear+LeakyReLU ──
+    // h1[N×h1D]  z1[N×h1D] (pre-activation, needed for backprop)
+    const h1=new Float64Array(N*h1D),z1=new Float64Array(N*h1D);
+    for(let i=0;i<N;i++){
+      // collect self + valid neighbors
+      const pool=[i];
+      for(let k=0;k<6;k++){const j=nb[i*6+k];if(j>=0)pool.push(j);}
+      // mean aggregate input features
+      const agg=new Float64Array(inD);
+      for(const j of pool)for(let d=0;d<inD;d++)agg[d]+=x[j*2+d];
+      for(let d=0;d<inD;d++)agg[d]/=pool.length;
+      // W1 * agg + b1  →  LeakyReLU
+      for(let o=0;o<h1D;o++){
+        let s=this.b1[o];
+        for(let d=0;d<inD;d++)s+=this.W1[o*inD+d]*agg[d];
+        z1[i*h1D+o]=s;h1[i*h1D+o]=this._lr(s);
+      }
+    }
+    this._h1=h1;this._z1=z1;
+
+    // ── GAT: compute attention α_ij ──────────────────────────────
+    // e_ij = LR(aᵀ [h1_i ‖ h1_j]),  α_ij = softmax over j∈N(i)
+    const attW=this.attW;attW.fill(0);
+    const eRaw=new Float64Array(N*6); // raw LeakyReLU scores
+    for(let i=0;i<N;i++){
+      let mx=-1e18,hasNb=false;
+      for(let k=0;k<6;k++){
+        const j=nb[i*6+k];if(j<0){eRaw[i*6+k]=-1e30;continue;}
+        // dot product a · concat(h1_i, h1_j)
+        let score=0;
+        for(let d=0;d<h1D;d++)score+=this.a[d]*h1[i*h1D+d]+this.a[h1D+d]*h1[j*h1D+d];
+        eRaw[i*6+k]=this._lr(score);
+        if(eRaw[i*6+k]>mx)mx=eRaw[i*6+k];
+        hasNb=true;
+      }
+      if(!hasNb)continue;
+      // numerically stable softmax
+      let sumE=0;
+      for(let k=0;k<6;k++){
+        const j=nb[i*6+k];if(j<0)continue;
+        attW[i*6+k]=Math.exp(eRaw[i*6+k]-mx);sumE+=attW[i*6+k];
+      }
+      if(sumE>0){
+        let bestK=0,bestV=0;
+        for(let k=0;k<6;k++){
+          if(nb[i*6+k]<0)continue;
+          attW[i*6+k]/=sumE;
+          if(attW[i*6+k]>bestV){bestV=attW[i*6+k];bestK=k;}
+        }
+        this.attMax[i]=bestK; // track dominant neighbor
+      }
+    }
+    this._eRaw=eRaw;
+
+    // ── GCN-2: attention-weighted aggregate → linear+LeakyReLU ───
+    // h2[N×h2D], z2[N×h2D]
+    const h2=new Float64Array(N*h2D),z2=new Float64Array(N*h2D);
+    for(let i=0;i<N;i++){
+      const deg=Array.from(nb.slice(i*6,(i+1)*6)).filter(j=>j>=0).length;
+      const sw=1/(deg+1); // self weight: equal to 1/(deg+1)
+      const agg2=new Float64Array(h1D);
+      // self contribution
+      for(let d=0;d<h1D;d++)agg2[d]+=sw*h1[i*h1D+d];
+      // neighbor contributions (attention-weighted within 1-sw residual)
+      for(let k=0;k<6;k++){
+        const j=nb[i*6+k];if(j<0)continue;
+        const w=attW[i*6+k]*(1-sw);
+        for(let d=0;d<h1D;d++)agg2[d]+=w*h1[j*h1D+d];
+      }
+      // W2 * agg2 + b2  →  LeakyReLU
+      for(let o=0;o<h2D;o++){
+        let s=this.b2[o];
+        for(let d=0;d<h1D;d++)s+=this.W2[o*h1D+d]*agg2[d];
+        z2[i*h2D+o]=s;h2[i*h2D+o]=this._lr(s);
+      }
+    }
+    this._h2=h2;this._z2=z2;
+
+    // ── Output: ReLU(Wo·h2 + bo) ──────────────────────────────────
+    const out=new Float64Array(N);
+    for(let i=0;i<N;i++){
+      let s=this.bo[0];
+      for(let d=0;d<h2D;d++)s+=this.Wo[d]*h2[i*h2D+d];
+      out[i]=Math.max(0,s);
+    }
+    this._out=out;return out;
+  }
+
+  // ── FULL-GRAPH BACKWARD ───────────────────────────────────────────
+  // targets[N]: ground truth Λ*
+  // nb: Int32Array[N*6]
+  // regW: Laplacian regularization weight (spatial coherence penalty)
+  backward(targets,nb,lr=.0025,regW=.08,b1=.9,b2=.999,eps=1e-8){
+    const N=CFG.N_SITES,{inD,h1D,h2D}=this;
+    this.stepN++;
+    const lrT=lr*Math.sqrt(1-b2**this.stepN)/(1-b1**this.stepN);
+    const{_out:out,_h1:h1,_h2:h2,_z1:z1,_z2:z2,_x:x,attW}=this;
+
+    // ── Loss: MSE + Laplacian regularization ─────────────────────
+    // L = (1/N) ∑_i (Λ̂_i − Λ*_i)² + regW/N ∑_i (Λ̂_i − mean_{j∈N} Λ̂_j)²
+    let mseLoss=0;
+    const dOut=new Float64Array(N);
+
+    // MSE gradient: dL/dΛ̂_i = 2(Λ̂_i − Λ*_i)/N
+    for(let i=0;i<N;i++){const e=out[i]-targets[i];mseLoss+=e*e;dOut[i]+=2*e/N;}
+
+    // Laplacian gradient
+    // dL_lap/dΛ̂_i = 2*regW/N * [ (Λ̂_i − mean_N(i)) + ∑_k 1/|N(k)| * (Λ̂_k − mean_N(k)) * [i∈N(k)] ]
+    // Simplified: symmetric contribution
+    let lapLoss=0;
+    for(let i=0;i<N;i++){
+      const nbs=[];for(let k=0;k<6;k++){const j=nb[i*6+k];if(j>=0)nbs.push(j);}
+      if(!nbs.length)continue;
+      let mean=0;for(const j of nbs)mean+=out[j];mean/=nbs.length;
+      const diff=out[i]-mean;lapLoss+=diff*diff;
+      // gradient w.r.t. Λ̂_i (node i is the "center")
+      dOut[i]+=regW*2*diff/N;
+      // gradient w.r.t. Λ̂_j (each neighbor j is also a center of its own Laplacian)
+      for(const j of nbs)dOut[j]-=regW*2*diff/(N*nbs.length);
+    }
+    this.lastLoss=mseLoss/N+regW*lapLoss/N;
+    this.lapLoss=regW*lapLoss/N;
+    this.lossH.push(this.lastLoss);if(this.lossH.length>600)this.lossH.shift();
+
+    // ── Backprop: Output layer ────────────────────────────────────
+    // out[i] = ReLU(z_o[i]),  z_o[i] = Wo·h2[i] + bo
+    const dH2=new Float64Array(N*h2D);
+    const dWo=new Float64Array(h2D),dBo=new Float64Array(1);
+    for(let i=0;i<N;i++){
+      const g_o=dOut[i]*(out[i]>0?1:0); // ReLU gate (out[i]=max(0,z_o))
+      dBo[0]+=g_o;
+      for(let d=0;d<h2D;d++){dWo[d]+=g_o*h2[i*h2D+d];dH2[i*h2D+d]+=g_o*this.Wo[d];}
+    }
+    this._adam(this.Wo,dWo,this.mWo,lrT,b1,b2,eps);
+    this._adam(this.bo,dBo,this.mbo,lrT,b1,b2,eps);
+
+    // ── Backprop: GCN-2 ───────────────────────────────────────────
+    // h2[i] = LR(W2 * agg2[i] + b2)
+    // agg2[i] = sw*h1[i] + ∑_k α_{ik}*(1-sw)*h1[nb_k]
+    const dH1=new Float64Array(N*h1D);
+    const dW2=new Float64Array(h2D*h1D),dB2=new Float64Array(h2D);
+    const dAtt=new Float64Array(N*6); // gradient w.r.t. attention weights (for attention backprop)
+
+    for(let i=0;i<N;i++){
+      const nbs=[],ks=[];
+      for(let k=0;k<6;k++){const j=nb[i*6+k];if(j>=0){nbs.push(j);ks.push(k);}}
+      const deg=nbs.length,sw=1/(deg+1);
+      // Reconstruct agg2
+      const agg2=new Float64Array(h1D);
+      for(let d=0;d<h1D;d++)agg2[d]+=sw*h1[i*h1D+d];
+      for(let ki=0;ki<nbs.length;ki++){const j=nbs[ki],w=attW[i*6+ks[ki]]*(1-sw);for(let d=0;d<h1D;d++)agg2[d]+=w*h1[j*h1D+d];}
+
+      for(let o=0;o<h2D;o++){
+        const g=dH2[i*h2D+o]*this._lrg(z2[i*h2D+o]);
+        dB2[o]+=g;
+        for(let d=0;d<h1D;d++){
+          const gW=g*agg2[d];dW2[o*h1D+d]+=gW;
+          const dagg=g*this.W2[o*h1D+d];
+          // self contribution
+          dH1[i*h1D+d]+=dagg*sw;
+          // neighbor contributions  + attention gradient
+          for(let ki=0;ki<nbs.length;ki++){
+            const j=nbs[ki],k=ks[ki];
+            dH1[j*h1D+d]+=dagg*attW[i*6+k]*(1-sw);
+            // dL/d(attW_{ik}) = dagg * h1_j[d]  (summed over o,d but we sum after)
+            dAtt[i*6+k]+=dagg*(1-sw)*h1[j*h1D+d];
+          }
+        }
+      }
+    }
+    this._adam(this.W2,dW2,this.mW2,lrT,b1,b2,eps);
+    this._adam(this.b2,dB2,this.mb2,lrT,b1,b2,eps);
+
+    // ── Backprop: GAT attention ───────────────────────────────────
+    // attW[i,k] = softmax_k(e_ij),  e_ij = LR(aᵀ[h1_i‖h1_j])
+    // dL/d(e_ij) = attW_ij*(dAtt_ij - ∑_m attW_im * dAtt_im)
+    // dL/d(a) += dL/d(e_ij) * [h1_i ‖ h1_j]  (LR gate)
+    const da=new Float64Array(2*h1D);
+    const dH1att=new Float64Array(N*h1D); // extra h1 gradient from attention
+    for(let i=0;i<N;i++){
+      // compute ∑_m attW_im * dAtt_im
+      let sumDA=0;for(let k=0;k<6;k++){const j=nb[i*6+k];if(j<0)continue;sumDA+=attW[i*6+k]*dAtt[i*6+k];}
+      for(let k=0;k<6;k++){
+        const j=nb[i*6+k];if(j<0)continue;
+        const de_ij=attW[i*6+k]*(dAtt[i*6+k]-sumDA); // softmax Jacobian
+        const lrgate=this._lrg(this._eRaw[i*6+k]);    // LR gate on e_ij
+        const g=de_ij*lrgate;
+        // gradient w.r.t. a
+        for(let d=0;d<h1D;d++){da[d]+=g*h1[i*h1D+d];da[h1D+d]+=g*h1[j*h1D+d];}
+        // gradient w.r.t. h1_i, h1_j
+        for(let d=0;d<h1D;d++){dH1att[i*h1D+d]+=g*this.a[d];dH1att[j*h1D+d]+=g*this.a[h1D+d];}
+      }
+    }
+    this._adam(this.a,da,this.ma,lrT,b1,b2,eps);
+    // merge attention h1 gradient
+    for(let i=0;i<N*h1D;i++)dH1[i]+=dH1att[i];
+
+    // ── Backprop: GCN-1 ───────────────────────────────────────────
+    // h1[i] = LR(W1 * agg1[i] + b1)
+    // agg1[i] = (1/|pool|) ∑_{j∈{i}∪N(i)} x[j]
+    const dW1=new Float64Array(h1D*inD),dB1=new Float64Array(h1D);
+    // We don't need dX (input features have no parameters), but W1 and b1 update:
+    for(let i=0;i<N;i++){
+      const pool=[i];for(let k=0;k<6;k++){const j=nb[i*6+k];if(j>=0)pool.push(j);}
+      const cnt=pool.length;
+      const agg1=new Float64Array(inD);
+      for(const j of pool)for(let d=0;d<inD;d++)agg1[d]+=x[j*2+d];
+      for(let d=0;d<inD;d++)agg1[d]/=cnt;
+      for(let o=0;o<h1D;o++){
+        const g=dH1[i*h1D+o]*this._lrg(z1[i*h1D+o]);
+        dB1[o]+=g;
+        for(let d=0;d<inD;d++)dW1[o*inD+d]+=g*agg1[d];
+      }
+    }
+    this._adam(this.W1,dW1,this.mW1,lrT,b1,b2,eps);
+    this._adam(this.b1,dB1,this.mb1,lrT,b1,b2,eps);
+
+    return this.lastLoss;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// § LATTICE GRAPH  8³ cubic
+// ═══════════════════════════════════════════════════════════════════
+function buildLattice(D){
+  const N=D**3,pos=new Float32Array(N*3),edges=[],nb=new Int32Array(N*6).fill(-1);
+  for(let x=0;x<D;x++)for(let y=0;y<D;y++)for(let z=0;z<D;z++){
+    const i=x*D*D+y*D+z;
+    pos[i*3+0]=(x-(D-1)/2)*CFG.SPACING;pos[i*3+1]=(y-(D-1)/2)*CFG.SPACING;pos[i*3+2]=(z-(D-1)/2)*CFG.SPACING;
+    let nc=0;
+    [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]].forEach(([dx,dy,dz])=>{
+      const nx=x+dx,ny=y+dy,nz=z+dz;
+      if(nx>=0&&nx<D&&ny>=0&&ny<D&&nz>=0&&nz<D){
+        const j=nx*D*D+ny*D+nz;nb[i*6+nc++]=j;if(j>i)edges.push(i,j);
+      }
+    });
+  }
+  return{pos,edges:new Int32Array(edges),NE:edges.length/2,nb};
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// § ČECH COHOMOLOGY  Union-Find for β₀, β₁
+// ═══════════════════════════════════════════════════════════════════
+class Czech{
+  constructor(N,edges,NE){this.N=N;this.edges=edges;this.NE=NE;this._p=new Int32Array(N);this._r=new Uint8Array(N);}
+  _find(x){while(this._p[x]!==x){this._p[x]=this._p[this._p[x]];x=this._p[x];}return x;}
+  _union(a,b){a=this._find(a);b=this._find(b);if(a===b)return false;if(this._r[a]<this._r[b])[a,b]=[b,a];this._p[b]=a;if(this._r[a]===this._r[b])this._r[a]++;return true;}
+  compute(lams){
+    for(let i=0;i<this.N;i++){this._p[i]=i;this._r[i]=0;}
+    let maxL=0;for(const l of lams)if(l>maxL)maxL=l;
+    const thresh=maxL*CFG.COHOM_FRAC;
+    let ae=0;
+    for(let e=0;e<this.NE;e++){const i=this.edges[e*2],j=this.edges[e*2+1];if(lams[i]+lams[j]>thresh){this._union(i,j);ae++;}}
+    const roots=new Set();let an=0;
+    for(let i=0;i<this.N;i++)if(lams[i]>thresh/2){roots.add(this._find(i));an++;}
+    const b0=roots.size,b1=Math.max(0,ae-an+b0);
+    return{b0,b1,euler:an-ae,an,ae,maxL};
+  }
+}
+
+// target lambda (ground truth for NN training)
+function targetLam(local,nbs,sen){
+  const vn=nbs.filter(e=>e>0);const an=vn.length?vn.reduce((a,b)=>a+b,0)/vn.length:0;
+  return Math.max(.1,CFG.LAMINF+(local+an+sen-CFG.LAMINF)*Math.exp(-CFG.EPS2));
+}
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// § GLSL SHADERS
+// ═══════════════════════════════════════════════════════════════════
+
+// ── Background nebula ──────────────────────────────────────────────
+const BG_V=`varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,.999,1.);}`;
+const BG_F=`
+uniform float uT;varying vec2 vUv;
+vec3 mod3(vec3 x){return x-floor(x*(1./289.))*289.;}
+vec3 perm(vec3 x){return mod3(((x*34.)+1.)*x);}
+float snoise(vec2 v){
+  const vec4 C=vec4(.211324865,.366025403,-.577350269,.024390244);
+  vec2 i=floor(v+dot(v,C.yy)),x0=v-i+dot(i,C.xx);
+  vec2 i1=x0.x>x0.y?vec2(1,0):vec2(0,1);
+  vec4 x12=x0.xyxy+C.xxzz;x12.xy-=i1;i=mod(i,289.);
+  vec3 p=perm(perm(i.y+vec3(0,i1.y,1))+i.x+vec3(0,i1.x,1));
+  vec3 m=max(.5-vec3(dot(x0,x0),dot(x12.xy,x12.xy),dot(x12.zw,x12.zw)),0.);
+  m*=m;m*=m;
+  vec3 x2=2.*fract(p*C.www)-1.,h=abs(x2)-.5,ox=floor(x2+.5),a0=x2-ox;
+  m*=1.79284-.85373*(a0*a0+h*h);
+  vec3 g;g.x=a0.x*x0.x+h.x*x0.y;g.yz=a0.yz*x12.xz+h.yz*x12.yw;
+  return 130.*dot(m,g);
+}
+vec3 hsl(float h,float s,float l){
+  vec3 r=clamp(abs(mod(h*6.+vec3(0,4,2),6.)-3.)-1.,0.,1.);
+  return l+s*(r-.5)*(1.-abs(2.*l-1.));
+}
+void main(){
+  vec2 uv=(vUv-.5)*3.2;float t=uT*.035;
+  float n1=snoise(uv*1.1+t),n2=snoise(uv*2.3-t*1.2+1.6);
+  float n3=snoise(uv*4.6+t*.8+n1*.35),n4=snoise(uv*9.2-t*.4+n2*.25);
+  float nb=n1*.5+n2*.25+n3*.15+n4*.1;
+  float hue=fract(nb*.45+length(uv)*.1+t*.025);
+  float sat=.75+.25*snoise(uv*.6+t*.4);
+  float lit=.03+.09*clamp(nb*.5+.5,0.,1.);
+  vec3 col=hsl(hue,sat,lit);
+  vec2 sg=fract(vUv*90.)-.5;float star=max(0.,1.-length(sg)*22.);
+  col+=star*.7*vec3(1.,.92,.85)*step(.85,snoise(floor(vUv*90.)*14.3));
+  float v=1.-length((vUv-.5)*1.6);
+  gl_FragColor=vec4(col*v*v,1.);
+}`;
+
+// ── Node InstancedMesh ─────────────────────────────────────────────
+const NODE_V=`
+attribute float aL;   // Lambda norm
+attribute float aQ;   // quantum pop norm
+attribute float aE;   // enstrophy norm
+attribute float aIdx; // site index norm
+uniform float uT;
+varying vec3 vN,vW,vV;varying float vL,vQ,vE,vIdx;varying vec2 vUv;
+float h31(vec3 p){p=fract(p*vec3(127.1,311.7,74.7));p+=dot(p,p.yxz+19.19);return fract((p.x+p.y)*p.z);}
+void main(){
+  vL=aL;vQ=aQ;vE=aE;vIdx=aIdx;vUv=uv;
+  vN=normalize(normalMatrix*(mat3(instanceMatrix)*normal));
+  float sc=.22+.48*aL;
+  float wb=aE>.001?sin(uT*8.*aE+h31(normal+vec3(uT*.5))*6.283)*.07*aE:0.;
+  vec3 pos=position*(sc+wb);
+  vec4 wp4=modelMatrix*instanceMatrix*vec4(pos,1.);
+  vW=wp4.xyz;vV=normalize(cameraPosition-vW);
+  gl_Position=projectionMatrix*viewMatrix*wp4;
+}`;
+const NODE_F=`
+uniform float uT,uMode;
+varying vec3 vN,vW,vV;varying float vL,vQ,vE,vIdx;varying vec2 vUv;
+vec3 hsl(vec3 c){vec3 r=clamp(abs(mod(c.x*6.+vec3(0,4,2),6.)-3.)-1.,0.,1.);return c.z+c.y*(r-.5)*(1.-abs(2.*c.z-1.));}
+float hn(float n){return fract(sin(n)*43758.5453);}
+float nr(vec2 uv){vec2 i=floor(uv),f=fract(uv);float a=hn(i.x+i.y*57.),b=hn(i.x+1.+i.y*57.),c=hn(i.x+(i.y+1.)*57.),d=hn(i.x+1.+(i.y+1.)*57.);vec2 u=f*f*(3.-2.*f);return mix(mix(a,b,u.x),mix(c,d,u.x),u.y);}
+// thin-film iridescence
+vec3 thinFilm(float NV,float th){float phi=6.2832*th*(1.-NV);return vec3(.5+.5*cos(phi),.5+.5*cos(phi+2.094),.5+.5*cos(phi+4.189));}
+// sigil mandala
+float mandala(vec2 uv,float folds,float t){vec2 p=uv-.5;float a=atan(p.y,p.x),r=length(p);a=mod(a,6.2832/folds)-3.14159/folds;return sin(cos(a)*r*16.+t)*sin(sin(a)*r*16.+t*.8);}
+void main(){
+  vec3 N=normalize(vN),V=normalize(vV);float NV=max(0.,dot(N,V));
+  float fres=pow(1.-NV,3.5);
+  float hue,sat,lit;
+  if(uMode<.5){hue=vQ;sat=.7+.3*clamp(vL,0.,1.);lit=.22+.28*(1.-clamp(vE*.5,0.,.7));}
+  else if(uMode<1.5){hue=fract(vQ*3.+uT*.04);sat=.9;lit=.2+.55*vQ*35.;}
+  else if(uMode<2.5){hue=fract(.68-vE*1.8);sat=.95;lit=.12+.48*clamp(vE*2.8,0.,1.);}
+  else{hue=fract(.14+vL*.25);sat=.85;lit=.18+.42*clamp(vL,0.,1.);}
+  vec3 base=hsl(vec3(hue,sat,lit));
+  vec3 irid=thinFilm(NV,vL*2.5+1.+uT*.025*vE);
+  float s1=mandala(vUv,6.,uT*.35*(0.5+vL));
+  float s2=mandala(vUv,4.,-uT*.28+vIdx*.01);
+  float sn=nr(vUv*14.+uT*.18*vE);
+  vec3 col=mix(base,irid,.22+.38*fres);
+  col+=s1*.08*hsl(vec3(fract(hue+.5),.9,.7))*(0.5+vL);
+  col+=s2*.06*hsl(vec3(fract(hue+.33),.8,.6));
+  col+=sn*.04*base;
+  col+=fres*hsl(vec3(fract(hue+.5+uT*.018),1.,.7))*(.38+vL*.85);
+  col+=vQ*55.*base*.28*(1.-NV);
+  float pulse=.5+.5*sin(uT*8.*(vE+.04)+vIdx*19.);
+  col*=.82+.22*pulse;col*=.58+.75*vL;
+  gl_FragColor=vec4(col,.78+.22*fres);
+}`;
+
+// ── Edges ──────────────────────────────────────────────────────────
+const EDGE_V=`attribute float aFlow,aActive;attribute vec3 aCol;uniform float uT;varying float vActive;varying vec3 vCol;
+void main(){vActive=aActive;vCol=aCol;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`;
+const EDGE_F=`uniform float uT;varying float vActive,vFlow;varying vec3 vCol;
+void main(){if(vActive<.05)discard;gl_FragColor=vec4(vCol*(0.5+.6*vActive),vActive*.55);}`;
+
+// ── Bloom passes ───────────────────────────────────────────────────
+const QUAD_V=`varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}`;
+const bloomH=(W)=>`uniform sampler2D uT;uniform float uSig;varying vec2 vUv;
+void main(){vec3 c=vec3(0);float w=0.,px=1./${W.toFixed(1)};
+for(int i=-9;i<=9;i++){float wt=exp(-float(i*i)/(2.*uSig*uSig));c+=texture2D(uT,vUv+vec2(float(i)*px,0)).rgb*wt;w+=wt;}
+gl_FragColor=vec4(c/w,1.);}`;
+const bloomV=(H)=>`uniform sampler2D uT;uniform float uSig;varying vec2 vUv;
+void main(){vec3 c=vec3(0);float w=0.,py=1./${H.toFixed(1)};
+for(int i=-9;i<=9;i++){float wt=exp(-float(i*i)/(2.*uSig*uSig));c+=texture2D(uT,vUv+vec2(0,float(i)*py)).rgb*wt;w+=wt;}
+gl_FragColor=vec4(c/w,1.);}`;
+const COMP_F=`uniform sampler2D uScene,uBloom;uniform float uBS,uGlitch;varying vec2 vUv;
+void main(){
+  vec3 sc=texture2D(uScene,vUv).rgb;
+  if(uGlitch>.01){float sh=uGlitch*.011;sc.r=texture2D(uScene,vUv+vec2(sh,0)).r;sc.b=texture2D(uScene,vUv-vec2(sh,0)).b;}
+  vec3 bl=texture2D(uBloom,vUv).rgb;
+  vec3 col=sc+bl*uBS;
+  col=col*(1.+col*.08)/(1.+col);// Reinhard
+  col=pow(col,vec3(1./2.2));
+  gl_FragColor=vec4(col,1.);}`;
+
+// ── Particles ──────────────────────────────────────────────────────
+const PART_V=`attribute float aLife,aSz;attribute vec3 aCol;varying float vLife;varying vec3 vC;
+void main(){vLife=aLife;vC=aCol;gl_PointSize=aSz*(0.4+1.2*aLife)*(280./length((modelViewMatrix*vec4(position,1.)).xyz));gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`;
+const PART_F=`varying float vLife;varying vec3 vC;
+void main(){vec2 c=gl_PointCoord-.5;float r=length(c);if(r>.5)discard;float a=vLife*(1.-r*2.);gl_FragColor=vec4(vC*1.6,a*a);}`;
+
+// ═══════════════════════════════════════════════════════════════════
+// § THREE.JS SCENE
+// ═══════════════════════════════════════════════════════════════════
+const cv3d=document.getElementById('cv3d');
+const W3=window.innerWidth,H3=window.innerHeight;
+const renderer=new THREE.WebGLRenderer({canvas:cv3d,antialias:true,alpha:false,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(W3,H3);renderer.autoClear=false;
+
+const scene=new THREE.Scene();
+const cam=new THREE.PerspectiveCamera(55,W3/H3,.1,500);
+cam.position.set(0,5,27);cam.lookAt(0,0,0);
+
+// background
+const bgS=new THREE.Scene(),bgC=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+bgS.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),new THREE.ShaderMaterial({vertexShader:BG_V,fragmentShader:BG_F,uniforms:{uT:{value:0}},depthTest:false,depthWrite:false})));
+
+// render targets
+const mkRT=()=>new THREE.WebGLRenderTarget(W3,H3,{type:THREE.HalfFloatType,minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter});
+const rtMain=mkRT(),rtBloomA=mkRT(),rtBloomB=mkRT();
+
+const qG=new THREE.PlaneGeometry(2,2);
+const bloomHMat=new THREE.ShaderMaterial({vertexShader:QUAD_V,fragmentShader:bloomH(W3),uniforms:{uT:{value:rtMain.texture},uSig:{value:2.2}},depthTest:false,depthWrite:false});
+const bloomVMat=new THREE.ShaderMaterial({vertexShader:QUAD_V,fragmentShader:bloomV(H3),uniforms:{uT:{value:rtBloomA.texture},uSig:{value:2.2}},depthTest:false,depthWrite:false});
+const compMat=new THREE.ShaderMaterial({vertexShader:QUAD_V,fragmentShader:COMP_F,uniforms:{uScene:{value:rtMain.texture},uBloom:{value:rtBloomA.texture},uBS:{value:.7},uGlitch:{value:0}},depthTest:false,depthWrite:false});
+const bhS=new THREE.Scene();bhS.add(new THREE.Mesh(qG,bloomHMat));
+const bvS=new THREE.Scene();bvS.add(new THREE.Mesh(qG,bloomVMat));
+const cpS=new THREE.Scene();cpS.add(new THREE.Mesh(qG,compMat));
+
+// ambient light
+scene.add(new THREE.AmbientLight(0x111126,.4));
+const dl=new THREE.DirectionalLight(0x7744ff,.7);dl.position.set(8,18,12);scene.add(dl);
+
+// build lattice
+const lat=buildLattice(CFG.DIMS);
+const NS=CFG.N_SITES;
+
+// instanced nodes
+const sGeo=new THREE.SphereGeometry(1,14,10);
+const aL=new Float32Array(NS).fill(1),aQ=new Float32Array(NS),aE=new Float32Array(NS),aIdx=new Float32Array(NS);
+for(let i=0;i<NS;i++)aIdx[i]=i/NS;
+sGeo.setAttribute('aL',new THREE.InstancedBufferAttribute(aL,1));
+sGeo.setAttribute('aQ',new THREE.InstancedBufferAttribute(aQ,1));
+sGeo.setAttribute('aE',new THREE.InstancedBufferAttribute(aE,1));
+sGeo.setAttribute('aIdx',new THREE.InstancedBufferAttribute(aIdx,1));
+const nodeMat=new THREE.ShaderMaterial({vertexShader:NODE_V,fragmentShader:NODE_F,uniforms:{uT:{value:0},uMode:{value:0}},transparent:true,depthWrite:true});
+const nodes=new THREE.InstancedMesh(sGeo,nodeMat,NS);
+nodes.frustumCulled=false;
+const dum=new THREE.Object3D();
+for(let i=0;i<NS;i++){dum.position.set(lat.pos[i*3],lat.pos[i*3+1],lat.pos[i*3+2]);dum.updateMatrix();nodes.setMatrixAt(i,dum.matrix);}
+nodes.instanceMatrix.needsUpdate=true;
+scene.add(nodes);
+
+// edges
+const NE=lat.NE;
+const ePos=new Float32Array(NE*6),eFlow=new Float32Array(NE*2),eAct=new Float32Array(NE*2),eCol=new Float32Array(NE*6);
+function hsl2rgb(h,s,l){let r,g,b;if(!s){r=g=b=l}else{const q=l<.5?l*(1+s):l+s-l*s,p=2*l-q,hue2=(p,q,t)=>{if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<.5)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p};r=hue2(p,q,h+1/3);g=hue2(p,q,h);b=hue2(p,q,h-1/3);}return[r,g,b];}
+for(let e=0;e<NE;e++){
+  const i=lat.edges[e*2],j=lat.edges[e*2+1];
+  ePos[e*6+0]=lat.pos[i*3];ePos[e*6+1]=lat.pos[i*3+1];ePos[e*6+2]=lat.pos[i*3+2];
+  ePos[e*6+3]=lat.pos[j*3];ePos[e*6+4]=lat.pos[j*3+1];ePos[e*6+5]=lat.pos[j*3+2];
+  eFlow[e*2]=1;eFlow[e*2+1]=-1;eAct[e*2]=eAct[e*2+1]=.4;
+  const[r,g,b]=hsl2rgb(.72,.8,.5);for(let v=0;v<2;v++){eCol[e*6+v*3]=r;eCol[e*6+v*3+1]=g;eCol[e*6+v*3+2]=b;}
+}
+const eGeo=new THREE.BufferGeometry();
+eGeo.setAttribute('position',new THREE.BufferAttribute(ePos,3));
+eGeo.setAttribute('aFlow',new THREE.BufferAttribute(eFlow,1));
+eGeo.setAttribute('aActive',new THREE.BufferAttribute(eAct,1));
+eGeo.setAttribute('aCol',new THREE.BufferAttribute(eCol,3));
+const edgeMat=new THREE.ShaderMaterial({vertexShader:EDGE_V,fragmentShader:EDGE_F,uniforms:{uT:{value:0}},transparent:true,depthWrite:false,blending:THREE.AdditiveBlending});
+scene.add(new THREE.LineSegments(eGeo,edgeMat));
+
+// particles
+const NP=CFG.PARTICLES;
+const pPos=new Float32Array(NP*3),pLife=new Float32Array(NP),pSz=new Float32Array(NP),pCol=new Float32Array(NP*3);
+const pVel=new Float32Array(NP*3),pMaxL=new Float32Array(NP);
+const rngP=new RNG(777);
+for(let p=0;p<NP;p++){
+  const ni=Math.floor(rngP.next()*NS);
+  pPos[p*3]=lat.pos[ni*3]+rngP.randn()*.3;pPos[p*3+1]=lat.pos[ni*3+1]+rngP.randn()*.3;pPos[p*3+2]=lat.pos[ni*3+2]+rngP.randn()*.3;
+  pLife[p]=rngP.next();pMaxL[p]=1.5+rngP.next()*3;pSz[p]=1.5+rngP.next()*4.5;
+  const[r,g,b]=hsl2rgb(rngP.next(),.9,.6);pCol[p*3]=r;pCol[p*3+1]=g;pCol[p*3+2]=b;
+  pVel[p*3]=rngP.randn()*.2;pVel[p*3+1]=rngP.randn()*.2;pVel[p*3+2]=rngP.randn()*.2;
+}
+const ptGeo=new THREE.BufferGeometry();
+ptGeo.setAttribute('position',new THREE.BufferAttribute(pPos,3));
+ptGeo.setAttribute('aLife',new THREE.BufferAttribute(pLife,1));
+ptGeo.setAttribute('aSz',new THREE.BufferAttribute(pSz,1));
+ptGeo.setAttribute('aCol',new THREE.BufferAttribute(pCol,3));
+const ptMat=new THREE.ShaderMaterial({vertexShader:PART_V,fragmentShader:PART_F,uniforms:{uT:{value:0}},transparent:true,depthWrite:false,blending:THREE.AdditiveBlending});
+scene.add(new THREE.Points(ptGeo,ptMat));
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// § PHYSICS STATE
+// ═══════════════════════════════════════════════════════════════════
+const qsim=new QuantumSim(CFG.DIMS);
+let pdesim=null;
+// GCN: 2-feature input (pop, sensation) → 16 → 8 → 1 (Lambda)
+// Includes GAT attention + Laplacian spatial coherence regularizer
+const nn=new GCN(2,16,8,1);
+const czech=new Czech(NS,lat.edges,lat.NE);
+let adaptedL=new Float32Array(NS).fill(1);
+let pdeEnst=new Float32Array(NS);
+let cohomResult=null;
+let vizMode=0;
+let glitchStr=0;
+let autoRot=true;
+let camAngle=0,camElev=.25,camR=27;
+let isDrag=false,lastMX=0,lastMY=0;
+
+// ── Camera controls ────────────────────────────────────────────────
+cv3d.addEventListener('mousedown',e=>{isDrag=true;lastMX=e.clientX;lastMY=e.clientY;});
+window.addEventListener('mouseup',()=>isDrag=false);
+window.addEventListener('mousemove',e=>{
+  if(!isDrag)return;
+  camAngle+=(e.clientX-lastMX)*.007;
+  camElev=Math.max(-1.15,Math.min(1.15,camElev-(e.clientY-lastMY)*.006));
+  lastMX=e.clientX;lastMY=e.clientY;autoRot=false;
+});
+cv3d.addEventListener('wheel',e=>{camR=Math.max(10,Math.min(60,camR+e.deltaY*.04));e.preventDefault();},{passive:false});
+cv3d.addEventListener('touchstart',e=>{if(e.touches.length===1){isDrag=true;lastMX=e.touches[0].clientX;lastMY=e.touches[0].clientY;}});
+window.addEventListener('touchend',()=>isDrag=false);
+window.addEventListener('touchmove',e=>{if(!isDrag||e.touches.length!==1)return;camAngle+=(e.touches[0].clientX-lastMX)*.007;camElev=Math.max(-1.15,Math.min(1.15,camElev-(e.touches[0].clientY-lastMY)*.006));lastMX=e.touches[0].clientX;lastMY=e.touches[0].clientY;},{passive:true});
+
+// ── Tooltip raycaster ──────────────────────────────────────────────
+const ray=new THREE.Raycaster(),mxy=new THREE.Vector2();
+const tipEl=document.getElementById('tip'),tipTitle=document.getElementById('tip-title'),tipBody=document.getElementById('tip-body');
+cv3d.addEventListener('mousemove',e=>{
+  if(isDrag){tipEl.classList.remove('on');return;}
+  mxy.x=(e.clientX/W3)*2-1;mxy.y=-(e.clientY/H3)*2+1;
+  ray.setFromCamera(mxy,cam);
+  const hits=ray.intersectObject(nodes);
+  if(hits.length&&hits[0].instanceId!=null){
+    const id=hits[0].instanceId;
+    const D=CFG.DIMS;
+    const x=Math.floor(id/(D*D)),y=Math.floor(id/D)%D,z=id%D;
+    tipEl.style.left=(e.clientX+14)+'px';tipEl.style.top=(e.clientY-14)+'px';
+    tipEl.classList.add('on');
+    tipTitle.textContent=`Node ${id} · (${x},${y},${z})`;
+    const nbs=Array.from(lat.nb.slice(id*6,(id+1)*6)).filter(n=>n>=0);
+    tipBody.innerHTML=`Λ: ${adaptedL[id].toFixed(5)}&nbsp;&nbsp;|ψ|²: ${qsim.pop[id].toFixed(6)}<br>sensation σ²: ${qsim.sen[id].toFixed(6)}<br>enstrophy: ${pdeEnst[id].toFixed(5)}<br>neighbors: ${nbs.join(', ')}`;
+  } else tipEl.classList.remove('on');
+});
+
+// ── Mode buttons ───────────────────────────────────────────────────
+document.querySelectorAll('.mbtn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.mbtn').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');vizMode=+b.dataset.m;nodeMat.uniforms.uMode.value=vizMode;
+}));
+
+// ── Side controls ──────────────────────────────────────────────────
+document.getElementById('btn-rot').addEventListener('click',function(){autoRot=!autoRot;this.classList.toggle('on',autoRot);});
+document.getElementById('btn-play').addEventListener('click',function(){if(pdesim){pdesim._paused=!pdesim._paused;this.textContent=pdesim._paused?'▶':'⏸';}});
+document.getElementById('sl-bloom').addEventListener('input',e=>compMat.uniforms.uBS.value=e.target.value/100*1.6);
+document.getElementById('sl-nu').addEventListener('input',e=>{if(pdesim)pdesim.nu=.001+e.target.value/100*.025;});
+document.getElementById('sl-linf').addEventListener('input',e=>{CFG.LAMINF=.2+(e.target.value/100)*3.5;if(pdesim)pdesim.LamInf=CFG.LAMINF;});
+
+// ═══════════════════════════════════════════════════════════════════
+// § VISUAL UPDATES
+// ═══════════════════════════════════════════════════════════════════
+function fract(x){return x-Math.floor(x);}
+
+function updateLatticeVisuals(){
+  let maxQ=0,maxE=0,maxLv=0;
+  for(let i=0;i<NS;i++){if(qsim.pop[i]>maxQ)maxQ=qsim.pop[i];if(pdeEnst[i]>maxE)maxE=pdeEnst[i];if(adaptedL[i]>maxLv)maxLv=adaptedL[i];}
+  maxQ=maxQ||1e-10;maxE=maxE||1e-10;maxLv=maxLv||1;
+  const lA=sGeo.attributes.aL.array,qA=sGeo.attributes.aQ.array,eA=sGeo.attributes.aE.array;
+  for(let i=0;i<NS;i++){lA[i]=adaptedL[i]/maxLv;qA[i]=qsim.pop[i]/maxQ;eA[i]=Math.min(1,pdeEnst[i]/maxE*2);}
+  sGeo.attributes.aL.needsUpdate=sGeo.attributes.aQ.needsUpdate=sGeo.attributes.aE.needsUpdate=true;
+  // edge colors — blend: Lambda coherence (base) + GAT attention highlight
+  const eAArr=eGeo.attributes.aActive.array,eCArr=eGeo.attributes.aCol.array;
+  for(let e=0;e<NE;e++){
+    const i=lat.edges[e*2],j=lat.edges[e*2+1];
+    const ls=(adaptedL[i]+adaptedL[j])/(2*maxLv);
+    eAArr[e*2]=eAArr[e*2+1]=Math.min(1,ls*1.6);
+
+    // Find attention weight for this edge (if it exists in i→j or j→i direction)
+    let attI=0,attJ=0;
+    for(let k=0;k<6;k++){
+      if(lat.nb[i*6+k]===j)attI=nn.attW[i*6+k];
+      if(lat.nb[j*6+k]===i)attJ=nn.attW[j*6+k];
+    }
+    const attMean=(attI+attJ)/2;
+    // max attention slot: is this edge the dominant neighbor of either endpoint?
+    const isDominantI=(lat.nb[i*6+nn.attMax[i]]===j);
+    const isDominantJ=(lat.nb[j*6+nn.attMax[j]]===i);
+    const attBoost=isDominantI||isDominantJ?1.0:0.0;
+
+    // Hue: cyan=attention-heavy, gold=dominant, purple=low-attention
+    const baseHue=fract(.5*(qsim.pop[i]+qsim.pop[j])/maxQ*.6+.82*(pdeEnst[i]+pdeEnst[j])/(2*maxE)*.4);
+    const attHue=attBoost>.5?0.14:fract(.5-attMean*.5); // gold for dominant, cyan-purple blend for others
+    const hue=attMean>.3?attHue:baseHue;
+    const sat=0.75+0.25*attMean+0.2*attBoost;
+    const lit=0.38+0.28*attMean+0.18*attBoost;
+    const[r,g,b]=hsl2rgb(hue,sat,lit);
+    // dominant edges are brighter
+    const bright=1.0+attBoost*0.7;
+    for(let v=0;v<2;v++){eCArr[e*6+v*3]=r*bright;eCArr[e*6+v*3+1]=g*bright;eCArr[e*6+v*3+2]=b*bright;}
+    // dominant edges more opaque
+    if(isDominantI||isDominantJ){eAArr[e*2]=eAArr[e*2+1]=Math.min(1,ls*2.2+0.4);}
+  }
+  eGeo.attributes.aActive.needsUpdate=eGeo.attributes.aCol.needsUpdate=true;
+}
+
+function updateParticles(dt){
+  const rngQ=new RNG(Date.now()&0xffff);
+  let maxLv=0;for(const l of adaptedL)if(l>maxLv)maxLv=l;maxLv=maxLv||1;
+  const pA=ptGeo.attributes.position.array,lA=ptGeo.attributes.aLife.array,cA=ptGeo.attributes.aCol.array;
+  for(let p=0;p<NP;p++){
+    lA[p]-=dt/pMaxL[p];
+    if(lA[p]<=0){
+      // respawn near high-Lambda node
+      let best=0,bestL=0;for(let k=0;k<4;k++){const n=Math.floor(rngQ.next()*NS);if(adaptedL[n]>bestL){bestL=adaptedL[n];best=n;}}
+      pA[p*3]=lat.pos[best*3]+rngQ.randn()*.4;pA[p*3+1]=lat.pos[best*3+1]+rngQ.randn()*.4;pA[p*3+2]=lat.pos[best*3+2]+rngQ.randn()*.4;
+      lA[p]=pLife[p]=1;pMaxL[p]=1.8+rngQ.next()*3.2;
+      pVel[p*3]=rngQ.randn()*.25;pVel[p*3+1]=rngQ.randn()*.25;pVel[p*3+2]=rngQ.randn()*.25;
+      const[r,g,b]=hsl2rgb(fract(adaptedL[best]/maxLv*.6+.1),.92,.58);cA[p*3]=r;cA[p*3+1]=g;cA[p*3+2]=b;
+    } else {
+      pA[p*3]+=pVel[p*3]*dt+(rngQ.randn()*.015);pA[p*3+1]+=pVel[p*3+1]*dt+(rngQ.randn()*.015);pA[p*3+2]+=pVel[p*3+2]*dt+(rngQ.randn()*.015);
+      pVel[p*3]*=.97;pVel[p*3+1]*=.97;pVel[p*3+2]*=.97;
+    }
+  }
+  ptGeo.attributes.position.needsUpdate=ptGeo.attributes.aLife.needsUpdate=ptGeo.attributes.aCol.needsUpdate=true;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// § 2D CHART RENDERING
+// ═══════════════════════════════════════════════════════════════════
+function chartLine(cv,data,color,logY=false,label=''){
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='rgba(0,0,0,.28)';ctx.fillRect(0,0,W,H);
+  if(!data||data.length<2)return;
+  ctx.strokeStyle='rgba(255,255,255,.05)';ctx.lineWidth=1;
+  for(let i=1;i<4;i++){const y=H*i/4;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  for(let i=1;i<4;i++){const x=W*i/4;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  let mn=Infinity,mx=-Infinity;for(const v of data){if(v<mn)mn=v;if(v>mx)mx=v;}
+  if(mx===mn)mx=mn+1e-10;
+  const mapY=v=>{const norm=logY?(Math.log(Math.max(v,1e-15))-Math.log(Math.max(mn,1e-15)))/(Math.log(Math.max(mx,1e-15))-Math.log(Math.max(mn,1e-15))):(v-mn)/(mx-mn);return H-4-(H-8)*Math.max(0,Math.min(1,norm));};
+  ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=1.5;
+  const N=data.length;
+  for(let i=0;i<N;i++){const x=4+(W-8)*i/(N-1),y=mapY(data[i]);i?ctx.lineTo(x,y):ctx.moveTo(x,y);}
+  ctx.stroke();
+  ctx.fillStyle=color;ctx.font='7px Space Mono';ctx.fillText(data[data.length-1].toExponential(3),W-80,12);
+  if(label){ctx.fillStyle='rgba(255,255,255,.28)';ctx.fillText(label,4,12);}
+}
+
+function chartSpectrum(cv,bins,beta){
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='rgba(0,0,0,.28)';ctx.fillRect(0,0,W,H);
+  const N=bins.length;let mx=0;for(let k=1;k<N;k++)if(bins[k]>mx)mx=bins[k];if(!mx)return;
+  ctx.strokeStyle='rgba(255,255,255,.05)';ctx.lineWidth=1;
+  for(let i=1;i<4;i++){const y=H*i/4;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  const lkmax=Math.log(N/2);
+  const mx2=Math.max(1e-20,mx),mn2=1e-12;
+  const mx_=Math.log(mx2),mn_=Math.log(mn2);
+  const mX=k=>4+(W-8)*Math.log(k)/lkmax;
+  const mY=p=>H-4-(H-8)*Math.max(0,Math.min(1,(Math.log(p+1e-20)-mn_)/(mx_-mn_)));
+  // k^-β ref
+  ctx.strokeStyle='rgba(255,213,79,.35)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+  ctx.beginPath();
+  for(let k=1;k<N/2;k++){const y=mY(mx*Math.pow(k,-beta));k===1?ctx.moveTo(mX(k),y):ctx.lineTo(mX(k),y);}
+  ctx.stroke();ctx.setLineDash([]);
+  // data
+  ctx.strokeStyle='rgba(0,229,255,.85)';ctx.lineWidth=1.5;ctx.beginPath();let st=false;
+  for(let k=1;k<N/2;k++){if(bins[k]>0){st?ctx.lineTo(mX(k),mY(bins[k])):ctx.moveTo(mX(k),mY(bins[k]));st=true;}}
+  ctx.stroke();
+  ctx.fillStyle='rgba(255,213,79,.7)';ctx.font='7px Space Mono';ctx.fillText(`k⁻${beta.toFixed(2)}`,W-44,12);
+}
+
+function chartEnstComp(cv,enH){
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='rgba(0,0,0,.28)';ctx.fillRect(0,0,W,H);
+  if(!enH||enH.length<2)return;
+  // Saturated ΣΩ (actual PDE)
+  const N=enH.length;let mx=0;for(const v of enH)if(v>mx)mx=v;if(!mx)return;
+  const mY=v=>H-4-(H-8)*Math.min(1,v/mx);
+  ctx.strokeStyle='rgba(255,255,255,.05)';ctx.lineWidth=1;
+  for(let i=1;i<4;i++){const y=H*i/4;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  // classical reference (simulated runaway)
+  ctx.strokeStyle='rgba(255,100,80,.5)';ctx.lineWidth=1;ctx.setLineDash([4,3]);
+  ctx.beginPath();
+  for(let i=0;i<N;i++){
+    const t=i/(N-1)*10;const clasV=Math.min(mx*5,1*Math.pow(1+t,.4)/(1+t*.02)*mx*.2);
+    ctx.lineTo(4+(W-8)*i/(N-1),mY(Math.min(mx,clasV*Math.min(1,(i/N)*5))));
+  }
+  ctx.stroke();ctx.setLineDash([]);
+  // actual
+  ctx.strokeStyle='rgba(0,229,255,.85)';ctx.lineWidth=1.5;ctx.beginPath();
+  for(let i=0;i<N;i++)i?ctx.lineTo(4+(W-8)*i/(N-1),mY(enH[i])):ctx.moveTo(4+(W-8)*i/(N-1),mY(enH[i]));
+  ctx.stroke();
+  ctx.fillStyle='rgba(255,100,80,.6)';ctx.font='7px Space Mono';ctx.fillText('Classical ↗',4,12);
+  ctx.fillStyle='rgba(0,229,255,.7)';ctx.fillText(`ΣΩ Ω=${enH[N-1].toFixed(4)}`,4,22);
+}
+
+function drawOrbit(cv,lH,curL){
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height,cx=W/2,cy=H/2,mr=W/2-10;
+  ctx.clearRect(0,0,W,H);
+  const g=ctx.createRadialGradient(cx,cy,0,cx,cy,W/2);
+  g.addColorStop(0,'rgba(124,58,237,.07)');g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,W/2,0,Math.PI*2);ctx.fill();
+  const n=Math.min(lH.length,180);
+  if(n>1){
+    let maxL=0;for(const l of lH)if(l>maxL)maxL=l;maxL=maxL||1;
+    ctx.beginPath();
+    for(let i=0;i<n;i++){
+      const t=i/n,ang=t*Math.PI*10;
+      const r=mr*(lH[lH.length-n+i]/maxL)*.8;
+      const x=cx+r*Math.cos(ang),y=cy+r*Math.sin(ang);
+      i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+    }
+    const lg=ctx.createLinearGradient(0,0,W,H);lg.addColorStop(0,'rgba(224,64,251,.35)');lg.addColorStop(1,'rgba(0,229,255,.35)');
+    ctx.strokeStyle=lg;ctx.lineWidth=1.5;ctx.stroke();
+  }
+  const ang2=Date.now()*.0018,rr=mr*Math.min(curL/4,.85)*.8;
+  ctx.beginPath();ctx.arc(cx+rr*Math.cos(ang2),cy+rr*Math.sin(ang2),4,0,Math.PI*2);
+  ctx.fillStyle='rgba(224,64,251,.9)';ctx.shadowBlur=14;ctx.shadowColor='#e040fb';ctx.fill();ctx.shadowBlur=0;
+  ctx.fillStyle='rgba(255,255,255,.4)';ctx.font='8px Space Mono';ctx.textAlign='center';
+  ctx.fillText(`Λ=${curL.toFixed(3)}`,cx,H-4);ctx.textAlign='left';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// § NNOF PANEL TEXT CYCLES
+// ═══════════════════════════════════════════════════════════════════
+const PHE_TXT=['Each vortex breathes as a glowing bubble — pulsating, absorbing. Energy surges, then folds into harmony.','High-k eddies bite like blackberry effervescence; low-k rolls smooth as honeyed dusk.','Λ(t) oscillations taste like subtle sweetness, alerting the system when the field nears saturation.','The membrane shivers at the boundary of coherent flow — selective, reverent, alive to passage.','Sensation cascades through the lattice like breath through a resonating chamber of star-matter.'];
+const REL_TXT=['Every threshold gate acts as ancestral sigil — a node in the choreography of energy flow.','Overlap of vortex patches sings in harmony: ancient liquid songs encoded in geometry.','We read the lattice like a language: patterns emerge, align, and self-validate across scales.','The consent architecture holds: membranes reject extraction, require reverence, allow generosity.','Sigil-logic gates enforce the k⁻β cascade as symbolic regulation of the spectral sovereign.'];
+const HOR_TXT=['The lattice is a living map of metabolic intelligence — topologically forbidden blowups become impossible.','Dissonance is a topological impossibility: ΣΩ transforms supercritical → subcritical nonlinearity.','Each patch: glowing semi-permeable bubble of Λ-filtered fluid. Network: self-stabilizing cascade.','Cosmic foam of metabolic intelligence — enstrophy bounded by √Ω growth, dissipation always wins.','We engineered safety into the nonlinearity. Stability is no longer mysterious. The loop completes.'];
+let txtT=0;
+function updateNNOF(t){
+  txtT+=t;
+  const ti=Math.floor(txtT/9);
+  document.getElementById('lbody-phe').textContent=PHE_TXT[ti%PHE_TXT.length];
+  document.getElementById('lbody-rel').textContent=REL_TXT[ti%REL_TXT.length];
+  document.getElementById('lbody-hor').textContent=HOR_TXT[ti%HOR_TXT.length];
+  // PHE metrics
+  let avgSen=0;for(const s of qsim.sen)avgSen+=s;avgSen/=NS;
+  document.getElementById('phe-s').textContent=avgSen.toFixed(5);
+  document.getElementById('phe-i').textContent=(qsim.maxPop*1000).toFixed(3);
+  document.getElementById('phe-bar').style.width=Math.min(100,avgSen*800)+'%';
+  // REL metrics
+  let avgL=0;for(const l of adaptedL)avgL+=l;avgL/=NS;
+  const harm=Math.max(0,1-Math.abs(avgL-CFG.LAMINF)/CFG.LAMINF);
+  document.getElementById('rel-r').textContent=avgL.toFixed(4);
+  document.getElementById('rel-h').textContent=harm.toFixed(4);
+  document.getElementById('rel-bar').style.width=Math.min(100,harm*100)+'%';
+  // SYS metrics
+  if(pdesim){
+    document.getElementById('sys-h1').textContent=pdesim.H1.toFixed(4);
+    document.getElementById('sys-cl').textContent=pdesim.clipRate.toFixed(4);
+    document.getElementById('sys-do').textContent=(pdesim._dEnst||0).toFixed(4);
+    document.getElementById('sys-dl').textContent=(pdesim._dLambda||0).toFixed(4);
+    const clipBar=Math.min(100,pdesim.clipRate*1200);
+    document.getElementById('sys-bar').style.width=clipBar+'%';
+    document.getElementById('h-lam').textContent=pdesim.Lambda.toFixed(4);
+    document.getElementById('h-enst').textContent=pdesim.enstrophy.toFixed(4);
+    document.getElementById('h-eng').textContent=pdesim.energy.toFixed(4);
+    document.getElementById('h-t').textContent=pdesim.t.toFixed(3);
+  }
+  // EPI
+  const stab=pdesim?Math.max(0,1-pdesim.clipRate*15):.75;
+  document.getElementById('epi-c').textContent=stab>.8?'High':stab>.5?'Med-High':'Medium';
+  document.getElementById('epi-e').textContent=nn.lastLoss.toFixed(6);
+  document.getElementById('epi-bar').style.width=Math.min(100,stab*100)+'%';
+  // HOR
+  if(cohomResult){
+    document.getElementById('hor-an').textContent=cohomResult.an;
+    document.getElementById('hor-bar').style.width=Math.min(100,cohomResult.an/NS*100)+'%';
+    document.getElementById('co-b0').textContent=cohomResult.b0;
+    document.getElementById('co-b1').textContent=cohomResult.b1;
+    document.getElementById('co-eu').textContent=cohomResult.euler;
+    document.getElementById('h-betti').textContent=`${cohomResult.b0} · ${cohomResult.b1}`;
+  }
+  // quantum
+  document.getElementById('h-psi').textContent=qsim.maxPop.toFixed(5);
+  // NN loss
+  if(nn.lastLoss>0)document.getElementById('h-loss').textContent=nn.lastLoss.toFixed(5);
+  // Laplacian regularization loss (spatial coherence)
+  const lapPct=nn.lastLoss>0?Math.min(100,nn.lapLoss/nn.lastLoss*100):0;
+  document.getElementById('epi-e').textContent=`${nn.lastLoss.toFixed(5)} (lap ${lapPct.toFixed(0)}%)`;
+  // Attention entropy — how concentrated are attention weights?
+  // H = -∑ α log α per node, averaged; low H = focused, high H = diffuse
+  let avgAttEntropy=0;
+  for(let i=0;i<NS;i++){
+    let H=0;for(let k=0;k<6;k++){const a=nn.attW[i*6+k];if(a>1e-9)H-=a*Math.log(a);}
+    avgAttEntropy+=H;
+  }
+  avgAttEntropy/=NS;
+  document.getElementById('sys-cl').textContent=(pdesim?pdesim.clipRate:0).toFixed(4)+` att-H:${avgAttEntropy.toFixed(2)}`;
+  // spectral slope
+  if(pdesim){
+    const bins=pdesim.powerSpectrum();
+    let sx=0,sy=0,sxy=0,sx2=0,cnt=0;
+    for(let k=2;k<Math.min(8,bins.length/2);k++){if(bins[k]>0){const lk=Math.log(k),lp=Math.log(bins[k]+1e-20);sx+=lk;sy+=lp;sxy+=lk*lp;sx2+=lk*lk;cnt++;}}
+    if(cnt>1){const beta=-(cnt*sxy-sx*sy)/(cnt*sx2-sx*sx);document.getElementById('h-slope').textContent=beta.toFixed(3);}
+    chartSpectrum(document.getElementById('cv-spec'),Array.from(bins),cnt>1?-(((cnt*(Array.from({length:Math.min(8,bins.length/2)-2},(_,i)=>Math.log(i+2)).reduce((a,b)=>a+b,0))*(Array.from({length:Math.min(8,bins.length/2)-2},(_,i)=>Math.log(bins[i+2]+1e-20)).reduce((a,b)=>a+b,0)))-sx*sy)/(cnt*sx2-sx*sx)):5/3);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// § ANIMATION LOOP
+// ═══════════════════════════════════════════════════════════════════
+let lastTime=0,frameCount=0,pdeFrameCount=0;
+
+function animate(now){
+  requestAnimationFrame(animate);
+  const dt=Math.min(.05,(now-lastTime)/1000);lastTime=now;
+  const T=now*.001;
+  frameCount++;
+
+  // camera
+  if(autoRot)camAngle+=dt*.12;
+  cam.position.x=camR*Math.sin(camAngle)*Math.cos(camElev);
+  cam.position.y=camR*Math.sin(camElev);
+  cam.position.z=camR*Math.cos(camAngle)*Math.cos(camElev);
+  cam.lookAt(0,0,0);
+
+  // quantum step
+  qsim.step(CFG.Q_PER_FRAME);
+
+  // PDE step (every frame)
+  if(pdesim){
+    pdesim.step();
+    pdeFrameCount++;
+    // get per-site enstrophy every 3 frames
+    if(pdeFrameCount%3===0){
+      pdeEnst=pdesim.enstPerSite();
+    }
+  }
+
+  // GCN full-graph inference (every 5 frames)
+  if(frameCount%5===0 && pdesim){
+    // Forward pass: GCN takes full population + sensation arrays
+    const outL=nn.forward(qsim.pop,qsim.sen,lat.nb);
+    for(let i=0;i<NS;i++)adaptedL[i]=Math.max(.05,outL[i]);
+    cohomResult=czech.compute(adaptedL);
+  }
+
+  // glitch decay
+  glitchStr*=.94;
+  compMat.uniforms.uGlitch.value=glitchStr;
+  // random micro-glitch
+  if(Math.random()<.004)glitchStr=.3+Math.random()*.5;
+
+  // update Three.js uniforms
+  nodeMat.uniforms.uT.value=T;
+  edgeMat.uniforms.uT.value=T;
+  ptMat.uniforms.uT.value=T;
+  bgS.children[0].material.uniforms.uT.value=T;
+
+  // update visuals
+  updateLatticeVisuals();
+  updateParticles(dt);
+
+  // NNOF panels (every 4 frames)
+  if(frameCount%4===0)updateNNOF(dt*4);
+
+  // charts (every 8 frames)
+  if(frameCount%8===0){
+    chartLine(document.getElementById('cv-loss'),nn.lossH,'rgba(118,255,3,.85)',true);
+    if(pdesim){
+      chartEnstComp(document.getElementById('cv-enst'),pdesim.eH);
+      chartLine(document.getElementById('cv-lam'),pdesim.lH,'rgba(224,64,251,.85)');
+      drawOrbit(document.getElementById('cv-orbit'),pdesim.lH,pdesim.Lambda);
+    }
+  }
+
+  // ── Render pipeline ────────────────────────────────────────────
+  // 1. Scene → rtMain
+  renderer.setRenderTarget(rtMain);renderer.clear();
+  renderer.render(bgS,bgC);renderer.render(scene,cam);
+  // 2. Bloom H → rtBloomA
+  renderer.setRenderTarget(rtBloomA);renderer.clear();
+  renderer.render(bhS,bgC);
+  // 3. Bloom V → rtBloomB
+  bloomVMat.uniforms.uT.value=rtBloomA.texture;
+  renderer.setRenderTarget(rtBloomB);renderer.clear();
+  renderer.render(bvS,bgC);
+  // 4. Second H pass → rtBloomA
+  bloomHMat.uniforms.uT.value=rtBloomB.texture;
+  renderer.setRenderTarget(rtBloomA);renderer.clear();
+  renderer.render(bhS,bgC);
+  // 5. Composite → screen
+  compMat.uniforms.uBloom.value=rtBloomA.texture;
+  renderer.setRenderTarget(null);renderer.clear();
+  renderer.render(cpS,bgC);
+  // restore bloomH to main
+  bloomHMat.uniforms.uT.value=rtMain.texture;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// § INITIALIZATION (async, with loader progress)
+// ═══════════════════════════════════════════════════════════════════
+function setP(pct,msg){document.getElementById('lfill').style.width=pct+'%';document.getElementById('lmsg').textContent=msg;}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+async function init(){
+  // Phase 0: Quantum warm-up
+  setP(2,'Bootstrapping quantum Hamiltonian on 8³ lattice…');await sleep(20);
+  for(let t=0;t<100;t++){
+    qsim.step(6);
+    if(t%10===0){setP(2+t*.18,`Quantum walk: t=${qsim.t.toFixed(2)} · max|ψ|²=${qsim.maxPop.toFixed(5)}`);await sleep(0);}
+  }
+
+  // Phase 1: Build synthetic graph-structured training targets
+  setP(22,'Generating synthetic Λ-target field on 8³ graph…');await sleep(20);
+  // We generate multiple random population/sensation fields and
+  // compute a target Λ* for each site using the analytical formula.
+  // GCN trains on ALL sites simultaneously per sample (full-graph batch).
+  const trainPops=[],trainSens=[],trainTargets=[];
+  const rng=new RNG(7);
+  for(let s=0;s<CFG.NN_SAMPLES;s++){
+    // Spatially correlated pop field (smooth via neighbor averaging)
+    const rawPop=new Float32Array(NS).map(()=>rng.rr(0,1));
+    const sp=new Float32Array(NS);
+    for(let i=0;i<NS;i++){
+      sp[i]=rawPop[i];
+      for(let k=0;k<6;k++){const j=lat.nb[i*6+k];if(j>=0)sp[i]+=rawPop[j];}
+      sp[i]/=(Array.from(lat.nb.slice(i*6,(i+1)*6)).filter(j=>j>=0).length+1);
+    }
+    const ss=new Float32Array(NS).map(()=>rng.rr(0,.4));
+    // Per-site targets
+    const tgt=new Float64Array(NS);
+    for(let i=0;i<NS;i++){
+      const nbs=Array.from(lat.nb.slice(i*6,(i+1)*6)).map(j=>j>=0?sp[j]:0);
+      tgt[i]=targetLam(sp[i],nbs,ss[i]);
+    }
+    trainPops.push(sp);trainSens.push(ss);trainTargets.push(tgt);
+    if(s%10===0){setP(22+s*.4,`Graph sample ${s}/${CFG.NN_SAMPLES}…`);await sleep(0);}
+  }
+
+  // Phase 2: Train GCN (full-graph forward+backward each sample)
+  setP(32,'Training GCN + GAT attention (Lap regularizer, Adam)…');await sleep(20);
+  const rng2=new RNG(99);
+  for(let ep=0;ep<CFG.NN_EPOCHS;ep++){
+    // Shuffle sample order
+    const idx=Array.from({length:CFG.NN_SAMPLES},(_,i)=>i);
+    for(let i=idx.length-1;i>0;i--){const j=Math.floor(rng2.next()*(i+1));[idx[i],idx[j]]=[idx[j],idx[i]];}
+    for(const si of idx){
+      // Forward: full graph, 2 input features per node
+      nn.forward(trainPops[si],trainSens[si],lat.nb);
+      // Backward: MSE + Laplacian reg (λ=0.08 spatial coherence)
+      nn.backward(trainTargets[si],lat.nb,.0025,.08);
+    }
+    if(ep%40===0){
+      setP(32+ep*.1,`GCN epoch ${ep}/${CFG.NN_EPOCHS} · total=${nn.lastLoss.toFixed(5)} · lap=${nn.lapLoss.toFixed(5)}`);
+      await sleep(0);
+    }
+  }
+
+  // Phase 3: PDE init + warm-up
+  setP(80,'Initializing ΣΩ fluid dynamics (N=16³ PDE, Taylor-Green IC)…');await sleep(20);
+  pdesim=new PDESim(CFG.PDE_N);
+  for(let s=0;s<8;s++){
+    pdesim.step();
+    setP(80+s*1.5,`PDE warm-up step ${s+1}/8 · Ω=${pdesim.enstrophy.toFixed(4)} · Λ=${pdesim.Lambda.toFixed(4)}`);
+    await sleep(8);
+  }
+
+  // Phase 4: Initial GCN inference + attention warm-up
+  setP(95,'Running initial GCN forward pass · computing attention weights…');await sleep(10);
+  pdeEnst=pdesim.enstPerSite();
+  const initOut=nn.forward(qsim.pop,qsim.sen,lat.nb);
+  for(let i=0;i<NS;i++)adaptedL[i]=Math.max(.05,initOut[i]);
+  cohomResult=czech.compute(adaptedL);
+
+  setP(100,'ΣΩ Metabolic Lattice online. All systems coherent.');await sleep(400);
+
+  // hide loader
+  document.getElementById('loader').classList.add('out');
+  await sleep(900);
+  document.getElementById('loader').style.display='none';
+
+  // start animation
+  lastTime=performance.now();
+  requestAnimationFrame(animate);
+}
+
+// resize handler
+window.addEventListener('resize',()=>{
+  const W=window.innerWidth,H=window.innerHeight;
+  cam.aspect=W/H;cam.updateProjectionMatrix();
+  renderer.setSize(W,H);
+  rtMain.setSize(W,H);rtBloomA.setSize(W,H);rtBloomB.setSize(W,H);
+});
+
+init();
+</script>
+</body></html>
