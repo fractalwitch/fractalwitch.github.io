@@ -314,6 +314,7 @@
 
   #ax-left { bottom: 50%; left: 1.5rem; transform: rotate(-90deg) translateX(50%); }
   #ax-right { bottom: 50%; right: 1.5rem; transform: rotate(90deg) translateX(50%); }
+  #ax-right { bottom: 50%; right: 1.5rem; transform: rotate(90deg) translateX(50%); }
   #ax-top { top: 4.5rem; left: 50%; transform: translateX(-50%); }
   #ax-bottom { bottom: 1.5rem; left: 50%; transform: translateX(-50%); }
 
@@ -440,6 +441,13 @@
     border-color: var(--c2);
     color: var(--c2);
   }
+  .mode-btn.switching { animation: modePulse 0.4s ease; }
+  @keyframes modePulse {
+    0%   { transform: scale(1);    box-shadow: 0 0 0px rgba(167,139,250,0); }
+    45%  { transform: scale(1.1);  box-shadow: 0 0 14px rgba(167,139,250,0.5); }
+    100% { transform: scale(1);    box-shadow: 0 0 0px rgba(167,139,250,0); }
+  }
+  .axis-label { transition: opacity 0.25s ease; }
 
   /* ── CLUSTER NAMES ── */
   .cluster-label {
@@ -686,10 +694,10 @@
 </div>
 
 <!-- ── AXIS LABELS ── -->
-<div class="axis-label hidden" id="ax-left">ENERGY ↑</div>
-<div class="axis-label hidden" id="ax-right">ENERGY ↑</div>
-<div class="axis-label hidden" id="ax-top">EUPHORIC</div>
-<div class="axis-label hidden" id="ax-bottom">MELANCHOLY → → → → → → EUPHORIC</div>
+<div class="axis-label hidden" id="ax-left">MELANCHOLY</div>
+<div class="axis-label hidden" id="ax-right">EUPHORIC</div>
+<div class="axis-label hidden" id="ax-top">ENERGETIC</div>
+<div class="axis-label hidden" id="ax-bottom">MELLOW</div>
 
 <!-- ── COLOR MODE ── -->
 <div id="color-mode" class="hidden">
@@ -709,12 +717,14 @@
 
 <!-- ── LEGEND ── -->
 <div id="legend" class="hidden">
-  <div class="legend-row"><div class="legend-dot" style="background:#ff6ec7"></div> sad + intense</div>
-  <div class="legend-row"><div class="legend-dot" style="background:#a78bfa"></div> complex / brooding</div>
-  <div class="legend-row"><div class="legend-dot" style="background:#67e8f9"></div> chill + cool</div>
-  <div class="legend-row"><div class="legend-dot" style="background:#86efac"></div> peaceful + bright</div>
-  <div class="legend-row"><div class="legend-dot" style="background:#fde68a"></div> bright + driving</div>
-  <div class="legend-row"><div class="legend-dot" style="background:#fb923c"></div> euphoric + energized</div>
+  <div id="legend-items">
+    <div class="legend-row"><div class="legend-dot" style="background:#6366f1"></div> melancholy · still</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#a78bfa"></div> complex · introspective</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#67e8f9"></div> chill · dreamy</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#86efac"></div> bright · peaceful</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#fde68a"></div> euphoric · driving</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#f97316"></div> intense · dancing</div>
+  </div>
   <div style="margin-top:0.5rem; color: rgba(255,255,255,0.2);">scroll: zoom · drag: pan · click: open in spotify</div>
 </div>
 
@@ -1201,7 +1211,7 @@ async function runEnrichment(){
           if(idx>=0&&worldPositions){
             const oldPos={...worldPositions[idx]};
             s.f=getFeatures(s);
-            const newPos=computeWorldPos(s);
+            const newPos=computeWorldPos(s,colorMode);
             if(Math.hypot(newPos.wx-oldPos.wx,newPos.wy-oldPos.wy)>.008){
               startTransition(idx,oldPos,newPos);
               worldPositions[idx]=newPos;
@@ -1231,7 +1241,7 @@ async function requestAudioAnalysis(songIdx){
     const oldPos=worldPositions?{...worldPositions[songIdx]}:null;
     s.f=getFeatures(s);
     if(oldPos&&worldPositions){
-      const newPos=computeWorldPos(s);
+      const newPos=computeWorldPos(s,colorMode);
       if(Math.hypot(newPos.wx-oldPos.wx,newPos.wy-oldPos.wy)>.005){startTransition(songIdx,oldPos,newPos);worldPositions[songIdx]=newPos;}
     }
     queueSave();
@@ -1250,7 +1260,8 @@ const ctx=canvas.getContext('2d');
 function launchViz(){
   hide('loading-screen');canvas.classList.remove('hidden');showHUD();
   songs.forEach(s=>{s.f=getFeatures(s);});
-  worldPositions=songs.map(computeWorldPos);
+  worldPositions=songs.map(s=>computeWorldPos(s,colorMode));
+  updateAxisLabels(colorMode);
   updateHUD();resizeCanvas();
   window.addEventListener('resize',resizeCanvas);
   setupInteraction();resetView();renderLoop();
@@ -1258,13 +1269,37 @@ function launchViz(){
 }
 function resizeCanvas(){canvas.width=innerWidth;canvas.height=innerHeight;}
 
-function computeWorldPos(s){
-  const f=s.f||getFeatures(s),m=.07;
+// Axis config per mode — what each filter maps to X and Y
+const MODE_AXES = {
+  genre: { x:'valence', y:'energy',      xl:'MELANCHOLY', xr:'EUPHORIC',  yb:'MELLOW',  yt:'ENERGETIC' },
+  energy:{ x:'valence', y:'energy',      xl:'MELANCHOLY', xr:'EUPHORIC',  yb:'MELLOW',  yt:'ENERGETIC' },
+  tempo: { x:'valence', y:'tempo',       xl:'MELANCHOLY', xr:'EUPHORIC',  yb:'SLOW',    yt:'FAST'      },
+  dance: { x:'danceability', y:'energy', xl:'STILL',      xr:'DANCEABLE', yb:'MELLOW',  yt:'ENERGETIC' },
+};
+
+function getAxisFeature(f, key){
+  if(key==='tempo') return Math.max(0,Math.min(1,(f.tempo-60)/140));
+  return f[key]||0;
+}
+
+function computeWorldPos(s, mode){
+  const f=s.f||getFeatures(s), m=.07;
+  const ax=MODE_AXES[mode||colorMode]||MODE_AXES.genre;
   let hx=0,hy=0;
-  for(let c of s.id){hx=Math.imul(31,hx)+c.charCodeAt(0)|0;hy=Math.imul(37,hy)+c.charCodeAt(0)|0;}
+  for(let ch of s.id){hx=Math.imul(31,hx)+ch.charCodeAt(0)|0;hy=Math.imul(37,hy)+ch.charCodeAt(0)|0;}
   const jx=(Math.sin(hx*7.3)*43758.5%1-.5)*.016;
   const jy=(Math.sin(hy*3.7)*43758.5%1-.5)*.016;
-  return{wx:m+f.valence*(1-m*2)+jx,wy:(1-m)-f.energy*(1-m*2)+jy};
+  const xv=getAxisFeature(f,ax.x);
+  const yv=getAxisFeature(f,ax.y);
+  return{wx:m+xv*(1-m*2)+jx, wy:(1-m)-yv*(1-m*2)+jy};
+}
+
+function updateAxisLabels(mode){
+  const ax=MODE_AXES[mode]||MODE_AXES.genre;
+  document.getElementById('ax-left').textContent=ax.xl;
+  document.getElementById('ax-right').textContent=ax.xr;
+  document.getElementById('ax-bottom').textContent=ax.yb;
+  document.getElementById('ax-top').textContent=ax.yt;
 }
 function startTransition(idx,from,to){
   posTransitions[idx]={fx:from.wx,fy:from.wy,tx:to.wx,ty:to.wy,start:performance.now(),dur:1800+Math.random()*600};
@@ -1282,12 +1317,27 @@ function worldToScreen(wx,wy){
 }
 function getColor(s,mode){
   const f=s.f;if(!f) return '#888';
-  const v=f.valence,e=f.energy,d=f.danceability,t=(f.tempo-60)/140;
-  if(mode==='energy'){const h=250-e*220;return`hsl(${h},80%,${40+e*30}%)`;}
-  if(mode==='tempo'){const h=240-t*200;return`hsl(${h},75%,${45+t*25}%)`;}
-  if(mode==='dance'){const h=130-d*100+20;return`hsl(${h},80%,${40+d*30}%)`;}
-  const hue=(v*200+e*80+d*60)%360;
-  return`hsl(${hue},${60+d*30}%,${35+e*30}%)`;
+  const v=f.valence,e=f.energy,d=f.danceability,t=Math.max(0,Math.min(1,(f.tempo-60)/140));
+  if(mode==='energy'){
+    // blue (calm) → purple → magenta → orange → yellow (intense)
+    const h=260-e*220; const sat=60+e*35; const lit=30+e*35;
+    return`hsl(${h},${sat}%,${lit}%)`;
+  }
+  if(mode==='tempo'){
+    // deep blue (slow) → teal → green → yellow → red (fast)
+    const h=240-t*240; return`hsl(${h},80%,${40+t*25}%)`;
+  }
+  if(mode==='dance'){
+    // full spectrum rainbow by danceability + energy brightness
+    // still=cool blues, danceable=hot pinks/oranges/yellows
+    const h=(d*300+e*60)%360;
+    const sat=55+d*40;
+    const lit=30+d*25+e*15;
+    return`hsl(${h},${sat}%,${lit}%)`;
+  }
+  // SONIC: hue from valence (blue=sad→red/orange=happy), brightness from energy
+  const hue=220+v*160; // 220=blue(melancholy) → 380=red/pink(euphoric)
+  return`hsl(${hue%360},${55+d*30}%,${30+e*35}%)`;
 }
 function getSize(s){return 1.5+(s.f?.danceability||.5)*3.5;}
 
@@ -1480,11 +1530,59 @@ function setLoadStatus(msg,progress){
 function resetView(){camX=0;camY=0;camZoom=1;}
 function zoomIn(){camZoom=Math.min(30,camZoom*1.4);}
 function zoomOut(){camZoom=Math.max(.3,camZoom/1.4);}
-function setColorMode(mode){colorMode=mode;document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));document.getElementById(`cm-${mode}`).classList.add('active');}
+let _modeTransitioning=false;
+
+function setColorMode(mode){
+  if(colorMode===mode||_modeTransitioning) return;
+  _modeTransitioning=true;
+  const prev=colorMode;
+  colorMode=mode;
+
+  // Update button states with pulse
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active','switching'));
+  const activeBtn=document.getElementById(`cm-${mode}`);
+  activeBtn.classList.add('active','switching');
+  setTimeout(()=>activeBtn.classList.remove('switching'),400);
+
+  // Update axis labels immediately
+  updateAxisLabels(mode);
+
+  // Shimmer fade-out, reposition, fade back in
+  const canvas=document.getElementById('viz-canvas');
+  canvas.style.transition='opacity 0.25s ease';
+  canvas.style.opacity='0.15';
+
+  // Stagger star transitions — recompute all positions for new mode
+  setTimeout(()=>{
+    if(worldPositions){
+      songs.forEach((s,i)=>{
+        // add slight stagger per star so they ripple outward
+        const delay=Math.random()*400;
+        setTimeout(()=>{
+          const oldPos={...getPos(i)};
+          const newPos=computeWorldPos(s,mode);
+          const dist=Math.hypot(newPos.wx-oldPos.wx,newPos.wy-oldPos.wy);
+          if(dist>.002){
+            posTransitions[i]={
+              fx:oldPos.wx,fy:oldPos.wy,
+              tx:newPos.wx,ty:newPos.wy,
+              start:performance.now(),
+              dur:600+Math.random()*800, // 600-1400ms per star
+            };
+            worldPositions[i]=newPos;
+          }
+        }, delay);
+      });
+    }
+    // fade back in
+    canvas.style.opacity='1';
+    setTimeout(()=>{ canvas.style.transition=''; _modeTransitioning=false; },500);
+  },260);
+}
 function handleSearch(val){searchQuery=val;}
 function show(id){document.getElementById(id).classList.remove('hidden');}
 function hide(id){document.getElementById(id).classList.add('hidden');}
-function showHUD(){['hud','legend','controls','color-mode','search-wrap','ax-top','ax-bottom','ax-left'].forEach(show);}
+function showHUD(){['hud','legend','controls','color-mode','search-wrap','ax-top','ax-bottom','ax-left','ax-right'].forEach(show);}
 
 // ═══════════════════════════════════════════════════
 // BOOT
