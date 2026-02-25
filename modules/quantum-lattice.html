@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔮 Quantum Lattice Λ-Adapter</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #04020f;
+  color: #d0c8ff;
+  font-family: 'Courier New', monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+header {
+  text-align: center;
+  padding: 24px 20px 12px;
+  background: linear-gradient(180deg, rgba(60,20,100,0.6) 0%, transparent 100%);
+  border-bottom: 1px solid #3a1a6a;
+}
+
+header h1 {
+  font-size: clamp(1.2em, 3vw, 2em);
+  background: linear-gradient(90deg, #a78bfa, #38bdf8, #f472b6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.05em;
+}
+
+header p {
+  font-size: 0.78em;
+  color: #7c6daa;
+  margin-top: 5px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 14px;
+  padding: 14px;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+.panel {
+  background: rgba(15, 8, 35, 0.85);
+  border: 1px solid #2e1a55;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.panel h2 {
+  font-size: 0.72em;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #8b73cc;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #1e1040;
+}
+
+canvas {
+  border-radius: 6px;
+  display: block;
+  width: 100%;
+  image-rendering: pixelated;
+}
+
+.stats {
+  font-size: 0.68em;
+  color: #7a6db0;
+  line-height: 1.7;
+}
+
+.stats span { color: #c4b5fd; }
+
+.controls {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+button {
+  background: linear-gradient(135deg, #3b1d7a, #5b2d9a);
+  color: #e0d6ff;
+  border: 1px solid #6b3dba;
+  border-radius: 20px;
+  padding: 7px 20px;
+  font-family: inherit;
+  font-size: 0.75em;
+  cursor: pointer;
+  letter-spacing: 0.08em;
+  transition: all 0.2s;
+}
+
+button:hover { background: linear-gradient(135deg, #5b2d9a, #7b4dca); box-shadow: 0 0 12px rgba(139,92,246,0.4); }
+button:disabled { opacity: 0.4; cursor: default; }
+button.active { background: linear-gradient(135deg, #0e6b6b, #1e9b8b); border-color: #2ddbbb; }
+
+.log-panel {
+  grid-column: 1 / -1;
+  max-height: 120px;
+  overflow-y: auto;
+  font-size: 0.68em;
+  line-height: 1.6;
+  color: #7a9a7a;
+}
+
+.log-panel .line-q  { color: #7dd3fc; }
+.log-panel .line-p  { color: #c084fc; }
+.log-panel .line-nn { color: #86efac; }
+.log-panel .line-w  { color: #fca5a5; }
+
+.legend {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.65em;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+
+#progress-bar {
+  grid-column: 1 / -1;
+  height: 4px;
+  background: #1a0a3a;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+#progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6b21a8, #2563eb, #0e9f6e);
+  width: 0%;
+  transition: width 0.1s;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🔮 Quantum Lattice Λ-Adapter</h1>
+  <p>8×8×8 Lattice · Quantum Walk · 3D Vorticity PDE · Neural Λ-Saturation</p>
+</header>
+
+<div class="layout">
+
+  <div id="progress-bar"><div id="progress-fill"></div></div>
+
+  <!-- Panel 1: Quantum populations -->
+  <div class="panel">
+    <h2>⚛ Quantum Populations (z=3 slice)</h2>
+    <canvas id="cvQ" width="200" height="200"></canvas>
+    <div class="stats" id="statsQ">Initialising…</div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-swatch" style="background:#000060"></div>low</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#0060ff"></div>mid</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#ffffff"></div>high</div>
+    </div>
+  </div>
+
+  <!-- Panel 2: PDE enstrophy -->
+  <div class="panel">
+    <h2>🌀 Vorticity PDE Enstrophy (z=3 slice)</h2>
+    <canvas id="cvP" width="200" height="200"></canvas>
+    <div class="stats" id="statsP">Initialising…</div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-swatch" style="background:#0a0a0a"></div>calm</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#7a2020"></div>mid</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#ffaa00"></div>intense</div>
+    </div>
+  </div>
+
+  <!-- Panel 3: Adapted Lambda -->
+  <div class="panel">
+    <h2>λ Adapted Saturation (z=3 slice)</h2>
+    <canvas id="cvL" width="200" height="200"></canvas>
+    <div class="stats" id="statsL">Waiting for NN…</div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-swatch" style="background:#0f0f20"></div>Λ≈0</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#6b21a8"></div>Λ≈1</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#f0abfc"></div>Λ≈2+</div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls panel">
+    <button id="btnRun">▶ Run Simulation</button>
+    <button id="btnStep" disabled>⏭ Step</button>
+    <button id="btnReset">↺ Reset</button>
+    <div class="stats" style="margin-left:auto" id="statusLine">Ready.</div>
+  </div>
+
+  <!-- Log -->
+  <div class="panel log-panel" id="logPanel">
+    <div class="line-w">Quantum Lattice Λ-Adapter initialised. Press ▶ Run to begin.</div>
+  </div>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// UTILITIES
+// ─────────────────────────────────────────────────────────────────────────────
+
+const DIMS = 8;
+const NUM_SITES = DIMS * DIMS * DIMS;
+
+function log(msg, cls = '') {
+  const p = document.getElementById('logPanel');
+  const d = document.createElement('div');
+  d.className = cls;
+  d.textContent = msg;
+  p.appendChild(d);
+  p.scrollTop = p.scrollHeight;
+}
+
+function setProgress(pct) {
+  document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LATTICE GRAPH  (8×8×8 grid)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function makeNeighbors() {
+  // Returns neighbors[site] = array of up to 6 neighbour site indices (-1 = absent)
+  const nb = [];
+  for (let z = 0; z < DIMS; z++)
+    for (let y = 0; y < DIMS; y++)
+      for (let x = 0; x < DIMS; x++) {
+        const idx = x + y * DIMS + z * DIMS * DIMS;
+        const dirs = [
+          x > 0        ? idx - 1                 : -1,
+          x < DIMS - 1 ? idx + 1                 : -1,
+          y > 0        ? idx - DIMS               : -1,
+          y < DIMS - 1 ? idx + DIMS               : -1,
+          z > 0        ? idx - DIMS * DIMS         : -1,
+          z < DIMS - 1 ? idx + DIMS * DIMS         : -1,
+        ];
+        nb.push(dirs);
+      }
+  return nb;
+}
+
+const NEIGHBORS = makeNeighbors();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QUANTUM WALK  (sparse, real-space time evolution via Cayley map approximation)
+// Replaces qutip.mesolve with a fast Crank-Nicolson-lite step
+// H = -A + V  (hopping + diagonal disorder)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class QuantumState {
+  constructor() {
+    this.re = new Float64Array(NUM_SITES);
+    this.im = new Float64Array(NUM_SITES);
+
+    // Disorder potential
+    const rng = mulberry32(42);
+    this.V = new Float64Array(NUM_SITES).map(() => (rng() - 0.5) * 2);
+
+    // Start at centre (3,3,3)
+    const cx = 3 + 3 * DIMS + 3 * DIMS * DIMS;
+    this.re[cx] = 1.0;
+
+    this.populations = null; // will be set after run
+  }
+
+  // One 4th-order Runge-Kutta step of  dψ/dt = -i H ψ  (ħ=1)
+  // H·ψ_r + i·H·ψ_i with H sparse
+  _Hpsi(re, im, outRe, outIm) {
+    for (let s = 0; s < NUM_SITES; s++) {
+      let hr = this.V[s] * re[s];
+      let hi = this.V[s] * im[s];
+      for (const n of NEIGHBORS[s]) {
+        if (n < 0) continue;
+        hr -= re[n]; // H_hop = -A
+        hi -= im[n];
+      }
+      // -i (hr + i·hi) = hi - i·hr
+      outRe[s] = hi;
+      outIm[s] = -hr;
+    }
+  }
+
+  step(dt) {
+    const N = NUM_SITES;
+    const k1r = new Float64Array(N), k1i = new Float64Array(N);
+    const k2r = new Float64Array(N), k2i = new Float64Array(N);
+    const k3r = new Float64Array(N), k3i = new Float64Array(N);
+    const k4r = new Float64Array(N), k4i = new Float64Array(N);
+    const tmp_r = new Float64Array(N), tmp_i = new Float64Array(N);
+
+    this._Hpsi(this.re, this.im, k1r, k1i);
+
+    for (let s = 0; s < N; s++) { tmp_r[s] = this.re[s] + 0.5 * dt * k1r[s]; tmp_i[s] = this.im[s] + 0.5 * dt * k1i[s]; }
+    this._Hpsi(tmp_r, tmp_i, k2r, k2i);
+
+    for (let s = 0; s < N; s++) { tmp_r[s] = this.re[s] + 0.5 * dt * k2r[s]; tmp_i[s] = this.im[s] + 0.5 * dt * k2i[s]; }
+    this._Hpsi(tmp_r, tmp_i, k3r, k3i);
+
+    for (let s = 0; s < N; s++) { tmp_r[s] = this.re[s] + dt * k3r[s]; tmp_i[s] = this.im[s] + dt * k3i[s]; }
+    this._Hpsi(tmp_r, tmp_i, k4r, k4i);
+
+    let norm = 0;
+    for (let s = 0; s < N; s++) {
+      this.re[s] += (dt / 6) * (k1r[s] + 2 * k2r[s] + 2 * k3r[s] + k4r[s]);
+      this.im[s] += (dt / 6) * (k1i[s] + 2 * k2i[s] + 2 * k3i[s] + k4i[s]);
+      norm += this.re[s] ** 2 + this.im[s] ** 2;
+    }
+    // Renormalise
+    norm = Math.sqrt(norm);
+    for (let s = 0; s < N; s++) { this.re[s] /= norm; this.im[s] /= norm; }
+  }
+
+  population() {
+    const p = new Float64Array(NUM_SITES);
+    for (let s = 0; s < NUM_SITES; s++) p[s] = this.re[s] ** 2 + this.im[s] ** 2;
+    return p;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PDE: 3D VORTICITY (pseudo-spectral, simplified for JS)
+// Uses a hand-rolled 1D FFT + separable 3D transform
+// ─────────────────────────────────────────────────────────────────────────────
+
+const PDE_N = DIMS * 4; // 32
+
+// Cooley-Tukey FFT (radix-2) over complex array {re, im}
+function fft(re, im, invert) {
+  const n = re.length;
+  if (n === 1) return;
+
+  const re2 = new Float64Array(n), im2 = new Float64Array(n);
+  for (let i = 0; i < n / 2; i++) { re2[i] = re[2 * i]; im2[i] = im[2 * i]; }
+  for (let i = 0; i < n / 2; i++) { re2[n / 2 + i] = re[2 * i + 1]; im2[n / 2 + i] = im[2 * i + 1]; }
+  re.set(re2); im.set(im2);
+
+  for (let len = 2; len <= n; len <<= 1) {
+    const ang = 2 * Math.PI / len * (invert ? -1 : 1);
+    const wr = Math.cos(ang), wi = Math.sin(ang);
+    for (let i = 0; i < n; i += len) {
+      let cr = 1, ci = 0;
+      for (let j = 0; j < len / 2; j++) {
+        const ur = re[i + j], ui = im[i + j];
+        const vr = re[i + j + len / 2] * cr - im[i + j + len / 2] * ci;
+        const vi = re[i + j + len / 2] * ci + im[i + j + len / 2] * cr;
+        re[i + j] = ur + vr; im[i + j] = ui + vi;
+        re[i + j + len / 2] = ur - vr; im[i + j + len / 2] = ui - vi;
+        const ncr = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = ncr;
+      }
+    }
+  }
+  if (invert) { for (let i = 0; i < n; i++) { re[i] /= n; im[i] /= n; } }
+}
+
+// 3D FFT via 1D along each axis
+function fft3d(fieldRe, fieldIm, N, invert) {
+  const N2 = N * N, N3 = N * N * N;
+  const buf_r = new Float64Array(N), buf_i = new Float64Array(N);
+
+  // x axis
+  for (let z = 0; z < N; z++) for (let y = 0; y < N; y++) {
+    for (let x = 0; x < N; x++) { buf_r[x] = fieldRe[z * N2 + y * N + x]; buf_i[x] = fieldIm[z * N2 + y * N + x]; }
+    fft(buf_r, buf_i, invert);
+    for (let x = 0; x < N; x++) { fieldRe[z * N2 + y * N + x] = buf_r[x]; fieldIm[z * N2 + y * N + x] = buf_i[x]; }
+  }
+  // y axis
+  for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
+    for (let y = 0; y < N; y++) { buf_r[y] = fieldRe[z * N2 + y * N + x]; buf_i[y] = fieldIm[z * N2 + y * N + x]; }
+    fft(buf_r, buf_i, invert);
+    for (let y = 0; y < N; y++) { fieldRe[z * N2 + y * N + x] = buf_r[y]; fieldIm[z * N2 + y * N + x] = buf_i[y]; }
+  }
+  // z axis
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    for (let z = 0; z < N; z++) { buf_r[z] = fieldRe[z * N2 + y * N + x]; buf_i[z] = fieldIm[z * N2 + y * N + x]; }
+    fft(buf_r, buf_i, invert);
+    for (let z = 0; z < N; z++) { fieldRe[z * N2 + y * N + x] = buf_r[z]; fieldIm[z * N2 + y * N + x] = buf_i[z]; }
+  }
+}
+
+// Precompute wavenumbers
+function makeK(N) {
+  const k = new Float64Array(N);
+  for (let i = 0; i < N; i++) k[i] = i <= N / 2 ? i : i - N;
+  return k;
+}
+
+class VorticityPDE {
+  constructor() {
+    const N = PDE_N, N3 = N ** 3;
+    this.N = N;
+    this.nu = 0.01;
+    this.dt = 0.005;
+    this.Lambda = 1.0;
+
+    const kArr = makeK(N);
+    this.KX = new Float64Array(N3);
+    this.KY = new Float64Array(N3);
+    this.KZ = new Float64Array(N3);
+    this.K2 = new Float64Array(N3);
+
+    for (let z = 0; z < N; z++) for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const idx = z * N * N + y * N + x;
+      this.KX[idx] = kArr[x];
+      this.KY[idx] = kArr[y];
+      this.KZ[idx] = kArr[z];
+      const k2 = kArr[x] ** 2 + kArr[y] ** 2 + kArr[z] ** 2;
+      this.K2[idx] = k2 === 0 ? 1e-10 : k2;
+    }
+
+    const rng = mulberry32(42);
+    this.omega = [new Float64Array(N3), new Float64Array(N3), new Float64Array(N3)];
+    for (let c = 0; c < 3; c++) for (let i = 0; i < N3; i++) this.omega[c][i] = (rng() - 0.5) * 0.2;
+
+    this.enstrophy = null;
+  }
+
+  // Compute enstrophy: 0.5 * |ω|²  per voxel
+  computeEnstrophy() {
+    const N3 = this.N ** 3;
+    const e = new Float64Array(N3);
+    for (let i = 0; i < N3; i++)
+      e[i] = 0.5 * (this.omega[0][i] ** 2 + this.omega[1][i] ** 2 + this.omega[2][i] ** 2);
+    return e;
+  }
+
+  // Single pseudo-spectral step with diffusion (omit non-linear for speed in JS)
+  // Full vortex-stretching is expensive; we include: diffusion + linear stretching estimate
+  step() {
+    const N = this.N, N3 = N ** 3;
+    const { KX, KY, KZ, K2, nu, dt } = this;
+
+    for (let c = 0; c < 3; c++) {
+      const wRe = this.omega[c].slice();
+      const wIm = new Float64Array(N3);
+
+      fft3d(wRe, wIm, N, false);
+
+      // Diffusion in spectral space: w_hat *= exp(-nu * K2 * dt)
+      for (let i = 0; i < N3; i++) {
+        const d = Math.exp(-nu * K2[i] * dt);
+        wRe[i] *= d; wIm[i] *= d;
+      }
+
+      fft3d(wRe, wIm, N, true);
+      this.omega[c] = wRe;
+    }
+
+    // Saturated vortex stretching: add small turbulent kick proportional to enstrophy
+    const rng = mulberry32(Math.floor(Math.random() * 1e9));
+    const enst = this.computeEnstrophy();
+    const maxE = enst.reduce((a, b) => Math.max(a, b), 0) + 1e-10;
+    for (let c = 0; c < 3; c++)
+      for (let i = 0; i < N3; i++) {
+        const kick = (rng() - 0.5) * 0.02 * (enst[i] / maxE);
+        const norm = Math.abs(this.omega[c][i]) + 1e-10;
+        this.omega[c][i] += Math.min(kick, this.Lambda / norm) * dt;
+      }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NEURAL NETWORK: LambdaAdapter  (pure JS, 8→16→1 with ReLU)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function relu(x) { return Math.max(0, x); }
+function reluGrad(x) { return x > 0 ? 1 : 0; }
+
+class LambdaAdapter {
+  constructor() {
+    const rng = mulberry32(99);
+    // Glorot init
+    this.W1 = Array.from({ length: 8 }, () => Array.from({ length: 16 }, () => (rng() - 0.5) * Math.sqrt(2 / 8)));
+    this.b1 = new Array(16).fill(0);
+    this.W2 = Array.from({ length: 16 }, () => [(rng() - 0.5) * Math.sqrt(2 / 16)]);
+    this.b2 = [0];
+  }
+
+  forward(x) {
+    // x: length-8 array
+    const h = this.b1.map((b, j) => {
+      let s = b;
+      for (let i = 0; i < 8; i++) s += x[i] * this.W1[i][j];
+      return relu(s);
+    });
+    let out = this.b2[0];
+    for (let j = 0; j < 16; j++) out += h[j] * this.W2[j][0];
+    return relu(out);
+  }
+
+  train(inputs, targets, epochs = 200, lr = 0.01) {
+    const N = inputs.length;
+    let lastLoss = Infinity;
+
+    for (let ep = 0; ep < epochs; ep++) {
+      let totalLoss = 0;
+      // Accumulate gradients
+      const dW1 = Array.from({ length: 8 }, () => new Array(16).fill(0));
+      const db1 = new Array(16).fill(0);
+      const dW2 = Array.from({ length: 16 }, () => [0]);
+      const db2 = [0];
+
+      for (let n = 0; n < N; n++) {
+        const x = inputs[n], t = targets[n];
+
+        // Forward
+        const h_pre = this.b1.map((b, j) => { let s = b; for (let i = 0; i < 8; i++) s += x[i] * this.W1[i][j]; return s; });
+        const h = h_pre.map(v => relu(v));
+        const out_pre = this.b2[0] + h.reduce((s, hj, j) => s + hj * this.W2[j][0], 0);
+        const out = relu(out_pre);
+
+        const err = out - t;
+        totalLoss += err * err;
+
+        // Backprop output layer
+        const dOut = 2 * err * reluGrad(out_pre);
+        db2[0] += dOut;
+        for (let j = 0; j < 16; j++) dW2[j][0] += dOut * h[j];
+
+        // Backprop hidden layer
+        for (let j = 0; j < 16; j++) {
+          const dH = dOut * this.W2[j][0] * reluGrad(h_pre[j]);
+          db1[j] += dH;
+          for (let i = 0; i < 8; i++) dW1[i][j] += dH * x[i];
+        }
+      }
+
+      // Update (Adam-lite: SGD with momentum not implemented for brevity)
+      for (let i = 0; i < 8; i++) for (let j = 0; j < 16; j++) this.W1[i][j] -= lr * dW1[i][j] / N;
+      for (let j = 0; j < 16; j++) { this.b1[j] -= lr * db1[j] / N; this.W2[j][0] -= lr * dW2[j][0] / N; }
+      this.b2[0] -= lr * db2[0] / N;
+      lastLoss = totalLoss / N;
+    }
+    return lastLoss;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TARGET LAMBDA
+// ─────────────────────────────────────────────────────────────────────────────
+
+function targetLambda(localEnergy, neighborEnergies, sensation, lambdaInf = 1.0, eps2 = 0.3) {
+  const valid = neighborEnergies.filter(e => e > 0);
+  const avgNeigh = valid.length ? valid.reduce((s, v) => s + v, 0) / valid.length : 0;
+  const energy = localEnergy + avgNeigh + sensation;
+  return Math.max(lambdaInf + (energy - lambdaInf) * Math.exp(-eps2), 0);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RENDERING
+// ─────────────────────────────────────────────────────────────────────────────
+
+const CELL = 200 / DIMS; // canvas is 200px, 8 cells → 25px each
+
+function heatmapBlue(ctx, data, zSlice) {
+  // data: Float64Array[NUM_SITES], zSlice: 0..7
+  const max = data.reduce((a, b) => Math.max(a, b), 1e-20);
+  ctx.clearRect(0, 0, 200, 200);
+  for (let y = 0; y < DIMS; y++)
+    for (let x = 0; x < DIMS; x++) {
+      const idx = x + y * DIMS + zSlice * DIMS * DIMS;
+      const v = data[idx] / max;
+      const r = Math.round(v * 80);
+      const g = Math.round(v * 120);
+      const b = Math.round(v * 255);
+      ctx.fillStyle = `rgb(${r},${g},${b})`;
+      ctx.fillRect(x * CELL, y * CELL, CELL - 1, CELL - 1);
+    }
+}
+
+function heatmapFire(ctx, data, zSlice, N_pde) {
+  // data: Float64Array[N_pde^3] enstrophy, downsampled to 8x8
+  const patchSize = N_pde / DIMS;
+  const vals = new Float64Array(NUM_SITES / DIMS * DIMS);
+  let max = 1e-20;
+  for (let y = 0; y < DIMS; y++)
+    for (let x = 0; x < DIMS; x++) {
+      let sum = 0, cnt = 0;
+      for (let py = 0; py < patchSize; py++)
+        for (let px = 0; px < patchSize; px++) {
+          const pidx = (zSlice * patchSize + 0) * N_pde * N_pde + (y * patchSize + py) * N_pde + (x * patchSize + px);
+          sum += data[pidx]; cnt++;
+        }
+      const v = sum / cnt;
+      vals[x + y * DIMS] = v;
+      if (v > max) max = v;
+    }
+
+  ctx.clearRect(0, 0, 200, 200);
+  for (let y = 0; y < DIMS; y++)
+    for (let x = 0; x < DIMS; x++) {
+      const v = vals[x + y * DIMS] / max;
+      const r = Math.round(Math.min(255, v * 400));
+      const g = Math.round(v * v * 180);
+      const b = 0;
+      ctx.fillStyle = `rgb(${r},${g},${b})`;
+      ctx.fillRect(x * CELL, y * CELL, CELL - 1, CELL - 1);
+    }
+}
+
+function heatmapPurple(ctx, data, zSlice) {
+  const max = data.reduce((a, b) => Math.max(a, b), 1e-20);
+  ctx.clearRect(0, 0, 200, 200);
+  for (let y = 0; y < DIMS; y++)
+    for (let x = 0; x < DIMS; x++) {
+      const idx = x + y * DIMS + zSlice * DIMS * DIMS;
+      const v = Math.min(1, data[idx] / (max * 0.5));
+      const r = Math.round(180 * v);
+      const g = Math.round(20 * v);
+      const b = Math.round(220 * v);
+      ctx.fillStyle = `rgb(${r},${g},${b})`;
+      ctx.fillRect(x * CELL, y * CELL, CELL - 1, CELL - 1);
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PRNG (seedable)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function mulberry32(seed) {
+  let s = seed | 0;
+  return function () {
+    s |= 0; s = s + 0x6D2B79F5 | 0;
+    let t = Math.imul(s ^ s >>> 15, 1 | s);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SIMULATION ORCHESTRATION
+// ─────────────────────────────────────────────────────────────────────────────
+
+let qState = null, pdeState = null, nnModel = null;
+let quantumPops = null, pdePops = null;
+let quantumLambdas = null, pdeLambdas = null;
+let running = false;
+
+const ctxQ = document.getElementById('cvQ').getContext('2d');
+const ctxP = document.getElementById('cvP').getContext('2d');
+const ctxL = document.getElementById('cvL').getContext('2d');
+
+function buildInputVec(avgPops, sensations, siteIdx) {
+  const local = avgPops[siteIdx];
+  const neigh = NEIGHBORS[siteIdx].map(n => n >= 0 ? avgPops[n] : 0);
+  const sens = sensations[siteIdx];
+  return [local, ...neigh, sens];
+}
+
+async function runSimulation() {
+  document.getElementById('btnRun').disabled = true;
+  document.getElementById('btnStep').disabled = true;
+  running = true;
+
+  // ── QUANTUM PHASE ──────────────────────────────────────────────────────────
+  log('⚛ Starting quantum time evolution (50 steps, dt=0.2)…', 'line-q');
+  qState = new QuantumState();
+  const NUM_T = 50;
+  const qDt = 0.2;
+  const perSite = [];
+  for (let t = 0; t < NUM_T; t++) {
+    qState.step(qDt);
+    perSite.push(qState.population());
+    setProgress(t / NUM_T * 30);
+    if (t % 5 === 0) {
+      heatmapBlue(ctxQ, qState.population(), 3);
+      document.getElementById('statsQ').innerHTML =
+        `t = <span>${(t * qDt).toFixed(1)}</span> / 10  |  step <span>${t + 1}</span> / ${NUM_T}`;
+      await sleep(0);
+    }
+  }
+
+  // Compute avg pops and sensations (variance over time)
+  quantumPops = new Float64Array(NUM_SITES);
+  const quantumSens = new Float64Array(NUM_SITES);
+  for (let s = 0; s < NUM_SITES; s++) {
+    let sum = 0, sum2 = 0;
+    for (let t = 0; t < NUM_T; t++) { sum += perSite[t][s]; sum2 += perSite[t][s] ** 2; }
+    quantumPops[s] = sum / NUM_T;
+    quantumSens[s] = sum2 / NUM_T - quantumPops[s] ** 2;
+  }
+
+  heatmapBlue(ctxQ, quantumPops, 3);
+  document.getElementById('statsQ').innerHTML =
+    `avg pop <span>${(quantumPops.reduce((a, b) => a + b, 0) / NUM_SITES).toFixed(4)}</span> | σ² = <span>${(quantumSens.reduce((a, b) => a + b, 0) / NUM_SITES).toExponential(2)}</span>`;
+  log(`✓ Quantum done. Centre pop: ${quantumPops[3 + 3 * DIMS + 3 * DIMS * DIMS].toFixed(5)}`, 'line-q');
+
+  // ── PDE PHASE ──────────────────────────────────────────────────────────────
+  log('🌀 Running 3D vorticity PDE (50 steps)…', 'line-p');
+  pdeState = new VorticityPDE();
+  const PDE_STEPS = 50;
+  const pdeEnstSeries = [];
+
+  for (let step = 0; step < PDE_STEPS; step++) {
+    pdeState.step();
+    pdeEnstSeries.push(pdeState.computeEnstrophy());
+    setProgress(30 + step / PDE_STEPS * 35);
+    if (step % 5 === 0) {
+      heatmapFire(ctxP, pdeEnstSeries[pdeEnstSeries.length - 1], 3, PDE_N);
+      document.getElementById('statsP').innerHTML =
+        `step <span>${step + 1}</span> / ${PDE_STEPS}  |  ν = <span>${pdeState.nu}</span>`;
+      await sleep(0);
+    }
+  }
+
+  // Per-site averages (patch 4x4x4 → one lattice site)
+  const N_pde = PDE_N, ps = N_pde / DIMS;
+  pdePops = new Float64Array(NUM_SITES);
+  const pdeSens = new Float64Array(NUM_SITES);
+
+  for (let s = 0; s < NUM_SITES; s++) {
+    const sz = Math.floor(s / (DIMS * DIMS));
+    const sy = Math.floor((s % (DIMS * DIMS)) / DIMS);
+    const sx = s % DIMS;
+
+    let sum = 0, sum2 = 0;
+    for (let t = 0; t < pdeEnstSeries.length; t++) {
+      let patchSum = 0;
+      for (let pz = 0; pz < ps; pz++) for (let py = 0; py < ps; py++) for (let px = 0; px < ps; px++) {
+        const pidx = (sz * ps + pz) * N_pde * N_pde + (sy * ps + py) * N_pde + (sx * ps + px);
+        patchSum += pdeEnstSeries[t][pidx];
+      }
+      const v = patchSum / (ps ** 3);
+      sum += v; sum2 += v * v;
+    }
+    pdePops[s] = sum / pdeEnstSeries.length;
+    pdeSens[s] = sum2 / pdeEnstSeries.length - pdePops[s] ** 2;
+  }
+
+  heatmapFire(ctxP, pdeEnstSeries[pdeEnstSeries.length - 1], 3, N_pde);
+  document.getElementById('statsP').innerHTML =
+    `avg enstrophy <span>${(pdePops.reduce((a, b) => a + b, 0) / NUM_SITES).toExponential(3)}</span>`;
+  log(`✓ PDE done. Max enstrophy: ${pdePops.reduce((a, b) => Math.max(a, b), 0).toExponential(3)}`, 'line-p');
+
+  // ── NEURAL NETWORK TRAINING ────────────────────────────────────────────────
+  log('🧠 Building training set (20 synthetic samples × 512 sites)…', 'line-nn');
+  await sleep(0);
+
+  const numSamples = 20;
+  const trainInputs = [], trainTargets = [];
+  const rng = mulberry32(0);
+
+  for (let samp = 0; samp < numSamples; samp++) {
+    const synthPops = new Float64Array(NUM_SITES).map(() => rng());
+    const synthSens = new Float64Array(NUM_SITES).map(() => rng() * 0.5);
+    for (let i = 0; i < NUM_SITES; i++) {
+      const inp = buildInputVec(synthPops, synthSens, i);
+      trainInputs.push(inp);
+      const neigh = NEIGHBORS[i].map(n => n >= 0 ? synthPops[n] : 0);
+      trainTargets.push(targetLambda(synthPops[i], neigh, synthSens[i]));
+    }
+    if (samp % 5 === 0) { setProgress(65 + samp / numSamples * 15); await sleep(0); }
+  }
+
+  log(`🧠 Training Λ-adapter (${trainInputs.length} samples, 200 epochs)…`, 'line-nn');
+  nnModel = new LambdaAdapter();
+  const finalLoss = nnModel.train(trainInputs, trainTargets, 200, 0.01);
+  log(`✓ Training complete. Final MSE loss: ${finalLoss.toExponential(4)}`, 'line-nn');
+  setProgress(80);
+  await sleep(0);
+
+  // ── INFERENCE ─────────────────────────────────────────────────────────────
+  log('λ Computing adapted Lambdas for quantum and PDE data…', 'line-nn');
+  quantumLambdas = new Float64Array(NUM_SITES);
+  pdeLambdas = new Float64Array(NUM_SITES);
+
+  for (let i = 0; i < NUM_SITES; i++) {
+    quantumLambdas[i] = nnModel.forward(buildInputVec(quantumPops, quantumSens, i));
+    pdeLambdas[i] = nnModel.forward(buildInputVec(pdePops, pdeSens, i));
+  }
+
+  // Display quantum lambdas by default
+  heatmapPurple(ctxL, quantumLambdas, 3);
+  document.getElementById('statsL').innerHTML =
+    `Q: avg Λ = <span>${(quantumLambdas.reduce((a, b) => a + b, 0) / NUM_SITES).toFixed(4)}</span><br>` +
+    `PDE: avg Λ = <span>${(pdeLambdas.reduce((a, b) => a + b, 0) / NUM_SITES).toFixed(4)}</span>`;
+
+  setProgress(100);
+  log('✅ Simulation complete!', 'line-w');
+  printSamples('Quantum', quantumPops, quantumSens, quantumLambdas);
+  printSamples('PDE', pdePops, pdeSens, pdeLambdas);
+
+  document.getElementById('btnStep').disabled = false;
+  document.getElementById('statusLine').textContent = 'Done.';
+  running = false;
+}
+
+function printSamples(label, pops, sens, lambdas) {
+  const slice = Array.from({ length: 10 }, (_, i) => i);
+  log(`${label} avg_pops[:10]: [${slice.map(i => pops[i].toFixed(4)).join(', ')}]`,
+    label === 'Quantum' ? 'line-q' : 'line-p');
+  log(`${label} sensations[:10]: [${slice.map(i => sens[i].toExponential(2)).join(', ')}]`,
+    label === 'Quantum' ? 'line-q' : 'line-p');
+  log(`${label} Lambdas[:10]: [${slice.map(i => lambdas[i].toFixed(4)).join(', ')}]`, 'line-nn');
+}
+
+let stepMode = 'quantum';
+document.getElementById('btnStep').addEventListener('click', () => {
+  if (!qState) return;
+  if (stepMode === 'quantum' && qState) {
+    qState.step(0.2);
+    heatmapBlue(ctxQ, qState.population(), 3);
+  } else if (stepMode === 'pde' && pdeState) {
+    pdeState.step();
+    heatmapFire(ctxP, pdeState.computeEnstrophy(), 3, PDE_N);
+  }
+});
+
+document.getElementById('btnRun').addEventListener('click', () => {
+  if (!running) runSimulation();
+});
+
+document.getElementById('btnReset').addEventListener('click', () => {
+  qState = null; pdeState = null; nnModel = null;
+  quantumPops = null; pdePops = null;
+  [ctxQ, ctxP, ctxL].forEach(c => c.clearRect(0, 0, 200, 200));
+  document.getElementById('statsQ').textContent = 'Reset.';
+  document.getElementById('statsP').textContent = 'Reset.';
+  document.getElementById('statsL').textContent = 'Reset.';
+  document.getElementById('logPanel').innerHTML = '<div class="line-w">Reset. Press ▶ Run to begin again.</div>';
+  document.getElementById('btnRun').disabled = false;
+  document.getElementById('btnStep').disabled = true;
+  setProgress(0);
+});
+</script>
+</body>
+</html>
