@@ -924,6 +924,9 @@
 
   <button id="sp-debug-toggle" onclick="toggleDebugLog()">▸ SHOW DEBUG LOG</button>
   <div id="sp-debug"></div>
+
+  <button id="sp-genre-toggle" onclick="toggleGenreLog()" style="margin-top:.4rem">▸ SHOW GENRE LOG</button>
+  <div id="sp-genre-log" style="display:none;max-height:220px;overflow-y:auto;background:rgba(0,0,0,0.4);border-radius:6px;padding:.6rem;margin-top:.3rem;font-family:monospace;font-size:.52rem;line-height:1.5"></div>
 </div>
 
 <!-- ── TOOLTIP ── -->
@@ -973,6 +976,15 @@ let featureCache={};
 function loadFeatureCache(){
   try{featureCache=JSON.parse(localStorage.getItem(CACHE_KEY)||'{}');}
   catch{featureCache={};}
+  // Wipe stale no-id markers so genre enrichment retries properly
+  let wiped=0;
+  for(const id of Object.keys(featureCache)){
+    if(featureCache[id]?._v?.g==='no-id'||featureCache[id]?._v?.g===false){
+      delete featureCache[id]._v.g;
+      wiped++;
+    }
+  }
+  if(wiped>0) console.log('[GENRE] wiped '+wiped+' stale no-id markers');
 }
 let _saveTimer=null;
 function queueSave(){
@@ -1142,83 +1154,93 @@ function genresToFeatures(genres){
 const artistGenreCache = {};
 
 async function runGenreEnrichment(){
-  if(!accessToken){ dbg('no access token — genre enrichment skipped','warn'); return; }
+  if(!accessToken){ dbgG('no access token — skipped','warn'); return; }
+  dbgG('▶ runGenreEnrichment() called','info');
+  dbgG(`songs.length=${songs.length}, token=${accessToken?'ok':'MISSING'}`,'info');
 
-  // Check for missing artistIds (old scan cache pre-dates artistId field)
-  // Fix: re-fetch artistIds via /v1/tracks batch (50/call) — faster than rescan
+  // Phase 1: fix missing artistIds via /v1/tracks batch
   const missingArtistId = songs.filter(s=>!s.artistId&&!featureCache[s.id]?._v?.g);
+  dbgG(`phase 1: ${missingArtistId.length} songs need artistId`,'info');
   if(missingArtistId.length>0){
-    dbg(`fixing ${missingArtistId.length} songs missing artistId — re-fetching from Spotify...`,'warn');
     let fixed=0;
     for(let i=0;i<missingArtistId.length;i+=50){
       const batch=missingArtistId.slice(i,i+50);
       const ids=batch.map(s=>s.id).join(',');
       try{
         const data=await apiGet(`https://api.spotify.com/v1/tracks?ids=${ids}`);
+        dbgG(`  batch ${Math.floor(i/50)+1}: got ${data.tracks?.length||0} tracks`,'info');
         for(const t of data.tracks||[]){
           if(!t) continue;
           const s=songs.find(x=>x.id===t.id);
-          if(s&&t.artists?.[0]?.id){
-            s.artistId=t.artists[0].id;
-            fixed++;
-          }
+          if(s&&t.artists?.[0]?.id){ s.artistId=t.artists[0].id; fixed++; }
         }
-        if((i/50)%4===0) dbg(`artistId fix: ${Math.min(i+50,missingArtistId.length)}/${missingArtistId.length}`,'info');
+        if(i===0&&data.tracks?.[0]){
+          dbgG(`  example: "${data.tracks[0].name}" → artist[0].id=${data.tracks[0].artists?.[0]?.id||'null'}`,'info');
+        }
       }catch(e){
-        dbg(`artistId fix batch error: ${e.message}`,'warn');
-        break;
+        dbgG(`tracks batch error: ${e.message}`,'err'); break;
       }
-      await delay(jitter(500));
+      await delay(jitter(400));
     }
-    dbg(`✦ fixed ${fixed}/${missingArtistId.length} missing artistIds`,'ok');
+    dbgG(`✦ phase 1: fixed ${fixed}/${missingArtistId.length} artistIds`,'ok');
+    queueSave();
   }
 
-  // Collect unique artist IDs that still need fetching
+  // Phase 2: collect unique artists still needing genre data
   const needsFetch = new Set();
+  let noId=0;
   for(const s of songs){
     if(featureCache[s.id]?._v?.g) continue;
-    if(s.artistId && !artistGenreCache[s.artistId]) needsFetch.add(s.artistId);
+    if(s.artistId) needsFetch.add(s.artistId);
+    else noId++;
   }
-
-  const alreadyCached = songs.filter(s=>featureCache[s.id]?._v?.g&&featureCache[s.id]._v.g!=='no-id').length;
-  dbg(`▶ genre: ${needsFetch.size} artists to fetch, ${alreadyCached} already cached, ${missingArtistId.length} need rescan`,'info');
+  const already=songs.filter(s=>featureCache[s.id]?._v?.g).length;
+  dbgG(`phase 2: ${needsFetch.size} artists to fetch, ${already} already done, ${noId} still no artistId`,'info');
+  const sampleIds=[...needsFetch].slice(0,5);
+  dbgG(`sample artistIds: [${sampleIds.join(', ')}]`,'info');
   updateHUD();
 
   if(!needsFetch.size){
-    applyGenresToAll();
-    return;
+    dbgG('nothing to fetch → applying to all','info');
+    applyGenresToAll(); return;
   }
 
+  // Phase 3: fetch genres in batches of 50
   const ids=[...needsFetch];
-  let fetched=0;
+  let fetched=0, withGenres=0, emptyGenres=0;
   for(let i=0;i<ids.length;i+=50){
     const batch=ids.slice(i,i+50);
     try{
       const data=await apiGet(`https://api.spotify.com/v1/artists?ids=${batch.join(',')}`);
-      for(const artist of data.artists||[]){
-        if(artist) artistGenreCache[artist.id]={genres:artist.genres||[],name:artist.name};
+      const artists=data.artists||[];
+      dbgG(`  artist batch ${Math.floor(i/50)+1}/${Math.ceil(ids.length/50)}: got ${artists.length} artists`,'info');
+      for(const a of artists){
+        if(!a){ emptyGenres++; continue; }
+        artistGenreCache[a.id]={genres:a.genres||[],name:a.name};
+        if(a.genres?.length) withGenres++; else emptyGenres++;
       }
+      const ex=artists.find(a=>a?.genres?.length);
+      if(ex) dbgG(`  e.g. "${ex.name}": [${ex.genres.slice(0,3).join(', ')}]`,'info');
       fetched+=batch.length;
-      if(fetched%200===0||fetched===ids.length) dbg(`genre artists: ${fetched}/${ids.length} fetched`,'info');
-      applyGenresToAll(); // apply progressively
+      applyGenresToAll();
       updateHUD();
     }catch(e){
-      if(e.message==='auth_expired'||e.message==='forbidden'){ dbg(`genre: stopped — ${e.message}`,'err'); return; }
-      dbg(`genre batch ${i}-${i+50} error: ${e.message}`,'warn');
+      if(e.message==='auth_expired'||e.message==='forbidden'){ dbgG(`stopped: ${e.message}`,'err'); return; }
+      dbgG(`artist batch error at ${i}: ${e.message}`,'warn');
     }
-    await delay(jitter(600));
+    await delay(jitter(500));
   }
 
   applyGenresToAll();
   const cs=getGenreChecksum();
-  dbg(`✦ genre complete — ${cs.genreDone}/${cs.total} tracks enriched`,'ok');
+  dbgG(`✦ done — ${cs.genreReal}/${cs.total} enriched · ${withGenres} artists w/genres · ${emptyGenres} empty`,'ok');
   updateHUD();
 }
 
 function applyGenresToAll(){
   let applied=0, skipped=0;
   for(const s of songs){
-    if(featureCache[s.id]?._v?.g) continue;
+    if(featureCache[s.id]?._v?.g&&featureCache[s.id]._v.g!=='no-id') continue;
     const gdata=artistGenreCache[s.artistId];
     if(!gdata){ skipped++; continue; }
     const features=genresToFeatures(gdata.genres);
@@ -1271,22 +1293,31 @@ function queueAudioAnalysis(songIdx){
 }
 
 async function drainAudioQueue(){
+  if(_audioRunning) return; // already running
   _audioRunning=true;
+  const AUDIO_WORKERS=3;
   let processed=0;
-  while(_audioQueue.length){
-    const idx=_audioQueue.shift();
-    const s=songs[idx];
-    if(!s||(!s.preview_url&&!featureCache[s.id]?.previewUrl)||featureCache[s.id]?._v?.a) continue;
-    const url=s.preview_url||featureCache[s.id]?.previewUrl;
-    await analyzePreview(s, idx, url);
-    processed++;
-    if(processed%10===0) updateHUD(); // live counter tick every 10 tracks
-    await delay(150);
+
+  async function audioWorker(){
+    while(_audioQueue.length){
+      const idx=_audioQueue.shift();
+      if(idx===undefined) return;
+      const s=songs[idx];
+      if(!s||featureCache[s.id]?._v?.a) continue;
+      const url=s.preview_url||featureCache[s.id]?.previewUrl;
+      if(!url) continue;
+      await analyzePreview(s, idx, url);
+      processed++;
+      if(processed%10===0) updateHUD();
+      await delay(80);
+    }
   }
+
+  await Promise.all(Array.from({length:AUDIO_WORKERS},()=>audioWorker()));
   _audioRunning=false;
-  updateHUD(); // final tick
+  updateHUD();
   const ast=getAudioStats();
-  dbg(`✦ audio analysis complete — ${ast.analyzed} tracks analyzed`,'ok');
+  dbg(`✦ audio complete — ${ast.analyzed} analyzed`,'ok');
 }
 
 async function analyzePreview(s, songIdx, previewUrl){
@@ -1419,31 +1450,39 @@ async function runPassiveAudioAnalysis(){
     .map((s,i)=>({s,i}))
     .filter(({s})=>!featureCache[s.id]?._v?.a);
 
-  if(!toAnalyze.length){ dbg('audio: all tracks already analyzed ✓','ok'); return; }
-
-  // shuffle for representative early sample
+  if(!toAnalyze.length){ dbg('audio: all analyzed ✓','ok'); return; }
   toAnalyze.sort(()=>Math.random()-.5);
 
-  dbg(`▶ audio: ${toAnalyze.length} tracks to analyze (iTunes + Deezer preview lookup)`,'info');
+  const RESOLVE_WORKERS=4;
+  dbg(`▶ audio: ${toAnalyze.length} tracks · ${RESOLVE_WORKERS} iTunes workers`,'info');
 
-  let resolved=0, failed=0, analyzed=0;
-  for(const {s,i} of toAnalyze){
-    if(_enrichToken !== _enrichToken) break; // cancelled check
-    const url=await resolvePreview(s);
-    if(url){
-      resolved++;
-      s.preview_url=url; // patch the live song object too
-      queueAudioAnalysis(i);
-      if(resolved%50===0){
-        dbg(`audio: resolved ${resolved} previews — ${analyzed} analyzed, ${failed} not found`,'info');
-        updateHUD();
-      }
-    } else {
-      failed++;
+  const queue=[...toAnalyze];
+  let resolved=0, failed=0;
+  const resolveToken=_enrichToken;
+
+  async function resolveWorker(){
+    while(queue.length){
+      if(_enrichToken!==resolveToken) return; // cancelled
+      const item=queue.shift();
+      if(!item) return;
+      const {s,i}=item;
+      if(featureCache[s.id]?._v?.a) continue;
+      const url=await resolvePreview(s);
+      if(url){
+        s.preview_url=url;
+        queueAudioAnalysis(i);
+        resolved++;
+        if(resolved%25===0){
+          dbg(`audio: ${resolved} previews resolved, ${queue.length} remaining`,'info');
+          updateHUD();
+        }
+      } else { failed++; }
+      await delay(120);
     }
-    await delay(250); // gentle pacing for iTunes API
   }
-  dbg(`audio preview resolution done — resolved:${resolved} failed:${failed}`,'ok');
+
+  await Promise.all(Array.from({length:RESOLVE_WORKERS},()=>resolveWorker()));
+  dbg(`✦ audio resolution done — resolved:${resolved} failed:${failed}`,'ok');
 }
 
 function getAudioStats(){
@@ -1813,134 +1852,131 @@ async function lastfmFetch(url){
 
 async function runEnrichment(){
   if(!lastfmKey){ dbg('no lastfmKey — enrichment skipped','warn'); return; }
-  if(enrichActive){ dbg(`already active (token ${_enrichToken}) — ignoring`,'warn'); return; }
+  if(enrichActive){ dbg(`already active — ignoring`,'warn'); return; }
   enrichActive=true;
   enrichConsecFails=0;
   const myToken=++_enrichToken;
   setEnrichError(null);
+
+  const WORKERS=5; // parallel workers — ~5x speedup
   const toProcess=songs.filter(s=>!featureCache[s.id]?.lastfm);
-  dbg(`▶ start: ${toProcess.length} tracks (token ${myToken})`,'info');
+  dbg(`▶ lastfm: ${toProcess.length} tracks · ${WORKERS} workers (token ${myToken})`,'info');
   updateHUD();
 
-  let foundCount=0, skippedCount=0;
-  const skipReasons={}; // aggregate skip reasons
-  let sampleLogged=0;   // log first 5 queries so we can see what's being sent
+  let idx=0, foundCount=0, skippedCount=0;
+  const skipReasons={};
+  function logSkip(r){ skipReasons[r]=(skipReasons[r]||0)+1; }
 
-  function logSkip(reason){
-    skipReasons[reason]=(skipReasons[reason]||0)+1;
-    // every 50 skips, dump the aggregate
-    const total=Object.values(skipReasons).reduce((a,b)=>a+b,0);
-    if(total%50===0){
-      const summary=Object.entries(skipReasons).map(([k,v])=>`${k}:${v}`).join(' | ');
-      dbg(`skip breakdown — ${summary}`,'warn');
-    }
-  }
+  async function worker(wId){
+    while(true){
+      if(_enrichToken!==myToken) return; // cancelled
+      const i=idx++;
+      if(i>=toProcess.length) return; // done
+      const s=toProcess[i];
 
-  for(let i=0;i<toProcess.length;i++){
-    if(_enrichToken!==myToken){ dbg(`cancelled at ${i} — found:${foundCount} skipped:${skippedCount}`,'warn'); enrichActive=false; return; }
-    const s=toProcess[i];
-    if(i===0||i%25===0){
-      dbg(`${i}/${toProcess.length} found:${foundCount} skipped:${skippedCount} fails:${enrichConsecFails}`,'info');
-      updateHUD();
-    }
+      // progress log every 100 tracks (across all workers)
+      if(i%100===0){
+        dbg(`${i}/${toProcess.length} found:${foundCount} skipped:${skippedCount}`,'info');
+        updateHUD();
+      }
+      // skip breakdown every 250
+      if(skippedCount>0&&skippedCount%250===0){
+        const summary=Object.entries(skipReasons).map(([k,v])=>`${k}:${v}`).join(' | ');
+        dbg(`skip breakdown — ${summary}`,'warn');
+      }
 
-    try{
       const attempts=[
         ()=>lastfmTagUrl(s.artist, s.name, lastfmKey),
         ()=>lastfmTagUrl(cleanArtist(s.artist), s.name, lastfmKey),
         ()=>lastfmTagUrl(s.artist, s.name.split(/[\(\[-]/)[0], lastfmKey),
       ];
 
-      // log first 5 queries + every 200th so we can see what's being sent
-      if(sampleLogged<5 || i%200===0){
-        const ca=cleanArtist(s.artist), ct=cleanTrack(s.name);
-        dbg(`sample query — raw:"${s.artist.slice(0,18)}" → "${ca.slice(0,18)}" | track:"${s.name.slice(0,18)}" → "${ct.slice(0,18)}"`,'info');
-        sampleLogged++;
-      }
-
       let d=null, fetchOk=false;
-
-      for(let attempt=0; attempt<attempts.length; attempt++){
+      for(let attempt=0;attempt<attempts.length;attempt++){
         const url=attempts[attempt]();
         let r;
         try{ r=await lastfmFetch(url); }
         catch(fe){
-          dbg(`fetch err [${i}] attempt ${attempt}: ${fe.message}`,'warn');
           enrichConsecFails++;
-          if(enrichConsecFails>=15){ dbg('15 consecutive fetch failures — stopping','err'); setEnrichError('Network issues — Open Settings → Retry.'); enrichActive=false; return; }
-          await delay(1000); break;
+          if(enrichConsecFails>=20){ dbg('20 consecutive fails — stopping','err'); setEnrichError('Network issues — Open Settings → Retry.'); enrichActive=false; _enrichToken++; return; }
+          await delay(800); break;
         }
-        if(r.status===401||r.status===403){ dbg(`HTTP ${r.status} — key rejected`,'err'); setEnrichError(`Last.fm key rejected (HTTP ${r.status})`); enrichActive=false; return; }
-        if(r.status===429){ dbg('HTTP 429 — rate limited 60s','warn'); setEnrichError('Last.fm rate limited — resuming in 60s...'); await delay(60000); setEnrichError(null); i--; break; }
-        if(!r.ok){ enrichConsecFails++; logSkip(`http-${r.status}`); fetchOk=true; break; }
+        if(r.status===401||r.status===403){ dbg(`HTTP ${r.status} — key rejected`,'err'); setEnrichError(`Last.fm key rejected`); enrichActive=false; _enrichToken++; return; }
+        if(r.status===429){ dbg('rate limited 60s','warn'); setEnrichError('Last.fm rate limit — pausing 60s...'); await delay(60000); setEnrichError(null); attempt--; continue; }
+        if(!r.ok){ logSkip(`http-${r.status}`); skippedCount++; fetchOk=true; break; }
 
         let parsed;
-        try{ parsed=await r.json(); }catch(je){ dbg(`JSON fail: ${je.message}`,'warn'); await delay(340); break; }
+        try{ parsed=await r.json(); }
+        catch(je){ logSkip('json-fail'); skippedCount++; fetchOk=true; break; }
 
         if(parsed.error){
-          const FATAL=[4,9,10,13,14,26];
-          if(FATAL.includes(parsed.error)){ dbg(`FATAL lfm err ${parsed.error}: ${parsed.message}`,'err'); setEnrichError(`Last.fm error ${parsed.error}: ${parsed.message||'?'}`); enrichActive=false; return; }
-          if(parsed.error===6){
-            if(attempt<attempts.length-1){ await delay(80); continue; } // try next cleanup
-            logSkip('err6-not-found');
-            fetchOk=true; break;
-          }
-          logSkip(`err${parsed.error}`);
-          fetchOk=true; break;
-        }
-
-        // success — check if tags actually present
-        const tags=parsed?.toptags?.tag;
-        if(!tags||!tags.length){
-          logSkip('no-tags');
+          if(parsed.error===6||parsed.error===7||parsed.error===8){
+            if(attempt<attempts.length-1){ await delay(60); continue; }
+            logSkip(`err${parsed.error}-not-found`); skippedCount++;
+          } else if([4,9,10,13,14,26].includes(parsed.error)){
+            dbg(`fatal lastfm error ${parsed.error}`,'err'); setEnrichError(`Last.fm error ${parsed.error}`); enrichActive=false; _enrichToken++; return;
+          } else if(parsed.error===11||parsed.error===16){
+            await delay(2000); attempt--; continue;
+          } else { logSkip(`err${parsed.error}`); skippedCount++; }
           fetchOk=true; break;
         }
 
         d=parsed; fetchOk=true; break;
       }
 
-      if(!fetchOk){ await delay(340); continue; }
-      if(!d){ skippedCount++; await delay(100); continue; }
+      if(!fetchOk||!d){ skippedCount++; continue; }
 
-      // got valid tags!
-      enrichConsecFails=0; foundCount++;
-      const tags=d.toptags.tag;
-      const lf=tagsToFeatures(tags);
-      if(!featureCache[s.id]) featureCache[s.id]={};
-      featureCache[s.id].lastfm=lf;
-      featureCache[s.id].tags=tags.slice(0,5).map(t=>t.name);
-      if(foundCount<=3||foundCount%50===0) dbg(`✦ found tags [${i}] "${s.name.slice(0,25)}" → ${featureCache[s.id].tags.join(', ')}`,'ok');
-      const sidx=songs.indexOf(s);
-      if(sidx>=0&&worldPositions){
-        const oldPos={...worldPositions[sidx]};
-        s.f=getFeatures(s);
-        const newPos=computeWorldPos(s,colorMode);
-        if(Math.hypot(newPos.wx-oldPos.wx,newPos.wy-oldPos.wy)>.008){ startTransition(sidx,oldPos,newPos); worldPositions[sidx]=newPos; }
+      const tags=(d.toptags?.tag||[]).slice(0,8).map(t=>t.name?.toLowerCase()).filter(Boolean);
+      if(!tags.length){ logSkip('no-tags'); skippedCount++; continue; }
+
+      // map tags to features
+      const tagFeatures={valence:null,energy:null,danceability:null};
+      const MOOD_MAP={'happy':[.8,.65,.7],'sad':[.2,.35,.4],'energetic':[.6,.88,.75],'calm':[.6,.25,.3],'aggressive':[.3,.88,.6],'romantic':[.65,.4,.55],'melancholy':[.2,.38,.35],'euphoric':[.88,.8,.75],'dark':[.2,.6,.4],'uplifting':[.78,.72,.68]};
+      let wt=0;
+      for(const tag of tags){
+        for(const [k,[v,e,d2]] of Object.entries(MOOD_MAP)){
+          if(tag.includes(k)){ tagFeatures.valence=(tagFeatures.valence||0)+v; tagFeatures.energy=(tagFeatures.energy||0)+e; tagFeatures.danceability=(tagFeatures.danceability||0)+d2; wt++; }
+        }
       }
-      queueSave();
+      if(wt>0){ tagFeatures.valence/=wt; tagFeatures.energy/=wt; tagFeatures.danceability/=wt; }
+      else { tagFeatures.valence=null; tagFeatures.energy=null; tagFeatures.danceability=null; }
 
-    }catch(e){
-      dbg(`exception [${i}] "${s.name.slice(0,20)}": ${e.message}`,'err');
-      enrichConsecFails++;
+      if(!featureCache[s.id]) featureCache[s.id]={};
+      featureCache[s.id].lastfm={...tagFeatures, tags};
+      featureCache[s.id].tags=tags;
+      enrichConsecFails=0;
+      foundCount++;
+      s.f=getFeatures(s);
+      const si=songs.indexOf(s);
+      if(si>=0&&worldPositions){
+        const np=computeWorldPos(s,colorMode);
+        startTransition(si,worldPositions[si],np);
+        worldPositions[si]=np;
+      }
+      if(foundCount%50===0){ queueSave(); updateHUD(); }
+      await delay(jitter(120)); // tight delay — workers share the rate limit budget
     }
-    await delay(340);
   }
+
+  // Launch all workers concurrently
+  await Promise.all(Array.from({length:WORKERS},(_,i)=>worker(i)));
 
   if(_enrichToken===myToken){
+    queueSave();
     const summary=Object.entries(skipReasons).map(([k,v])=>`${k}:${v}`).join(' | ');
-    dbg(`✦ complete — found:${foundCount} skipped:${skippedCount} | ${summary||'no skips'}`, 'ok');
+    dbg(`✦ lastfm done — found:${foundCount} skipped:${skippedCount} | ${summary||'clean'}`,'ok');
     enrichActive=false; setEnrichError(null); updateHUD();
-  } else {
-    dbg(`loop ended, token changed ${myToken}→${_enrichToken}`,'warn');
   }
 }
+
 function retryEnrichment(){
   _enrichToken++;
   enrichActive=false;
   enrichConsecFails=0;
   setEnrichError(null);
   toggleSettings();
-  setTimeout(runEnrichment,600);
+  setTimeout(runEnrichment, 600);         // last.fm
+  setTimeout(runGenreEnrichment, 1200);   // genre
 }
 
 // ── ON-DEMAND AUDIO ANALYSIS ──────────────────────
@@ -2282,6 +2318,8 @@ let settingsOpen=false;
 
 // ── DEBUG LOG ──
 const _dbgLines=[];
+const _genreLines=[];
+let _genreLogOpen=false;
 let _debugOpen=false;
 
 function dbg(msg, type='info'){
@@ -2294,6 +2332,30 @@ function dbg(msg, type='info'){
   // surface errors automatically — show flag even if panel closed
   if(type==='err') setEnrichError(msg);
 }
+function dbgG(msg, type='info'){
+  const t=new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  _genreLines.push({t,msg,type});
+  if(_genreLines.length>200) _genreLines.shift();
+  console.log(`[GENRE ${type.toUpperCase()}] ${msg}`);
+  if(_genreLogOpen) renderGenreLog();
+}
+function renderGenreLog(){
+  const el=document.getElementById('sp-genre-log');
+  if(!el) return;
+  el.innerHTML=_genreLines.slice().reverse().map(l=>{
+    const color=l.type==='ok'?'#4ade80':l.type==='err'?'#f87171':l.type==='warn'?'#fbbf24':'#93c5fd';
+    return `<div style="color:${color};margin-bottom:3px">${l.t} ${l.msg}</div>`;
+  }).join('');
+}
+function toggleGenreLog(){
+  _genreLogOpen=!_genreLogOpen;
+  const el=document.getElementById('sp-genre-log');
+  const btn=document.getElementById('sp-genre-toggle');
+  if(el) el.style.display=_genreLogOpen?'block':'none';
+  if(btn) btn.textContent=(_genreLogOpen?'▾ HIDE':'▸ SHOW')+' GENRE LOG';
+  if(_genreLogOpen) renderGenreLog();
+}
+
 
 function renderDebugLog(){
   const el=document.getElementById('sp-debug');
