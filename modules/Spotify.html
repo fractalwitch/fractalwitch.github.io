@@ -1394,14 +1394,23 @@ async function runEnrichment(){
 
       // Last.fm returns error codes in JSON too
       if(d.error){
-        const FATAL=[4,6,10,26]; // invalid key, invalid params, banned key, suspended
-        const msg=`Last.fm error ${d.error}: ${d.message||'unknown'}`;
+        // error 6 = track not found (normal for obscure tracks — skip silently)
+        // error 7 = invalid format (skip)
+        // error 8 = operation failed temporarily (skip)
+        const SKIP=[6,7,8,11,16]; // transient / track-not-found errors, just continue
+        const FATAL=[4,9,10,13,14,26]; // actual key/auth errors
+        if(SKIP.includes(d.error)){
+          // totally normal — just no Last.fm data for this track
+          continue;
+        }
         if(FATAL.includes(d.error)){
+          const msg=`Last.fm key error ${d.error}: ${d.message||'unknown'}`;
           setEnrichError(msg+' — check your Last.fm API key');
           enrichActive=false; return;
         }
+        // unknown error — count as soft fail, keep going
         enrichConsecFails++;
-        await delay(1000); continue;
+        await delay(500); continue;
       }
 
       enrichConsecFails=0; // reset on success
