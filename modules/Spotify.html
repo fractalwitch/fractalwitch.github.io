@@ -449,6 +449,127 @@
   }
   .axis-label { transition: opacity 0.25s ease; }
 
+  /* ── SETTINGS BUTTON ── */
+  #settings-btn {
+    position: fixed;
+    bottom: 1.4rem;
+    left: 1.4rem;
+    width: 36px;
+    height: 36px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(167,139,250,0.2);
+    border-radius: 50%;
+    color: rgba(255,255,255,0.45);
+    font-size: 1rem;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 40;
+    transition: all 0.25s ease;
+  }
+  #settings-btn:hover { background: rgba(167,139,250,0.15); color: #a78bfa; border-color: rgba(167,139,250,0.5); }
+  #settings-btn.has-error {
+    border-color: rgba(255,100,100,0.6);
+    color: rgba(255,130,130,0.9);
+    animation: flagPulse 2.5s ease-in-out infinite;
+  }
+  @keyframes flagPulse {
+    0%,100% { box-shadow: 0 0 0px rgba(255,100,100,0); }
+    50%      { box-shadow: 0 0 10px rgba(255,100,100,0.4); }
+  }
+
+  /* ── SETTINGS PANEL ── */
+  #settings-panel {
+    position: fixed;
+    bottom: 4.6rem;
+    left: 1.4rem;
+    width: 280px;
+    background: rgba(6,4,14,0.96);
+    border: 1px solid rgba(167,139,250,0.25);
+    border-radius: 10px;
+    padding: 1.2rem;
+    z-index: 50;
+    display: none;
+    backdrop-filter: blur(12px);
+    font-family: var(--mono);
+    transform-origin: bottom left;
+    animation: panelOpen 0.2s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes panelOpen {
+    from { opacity:0; transform: scale(0.88) translateY(8px); }
+    to   { opacity:1; transform: scale(1) translateY(0); }
+  }
+  .sp-title {
+    font-size: .6rem;
+    letter-spacing: .2em;
+    color: rgba(167,139,250,0.7);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+  .sp-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(167,139,250,0.15);
+  }
+  .sp-error {
+    background: rgba(255,60,60,0.07);
+    border: 1px solid rgba(255,80,80,0.25);
+    border-radius: 6px;
+    padding: .7rem .8rem;
+    margin-bottom: .9rem;
+    display: none;
+  }
+  .sp-error-label {
+    font-size: .48rem;
+    letter-spacing: .15em;
+    color: rgba(255,120,120,0.7);
+    margin-bottom: .35rem;
+  }
+  .sp-error-msg {
+    font-size: .58rem;
+    color: rgba(255,160,160,0.85);
+    line-height: 1.6;
+    letter-spacing: .03em;
+  }
+  .sp-section {
+    margin-bottom: .9rem;
+  }
+  .sp-label {
+    font-size: .48rem;
+    letter-spacing: .15em;
+    color: rgba(255,255,255,0.25);
+    margin-bottom: .3rem;
+  }
+  .sp-value {
+    font-size: .55rem;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: .05em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sp-btn {
+    width: 100%;
+    padding: .55rem;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 5px;
+    color: rgba(255,255,255,0.4);
+    font-family: var(--mono);
+    font-size: .58rem;
+    letter-spacing: .15em;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: .4rem;
+  }
+  .sp-btn:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7); border-color: rgba(255,255,255,0.25); }
+  .sp-btn.danger { border-color: rgba(255,100,100,0.25); color: rgba(255,130,130,0.6); }
+  .sp-btn.danger:hover { background: rgba(255,60,60,0.08); color: rgba(255,160,160,0.9); border-color: rgba(255,100,100,0.5); }
+
   /* ── CLUSTER NAMES ── */
   .cluster-label {
     position: fixed;
@@ -733,6 +854,39 @@
   <button class="ctrl-btn" onclick="resetView()" title="reset view">⊙</button>
   <button class="ctrl-btn" onclick="zoomIn()" title="zoom in">+</button>
   <button class="ctrl-btn" onclick="zoomOut()" title="zoom out">−</button>
+</div>
+
+<!-- ── SETTINGS BUTTON ── -->
+<button id="settings-btn" onclick="toggleSettings()" title="settings">⚙</button>
+
+<!-- ── SETTINGS PANEL ── -->
+<div id="settings-panel">
+  <div class="sp-title">SETTINGS</div>
+
+  <!-- error readout — only visible when errors present -->
+  <div class="sp-error" id="sp-error-block">
+    <div class="sp-error-label">⚑ SYSTEM ALERT</div>
+    <div class="sp-error-msg" id="sp-error-msg"></div>
+  </div>
+
+  <!-- current API keys (display only) -->
+  <div class="sp-section">
+    <div class="sp-label">SPOTIFY CLIENT ID</div>
+    <div class="sp-value" id="sp-client-id">—</div>
+  </div>
+  <div class="sp-section">
+    <div class="sp-label">LAST.FM API KEY</div>
+    <div class="sp-value" id="sp-lastfm-key">—</div>
+  </div>
+
+  <!-- crystallization status -->
+  <div class="sp-section">
+    <div class="sp-label">CRYSTALLIZATION</div>
+    <div class="sp-value" id="sp-crystal-status">—</div>
+  </div>
+
+  <button class="sp-btn" onclick="retryEnrichment()">⟳ RETRY CRYSTALLIZATION</button>
+  <button class="sp-btn danger" onclick="logOut()">↩ LOG OUT</button>
 </div>
 
 <!-- ── TOOLTIP ── -->
@@ -1189,42 +1343,108 @@ async function fetchAllLiked(){
 // LASTFM PROGRESSIVE ENRICHMENT
 // ═══════════════════════════════════════════════════
 let enrichActive=false;
+let enrichError=null; // null = ok, string = error message
+let enrichConsecFails=0;
+
+function setEnrichError(msg){
+  enrichError=msg;
+  const btn=document.getElementById('settings-btn');
+  const block=document.getElementById('sp-error-block');
+  const msgEl=document.getElementById('sp-error-msg');
+  if(btn) { btn.classList.toggle('has-error', !!msg); btn.textContent=msg?'⚑':'⚙'; }
+  if(block) block.style.display=msg?'block':'none';
+  if(msgEl&&msg) msgEl.textContent=msg;
+  updateSettingsPanel();
+}
+
 async function runEnrichment(){
   if(!lastfmKey||enrichActive) return;
   enrichActive=true;
+  enrichConsecFails=0;
+  setEnrichError(null);
   const toProcess=songs.filter(s=>!featureCache[s.id]?.lastfm);
   updateHUD();
+
   for(let i=0;i<toProcess.length;i++){
     const s=toProcess[i];
     try{
       const url=`https://ws.audioscrobbler.com/2.0/?method=track.getTopTags&artist=${encodeURIComponent(s.artist)}&track=${encodeURIComponent(s.name)}&api_key=${lastfmKey}&format=json&autocorrect=1`;
       const r=await fetch(url);
-      if(r.ok){
-        const d=await r.json();
-        const tags=d?.toptags?.tag;
-        if(tags&&tags.length){
-          const lf=tagsToFeatures(tags);
-          if(!featureCache[s.id]) featureCache[s.id]={};
-          featureCache[s.id].lastfm=lf;
-          featureCache[s.id].tags=tags.slice(0,5).map(t=>t.name);
-          const idx=songs.indexOf(s);
-          if(idx>=0&&worldPositions){
-            const oldPos={...worldPositions[idx]};
-            s.f=getFeatures(s);
-            const newPos=computeWorldPos(s,colorMode);
-            if(Math.hypot(newPos.wx-oldPos.wx,newPos.wy-oldPos.wy)>.008){
-              startTransition(idx,oldPos,newPos);
-              worldPositions[idx]=newPos;
-            }
-          }
-          queueSave();
-        }
+
+      if(r.status===401||r.status===403){
+        setEnrichError(`Last.fm API key rejected (HTTP ${r.status}) — check your key in the login screen`);
+        enrichActive=false; return;
       }
-    }catch{}
+      if(r.status===429){
+        setEnrichError('Last.fm rate limited — crystallization paused, will auto-resume in 60s');
+        await delay(60000);
+        setEnrichError(null);
+        i--; continue; // retry same song
+      }
+      if(!r.ok){
+        enrichConsecFails++;
+        if(enrichConsecFails>=5){
+          setEnrichError(`Last.fm API unresponsive (HTTP ${r.status}) after 5 attempts — crystallization paused`);
+          enrichActive=false; return;
+        }
+        await delay(2000); continue;
+      }
+
+      const d=await r.json();
+
+      // Last.fm returns error codes in JSON too
+      if(d.error){
+        const FATAL=[4,6,10,26]; // invalid key, invalid params, banned key, suspended
+        const msg=`Last.fm error ${d.error}: ${d.message||'unknown'}`;
+        if(FATAL.includes(d.error)){
+          setEnrichError(msg+' — check your Last.fm API key');
+          enrichActive=false; return;
+        }
+        enrichConsecFails++;
+        await delay(1000); continue;
+      }
+
+      enrichConsecFails=0; // reset on success
+      const tags=d?.toptags?.tag;
+      if(tags&&tags.length){
+        const lf=tagsToFeatures(tags);
+        if(!featureCache[s.id]) featureCache[s.id]={};
+        featureCache[s.id].lastfm=lf;
+        featureCache[s.id].tags=tags.slice(0,5).map(t=>t.name);
+        const idx=songs.indexOf(s);
+        if(idx>=0&&worldPositions){
+          const oldPos={...worldPositions[idx]};
+          s.f=getFeatures(s);
+          const newPos=computeWorldPos(s,colorMode);
+          if(Math.hypot(newPos.wx-oldPos.wx,newPos.wy-oldPos.wy)>.008){
+            startTransition(idx,oldPos,newPos);
+            worldPositions[idx]=newPos;
+          }
+        }
+        queueSave();
+      }
+    }catch(e){
+      enrichConsecFails++;
+      if(enrichConsecFails>=10){
+        setEnrichError('Network error during crystallization — check connection. Open settings to retry.');
+        enrichActive=false; return;
+      }
+    }
     if(i%50===0) updateHUD();
     await delay(340);
   }
-  enrichActive=false;updateHUD();
+  enrichActive=false;
+  setEnrichError(null);
+  updateHUD();
+}
+
+function retryEnrichment(){
+  enrichError=null;
+  enrichActive=false;
+  enrichConsecFails=0;
+  setEnrichError(null);
+  toggleSettings();
+  setTimeout(runEnrichment, 500);
 }
 
 // ── ON-DEMAND AUDIO ANALYSIS ──────────────────────
@@ -1527,6 +1747,75 @@ function setLoadStatus(msg,progress){
   const reqInfo=_reqCount>0?` · ${_reqCount} API calls`:'';
   document.getElementById('load-count').textContent=`${pct}% complete${reqInfo}`;
 }
+// ── SETTINGS PANEL ──────────────────────────────
+let settingsOpen=false;
+
+function toggleSettings(){
+  settingsOpen=!settingsOpen;
+  const panel=document.getElementById('settings-panel');
+  if(!panel) return;
+  if(settingsOpen){
+    updateSettingsPanel();
+    panel.style.display='block';
+  } else {
+    panel.style.display='none';
+  }
+}
+
+function updateSettingsPanel(){
+  const cid=document.getElementById('sp-client-id');
+  const lfk=document.getElementById('sp-lastfm-key');
+  const cst=document.getElementById('sp-crystal-status');
+  const stored_cid=localStorage.getItem('rs_client_id')||clientId;
+  const stored_lfk=localStorage.getItem('rs_lastfm_key')||lastfmKey;
+  if(cid) cid.textContent=stored_cid?stored_cid.slice(0,8)+'...'+ stored_cid.slice(-4):'not set';
+  if(lfk) lfk.textContent=stored_lfk?stored_lfk.slice(0,6)+'...'+ stored_lfk.slice(-4):'not set — crystallization disabled';
+  if(cst){
+    const total=songs.length;
+    const done=songs.filter(s=>featureCache[s.id]?.lastfm).length;
+    if(!lastfmKey) cst.textContent='no Last.fm key';
+    else if(enrichActive) cst.textContent=`running — ${done.toLocaleString()} / ${total.toLocaleString()}`;
+    else if(enrichError) cst.textContent='paused — error detected';
+    else if(done>=total) cst.textContent=`complete ✦ ${done.toLocaleString()} songs`;
+    else cst.textContent=`${done.toLocaleString()} / ${total.toLocaleString()} — idle`;
+  }
+}
+
+function logOut(){
+  // clear auth tokens only — preserve ALL cache data
+  localStorage.removeItem('rs_token');
+  localStorage.removeItem('rs_token_exp');
+  // keep: rs_client_id, rs_lastfm_key, rs_features_v4, rs_scan_v1
+  settingsOpen=false;
+  document.getElementById('settings-panel').style.display='none';
+  // hide viz, show login
+  const canvas=document.getElementById('viz-canvas');
+  canvas.style.transition='opacity 0.4s';
+  canvas.style.opacity='0';
+  setTimeout(()=>{
+    canvas.classList.add('hidden');
+    canvas.style.opacity='1';
+    canvas.style.transition='';
+    ['hud','legend','controls','color-mode','search-wrap','ax-top','ax-bottom','ax-left','ax-right','settings-btn'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el){ el.classList.add('hidden'); el.style.display=''; }
+    });
+    document.getElementById('settings-btn').style.display='none';
+    show('login-screen');
+  },420);
+}
+
+// close settings panel when clicking outside
+document.addEventListener('click',(e)=>{
+  if(!settingsOpen) return;
+  const panel=document.getElementById('settings-panel');
+  const btn=document.getElementById('settings-btn');
+  if(panel&&btn&&!panel.contains(e.target)&&!btn.contains(e.target)){
+    settingsOpen=false;
+    panel.style.display='none';
+  }
+});
+
 function resetView(){camX=0;camY=0;camZoom=1;}
 function zoomIn(){camZoom=Math.min(30,camZoom*1.4);}
 function zoomOut(){camZoom=Math.max(.3,camZoom/1.4);}
@@ -1582,7 +1871,11 @@ function setColorMode(mode){
 function handleSearch(val){searchQuery=val;}
 function show(id){document.getElementById(id).classList.remove('hidden');}
 function hide(id){document.getElementById(id).classList.add('hidden');}
-function showHUD(){['hud','legend','controls','color-mode','search-wrap','ax-top','ax-bottom','ax-left','ax-right'].forEach(show);}
+function showHUD(){
+  ['hud','legend','controls','color-mode','search-wrap','ax-top','ax-bottom','ax-left','ax-right'].forEach(show);
+  const sb=document.getElementById('settings-btn');
+  if(sb) sb.style.display='flex';
+}
 
 // ═══════════════════════════════════════════════════
 // BOOT
