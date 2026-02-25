@@ -1179,15 +1179,32 @@ async function runGenreEnrichment(){
   if(!accessToken){ dbg('no access token — genre enrichment skipped','warn'); return; }
 
   // Check for missing artistIds (old scan cache pre-dates artistId field)
+  // Fix: re-fetch artistIds via /v1/tracks batch (50/call) — faster than rescan
   const missingArtistId = songs.filter(s=>!s.artistId&&!featureCache[s.id]?._v?.g);
   if(missingArtistId.length>0){
-    dbg(`⚠ ${missingArtistId.length} songs missing artistId — scan cache is old. Hit RESCAN LIBRARY to fix.`,'warn');
-    // Mark them as processed so counter reflects reality
-    for(const s of missingArtistId){
-      if(!featureCache[s.id]) featureCache[s.id]={};
-      if(!featureCache[s.id]._v) featureCache[s.id]._v={};
-      featureCache[s.id]._v.g='no-id'; // special marker — not real genre data
+    dbg(`fixing ${missingArtistId.length} songs missing artistId — re-fetching from Spotify...`,'warn');
+    let fixed=0;
+    for(let i=0;i<missingArtistId.length;i+=50){
+      const batch=missingArtistId.slice(i,i+50);
+      const ids=batch.map(s=>s.id).join(',');
+      try{
+        const data=await apiGet(`https://api.spotify.com/v1/tracks?ids=${ids}`);
+        for(const t of data.tracks||[]){
+          if(!t) continue;
+          const s=songs.find(x=>x.id===t.id);
+          if(s&&t.artists?.[0]?.id){
+            s.artistId=t.artists[0].id;
+            fixed++;
+          }
+        }
+        if((i/50)%4===0) dbg(`artistId fix: ${Math.min(i+50,missingArtistId.length)}/${missingArtistId.length}`,'info');
+      }catch(e){
+        dbg(`artistId fix batch error: ${e.message}`,'warn');
+        break;
+      }
+      await delay(jitter(500));
     }
+    dbg(`✦ fixed ${fixed}/${missingArtistId.length} missing artistIds`,'ok');
   }
 
   // Collect unique artist IDs that still need fetching
@@ -1289,21 +1306,28 @@ function queueAudioAnalysis(songIdx){
 
 async function drainAudioQueue(){
   _audioRunning=true;
+  let processed=0;
   while(_audioQueue.length){
     const idx=_audioQueue.shift();
     const s=songs[idx];
-    if(!s||!s.preview_url||featureCache[s.id]?._v?.a){ continue; }
-    await analyzePreview(s, idx);
-    await delay(200); // breathe between analyses
+    if(!s||(!s.preview_url&&!featureCache[s.id]?.previewUrl)||featureCache[s.id]?._v?.a) continue;
+    const url=s.preview_url||featureCache[s.id]?.previewUrl;
+    await analyzePreview(s, idx, url);
+    processed++;
+    if(processed%10===0) updateHUD(); // live counter tick every 10 tracks
+    await delay(150);
   }
   _audioRunning=false;
+  updateHUD(); // final tick
+  const ast=getAudioStats();
+  dbg(`✦ audio analysis complete — ${ast.analyzed} tracks analyzed`,'ok');
 }
 
-async function analyzePreview(s, songIdx){
-  if(!s.preview_url) return;
+async function analyzePreview(s, songIdx, previewUrl){
+  if(!previewUrl) return;
   try{
     if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-    const resp=await fetch(s.preview_url);
+    const resp=await fetch(previewUrl);
     if(!resp.ok) return;
     const buf=await resp.arrayBuffer();
     const offline=new OfflineAudioContext(1,audioCtx.sampleRate*15,audioCtx.sampleRate);
@@ -1601,6 +1625,7 @@ function onSuccess(){ _throttleMs = Math.max(THROTTLE_MIN, _throttleMs * 0.98); 
 function onRateLimit(){ _throttleMs = Math.min(THROTTLE_MAX, _throttleMs * 2.5); } // back off hard on 429
 
 async function apiGet(url, _retries=0){
+  if(!accessToken){ dbg('apiGet: no access token','err'); throw new Error('auth_expired'); }
   const minGap=jitter(_throttleMs);
   const now=Date.now(), gap=now-_lastApiCall;
   if(gap<minGap) await delay(minGap-gap);
@@ -1615,40 +1640,44 @@ async function apiGet(url, _retries=0){
     r=await fetch(url,{headers:{Authorization:`Bearer ${accessToken}`},signal:controller.signal});
     clearTimeout(tid);
   }catch(e){
-    if(e.name==='AbortError') throw new Error('Request timed out — check connection');
+    if(e.name==='AbortError'){
+      dbg(`apiGet timeout: ${url.slice(0,60)}`,'warn');
+      throw new Error('Request timed out — check connection');
+    }
+    dbg(`apiGet fetch error: ${e.message}`,'warn');
     throw new Error('auth_expired');
   }
 
-  if(r.status===401||r.status===403) throw new Error('auth_expired');
+  if(r.status===401||r.status===403){
+    dbg(`Spotify ${r.status} — token rejected`,'err');
+    throw new Error('auth_expired');
+  }
 
   if(r.status===429){
     const retryAfterHeader=r.headers.get('Retry-After');
     const isPunishmentBlock=(_tracksLoadedSoFar===0 && _reqCount<=2);
-
-    onRateLimit(); // back throttle off hard
+    onRateLimit();
     if(isPunishmentBlock){
-      // blocked before even starting = Client ID punishment block
-      // do NOT retry — that makes it worse. bail immediately.
+      dbg('Spotify 429 on first calls — Client ID punishment block','err');
       throw new Error('CLIENT_ID_BLOCKED');
     }
-
     let waitSecs;
     if(retryAfterHeader){
       waitSecs=parseInt(retryAfterHeader);
-      if(waitSecs>=3600) throw new Error('CLIENT_ID_BLOCKED'); // >1hr = punishment block, bail
+      if(waitSecs>=3600){ dbg('Spotify 429 Retry-After >1hr — punishment block','err'); throw new Error('CLIENT_ID_BLOCKED'); }
+      dbg(`Spotify 429 rate limit — Retry-After: ${waitSecs}s`,'warn');
       setLoadDetail(`HTTP 429 · Retry-After: ${waitSecs}s`);
     } else {
       waitSecs=jitter(Math.pow(2,_retries+1)*10);
+      dbg(`Spotify 429 rate limit — backoff ${waitSecs}s`,'warn');
       setLoadDetail(`HTTP 429 · no header · backoff ${waitSecs}s`);
     }
-
-    if(_retries>=3) throw new Error('rate_limited_hard');
-
+    if(_retries>=3){ dbg('Spotify 429 — max retries reached','err'); throw new Error('rate_limited_hard'); }
     for(let i=waitSecs;i>0;i--){
       const pct=(waitSecs-i)/waitSecs;
       const filled=Math.floor(pct*20);
       const bar='█'.repeat(filled)+'░'.repeat(20-filled);
-      setLoadStatus(`⏳ RATE LIMITED · resuming in ${i}s  [${bar}]`, 0.01);
+      setLoadStatus(`⏳ RATE LIMITED · resuming in ${i}s  [${bar}]`,0.01);
       await delay(1000);
     }
     setLoadStatus('RESUMING SCAN...',0.01);
@@ -1657,13 +1686,17 @@ async function apiGet(url, _retries=0){
     return apiGet(url, _retries+1);
   }
 
-  if(!r.ok) throw new Error(`Spotify HTTP ${r.status}`);
+  if(!r.ok){
+    dbg(`Spotify HTTP ${r.status}: ${url.slice(0,60)}`,'warn');
+    throw new Error(`Spotify HTTP ${r.status}`);
+  }
   try{
-    const json = await r.json();
-    onSuccess(); // gradually tighten throttle on clean responses
+    const json=await r.json();
+    onSuccess();
     return json;
-  }catch(e){ throw new Error('auth_expired'); }
+  }catch(e){ dbg('apiGet JSON parse error','warn'); throw new Error('auth_expired'); }
 }
+
 
 function setLoadDetail(msg){
   const el=document.getElementById('load-detail');
@@ -2327,10 +2360,14 @@ function toggleSettings(){
   if(settingsOpen){
     updateSettingsPanel();
     panel.style.display='block';
+    // keep refreshing while open
+    if(!_settingsRefreshTimer) _settingsRefreshTimer=setInterval(updateSettingsPanel,2000);
   } else {
     panel.style.display='none';
+    clearInterval(_settingsRefreshTimer); _settingsRefreshTimer=null;
   }
 }
+let _settingsRefreshTimer=null;
 
 function updateSettingsPanel(){
   const cid=document.getElementById('sp-client-id');
@@ -2491,27 +2528,7 @@ async function boot(){
 boot();
 </script>
 </body>
-</html>async function apiGet(url,retry=0){
-  if(!accessToken) throw new Error('auth_expired');
-  if(Date.now()>tokenExp){ dbg('Spotify token expired — re-auth needed','err'); throw new Error('auth_expired'); }
-  await enforceThrottle();
-  const r=await fetch(url,{headers:{Authorization:`Bearer ${accessToken}`},signal:AbortSignal.timeout(15000)});
-  if(r.status===401){ dbg('Spotify 401 — token rejected','err'); throw new Error('auth_expired'); }
-  if(r.status===403){ dbg(`Spotify 403 forbidden: ${url.slice(0,60)}`,'err'); throw new Error('forbidden'); }
-  if(r.status===429){
-    const wait=(parseInt(r.headers.get('Retry-After')||'10')+1)*1000;
-    dbg(`Spotify 429 rate limit — waiting ${Math.round(wait/1000)}s`,'warn');
-    _throttleMs=Math.min(_throttleMs*2.5,8000);
-    await delay(wait); return apiGet(url,retry);
-  }
-  if(!r.ok){
-    dbg(`Spotify HTTP ${r.status} for ${url.slice(0,60)}`,'warn');
-    if(retry<3){ await delay(2000); return apiGet(url,retry+1); }
-    throw new Error(`http_${r.status}`);
-  }
-  _throttleMs=Math.max(1500,_throttleMs*.98);
-  return r.json();
-}
+</html>
 
 
 async function analyzePreview(previewUrl){
@@ -2628,15 +2645,32 @@ async function runGenreEnrichment(){
   if(!accessToken){ dbg('no access token — genre enrichment skipped','warn'); return; }
 
   // Check for missing artistIds (old scan cache pre-dates artistId field)
+  // Fix: re-fetch artistIds via /v1/tracks batch (50/call) — faster than rescan
   const missingArtistId = songs.filter(s=>!s.artistId&&!featureCache[s.id]?._v?.g);
   if(missingArtistId.length>0){
-    dbg(`⚠ ${missingArtistId.length} songs missing artistId — scan cache is old. Hit RESCAN LIBRARY to fix.`,'warn');
-    // Mark them as processed so counter reflects reality
-    for(const s of missingArtistId){
-      if(!featureCache[s.id]) featureCache[s.id]={};
-      if(!featureCache[s.id]._v) featureCache[s.id]._v={};
-      featureCache[s.id]._v.g='no-id'; // special marker — not real genre data
+    dbg(`fixing ${missingArtistId.length} songs missing artistId — re-fetching from Spotify...`,'warn');
+    let fixed=0;
+    for(let i=0;i<missingArtistId.length;i+=50){
+      const batch=missingArtistId.slice(i,i+50);
+      const ids=batch.map(s=>s.id).join(',');
+      try{
+        const data=await apiGet(`https://api.spotify.com/v1/tracks?ids=${ids}`);
+        for(const t of data.tracks||[]){
+          if(!t) continue;
+          const s=songs.find(x=>x.id===t.id);
+          if(s&&t.artists?.[0]?.id){
+            s.artistId=t.artists[0].id;
+            fixed++;
+          }
+        }
+        if((i/50)%4===0) dbg(`artistId fix: ${Math.min(i+50,missingArtistId.length)}/${missingArtistId.length}`,'info');
+      }catch(e){
+        dbg(`artistId fix batch error: ${e.message}`,'warn');
+        break;
+      }
+      await delay(jitter(500));
     }
+    dbg(`✦ fixed ${fixed}/${missingArtistId.length} missing artistIds`,'ok');
   }
 
   // Collect unique artist IDs that still need fetching
@@ -2738,21 +2772,28 @@ function queueAudioAnalysis(songIdx){
 
 async function drainAudioQueue(){
   _audioRunning=true;
+  let processed=0;
   while(_audioQueue.length){
     const idx=_audioQueue.shift();
     const s=songs[idx];
-    if(!s||!s.preview_url||featureCache[s.id]?._v?.a){ continue; }
-    await analyzePreview(s, idx);
-    await delay(200); // breathe between analyses
+    if(!s||(!s.preview_url&&!featureCache[s.id]?.previewUrl)||featureCache[s.id]?._v?.a) continue;
+    const url=s.preview_url||featureCache[s.id]?.previewUrl;
+    await analyzePreview(s, idx, url);
+    processed++;
+    if(processed%10===0) updateHUD(); // live counter tick every 10 tracks
+    await delay(150);
   }
   _audioRunning=false;
+  updateHUD(); // final tick
+  const ast=getAudioStats();
+  dbg(`✦ audio analysis complete — ${ast.analyzed} tracks analyzed`,'ok');
 }
 
-async function analyzePreview(s, songIdx){
-  if(!s.preview_url) return;
+async function analyzePreview(s, songIdx, previewUrl){
+  if(!previewUrl) return;
   try{
     if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-    const resp=await fetch(s.preview_url);
+    const resp=await fetch(previewUrl);
     if(!resp.ok) return;
     const buf=await resp.arrayBuffer();
     const offline=new OfflineAudioContext(1,audioCtx.sampleRate*15,audioCtx.sampleRate);
@@ -3049,70 +3090,7 @@ const THROTTLE_MAX = 8000;
 function onSuccess(){ _throttleMs = Math.max(THROTTLE_MIN, _throttleMs * 0.98); } // slowly speed up if all good
 function onRateLimit(){ _throttleMs = Math.min(THROTTLE_MAX, _throttleMs * 2.5); } // back off hard on 429
 
-async function apiGet(url, _retries=0){
-  const minGap=jitter(_throttleMs);
-  const now=Date.now(), gap=now-_lastApiCall;
-  if(gap<minGap) await delay(minGap-gap);
-  setLoadDetail(`throttle: ${(_throttleMs/1000).toFixed(1)}s/req · ${_reqCount} calls made`);
-  _lastApiCall=Date.now();
-  _reqCount++;
 
-  let r;
-  try{
-    const controller=new AbortController();
-    const tid=setTimeout(()=>controller.abort(),20000);
-    r=await fetch(url,{headers:{Authorization:`Bearer ${accessToken}`},signal:controller.signal});
-    clearTimeout(tid);
-  }catch(e){
-    if(e.name==='AbortError') throw new Error('Request timed out — check connection');
-    throw new Error('auth_expired');
-  }
-
-  if(r.status===401||r.status===403) throw new Error('auth_expired');
-
-  if(r.status===429){
-    const retryAfterHeader=r.headers.get('Retry-After');
-    const isPunishmentBlock=(_tracksLoadedSoFar===0 && _reqCount<=2);
-
-    onRateLimit(); // back throttle off hard
-    if(isPunishmentBlock){
-      // blocked before even starting = Client ID punishment block
-      // do NOT retry — that makes it worse. bail immediately.
-      throw new Error('CLIENT_ID_BLOCKED');
-    }
-
-    let waitSecs;
-    if(retryAfterHeader){
-      waitSecs=parseInt(retryAfterHeader);
-      if(waitSecs>=3600) throw new Error('CLIENT_ID_BLOCKED'); // >1hr = punishment block, bail
-      setLoadDetail(`HTTP 429 · Retry-After: ${waitSecs}s`);
-    } else {
-      waitSecs=jitter(Math.pow(2,_retries+1)*10);
-      setLoadDetail(`HTTP 429 · no header · backoff ${waitSecs}s`);
-    }
-
-    if(_retries>=3) throw new Error('rate_limited_hard');
-
-    for(let i=waitSecs;i>0;i--){
-      const pct=(waitSecs-i)/waitSecs;
-      const filled=Math.floor(pct*20);
-      const bar='█'.repeat(filled)+'░'.repeat(20-filled);
-      setLoadStatus(`⏳ RATE LIMITED · resuming in ${i}s  [${bar}]`, 0.01);
-      await delay(1000);
-    }
-    setLoadStatus('RESUMING SCAN...',0.01);
-    setLoadDetail('');
-    _lastApiCall=0;
-    return apiGet(url, _retries+1);
-  }
-
-  if(!r.ok) throw new Error(`Spotify HTTP ${r.status}`);
-  try{
-    const json = await r.json();
-    onSuccess(); // gradually tighten throttle on clean responses
-    return json;
-  }catch(e){ throw new Error('auth_expired'); }
-}
 
 function setLoadDetail(msg){
   const el=document.getElementById('load-detail');
@@ -3776,10 +3754,14 @@ function toggleSettings(){
   if(settingsOpen){
     updateSettingsPanel();
     panel.style.display='block';
+    // keep refreshing while open
+    if(!_settingsRefreshTimer) _settingsRefreshTimer=setInterval(updateSettingsPanel,2000);
   } else {
     panel.style.display='none';
+    clearInterval(_settingsRefreshTimer); _settingsRefreshTimer=null;
   }
 }
+let _settingsRefreshTimer=null;
 
 function updateSettingsPanel(){
   const cid=document.getElementById('sp-client-id');
