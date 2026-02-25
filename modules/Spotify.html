@@ -570,6 +570,37 @@
   .sp-btn.danger { border-color: rgba(255,100,100,0.25); color: rgba(255,130,130,0.6); }
   .sp-btn.danger:hover { background: rgba(255,60,60,0.08); color: rgba(255,160,160,0.9); border-color: rgba(255,100,100,0.5); }
 
+  /* ── DEBUG LOG ── */
+  #sp-debug {
+    margin-top: .8rem;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 5px;
+    padding: .6rem .7rem;
+    max-height: 160px;
+    overflow-y: auto;
+    display: none;
+  }
+  #sp-debug-toggle {
+    background: none; border: none;
+    color: rgba(255,255,255,0.2);
+    font-family: var(--mono); font-size: .45rem;
+    letter-spacing: .12em; cursor: pointer;
+    padding: .3rem 0; width: 100%; text-align: left;
+    margin-top: .5rem;
+  }
+  #sp-debug-toggle:hover { color: rgba(255,255,255,0.45); }
+  .dbg-line {
+    font-family: var(--mono); font-size: .48rem;
+    letter-spacing: .04em; line-height: 1.7;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    padding: .15rem 0;
+  }
+  .dbg-ok  { color: rgba(120,220,120,0.8); }
+  .dbg-err { color: rgba(255,120,120,0.9); }
+  .dbg-warn{ color: rgba(255,200,80,0.8); }
+  .dbg-info{ color: rgba(160,160,255,0.7); }
+
   /* ── CLUSTER NAMES ── */
   .cluster-label {
     position: fixed;
@@ -887,6 +918,9 @@
 
   <button class="sp-btn" onclick="retryEnrichment()">⟳ RETRY CRYSTALLIZATION</button>
   <button class="sp-btn danger" onclick="logOut()">↩ LOG OUT</button>
+
+  <button id="sp-debug-toggle" onclick="toggleDebugLog()">▸ SHOW DEBUG LOG</button>
+  <div id="sp-debug"></div>
 </div>
 
 <!-- ── TOOLTIP ── -->
@@ -1372,62 +1406,59 @@ async function lastfmFetch(url){
 }
 
 async function runEnrichment(){
-  if(!lastfmKey||enrichActive) return;
+  if(!lastfmKey){ dbg('no lastfmKey — enrichment skipped','warn'); return; }
+  if(enrichActive){ dbg(`already active (token ${_enrichToken}) — ignoring`,'warn'); return; }
   enrichActive=true;
   enrichConsecFails=0;
   const myToken=++_enrichToken;
   setEnrichError(null);
   const toProcess=songs.filter(s=>!featureCache[s.id]?.lastfm);
+  dbg(`▶ start: ${toProcess.length} tracks (token ${myToken})`,'info');
   updateHUD();
 
   for(let i=0;i<toProcess.length;i++){
-    if(_enrichToken!==myToken){ enrichActive=false; return; } // cancelled
+    if(_enrichToken!==myToken){ dbg(`cancelled at ${i} (new token ${_enrichToken})`,'warn'); enrichActive=false; return; }
     const s=toProcess[i];
+    if(i===0||i%100===0) dbg(`${i}/${toProcess.length} consec-fails:${enrichConsecFails}`,'info');
     try{
       const url=`https://ws.audioscrobbler.com/2.0/?method=track.getTopTags&artist=${encodeURIComponent(s.artist)}&track=${encodeURIComponent(s.name)}&api_key=${lastfmKey}&format=json&autocorrect=1`;
       let r;
       try{ r=await lastfmFetch(url); }
-      catch(fetchErr){
-        // timeout or network error
+      catch(fe){
+        dbg(`fetch err [${i}] "${s.name.slice(0,20)}": ${fe.message}`,'warn');
         enrichConsecFails++;
-        if(enrichConsecFails>=15){
-          setEnrichError('Network issues — check connection. Open Settings → Retry to resume.');
-          enrichActive=false; return;
-        }
+        if(enrichConsecFails>=15){ dbg('15 fails — stopping','err'); setEnrichError('Network issues — Open Settings → Retry.'); enrichActive=false; return; }
         await delay(1500); continue;
       }
 
       if(r.status===401||r.status===403){
-        setEnrichError(`Last.fm API key rejected (HTTP ${r.status}) — check your key`);
+        dbg(`HTTP ${r.status} — key rejected`,'err');
+        setEnrichError(`Last.fm key rejected (HTTP ${r.status})`);
         enrichActive=false; return;
       }
       if(r.status===429){
-        setEnrichError('Last.fm rate limited — auto-resuming in 60s...');
-        await delay(60000); setEnrichError(null);
+        dbg('HTTP 429 — rate limited 60s','warn');
+        setEnrichError('Last.fm rate limited — resuming in 60s...');
+        await delay(60000); setEnrichError(null); dbg('resuming','info');
         i--; continue;
       }
       if(!r.ok){
+        dbg(`HTTP ${r.status} for "${s.name.slice(0,20)}"`,'warn');
         enrichConsecFails++;
-        if(enrichConsecFails>=10){
-          setEnrichError(`Last.fm unresponsive (HTTP ${r.status}) — Open Settings → Retry`);
-          enrichActive=false; return;
-        }
+        if(enrichConsecFails>=10){ dbg('10 HTTP errors — stopping','err'); setEnrichError(`Last.fm HTTP ${r.status} — Open Settings → Retry`); enrichActive=false; return; }
         await delay(1500); continue;
       }
 
       let d;
-      try{ d=await r.json(); }catch{ enrichConsecFails++; await delay(500); continue; }
+      try{ d=await r.json(); }
+      catch(je){ dbg(`JSON fail [${i}]: ${je.message}`,'warn'); enrichConsecFails++; await delay(500); continue; }
 
       if(d.error){
         const SKIP=[6,7,8,11,16];
         const FATAL=[4,9,10,13,14,26];
         if(SKIP.includes(d.error)){ continue; }
-        if(FATAL.includes(d.error)){
-          setEnrichError(`Last.fm key error ${d.error}: ${d.message||'unknown'}`);
-          enrichActive=false; return;
-        }
-        enrichConsecFails++;
-        await delay(500); continue;
+        if(FATAL.includes(d.error)){ dbg(`FATAL lfm err ${d.error}: ${d.message}`,'err'); setEnrichError(`Last.fm error ${d.error}: ${d.message||'?'}`); enrichActive=false; return; }
+        dbg(`soft lfm err ${d.error}: ${d.message}`,'warn'); enrichConsecFails++; await delay(500); continue;
       }
 
       enrichConsecFails=0;
@@ -1437,35 +1468,29 @@ async function runEnrichment(){
         if(!featureCache[s.id]) featureCache[s.id]={};
         featureCache[s.id].lastfm=lf;
         featureCache[s.id].tags=tags.slice(0,5).map(t=>t.name);
-        const idx=songs.indexOf(s);
-        if(idx>=0&&worldPositions){
-          const oldPos={...worldPositions[idx]};
+        const sidx=songs.indexOf(s);
+        if(sidx>=0&&worldPositions){
+          const oldPos={...worldPositions[sidx]};
           s.f=getFeatures(s);
           const newPos=computeWorldPos(s,colorMode);
-          if(Math.hypot(newPos.wx-oldPos.wx,newPos.wy-oldPos.wy)>.008){
-            startTransition(idx,oldPos,newPos);
-            worldPositions[idx]=newPos;
-          }
+          if(Math.hypot(newPos.wx-oldPos.wx,newPos.wy-oldPos.wy)>.008){ startTransition(sidx,oldPos,newPos); worldPositions[sidx]=newPos; }
         }
         queueSave();
       }
     }catch(e){
+      dbg(`exception [${i}] "${s.name.slice(0,20)}": ${e.message}`,'err');
       enrichConsecFails++;
-      if(enrichConsecFails>=10){
-        setEnrichError('Network error during crystallization — check connection. Open settings to retry.');
-        enrichActive=false; return;
-      }
     }
     if(i%50===0) updateHUD();
     await delay(340);
   }
   if(_enrichToken===myToken){
-    enrichActive=false;
-    setEnrichError(null);
-    updateHUD();
+    dbg(`✦ complete — token ${myToken}`,'ok');
+    enrichActive=false; setEnrichError(null); updateHUD();
+  } else {
+    dbg(`ended but token changed ${myToken}→${_enrichToken}`,'warn');
   }
 }
-
 function retryEnrichment(){
   _enrichToken++;
   enrichActive=false;
@@ -1777,6 +1802,45 @@ function setLoadStatus(msg,progress){
 }
 // ── SETTINGS PANEL ──────────────────────────────
 let settingsOpen=false;
+
+// ── DEBUG LOG ──
+const _dbgLines=[];
+let _debugOpen=false;
+
+function dbg(msg, type='info'){
+  const t=new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const line={t,msg,type};
+  _dbgLines.push(line);
+  if(_dbgLines.length>120) _dbgLines.shift();
+  console.log(`[RS ${type.toUpperCase()}] ${msg}`); // also goes to browser console
+  if(_debugOpen) renderDebugLog();
+  // surface errors automatically — show flag even if panel closed
+  if(type==='err') setEnrichError(msg);
+}
+
+function renderDebugLog(){
+  const el=document.getElementById('sp-debug');
+  if(!el) return;
+  el.innerHTML=_dbgLines.slice().reverse().map(l=>
+    `<div class="dbg-line dbg-${l.type}">${l.t} ${l.msg}</div>`
+  ).join('');
+}
+
+function toggleDebugLog(){
+  _debugOpen=!_debugOpen;
+  const el=document.getElementById('sp-debug');
+  const btn=document.getElementById('sp-debug-toggle');
+  if(!el||!btn) return;
+  if(_debugOpen){
+    el.style.display='block';
+    btn.textContent='▾ HIDE DEBUG LOG';
+    renderDebugLog();
+    setTimeout(()=>el.scrollTop=0,50);
+  } else {
+    el.style.display='none';
+    btn.textContent='▸ SHOW DEBUG LOG';
+  }
+}
 
 function toggleSettings(){
   settingsOpen=!settingsOpen;
