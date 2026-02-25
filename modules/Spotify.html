@@ -963,7 +963,7 @@ let worldPositions=null;
 let posTransitions={};
 
 // ── FEATURE CACHE ─────────────────────────────────
-const CACHE_KEY='rs_features_v4';
+const CACHE_KEY='rs_features_v5'; // v5: added genre+audio checksum
 let featureCache={};
 
 function loadFeatureCache(){
@@ -1100,28 +1100,307 @@ async function analyzePreview(previewUrl){
 }
 
 // ── COMBINED FEATURES ─────────────────────────────
+// ══════════════════════════════════════════════════
+// SPOTIFY GENRE ENGINE
+// ══════════════════════════════════════════════════
+
+// Spotify genre string → feature weights
+// Format: [valence, energy, danceability]  (null = don't influence)
+const GENRE_MAP = {
+  // emotional valence
+  'happy':         [.82,.65,.70], 'sad':           [.18,.35,.40],
+  'melancholy':    [.22,.38,.35], 'euphoric':       [.88,.80,.75],
+  'dark':          [.20,.60,.40], 'uplifting':      [.78,.72,.68],
+  'romantic':      [.62,.45,.55], 'aggressive':     [.35,.88,.60],
+  'peaceful':      [.65,.25,.35], 'anxious':        [.30,.65,.45],
+
+  // energy
+  'ambient':       [.55,.18,.25], 'drone':          [.40,.15,.20],
+  'noise':         [.35,.85,.40], 'industrial':     [.28,.80,.50],
+  'shoegaze':      [.45,.55,.38], 'post-rock':      [.48,.60,.38],
+  'metal':         [.30,.90,.55], 'hardcore':       [.28,.92,.60],
+  'punk':          [.45,.85,.65], 'grunge':         [.35,.75,.55],
+  'classical':     [.58,.30,.25], 'orchestral':     [.55,.42,.28],
+  'acoustic':      [.60,.32,.42], 'folk':           [.58,.35,.45],
+
+  // dance / rhythm
+  'dance':         [.70,.78,.88], 'techno':         [.45,.82,.85],
+  'house':         [.65,.80,.88], 'trance':         [.68,.82,.82],
+  'drum and bass': [.50,.88,.80], 'jungle':         [.48,.85,.80],
+  'dubstep':       [.42,.85,.75], 'trap':           [.40,.78,.80],
+  'hip hop':       [.52,.68,.78], 'r&b':            [.62,.60,.72],
+  'funk':          [.72,.72,.88], 'soul':           [.65,.58,.68],
+  'disco':         [.78,.75,.88], 'reggae':         [.70,.55,.70],
+  'dancehall':     [.68,.72,.82], 'afrobeats':      [.72,.78,.88],
+
+  // vibe / texture
+  'lo-fi':         [.58,.35,.48], 'chillwave':      [.62,.32,.45],
+  'vaporwave':     [.55,.30,.42], 'hyperpop':       [.72,.82,.80],
+  'glitch':        [.40,.70,.55], 'experimental':   [.45,.58,.40],
+  'electronic':    [.52,.68,.65], 'synth':          [.58,.62,.62],
+  'pop':           [.72,.68,.72], 'indie':          [.58,.55,.58],
+  'alternative':   [.48,.60,.55], 'post-punk':      [.38,.68,.52],
+  'goth':          [.25,.62,.45], 'emo':            [.28,.65,.50],
+  'jazz':          [.62,.48,.58], 'blues':          [.45,.52,.58],
+  'country':       [.62,.52,.60], 'gospel':         [.72,.65,.62],
+  'new age':       [.65,.22,.30], 'meditation':     [.60,.15,.25],
+  'club':          [.65,.82,.88], 'party':          [.78,.82,.88],
+  'workout':       [.62,.88,.78], 'study':          [.58,.28,.35],
+};
+
+function genresToFeatures(genres){
+  if(!genres||!genres.length) return null;
+  let v=0,e=0,d=0,wt=0;
+  for(const g of genres){
+    const gl=g.toLowerCase();
+    // direct match
+    for(const [key,[gv,ge,gd]] of Object.entries(GENRE_MAP)){
+      if(gl.includes(key)){
+        const w=1;
+        v+=gv*w; e+=ge*w; d+=gd*w; wt+=w;
+      }
+    }
+  }
+  if(!wt) return null;
+  return {
+    valence: Math.max(.05,Math.min(.95,v/wt)),
+    energy:  Math.max(.05,Math.min(.95,e/wt)),
+    danceability: Math.max(.05,Math.min(.95,d/wt)),
+  };
+}
+
+// artist ID → genres cache (shared across tracks)
+const artistGenreCache = {};
+
+async function runGenreEnrichment(){
+  if(!accessToken){ dbg('no access token — genre enrichment skipped','warn'); return; }
+
+  // collect unique artist IDs that need fetching
+  const needsFetch = new Set();
+  for(const s of songs){
+    if(featureCache[s.id]?._v?.g) continue; // already done
+    if(s.artistId && !artistGenreCache[s.artistId]) needsFetch.add(s.artistId);
+  }
+
+  if(!needsFetch.size){
+    dbg('genre: all artists already cached','info');
+    applyGenresToAll();
+    return;
+  }
+
+  const ids=[...needsFetch];
+  dbg(`▶ genre fetch: ${ids.length} unique artists in ${Math.ceil(ids.length/50)} calls`,'info');
+
+  // batch 50 at a time
+  for(let i=0;i<ids.length;i+=50){
+    const batch=ids.slice(i,i+50);
+    try{
+      const data=await apiGet(`https://api.spotify.com/v1/artists?ids=${batch.join(',')}`);
+      for(const artist of data.artists||[]){
+        if(artist) artistGenreCache[artist.id]={genres:artist.genres||[],name:artist.name};
+      }
+      dbg(`genres: ${Math.min(i+50,ids.length)}/${ids.length} artists fetched`,'info');
+    }catch(e){
+      if(e.message==='auth_expired'){ dbg('genre: token expired','warn'); return; }
+      dbg(`genre batch error: ${e.message}`,'warn');
+    }
+    await delay(jitter(700));
+  }
+
+  applyGenresToAll();
+}
+
+function applyGenresToAll(){
+  let applied=0, skipped=0;
+  for(const s of songs){
+    if(featureCache[s.id]?._v?.g) continue;
+    const gdata=artistGenreCache[s.artistId];
+    if(!gdata){ skipped++; continue; }
+    const features=genresToFeatures(gdata.genres);
+    if(!featureCache[s.id]) featureCache[s.id]={};
+    featureCache[s.id].genre=features;
+    featureCache[s.id].genreTags=gdata.genres.slice(0,6);
+    if(!featureCache[s.id]._v) featureCache[s.id]._v={};
+    featureCache[s.id]._v.g=true;
+    if(features){
+      // update position
+      const idx=songs.indexOf(s);
+      if(idx>=0&&worldPositions){
+        const oldPos={...worldPositions[idx]};
+        s.f=getFeatures(s);
+        const newPos=computeWorldPos(s,colorMode);
+        if(Math.hypot(newPos.wx-oldPos.wx,newPos.wy-oldPos.wy)>.005){
+          startTransition(idx,oldPos,newPos);
+          worldPositions[idx]=newPos;
+        }
+      }
+      applied++;
+    } else { skipped++; }
+  }
+  queueSave();
+  updateHUD();
+  dbg(`✦ genres applied: ${applied} tracks enriched, ${skipped} no genre data`,'ok');
+}
+
+function getGenreChecksum(){
+  const total=songs.length;
+  const done=songs.filter(s=>featureCache[s.id]?._v?.g).length;
+  const audio=songs.filter(s=>featureCache[s.id]?._v?.a).length;
+  return {total,genreDone:done,audioDone:audio};
+}
+
+// ══════════════════════════════════════════════════
+// PASSIVE AUDIO ANALYSIS
+// ══════════════════════════════════════════════════
+
+let audioCtx=null;
+let _audioQueue=[];
+let _audioRunning=false;
+
+function queueAudioAnalysis(songIdx){
+  if(_audioQueue.includes(songIdx)) return;
+  _audioQueue.push(songIdx);
+  if(!_audioRunning) drainAudioQueue();
+}
+
+async function drainAudioQueue(){
+  _audioRunning=true;
+  while(_audioQueue.length){
+    const idx=_audioQueue.shift();
+    const s=songs[idx];
+    if(!s||!s.preview_url||featureCache[s.id]?._v?.a){ continue; }
+    await analyzePreview(s, idx);
+    await delay(200); // breathe between analyses
+  }
+  _audioRunning=false;
+}
+
+async function analyzePreview(s, songIdx){
+  if(!s.preview_url) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    const resp=await fetch(s.preview_url);
+    if(!resp.ok) return;
+    const buf=await resp.arrayBuffer();
+    const offline=new OfflineAudioContext(1,audioCtx.sampleRate*15,audioCtx.sampleRate);
+    const src=offline.createBufferSource();
+    src.buffer=await audioCtx.decodeAudioData(buf);
+    src.connect(offline.destination);
+    src.start(0);
+    const rendered=await offline.startRendering();
+    const data=rendered.getChannelData(0);
+
+    // RMS energy
+    let sum=0; for(let i=0;i<data.length;i++) sum+=data[i]*data[i];
+    const rms=Math.sqrt(sum/data.length);
+    const energy=Math.min(1,rms*8);
+
+    // Zero crossing rate → brightness proxy
+    let zc=0; for(let i=1;i<data.length;i++) if(data[i-1]*data[i]<0) zc++;
+    const brightness=Math.min(1,zc/data.length*200);
+
+    // Onset detection → tempo
+    const frameSize=1024, hopSize=512;
+    const onsets=[];
+    let prevEnergy=0;
+    for(let i=0;i<data.length-frameSize;i+=hopSize){
+      let fe=0; for(let j=i;j<i+frameSize;j++) fe+=data[j]*data[j];
+      fe/=frameSize;
+      if(fe-prevEnergy>0.002&&onsets.length&&(i-onsets[onsets.length-1])>hopSize*3) onsets.push(i);
+      if(fe-prevEnergy>0.002&&!onsets.length) onsets.push(i);
+      prevEnergy=fe;
+    }
+    let tempo=120;
+    if(onsets.length>1){
+      const iois=onsets.slice(1).map((o,i)=>(o-onsets[i])/audioCtx.sampleRate*1000);
+      const med=iois.sort((a,b)=>a-b)[Math.floor(iois.length/2)];
+      tempo=Math.round(60000/med);
+      if(tempo<60) tempo*=2;
+      if(tempo>180) tempo=Math.round(tempo/2);
+      tempo=Math.max(60,Math.min(180,tempo));
+    }
+
+    const au={energy,brightness,tempo};
+    if(!featureCache[s.id]) featureCache[s.id]={};
+    featureCache[s.id].audio=au;
+    if(!featureCache[s.id]._v) featureCache[s.id]._v={};
+    featureCache[s.id]._v.a=true;
+
+    // update position
+    if(worldPositions){
+      const oldPos={...worldPositions[songIdx]};
+      s.f=getFeatures(s);
+      const newPos=computeWorldPos(s,colorMode);
+      if(Math.hypot(newPos.wx-oldPos.wx,newPos.wy-oldPos.wy)>.005){
+        startTransition(songIdx,oldPos,newPos);
+        worldPositions[songIdx]=newPos;
+      }
+    }
+    queueSave();
+  }catch(e){
+    // silent fail — preview might be unavailable or CORS blocked
+  }
+}
+
+async function runPassiveAudioAnalysis(){
+  const toAnalyze=songs
+    .map((s,i)=>({s,i}))
+    .filter(({s})=>s.preview_url&&!featureCache[s.id]?._v?.a);
+  
+  if(!toAnalyze.length){ dbg('audio: all tracks already analyzed','info'); return; }
+  dbg(`▶ audio: queuing ${toAnalyze.length} tracks for passive analysis`,'info');
+  
+  // shuffle so we get a representative sample early
+  toAnalyze.sort(()=>Math.random()-.5);
+  for(const {i} of toAnalyze) queueAudioAnalysis(i);
+}
+
+function getAudioStats(){
+  const withPreview=songs.filter(s=>s.preview_url).length;
+  const analyzed=songs.filter(s=>featureCache[s.id]?._v?.a).length;
+  return {withPreview, analyzed};
+}
+
 function getFeatures(track){
   const s=synth(track);
-  const c=featureCache[track.id]||{};
-  const lf=c.lastfm,au=c.audio;
-  if(!lf&&!au) return s;
-  let v=s.valence,e=s.energy,d=s.danceability,t=s.tempo;
+  const cached=featureCache[track.id]||{};
+  const gn=cached.genre, lf=cached.lastfm, au=cached.audio;
+  if(!gn&&!lf&&!au) return s;
+
+  let v=s.valence, e=s.energy, d=s.danceability, t=s.tempo;
+  let sources=[];
+
+  // genre is highest trust — Spotify's own taxonomy
+  if(gn){
+    if(gn.valence!=null)      v=s.valence*.08+gn.valence*.92;
+    if(gn.energy!=null)       e=s.energy*.08+gn.energy*.92;
+    if(gn.danceability!=null) d=s.danceability*.08+gn.danceability*.92;
+    sources.push('genre');
+  }
+  // lastfm blends on top if present
   if(lf){
-    if(lf.valence!=null)      v=s.valence*.12+lf.valence*.88;
-    if(lf.energy!=null)       e=s.energy*.12+lf.energy*.88;
-    if(lf.danceability!=null) d=s.danceability*.12+lf.danceability*.88;
+    const w=gn?.5:.88; // less weight if genre already set
+    if(lf.valence!=null) v=v*(1-w)+lf.valence*w;
+    if(lf.energy!=null)  e=e*(1-w)+lf.energy*w;
+    if(lf.danceability!=null) d=d*(1-w)+lf.danceability*w;
+    sources.push('lastfm');
   }
+  // audio analysis refines energy + tempo
   if(au){
-    e=(lf?e*.35:e*.28)+au.energy*(lf?.65:.72);
+    const ew=gn?.30:.65;
+    e=e*(1-ew)+au.energy*ew;
     t=au.tempo;
-    v=Math.max(.02,Math.min(.98,v+(au.brightness-.5)*.08));
+    v=Math.max(.02,Math.min(.98,v+(au.brightness-.5)*.06));
+    sources.push('audio');
   }
+
   return{
     valence:Math.max(.02,Math.min(.98,v)),
     energy:Math.max(.02,Math.min(.98,e)),
     danceability:Math.max(.02,Math.min(.98,d)),
     tempo:t,
-    source:au?'audio'+(lf?'+lastfm':''):(lf?'lastfm':'synthetic'),
+    genreTags:cached.genreTags||[],
+    source:sources.join('+')||'synthetic',
   };
 }
 
@@ -1344,6 +1623,7 @@ async function fetchAllLiked(){
         .map(i=>({
           id:i.track.id, name:i.track.name,
           artist:i.track.artists.map(a=>a.name).join(', '),
+          artistId:i.track.artists[0]?.id||null,  // primary artist ID for genre fetch
           uri:i.track.uri, url:i.track.external_urls.spotify,
           preview_url:i.track.preview_url,
           popularity:i.track.popularity||50,
@@ -1599,7 +1879,25 @@ function launchViz(){
   updateHUD();resizeCanvas();
   window.addEventListener('resize',resizeCanvas);
   setupInteraction();resetView();renderLoop();
-  if(lastfmKey) setTimeout(runEnrichment,2000);
+  // Checksum: determine what enrichment pipelines still need to run
+  setTimeout(()=>{
+    const cs=getGenreChecksum();
+    dbg(`checksum — genre:${cs.genreDone}/${cs.total} audio:${cs.audioDone}/${cs.total}`,'info');
+
+    // Always try genre enrichment (fast, uses Spotify token we already have)
+    if(cs.genreDone < cs.total) runGenreEnrichment();
+    else dbg('genre: fully cached ✓','ok');
+
+    // Passive audio — start after genre to avoid API collision
+    setTimeout(()=>{
+      const ast=getAudioStats();
+      if(ast.analyzed < ast.withPreview) runPassiveAudioAnalysis();
+      else dbg(`audio: fully cached ✓ (${ast.analyzed} tracks)`,'ok');
+    }, cs.genreDone < cs.total ? 30000 : 2000); // wait for genre if it's running
+
+    // Last.fm still runs if key present (catches anything genre misses)
+    if(lastfmKey) setTimeout(runEnrichment, 5000);
+  }, 2000);
 }
 function resizeCanvas(){canvas.width=innerWidth;canvas.height=innerHeight;}
 
@@ -1841,11 +2139,17 @@ function hideSongCard(){
 function updateHUD(){
   const el=document.getElementById('hud-count');if(!el)return;
   const total=songs.length;
-  const done=songs.filter(s=>featureCache[s.id]?.lastfm).length;
-  const audio=songs.filter(s=>featureCache[s.id]?.audio).length;
-  if(!lastfmKey) el.textContent=`${total.toLocaleString()} songs · hover stars to analyze audio`;
-  else if(done>=total) el.textContent=`${total.toLocaleString()} songs · ✦ crystallized${audio?` · ${audio} audio`:''}`;
-  else el.textContent=`${total.toLocaleString()} songs · crystallizing ${done.toLocaleString()} / ${total.toLocaleString()}`;
+  const cs=getGenreChecksum();
+  const ast=getAudioStats();
+
+  let parts=[`${total.toLocaleString()} songs`];
+  if(cs.genreDone>=total) parts.push('✦ genres crystallized');
+  else if(cs.genreDone>0) parts.push(`genres ${cs.genreDone.toLocaleString()}/${total.toLocaleString()}`);
+
+  if(ast.analyzed>=ast.withPreview&&ast.withPreview>0) parts.push(`✦ ${ast.analyzed.toLocaleString()} audio`);
+  else if(ast.analyzed>0) parts.push(`audio ${ast.analyzed.toLocaleString()}/${ast.withPreview.toLocaleString()}`);
+
+  el.textContent=parts.join(' · ');
 }
 
 function rescanLibrary(){
@@ -1924,13 +2228,16 @@ function updateSettingsPanel(){
   if(cid) cid.textContent=stored_cid?stored_cid.slice(0,8)+'...'+ stored_cid.slice(-4):'not set';
   if(lfk) lfk.textContent=stored_lfk?stored_lfk.slice(0,6)+'...'+ stored_lfk.slice(-4):'not set — crystallization disabled';
   if(cst){
-    const total=songs.length;
-    const done=songs.filter(s=>featureCache[s.id]?.lastfm).length;
-    if(!lastfmKey) cst.textContent='no Last.fm key';
-    else if(enrichActive) cst.textContent=`running — ${done.toLocaleString()} / ${total.toLocaleString()}`;
-    else if(enrichError) cst.textContent='paused — error detected';
-    else if(done>=total) cst.textContent=`complete ✦ ${done.toLocaleString()} songs`;
-    else cst.textContent=`${done.toLocaleString()} / ${total.toLocaleString()} — idle`;
+    const cs=getGenreChecksum();
+    const ast=getAudioStats();
+    const lines=[];
+    if(cs.genreDone>=cs.total) lines.push(`genres ✦ complete`);
+    else lines.push(`genres ${cs.genreDone}/${cs.total}${_audioRunning?'':enrichActive?' · running':' · idle'}`);
+    if(ast.withPreview>0){
+      if(ast.analyzed>=ast.withPreview) lines.push(`audio ✦ complete`);
+      else lines.push(`audio ${ast.analyzed}/${ast.withPreview}${_audioRunning?' · analyzing':' · queued'}`);
+    }
+    cst.textContent=lines.join(' | ')||'—';
   }
 }
 
