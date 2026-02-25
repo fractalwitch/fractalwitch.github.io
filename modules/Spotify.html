@@ -1437,29 +1437,46 @@ async function runEnrichment(){
   const myToken=++_enrichToken;
   setEnrichError(null);
   const toProcess=songs.filter(s=>!featureCache[s.id]?.lastfm);
-  dbg(`▶ start: ${toProcess.length} tracks to process (token ${myToken})`,'info');
+  dbg(`▶ start: ${toProcess.length} tracks (token ${myToken})`,'info');
   updateHUD();
 
   let foundCount=0, skippedCount=0;
+  const skipReasons={}; // aggregate skip reasons
+  let sampleLogged=0;   // log first 5 queries so we can see what's being sent
+
+  function logSkip(reason){
+    skipReasons[reason]=(skipReasons[reason]||0)+1;
+    // every 50 skips, dump the aggregate
+    const total=Object.values(skipReasons).reduce((a,b)=>a+b,0);
+    if(total%50===0){
+      const summary=Object.entries(skipReasons).map(([k,v])=>`${k}:${v}`).join(' | ');
+      dbg(`skip breakdown — ${summary}`,'warn');
+    }
+  }
 
   for(let i=0;i<toProcess.length;i++){
     if(_enrichToken!==myToken){ dbg(`cancelled at ${i} — found:${foundCount} skipped:${skippedCount}`,'warn'); enrichActive=false; return; }
     const s=toProcess[i];
-
-    // progress every 25 tracks so we can see movement
-    if(i===0||i%25===0) dbg(`${i}/${toProcess.length} found:${foundCount} skipped:${skippedCount} fails:${enrichConsecFails}`,'info');
-    if(i%25===0) updateHUD();
+    if(i===0||i%25===0){
+      dbg(`${i}/${toProcess.length} found:${foundCount} skipped:${skippedCount} fails:${enrichConsecFails}`,'info');
+      updateHUD();
+    }
 
     try{
-      // Try cleaned name first, fall back to raw if still error 6
       const attempts=[
-        ()=>lastfmTagUrl(s.artist, s.name, lastfmKey),                    // cleaned
-        ()=>lastfmTagUrl(cleanArtist(s.artist), s.name, lastfmKey),        // raw track, clean artist
-        ()=>lastfmTagUrl(s.artist, s.name.split(/[\(\[-]/)[0], lastfmKey), // truncate track at bracket
+        ()=>lastfmTagUrl(s.artist, s.name, lastfmKey),
+        ()=>lastfmTagUrl(cleanArtist(s.artist), s.name, lastfmKey),
+        ()=>lastfmTagUrl(s.artist, s.name.split(/[\(\[-]/)[0], lastfmKey),
       ];
 
-      let d=null;
-      let fetchOk=false;
+      // log first 5 queries + every 200th so we can see what's being sent
+      if(sampleLogged<5 || i%200===0){
+        const ca=cleanArtist(s.artist), ct=cleanTrack(s.name);
+        dbg(`sample query — raw:"${s.artist.slice(0,18)}" → "${ca.slice(0,18)}" | track:"${s.name.slice(0,18)}" → "${ct.slice(0,18)}"`,'info');
+        sampleLogged++;
+      }
+
+      let d=null, fetchOk=false;
 
       for(let attempt=0; attempt<attempts.length; attempt++){
         const url=attempts[attempt]();
@@ -1472,59 +1489,64 @@ async function runEnrichment(){
           await delay(1000); break;
         }
         if(r.status===401||r.status===403){ dbg(`HTTP ${r.status} — key rejected`,'err'); setEnrichError(`Last.fm key rejected (HTTP ${r.status})`); enrichActive=false; return; }
-        if(r.status===429){ dbg('HTTP 429 — rate limited 60s','warn'); setEnrichError('Last.fm rate limited — auto-resuming in 60s...'); await delay(60000); setEnrichError(null); i--; break; }
-        if(!r.ok){ enrichConsecFails++; await delay(500); break; }
+        if(r.status===429){ dbg('HTTP 429 — rate limited 60s','warn'); setEnrichError('Last.fm rate limited — resuming in 60s...'); await delay(60000); setEnrichError(null); i--; break; }
+        if(!r.ok){ enrichConsecFails++; logSkip(`http-${r.status}`); fetchOk=true; break; }
 
         let parsed;
-        try{ parsed=await r.json(); }catch{ await delay(340); break; }
+        try{ parsed=await r.json(); }catch(je){ dbg(`JSON fail: ${je.message}`,'warn'); await delay(340); break; }
 
         if(parsed.error){
           const FATAL=[4,9,10,13,14,26];
           if(FATAL.includes(parsed.error)){ dbg(`FATAL lfm err ${parsed.error}: ${parsed.message}`,'err'); setEnrichError(`Last.fm error ${parsed.error}: ${parsed.message||'?'}`); enrichActive=false; return; }
-          if(parsed.error===6 && attempt<attempts.length-1){
-            await delay(80); continue; // try next attempt
+          if(parsed.error===6){
+            if(attempt<attempts.length-1){ await delay(80); continue; } // try next cleanup
+            logSkip('err6-not-found');
+            fetchOk=true; break;
           }
-          // exhausted attempts or non-retryable skip error
-          skippedCount++; fetchOk=true; break;
+          logSkip(`err${parsed.error}`);
+          fetchOk=true; break;
         }
 
-        d=parsed; fetchOk=true; break; // success!
+        // success — check if tags actually present
+        const tags=parsed?.toptags?.tag;
+        if(!tags||!tags.length){
+          logSkip('no-tags');
+          fetchOk=true; break;
+        }
+
+        d=parsed; fetchOk=true; break;
       }
+
       if(!fetchOk){ await delay(340); continue; }
-      if(!d){ await delay(340); continue; } // was a skip
+      if(!d){ skippedCount++; await delay(100); continue; }
 
-      if(d.error){
-        skippedCount++; await delay(100); continue;
+      // got valid tags!
+      enrichConsecFails=0; foundCount++;
+      const tags=d.toptags.tag;
+      const lf=tagsToFeatures(tags);
+      if(!featureCache[s.id]) featureCache[s.id]={};
+      featureCache[s.id].lastfm=lf;
+      featureCache[s.id].tags=tags.slice(0,5).map(t=>t.name);
+      if(foundCount<=3||foundCount%50===0) dbg(`✦ found tags [${i}] "${s.name.slice(0,25)}" → ${featureCache[s.id].tags.join(', ')}`,'ok');
+      const sidx=songs.indexOf(s);
+      if(sidx>=0&&worldPositions){
+        const oldPos={...worldPositions[sidx]};
+        s.f=getFeatures(s);
+        const newPos=computeWorldPos(s,colorMode);
+        if(Math.hypot(newPos.wx-oldPos.wx,newPos.wy-oldPos.wy)>.008){ startTransition(sidx,oldPos,newPos); worldPositions[sidx]=newPos; }
       }
+      queueSave();
 
-      enrichConsecFails=0;
-      const tags=d?.toptags?.tag;
-      if(tags&&tags.length){
-        foundCount++;
-        const lf=tagsToFeatures(tags);
-        if(!featureCache[s.id]) featureCache[s.id]={};
-        featureCache[s.id].lastfm=lf;
-        featureCache[s.id].tags=tags.slice(0,5).map(t=>t.name);
-        const sidx=songs.indexOf(s);
-        if(sidx>=0&&worldPositions){
-          const oldPos={...worldPositions[sidx]};
-          s.f=getFeatures(s);
-          const newPos=computeWorldPos(s,colorMode);
-          if(Math.hypot(newPos.wx-oldPos.wx,newPos.wy-oldPos.wy)>.008){ startTransition(sidx,oldPos,newPos); worldPositions[sidx]=newPos; }
-        }
-        queueSave();
-      } else {
-        skippedCount++; // response ok but no tags
-      }
     }catch(e){
       dbg(`exception [${i}] "${s.name.slice(0,20)}": ${e.message}`,'err');
       enrichConsecFails++;
     }
-    await delay(340); // always delay at end — SKIP paths have their own smaller delay above
+    await delay(340);
   }
 
   if(_enrichToken===myToken){
-    dbg(`✦ complete — found:${foundCount} skipped:${skippedCount} (token ${myToken})`,'ok');
+    const summary=Object.entries(skipReasons).map(([k,v])=>`${k}:${v}`).join(' | ');
+    dbg(`✦ complete — found:${foundCount} skipped:${skippedCount} | ${summary||'no skips'}`, 'ok');
     enrichActive=false; setEnrichError(null); updateHUD();
   } else {
     dbg(`loop ended, token changed ${myToken}→${_enrichToken}`,'warn');
