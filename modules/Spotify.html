@@ -1158,32 +1158,28 @@ async function runGenreEnrichment(){
   dbgG('▶ runGenreEnrichment() called','info');
   dbgG(`songs.length=${songs.length}, token=${accessToken?'ok':'MISSING'}`,'info');
 
-  // Phase 1: fix missing artistIds via /v1/tracks batch
+  // Phase 1: check artistIds — populated by scan v2+
+  // (v1 scan cache didn't store artistId; bumping to rs_scan_v2 forces a fresh scan that does)
   const missingArtistId = songs.filter(s=>!s.artistId&&!featureCache[s.id]?._v?.g);
-  dbgG(`phase 1: ${missingArtistId.length} songs need artistId`,'info');
+  dbgG(`phase 1: ${missingArtistId.length}/${songs.length} songs missing artistId`,'info');
   if(missingArtistId.length>0){
-    let fixed=0;
-    for(let i=0;i<missingArtistId.length;i+=50){
-      const batch=missingArtistId.slice(i,i+50);
-      const ids=batch.map(s=>s.id).join(',');
-      try{
-        const data=await apiGet(`https://api.spotify.com/v1/tracks?ids=${ids}`);
-        dbgG(`  batch ${Math.floor(i/50)+1}: got ${data.tracks?.length||0} tracks`,'info');
-        for(const t of data.tracks||[]){
-          if(!t) continue;
-          const s=songs.find(x=>x.id===t.id);
-          if(s&&t.artists?.[0]?.id){ s.artistId=t.artists[0].id; fixed++; }
-        }
-        if(i===0&&data.tracks?.[0]){
-          dbgG(`  example: "${data.tracks[0].name}" → artist[0].id=${data.tracks[0].artists?.[0]?.id||'null'}`,'info');
-        }
-      }catch(e){
-        dbgG(`tracks batch error: ${e.message}`,'err'); break;
-      }
-      await delay(jitter(400));
+    const pct=Math.round((1-missingArtistId.length/songs.length)*100);
+    if(pct===0){
+      // ALL songs missing — old scan cache, need full rescan
+      dbgG(`all songs missing artistId — scan cache is v1. Library will auto-rescan on next page load (cache key bumped to v2).`,'warn');
+      dbgG(`genre enrichment cannot run until rescan completes. Reloading now to rebuild library index...`,'warn');
+      // Clear old v1 scan cache — v2 key is now active, fresh scan will include artistId
+      localStorage.removeItem('rs_scan_v1');
+      // Show message in HUD
+      const hudEl=document.getElementById('hud-count');
+      if(hudEl) hudEl.textContent='rebuilding library index for genre data — reloading...';
+      await delay(2000);
+      location.reload();
+      return;
+    } else {
+      // Partial — some songs have it, some don't (e.g. new additions since last scan)
+      dbgG(`${missingArtistId.length} songs have no artistId — these will be skipped for genre this run`,'warn');
     }
-    dbgG(`✦ phase 1: fixed ${fixed}/${missingArtistId.length} artistIds`,'ok');
-    queueSave();
   }
 
   // Phase 2: collect unique artists still needing genre data
@@ -1225,7 +1221,8 @@ async function runGenreEnrichment(){
       applyGenresToAll();
       updateHUD();
     }catch(e){
-      if(e.message==='auth_expired'||e.message==='forbidden'){ dbgG(`stopped: ${e.message}`,'err'); return; }
+      if(e.message==='auth_expired'){ dbgG(`stopped: token expired`,'err'); return; }
+      if(e.message==='forbidden_403'){ dbgG(`403 on artist batch — Spotify endpoint restriction. Genre will continue with cached data.`,'warn'); continue; }
       dbgG(`artist batch error at ${i}: ${e.message}`,'warn');
     }
     await delay(jitter(500));
@@ -1653,9 +1650,15 @@ async function apiGet(url, _retries=0){
     throw new Error('auth_expired');
   }
 
-  if(r.status===401||r.status===403){
-    dbg(`Spotify ${r.status} — token rejected`,'err');
+  if(r.status===401){
+    dbg('Spotify 401 — token expired, re-auth needed','err');
     throw new Error('auth_expired');
+  }
+  if(r.status===403){
+    // 403 can be endpoint restriction, not always token expiry
+    // Log it but throw a distinct error so callers can choose to retry
+    dbg(`Spotify 403 on ${url.slice(url.lastIndexOf('/')+1,url.lastIndexOf('/')+30)} — forbidden (scope/endpoint restriction)`,'warn');
+    throw new Error('forbidden_403');
   }
 
   if(r.status===429){
@@ -1711,7 +1714,7 @@ function abortAndReturn(){
   localStorage.removeItem('rs_token');localStorage.removeItem('rs_token_exp');
   hide('loading-screen');show('login-screen');
 }
-const SCAN_CACHE_KEY='rs_scan_v1';
+const SCAN_CACHE_KEY='rs_scan_v2'; // v2: includes artistId
 
 function saveScanProgress(tracks, nextUrl, total){
   try{
@@ -1727,11 +1730,11 @@ function saveScanProgress(tracks, nextUrl, total){
 
 function loadScanProgress(){
   try{
+    // Migrate: clear old v1 cache if v2 key is now active
+    if(SCAN_CACHE_KEY==='rs_scan_v2') localStorage.removeItem('rs_scan_v1');
     const raw=localStorage.getItem(SCAN_CACHE_KEY);
     if(!raw) return null;
     const p=JSON.parse(raw);
-    // scan cache is permanent — only expires if explicitly cleared
-    // tracks don't change often; user can manually rescan via button
     return p;
   }catch{ return null; }
 }
@@ -2301,9 +2304,10 @@ function updateHUD(){
 }
 
 function rescanLibrary(){
-  if(!confirm('Clear library cache and rescan from Spotify? This only affects the track list, not your Last.fm or audio analysis data.')) return;
+  if(!confirm('Rescan library from Spotify? Your Last.fm, genre, and audio analysis data will be preserved.')) return;
   localStorage.removeItem(SCAN_CACHE_KEY);
-  localStorage.removeItem('rs_token'); localStorage.removeItem('rs_token_exp');
+  localStorage.removeItem('rs_scan_v1'); // clear old key too
+  // Note: intentionally NOT clearing rs_token so user stays logged in
   location.reload();
 }
 function setLoadStatus(msg,progress){
