@@ -2087,7 +2087,8 @@ const VERT_SRC=`
     float py=(a_pos.y-canvasCy)*u_zoom+canvasCy+u_cy;
     vec2 clip=(vec2(px,py)/u_res)*2.0-1.0;
     gl_Position=vec4(clip*vec2(1,-1),0,1);
-    gl_PointSize=clamp(a_sz*u_zoom,1.0,80.0);
+    // Size: modest zoom scaling so dots stay readable, not giant
+    gl_PointSize=clamp(a_sz*(0.5+u_zoom*0.5),1.5,22.0);
     v_col=a_col; v_alpha=a_alpha; v_glow=a_glow;
   }
 `;
@@ -2100,9 +2101,10 @@ const FRAG_SRC=`
     vec2 coord=gl_PointCoord-vec2(0.5);
     float dist=length(coord);
     if(dist>0.5) discard;
-    // dual-layer glow: tight core + soft halo
-    float core=smoothstep(0.5,0.05,dist);
-    float halo=smoothstep(0.5,0.3,dist)*0.4*v_glow;
+    // tight gaussian core — crisp bright center, fast rolloff
+    float core=exp(-dist*dist*28.0);
+    // soft halo ring — wide but very dim, only for crystallized/hover
+    float halo=exp(-dist*dist*6.0)*0.25*v_glow;
     float alpha=v_alpha*(core+halo);
     gl_FragColor=vec4(v_col,alpha);
   }
@@ -2164,7 +2166,8 @@ function initWebGL(){
 
   // Additive blending — cluster glow accumulates like real light
   gl.enable(gl.BLEND);
-  gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
+  // ONE_MINUS_SRC_COLOR: additive-like but self-limiting — clusters glow without going fully white
+  gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_COLOR);
 
   return true;
 }
@@ -2346,15 +2349,15 @@ function render(){
       const rgb=parseHsl(col);
       _gpuColor[i*3]=rgb[0]; _gpuColor[i*3+1]=rgb[1]; _gpuColor[i*3+2]=rgb[2];
 
-      const baseSize=getSize(s)*2.2;
+      const baseSize=getSize(s)*1.4;
       const isHov=hoveredSong===i||pinnedSong===i;
       _gpuSize[i]=isHov?baseSize*2.4:baseSize;
 
       const isMatch=q&&(s.name.toLowerCase().includes(q)||s.artist.toLowerCase().includes(q));
       const isDim=q&&!isMatch;
       const isCryst=!!(featureCache[s.id]?.lastfm||featureCache[s.id]?.audio||featureCache[s.id]?.genre);
-      _gpuAlpha[i]=isDim?.03:isHov?.95:isCryst?.82:.52;
-      _gpuGlow[i]=isHov?1.0:isMatch?.8:(isCryst?.5:.15);
+      _gpuAlpha[i]=isDim?.015:isHov?.85:isCryst?.38:.22;
+      _gpuGlow[i]=isHov?1.0:isMatch?.7:(isCryst?.35:.08);
     }
 
     bindAttr(_bufPos,  _aPos,   _gpuPos,   2);
