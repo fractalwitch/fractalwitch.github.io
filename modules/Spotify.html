@@ -238,10 +238,15 @@
   }
 
   #viewport-mode {
+    position: fixed;
+    top: 6.5rem;
+    right: 1.5rem;
+    z-index: 20;
     display: flex;
     gap: 0.4rem;
-    margin-top: 0.35rem;
+    pointer-events: all;
   }
+  #viewport-mode.hidden { display: none; }
   .vp-fluid {
     opacity: 0.4;
     cursor: default !important;
