@@ -1154,84 +1154,90 @@ function genresToFeatures(genres){
 const artistGenreCache = {};
 
 async function runGenreEnrichment(){
-  if(!accessToken){ dbgG('no access token — skipped','warn'); return; }
-  dbgG('▶ runGenreEnrichment() called','info');
-  dbgG(`songs.length=${songs.length}, token=${accessToken?'ok':'MISSING'}`,'info');
+  if(!lastfmKey){ dbgG('no Last.fm key — genre enrichment skipped','warn'); return; }
+  dbgG('▶ runGenreEnrichment() via Last.fm artist.getTopTags','info');
+  dbgG(`songs.length=${songs.length}`,'info');
 
-  // Phase 1: check artistIds — populated by scan v2+
-  // (v1 scan cache didn't store artistId; bumping to rs_scan_v2 forces a fresh scan that does)
-  const missingArtistId = songs.filter(s=>!s.artistId&&!featureCache[s.id]?._v?.g);
-  dbgG(`phase 1: ${missingArtistId.length}/${songs.length} songs missing artistId`,'info');
-  if(missingArtistId.length>0){
-    const pct=Math.round((1-missingArtistId.length/songs.length)*100);
-    if(pct===0){
-      // ALL songs missing — old scan cache, need full rescan
-      dbgG(`all songs missing artistId — scan cache is v1. Library will auto-rescan on next page load (cache key bumped to v2).`,'warn');
-      dbgG(`genre enrichment cannot run until rescan completes. Reloading now to rebuild library index...`,'warn');
-      // Clear old v1 scan cache — v2 key is now active, fresh scan will include artistId
-      localStorage.removeItem('rs_scan_v1');
-      // Show message in HUD
-      const hudEl=document.getElementById('hud-count');
-      if(hudEl) hudEl.textContent='rebuilding library index for genre data — reloading...';
-      await delay(2000);
-      location.reload();
-      return;
-    } else {
-      // Partial — some songs have it, some don't (e.g. new additions since last scan)
-      dbgG(`${missingArtistId.length} songs have no artistId — these will be skipped for genre this run`,'warn');
-    }
+  // Build list of unique artists not yet enriched
+  // Group songs by primary artist name (we have this from scan, no Spotify API needed)
+  const artistMap = new Map(); // artistName → [songIdx, ...]
+  for(let i=0;i<songs.length;i++){
+    const s=songs[i];
+    if(featureCache[s.id]?._v?.g) continue; // already done
+    const artist=cleanArtist(s.artist);
+    if(!artistMap.has(artist)) artistMap.set(artist,[]);
+    artistMap.get(artist).push(i);
   }
 
-  // Phase 2: collect unique artists still needing genre data
-  const needsFetch = new Set();
-  let noId=0;
-  for(const s of songs){
-    if(featureCache[s.id]?._v?.g) continue;
-    if(s.artistId) needsFetch.add(s.artistId);
-    else noId++;
-  }
-  const already=songs.filter(s=>featureCache[s.id]?._v?.g).length;
-  dbgG(`phase 2: ${needsFetch.size} artists to fetch, ${already} already done, ${noId} still no artistId`,'info');
-  const sampleIds=[...needsFetch].slice(0,5);
-  dbgG(`sample artistIds: [${sampleIds.join(', ')}]`,'info');
-  updateHUD();
+  const alreadyDone=songs.filter(s=>featureCache[s.id]?._v?.g).length;
+  dbgG(`phase 1: ${artistMap.size} unique artists to enrich (${alreadyDone} already done)`,'info');
+  if(!artistMap.size){ dbgG('all done ✓','ok'); updateHUD(); return; }
 
-  if(!needsFetch.size){
-    dbgG('nothing to fetch → applying to all','info');
-    applyGenresToAll(); return;
-  }
+  const GENRE_WORKERS=4; // parallel Last.fm workers
+  const artistQueue=[...artistMap.entries()]; // [[artistName, [songIdxs]], ...]
+  let fetched=0, withTags=0, emptyTags=0, queueIdx=0;
 
-  // Phase 3: fetch genres in batches of 50
-  const ids=[...needsFetch];
-  let fetched=0, withGenres=0, emptyGenres=0;
-  for(let i=0;i<ids.length;i+=50){
-    const batch=ids.slice(i,i+50);
-    try{
-      const data=await apiGet(`https://api.spotify.com/v1/artists?ids=${batch.join(',')}`);
-      const artists=data.artists||[];
-      dbgG(`  artist batch ${Math.floor(i/50)+1}/${Math.ceil(ids.length/50)}: got ${artists.length} artists`,'info');
-      for(const a of artists){
-        if(!a){ emptyGenres++; continue; }
-        artistGenreCache[a.id]={genres:a.genres||[],name:a.name};
-        if(a.genres?.length) withGenres++; else emptyGenres++;
+  async function genreWorker(wId){
+    while(true){
+      const i=queueIdx++;
+      if(i>=artistQueue.length) return;
+      const [artistName, songIdxs]=artistQueue[i];
+
+      const url=`https://ws.audioscrobbler.com/2.0/?method=artist.getTopTags&artist=${encodeURIComponent(artistName)}&api_key=${lastfmKey}&format=json&autocorrect=1`;
+      let tags=[];
+      try{
+        const r=await lastfmFetch(url);
+        if(r.status===429){ dbgG('rate limit — pausing 30s','warn'); await delay(30000); queueIdx--; return; }
+        if(!r.ok){ emptyTags++; } else {
+          const d=await r.json();
+          if(d.error){ emptyTags++; }
+          else {
+            tags=(d.toptags?.tag||[])
+              .slice(0,10)
+              .map(t=>t.name?.toLowerCase())
+              .filter(Boolean);
+          }
+        }
+      }catch(e){ emptyTags++; }
+
+      // Apply tags to all songs by this artist
+      const features=genresToFeatures(tags);
+      for(const si of songIdxs){
+        const s=songs[si];
+        if(!featureCache[s.id]) featureCache[s.id]={};
+        featureCache[s.id].genre=features;
+        featureCache[s.id].genreTags=tags.slice(0,6);
+        if(!featureCache[s.id]._v) featureCache[s.id]._v={};
+        featureCache[s.id]._v.g=true;
+        if(features&&worldPositions){
+          s.f=getFeatures(s);
+          const np=computeWorldPos(s,colorMode);
+          if(Math.hypot(np.wx-worldPositions[si].wx,np.wy-worldPositions[si].wy)>.005){
+            startTransition(si,worldPositions[si],np);
+            worldPositions[si]=np;
+          }
+        }
       }
-      const ex=artists.find(a=>a?.genres?.length);
-      if(ex) dbgG(`  e.g. "${ex.name}": [${ex.genres.slice(0,3).join(', ')}]`,'info');
-      fetched+=batch.length;
-      applyGenresToAll();
-      updateHUD();
-    }catch(e){
-      if(e.message==='auth_expired'){ dbgG(`stopped: token expired`,'err'); return; }
-      if(e.message==='forbidden_403'){ dbgG(`403 on artist batch — Spotify endpoint restriction. Genre will continue with cached data.`,'warn'); continue; }
-      dbgG(`artist batch error at ${i}: ${e.message}`,'warn');
+
+      fetched++;
+      if(tags.length>0) withTags++;
+      else emptyTags++;
+
+      // Log every 10 artists
+      if(fetched%10===0||fetched===1){
+        const ex=tags.slice(0,3).join(', ');
+        dbgG(`${fetched}/${artistQueue.length} artists · ${withTags} w/tags · e.g. "${artistName}": [${ex||'no tags'}]`,'info');
+        queueSave(); updateHUD();
+      }
+      await delay(jitter(180)); // ~5 req/s across 4 workers = 20 req/s total
     }
-    await delay(jitter(500));
   }
 
-  applyGenresToAll();
+  await Promise.all(Array.from({length:GENRE_WORKERS},(_,i)=>genreWorker(i)));
+
+  queueSave(); updateHUD();
   const cs=getGenreChecksum();
-  dbgG(`✦ done — ${cs.genreReal}/${cs.total} enriched · ${withGenres} artists w/genres · ${emptyGenres} empty`,'ok');
-  updateHUD();
+  dbgG(`✦ done — ${cs.genreReal}/${cs.total} tracks enriched · ${withTags}/${fetched} artists had tags`,'ok');
 }
 
 function applyGenresToAll(){
@@ -2025,9 +2031,11 @@ function launchViz(){
     const cs=getGenreChecksum();
     dbg(`checksum — genre:${cs.genreDone}/${cs.total} audio:${cs.audioDone}/${cs.total}`,'info');
 
-    // Always try genre enrichment (fast, uses Spotify token we already have)
-    if(cs.genreDone < cs.total) runGenreEnrichment();
-    else dbg('genre: fully cached ✓','ok');
+    // Genre uses Last.fm artist.getTopTags — no Spotify API needed
+    if(cs.genreDone < cs.total){
+      if(lastfmKey) runGenreEnrichment();
+      else dbgG('no Last.fm key — add one in settings to enable genre enrichment','warn');
+    } else dbg('genre: fully cached ✓','ok');
 
     // Passive audio — start after genre to avoid API collision
     setTimeout(()=>{
@@ -2416,7 +2424,7 @@ function updateSettingsPanel(){
     const total=songs.length;
     const rows=[];
     rows.push(`last.fm   ${lfDone.toLocaleString()} / ${total.toLocaleString()}${enrichActive?' · running':''}`);
-    const gnote=cs.genreNoId>0?` ⚠ ${cs.genreNoId} need rescan`:'';
+    const gnote=!lastfmKey?' (needs Last.fm key)':cs.genreNoId>0?` ⚠ rescan`:'';
     rows.push(`genre     ${cs.genreReal.toLocaleString()} / ${total.toLocaleString()}${gnote}`);
     if(ast.withPreview===0&&ast.resolvedExternal===0) rows.push(`audio     resolving via iTunes/Deezer...`);
     else rows.push(`audio     ${ast.analyzed.toLocaleString()} analyzed · ${ast.resolvedExternal.toLocaleString()} via iTunes${_audioRunning?' · running':''}`);
