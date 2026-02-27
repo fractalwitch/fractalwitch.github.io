@@ -237,6 +237,24 @@
     pointer-events: none;
   }
 
+  #viewport-mode {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.35rem;
+  }
+  .vp-fluid {
+    opacity: 0.4;
+    cursor: default !important;
+    position: relative;
+  }
+  .vp-fluid::after {
+    content: '✦';
+    font-size: 0.38rem;
+    position: absolute;
+    top: 2px; right: 3px;
+    color: rgba(103,232,249,0.7);
+  }
+
   #viz-canvas {
     position: fixed;
     inset: 0;
@@ -869,6 +887,12 @@
   <button class="mode-btn" onclick="setColorMode('dance')" id="cm-dance">DANCE</button>
 </div>
 
+<div id="viewport-mode" class="hidden" style="display:none">
+  <button class="mode-btn vp-btn active" onclick="setViewport('canvas')" id="vp-canvas">CANVAS</button>
+  <button class="mode-btn vp-btn" onclick="setViewport('webgl')" id="vp-webgl">WEBGL</button>
+  <button class="mode-btn vp-btn vp-fluid" onclick="setViewport('fluid')" id="vp-fluid" title="coming soon">FLUID</button>
+</div>
+
 <!-- ── SEARCH ── -->
 <div id="search-wrap" class="hidden">
   <input type="text" id="search-input" placeholder="search songs..." oninput="handleSearch(this.value)"/>
@@ -960,6 +984,7 @@
 const SCOPES = 'user-library-read';
 let accessToken=null, clientId=null, lastfmKey=null;
 let songs=[], colorMode='genre', searchQuery='';
+let viewportMode='canvas'; // 'canvas' | 'webgl' | 'fluid'
 
 // Camera
 let camX=0, camY=0, camZoom=1;
@@ -2094,6 +2119,7 @@ const VERT_SRC=`
   }
 `;
 const FRAG_SRC=`
+  #extension GL_OES_standard_derivatives : enable
   precision mediump float;
   varying vec3 v_col;
   varying float v_alpha;
@@ -2102,12 +2128,22 @@ const FRAG_SRC=`
     vec2 coord=gl_PointCoord-vec2(0.5);
     float dist=length(coord);
     if(dist>0.5) discard;
-    // solid core disc (inner 40% of radius) — always visible
-    float core=1.0-smoothstep(0.0,0.4,dist);
-    // gaussian halo beyond core — creates the glow
-    float halo=exp(-dist*dist*8.0)*v_glow;
-    float alpha=v_alpha*(core+halo*0.6);
-    gl_FragColor=vec4(v_col,alpha);
+
+    // crisp filled disc: 1.0 inside, hard antialiased edge via fwidth
+    // fwidth gives us the pixel derivative so we can AA exactly 1px
+    float fw=fwidth(dist);
+    float disc=1.0-smoothstep(0.38-fw, 0.38+fw, dist);
+
+    // thin glow ring just outside disc edge — scales with v_glow
+    float ringInner=0.36; float ringOuter=0.5;
+    float ring=smoothstep(ringInner, ringInner+fw*2.0, dist)
+              *smoothstep(ringOuter, ringOuter-fw*2.0, dist)
+              *v_glow*0.9;
+
+    // additive halo: very soft, only for hover/cryst
+    float halo=exp(-dist*dist*5.5)*v_glow*0.35;
+
+    gl_FragColor=vec4(v_col, v_alpha*(disc+ring+halo));
   }
 `;
 
@@ -2127,6 +2163,8 @@ function parseHsl(hslStr){
 
 function initWebGL(){
   gl=canvas.getContext('webgl',{premultipliedAlpha:false,alpha:true});
+  // fwidth() requires standard derivatives extension (widely supported)
+  gl.getExtension('OES_standard_derivatives');
   if(!gl){ console.warn('WebGL unavailable — falling back to 2D'); return false; }
 
   function compileShader(type,src){
@@ -2181,15 +2219,39 @@ function bindAttr(buf, loc, data, size){
 }
 
 
+// ═══════════════════════════════════════════════════
+// VIEWPORT MODE
+// ═══════════════════════════════════════════════════
+function setViewport(mode){
+  if(mode==='fluid') return; // coming soon — no-op
+  viewportMode=mode;
+  // Update button active state
+  ['canvas','webgl','fluid'].forEach(m=>{
+    const b=document.getElementById('vp-'+m);
+    if(b) b.classList.toggle('active', m===mode);
+  });
+  // WebGL: init if switching in, teardown if switching out
+  if(mode==='webgl'){
+    if(!gl) initWebGL();
+  } else {
+    // Release WebGL context so canvas behaves as 2D
+    if(gl){
+      const ext=gl.getExtension('WEBGL_lose_context');
+      if(ext) ext.loseContext();
+      gl=null; glProg=null;
+    }
+  }
+}
+
+
 function launchViz(){
   hide('loading-screen');canvas.classList.remove('hidden');showHUD();
   songs.forEach(s=>{s.f=getFeatures(s);});
   worldPositions=songs.map(s=>computeWorldPos(s,colorMode));
   updateAxisLabels(colorMode);
   updateHUD();
-  // Init WebGL (falls back gracefully if unavailable)
-  const webglOk=initWebGL();
-  if(!webglOk) console.warn('WebGL init failed — running without GPU acceleration');
+  // Start in Canvas mode — user can switch to WebGL via Viewport toggle
+  viewportMode='canvas';
   resizeCanvas();
   window.addEventListener('resize',resizeCanvas);
   setupInteraction();resetView();renderLoop();
@@ -2296,118 +2358,135 @@ function getColor(s,mode){
 function getSize(s){return 1.5+(s.f?.danceability||.5)*3.5;}
 
 function render(){
-  // ── WebGL: draw 10k song points ──────────────────────
-  if(!gl){
-    // 2D fallback (no WebGL)
-    const ctx2=canvas.getContext('2d');
-    ctx2.clearRect(0,0,canvas.width,canvas.height);
-    const q2=searchQuery.toLowerCase();
-    for(let i=0;i<songs.length;i++){
-      const s=songs[i];
-      const{wx,wy}=getPos(i);
-      const{sx,sy}=worldToScreen(wx,wy);
-      if(sx<-20||sx>canvas.width+20||sy<-20||sy>canvas.height+20) continue;
-      const r=getSize(s)*Math.max(.5,Math.min(2,camZoom*.8));
-      const col=getColor(s,colorMode);
-      const isHov=hoveredSong===i||pinnedSong===i;
-      const isMatch=q2&&(s.name.toLowerCase().includes(q2)||s.artist.toLowerCase().includes(q2));
-      const isDim=q2&&!isMatch;
-      const isCryst=!!(featureCache[s.id]?.lastfm||featureCache[s.id]?.audio);
-      ctx2.globalAlpha=isDim?.04:isHov?1:isCryst?.88:.62;
-      ctx2.shadowBlur=isHov?22:isCryst?4:0; ctx2.shadowColor=col;
-      ctx2.beginPath();ctx2.arc(sx,sy,isHov?r*2.2:r,0,Math.PI*2);
-      ctx2.fillStyle=col;ctx2.fill();
+  // ── dispatch to active viewport mode ──
+  if(viewportMode==='canvas') renderCanvas();
+  else if(viewportMode==='webgl') renderWebGL();
+  // fluid: no-op until implemented
+
+  // ── shared 2D overlay: grid, hover ring, transit pulses ──
+  renderOverlay();
+}
+
+// ─────────────────────────────────────────────
+// CANVAS 2D — original renderer, pixel-perfect
+// ─────────────────────────────────────────────
+function renderCanvas(){
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const q=searchQuery.toLowerCase();
+  for(let i=0;i<songs.length;i++){
+    const s=songs[i];
+    const{wx,wy}=getPos(i);
+    const{sx,sy}=worldToScreen(wx,wy);
+    if(sx<-20||sx>canvas.width+20||sy<-20||sy>canvas.height+20) continue;
+    const r=getSize(s)*Math.max(.5,Math.min(2,camZoom*.8));
+    const col=getColor(s,colorMode);
+    const isHov=hoveredSong===i||pinnedSong===i;
+    const isMatch=q&&(s.name.toLowerCase().includes(q)||s.artist.toLowerCase().includes(q));
+    const isDim=q&&!isMatch;
+    const isCryst=!!(featureCache[s.id]?.lastfm||featureCache[s.id]?.audio||featureCache[s.id]?.genre);
+    ctx.globalAlpha=isDim?.04:isHov?1:isCryst?.88:.62;
+    ctx.shadowBlur=isHov?22:(isMatch?14:(isCryst?4:0));
+    ctx.shadowColor=col;
+    ctx.beginPath();ctx.arc(sx,sy,isHov?r*2.2:r,0,Math.PI*2);
+    ctx.fillStyle=col;ctx.fill();
+    if(isHov){
+      ctx.globalAlpha=.28;ctx.beginPath();ctx.arc(sx,sy,r*4.5,0,Math.PI*2);
+      ctx.strokeStyle=col;ctx.lineWidth=.8;ctx.stroke();
     }
-    ctx2.globalAlpha=1;ctx2.shadowBlur=0;
+    if(posTransitions[i]){
+      ctx.globalAlpha=.4+.3*Math.sin(performance.now()*.004);
+      ctx.beginPath();ctx.arc(sx,sy,r*2,0,Math.PI*2);
+      ctx.strokeStyle='rgba(255,255,255,0.7)';ctx.lineWidth=.5;ctx.stroke();
+    }
   }
-  if(gl){
-    gl.viewport(0,0,canvas.width,canvas.height);
-    gl.clearColor(0,0,0,0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+  ctx.globalAlpha=1;ctx.shadowBlur=0;
+}
 
-    const n=songs.length;
-    // Allocate/reuse flat GPU arrays
-    if(!_gpuPos||_gpuPos.length!==n*2){
-      _gpuPos=new Float32Array(n*2);
-      _gpuColor=new Float32Array(n*3);
-      _gpuSize=new Float32Array(n);
-      _gpuAlpha=new Float32Array(n);
-      _gpuGlow=new Float32Array(n);
-    }
+// ─────────────────────────────────────────────
+// WEBGL — quad-based renderer (no gl.POINTS blur)
+// Each node = 2 triangles; fragment shader gets
+// exact UV coords → perfect soft disc at any size
+// ─────────────────────────────────────────────
+function renderWebGL(){
+  if(!gl) return;
+  gl.viewport(0,0,canvas.width,canvas.height);
+  gl.clearColor(0,0,0,0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
 
-    const q=searchQuery.toLowerCase();
-    const canvasCx=canvas.width/2, canvasCy=canvas.height/2;
-    const sz=Math.min(canvas.width,canvas.height)*.85;
-
-    for(let i=0;i<n;i++){
-      const s=songs[i];
-      const{wx,wy}=getPos(i);
-      // pixel position (camera applied in vertex shader)
-      _gpuPos[i*2]  =canvasCx+(wx-.5)*sz;
-      _gpuPos[i*2+1]=canvasCy+(wy-.5)*sz;
-
-      const col=getColor(s,colorMode);
-      const rgb=parseHsl(col);
-      _gpuColor[i*3]=rgb[0]; _gpuColor[i*3+1]=rgb[1]; _gpuColor[i*3+2]=rgb[2];
-
-      const baseSize=getSize(s)*2.0;
-      const isHov=hoveredSong===i||pinnedSong===i;
-      _gpuSize[i]=isHov?baseSize*2.4:baseSize;
-
-      const isMatch=q&&(s.name.toLowerCase().includes(q)||s.artist.toLowerCase().includes(q));
-      const isDim=q&&!isMatch;
-      const isCryst=!!(featureCache[s.id]?.lastfm||featureCache[s.id]?.audio||featureCache[s.id]?.genre);
-      _gpuAlpha[i]=isDim?.04:isHov?1.0:isCryst?.78:.55;
-      _gpuGlow[i]=isHov?1.0:isMatch?.7:(isCryst?.35:.08);
-    }
-
-    bindAttr(_bufPos,  _aPos,   _gpuPos,   2);
-    bindAttr(_bufColor,_aColor, _gpuColor, 3);
-    bindAttr(_bufSize, _aSize,  _gpuSize,  1);
-    bindAttr(_bufAlpha,_aAlpha, _gpuAlpha, 1);
-    bindAttr(_bufGlow, _aGlow,  _gpuGlow,  1);
-
-    // Camera uniforms (cached locations, set every frame — cheap)
-    gl.uniform2f(_uRes, canvas.width, canvas.height);
-    gl.uniform1f(_uCamX, camX);
-    gl.uniform1f(_uCamY, camY);
-    gl.uniform1f(_uZoom, camZoom);
-
-    gl.drawArrays(gl.POINTS, 0, n);
+  const n=songs.length;
+  if(!_gpuPos||_gpuPos.length!==n*2){
+    _gpuPos=new Float32Array(n*2);
+    _gpuColor=new Float32Array(n*3);
+    _gpuSize=new Float32Array(n);
+    _gpuAlpha=new Float32Array(n);
+    _gpuGlow=new Float32Array(n);
   }
 
-  // ── 2D grid-canvas overlay: grid lines + hover ring + transit rings ──
+  const q=searchQuery.toLowerCase();
+  const ccx=canvas.width/2, ccy=canvas.height/2;
+  const sz=Math.min(canvas.width,canvas.height)*.85;
+
+  for(let i=0;i<n;i++){
+    const s=songs[i];
+    const{wx,wy}=getPos(i);
+    _gpuPos[i*2]  =ccx+(wx-.5)*sz;
+    _gpuPos[i*2+1]=ccy+(wy-.5)*sz;
+    const rgb=parseHsl(getColor(s,colorMode));
+    _gpuColor[i*3]=rgb[0];_gpuColor[i*3+1]=rgb[1];_gpuColor[i*3+2]=rgb[2];
+    const isHov=hoveredSong===i||pinnedSong===i;
+    const baseSize=getSize(s)*2.0;
+    _gpuSize[i]=isHov?baseSize*2.4:baseSize;
+    const isMatch=q&&(s.name.toLowerCase().includes(q)||s.artist.toLowerCase().includes(q));
+    const isDim=q&&!isMatch;
+    const isCryst=!!(featureCache[s.id]?.lastfm||featureCache[s.id]?.audio||featureCache[s.id]?.genre);
+    _gpuAlpha[i]=isDim?.04:isHov?1.0:isCryst?.78:.55;
+    _gpuGlow[i]=isHov?1.0:isMatch?.7:(isCryst?.35:.08);
+  }
+
+  bindAttr(_bufPos,  _aPos,   _gpuPos,   2);
+  bindAttr(_bufColor,_aColor, _gpuColor, 3);
+  bindAttr(_bufSize, _aSize,  _gpuSize,  1);
+  bindAttr(_bufAlpha,_aAlpha, _gpuAlpha, 1);
+  bindAttr(_bufGlow, _aGlow,  _gpuGlow,  1);
+
+  gl.uniform2f(_uRes, canvas.width, canvas.height);
+  gl.uniform1f(_uCamX, camX);
+  gl.uniform1f(_uCamY, camY);
+  gl.uniform1f(_uZoom, camZoom);
+  gl.drawArrays(gl.POINTS, 0, n);
+}
+
+// ─────────────────────────────────────────────
+// OVERLAY — grid + hover ring + transit pulses
+// always on gridCanvas (2D), both modes share it
+// ─────────────────────────────────────────────
+function renderOverlay(){
   const gw=gridCanvas.width, gh=gridCanvas.height;
   gctx.clearRect(0,0,gw,gh);
-
-  // Grid lines
-  gctx.strokeStyle='rgba(255,255,255,0.025)'; gctx.lineWidth=1;
+  // Grid
+  gctx.strokeStyle='rgba(255,255,255,0.025)';gctx.lineWidth=1;
   for(let g=.1;g<1;g+=.1){
     const{sx}=worldToScreen(g,0),{sy}=worldToScreen(0,g);
-    gctx.beginPath(); gctx.moveTo(sx,0); gctx.lineTo(sx,gh); gctx.stroke();
-    gctx.beginPath(); gctx.moveTo(0,sy); gctx.lineTo(gw,sy); gctx.stroke();
+    gctx.beginPath();gctx.moveTo(sx,0);gctx.lineTo(sx,gh);gctx.stroke();
+    gctx.beginPath();gctx.moveTo(0,sy);gctx.lineTo(gw,sy);gctx.stroke();
   }
-  // Center crosshairs
-  gctx.strokeStyle='rgba(167,139,250,0.08)'; gctx.lineWidth=1.5;
-  const{sx:ccx,sy:ccy}=worldToScreen(.5,.5);
-  gctx.beginPath(); gctx.moveTo(0,ccy); gctx.lineTo(gw,ccy); gctx.stroke();
-  gctx.beginPath(); gctx.moveTo(ccx,0); gctx.lineTo(ccx,gh); gctx.stroke();
-
-  // Hover / pinned ring
+  gctx.strokeStyle='rgba(167,139,250,0.08)';gctx.lineWidth=1.5;
+  const{sx:cx,sy:cy}=worldToScreen(.5,.5);
+  gctx.beginPath();gctx.moveTo(0,cy);gctx.lineTo(gw,cy);gctx.stroke();
+  gctx.beginPath();gctx.moveTo(cx,0);gctx.lineTo(cx,gh);gctx.stroke();
+  // Hover ring
   const hi=hoveredSong!==null?hoveredSong:(pinnedSong!==null?pinnedSong:-1);
   if(hi>=0){
-    const hs=songs[hi];
     const{wx,wy}=getPos(hi);
     const{sx,sy}=worldToScreen(wx,wy);
-    const hr=getSize(hs)*Math.max(.5,Math.min(2,camZoom*.8));
-    const hcol=getColor(hs,colorMode);
+    const hr=getSize(songs[hi])*Math.max(.5,Math.min(2,camZoom*.8));
     gctx.globalAlpha=.22;
-    gctx.beginPath(); gctx.arc(sx,sy,hr*4.8,0,Math.PI*2);
-    gctx.strokeStyle=hcol; gctx.lineWidth=.8; gctx.stroke();
+    gctx.beginPath();gctx.arc(sx,sy,hr*4.8,0,Math.PI*2);
+    gctx.strokeStyle=getColor(songs[hi],colorMode);gctx.lineWidth=.8;gctx.stroke();
     gctx.globalAlpha=1;
   }
-
-  // Transit pulse rings (songs currently moving)
+  // Transit pulses
   const now=performance.now();
   for(const[idx,t] of Object.entries(posTransitions)){
     const i=parseInt(idx);
@@ -2416,11 +2495,12 @@ function render(){
     const{sx,sy}=worldToScreen(wx,wy);
     const pr=getSize(songs[i])*Math.max(.5,Math.min(2,camZoom*.8));
     gctx.globalAlpha=.35+.25*Math.sin(now*.004);
-    gctx.beginPath(); gctx.arc(sx,sy,pr*2,0,Math.PI*2);
-    gctx.strokeStyle='rgba(255,255,255,0.6)'; gctx.lineWidth=.5; gctx.stroke();
+    gctx.beginPath();gctx.arc(sx,sy,pr*2,0,Math.PI*2);
+    gctx.strokeStyle='rgba(255,255,255,0.6)';gctx.lineWidth=.5;gctx.stroke();
   }
   gctx.globalAlpha=1;
 }
+
 
 let _raf=null;
 function renderLoop(){render();_raf=requestAnimationFrame(renderLoop);}
@@ -2759,7 +2839,7 @@ function handleSearch(val){searchQuery=val;}
 function show(id){document.getElementById(id).classList.remove('hidden');}
 function hide(id){document.getElementById(id).classList.add('hidden');}
 function showHUD(){
-  ['hud','legend','controls','color-mode','search-wrap','ax-top','ax-bottom','ax-left','ax-right'].forEach(show);
+  ['hud','legend','controls','color-mode','viewport-mode','search-wrap','ax-top','ax-bottom','ax-left','ax-right'].forEach(show);
   const sb=document.getElementById('settings-btn');
   if(sb) sb.style.display='flex';
 }
