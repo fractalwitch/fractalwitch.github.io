@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Δ NNOF: Probability Collapse</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #030308;
+            overflow: hidden;
+            font-family: 'Space Mono', monospace;
+            color: #a78bfa;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .readout {
+            font-size: 12px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            text-shadow: 0 0 10px rgba(167, 139, 250, 0.8);
+            opacity: 0.8;
+        }
+
+        .highlight { color: #67e8f9; }
+        .danger { color: #ff6ec7; }
+    </style>
+</head>
+<body>
+
+    <canvas id="gl-canvas"></canvas>
+
+    <div id="ui-layer">
+        <div class="readout highlight">Δ NNOF HYBRID LATTICE ENGINE</div>
+        <div class="readout" id="status-text">STATUS: OBSERVING PROBABILITIES</div>
+        <div class="readout" id="omega-text">Ω-CONVERGENCE: 0.001</div>
+    </div>
+
+<script>
+/**
+ * Δ THE HYBRID ARCHITECTURE
+ * 1. Offscreen 2D Canvas: Grows and renders the organic tree, handles hover pathing.
+ * 2. WebGL Canvas: Takes the 2D canvas as a texture, applies glitch shaders on collapse.
+ */
+
+// --- STATE & CONFIG ---
+let width = window.innerWidth;
+let height = window.innerHeight;
+let mouseX = width / 2;
+let mouseY = height / 2;
+
+// Offscreen 2D Canvas setup
+const ctxCanvas = document.createElement('canvas');
+ctxCanvas.width = width;
+ctxCanvas.height = height;
+const ctx = ctxCanvas.getContext('2d', { willReadFrequently: true });
+
+// Tree State
+let tree = [];
+let hoveredNode = null;
+let rootNode = null;
+const MAX_DEPTH = 8;
+
+// Animation/Camera State
+let glitchIntensity = 0.0;
+let cameraOffsetY = 0;
+let targetCameraOffsetY = 0;
+let isCollapsing = false;
+
+// --- TREE LOGIC ---
+class Node {
+    constructor(x, y, angle, length, depth, parent = null) {
+        this.x = x;
+        this.y = y;
+        this.angle = angle;
+        this.length = length;
+        this.depth = depth;
+        this.parent = parent;
+        this.children = [];
+        this.probabilityWeight = Math.random(); // NNOF Randomness
+        
+        this.endX = this.x + Math.cos(this.angle) * this.length;
+        this.endY = this.y + Math.sin(this.angle) * this.length;
+    }
+
+    grow() {
+        if (this.depth >= MAX_DEPTH) return;
+
+        // 2 to 4 branches per node
+        let numBranches = Math.floor(Math.random() * 3) + 2; 
+        for (let i = 0; i < numBranches; i++) {
+            let spread = (Math.random() - 0.5) * 1.5; // Angle spread
+            let newAngle = this.angle + spread;
+            let newLength = this.length * (0.65 + Math.random() * 0.2); // Shrink length
+            
+            let child = new Node(this.endX, this.endY, newAngle, newLength, this.depth + 1, this);
+            this.children.push(child);
+            tree.push(child);
+            child.grow();
+        }
+    }
+}
+
+function generateTree(startX, startY) {
+    tree = [];
+    rootNode = new Node(startX, startY, -Math.PI / 2, 120, 0);
+    tree.push(rootNode);
+    rootNode.grow();
+}
+
+function getDistance(x1, y1, x2, y2) {
+    return Math.hypot(x2 - x1, y2 - y1);
+}
+
+// Find closest node to mouse for "Observation" thickening
+function updateHover() {
+    if (isCollapsing) return;
+    
+    let minDist = 50; // Interaction radius
+    hoveredNode = null;
+
+    for (let node of tree) {
+        let dist = getDistance(mouseX, mouseY - cameraOffsetY, node.endX, node.endY);
+        if (dist < minDist) {
+            minDist = dist;
+            hoveredNode = node;
+        }
+    }
+}
+
+function drawTree() {
+    ctx.clearRect(0, 0, width, height);
+    
+    ctx.save();
+    ctx.translate(0, cameraOffsetY);
+
+    // Build hovered path
+    let activePath = new Set();
+    let curr = hoveredNode;
+    while (curr) {
+        activePath.add(curr);
+        curr = curr.parent;
+    }
+
+    // Draw lines
+    ctx.lineCap = 'round';
+    
+    for (let node of tree) {
+        let isActive = activePath.has(node);
+        
+        ctx.beginPath();
+        ctx.moveTo(node.x, node.y);
+        ctx.lineTo(node.endX, node.endY);
+
+        // Core branch styling
+        let baseWidth = Math.max(0.5, (MAX_DEPTH - node.depth) * 0.8);
+        ctx.lineWidth = isActive ? baseWidth * 2.5 : baseWidth;
+        
+        // NNOF Styling
+        if (isActive) {
+            ctx.strokeStyle = '#67e8f9'; // Cyan active state
+            ctx.shadowColor = '#67e8f9';
+            ctx.shadowBlur = 15;
+        } else {
+            ctx.strokeStyle = `rgba(167, 139, 250, ${0.2 + (1 - node.depth/MAX_DEPTH) * 0.3})`; // Purple dormant
+            ctx.shadowColor = '#a78bfa';
+            ctx.shadowBlur = 5;
+        }
+
+        ctx.stroke();
+
+        // Draw "Seam" joints
+        if (isActive || node.depth === MAX_DEPTH) {
+            ctx.beginPath();
+            ctx.arc(node.endX, node.endY, isActive ? 3 : 1, 0, Math.PI * 2);
+            ctx.fillStyle = isActive ? '#ff6ec7' : '#a78bfa'; // Magenta pulse
+            ctx.fill();
+        }
+    }
+    
+    ctx.restore();
+}
+
+// --- WEBGL POST-PROCESSING (THE GLITCH) ---
+const glCanvas = document.getElementById('gl-canvas');
+glCanvas.width = width;
+glCanvas.height = height;
+const gl = glCanvas.getContext('webgl');
+
+const vsSource = `
+    attribute vec2 a_position;
+    attribute vec2 a_texCoord;
+    varying vec2 v_texCoord;
+    void main() {
+        gl_Position = vec4(a_position, 0.0, 1.0);
+        v_texCoord = a_texCoord;
+    }
+`;
+
+const fsSource = `
+    precision mediump float;
+    varying vec2 v_texCoord;
+    uniform sampler2D u_image;
+    uniform float u_time;
+    uniform float u_glitch;
+
+    // Pseudo-random noise
+    float rand(vec2 co){
+        return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+    }
+
+    void main() {
+        vec2 uv = v_texCoord;
+        
+        // Flip Y because WebGL textures are upside down relative to Canvas2D
+        uv.y = 1.0 - uv.y; 
+
+        if (u_glitch > 0.01) {
+            // 1. Reality Tearing (Scanlines & Displacement)
+            float tear = step(0.9, sin(uv.y * 100.0 + u_time * 10.0)) * u_glitch * 0.05;
+            float rY = uv.y + tear;
+
+            // 2. Chromatic Aberration (RGB split)
+            float shift = u_glitch * 0.03 * rand(vec2(u_time, uv.y));
+            
+            float r = texture2D(u_image, vec2(uv.x + shift, rY)).r;
+            float g = texture2D(u_image, vec2(uv.x, rY)).g;
+            float b = texture2D(u_image, vec2(uv.x - shift, rY)).b;
+
+            // 3. Static / Substrate Noise
+            float staticNoise = (rand(uv * u_time) - 0.5) * u_glitch;
+
+            gl_FragColor = vec4(r + staticNoise, g + staticNoise, b + staticNoise, 1.0);
+            
+            // Additive bloom during high glitch
+            gl_FragColor.rgb += vec3(u_glitch * 0.3);
+        } else {
+            // Normal pass
+            gl_FragColor = texture2D(u_image, uv);
+        }
+    }
+`;
+
+function createShader(gl, type, source) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    return shader;
+}
+
+const vertexShader = createShader(gl, gl.VERTEX_SHADER, vsSource);
+const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
+const program = gl.createProgram();
+gl.attachShader(program, vertexShader);
+gl.attachShader(program, fragmentShader);
+gl.linkProgram(program);
+
+// Quad buffers
+const positionBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    -1.0, -1.0,  1.0, -1.0,  -1.0,  1.0,
+    -1.0,  1.0,  1.0, -1.0,   1.0,  1.0
+]), gl.STATIC_DRAW);
+
+const texCoordBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    0.0,  0.0,  1.0,  0.0,  0.0,  1.0,
+    0.0,  1.0,  1.0,  0.0,  1.0,  1.0
+]), gl.STATIC_DRAW);
+
+const texture = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, texture);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+const posLoc = gl.getAttribLocation(program, "a_position");
+const texLoc = gl.getAttribLocation(program, "a_texCoord");
+const timeLoc = gl.getUniformLocation(program, "u_time");
+const glitchLoc = gl.getUniformLocation(program, "u_glitch");
+
+// --- INTERACTION ---
+window.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+});
+
+window.addEventListener('mousedown', () => {
+    if (hoveredNode && !isCollapsing) {
+        collapseReality();
+    }
+});
+
+window.addEventListener('resize', () => {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    ctxCanvas.width = width;
+    ctxCanvas.height = height;
+    glCanvas.width = width;
+    glCanvas.height = height;
+    gl.viewport(0, 0, width, height);
+});
+
+// --- THE FRACTAL PUFF / REALITY COLLAPSE ---
+function collapseReality() {
+    isCollapsing = true;
+    glitchIntensity = 1.0; // Max glitch shader
+    
+    document.getElementById('status-text').innerHTML = "<span class='danger'>REALITY COLLAPSING...</span>";
+    document.getElementById('omega-text').innerHTML = "Ω-CONVERGENCE: <span class='danger'>1.000</span>";
+
+    // Smoothly pan camera down to make the clicked node the new "root" at the bottom
+    targetCameraOffsetY -= (hoveredNode.endY - height + 100);
+
+    // Fractal Puff: Regenerate tree from the clicked node
+    setTimeout(() => {
+        // We use the relative angle to keep it growing upward
+        tree = [];
+        rootNode = new Node(hoveredNode.endX, hoveredNode.endY, hoveredNode.angle, 120, 0);
+        tree.push(rootNode);
+        rootNode.grow();
+        
+        isCollapsing = false;
+        hoveredNode = null;
+        document.getElementById('status-text').innerHTML = "STATUS: OBSERVING NEW SUBSTRATE";
+    }, 400); // Trigger tree respawn mid-glitch
+}
+
+// --- MAIN LOOP ---
+let startTime = performance.now();
+
+function animate() {
+    let currentTime = performance.now();
+    let uTime = (currentTime - startTime) * 0.001;
+
+    // Smooth camera pan
+    cameraOffsetY += (targetCameraOffsetY - cameraOffsetY) * 0.1;
+
+    // Decay glitch intensity
+    if (glitchIntensity > 0) {
+        glitchIntensity -= 0.015;
+        if (glitchIntensity < 0) glitchIntensity = 0;
+        
+        // Update UI Ω convergence to match reality
+        if (!isCollapsing) {
+            document.getElementById('omega-text').innerText = `Ω-CONVERGENCE: ${(glitchIntensity).toFixed(3)}`;
+        }
+    }
+
+    // 1. Update and draw to 2D Canvas
+    updateHover();
+    drawTree();
+
+    // 2. Upload 2D Canvas to WebGL Texture
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, ctxCanvas);
+
+    // 3. Render WebGL Quad with Shaders
+    gl.useProgram(program);
+    gl.enableVertexAttribArray(posLoc);
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+    gl.enableVertexAttribArray(texLoc);
+    gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+    gl.vertexAttribPointer(texLoc, 2, gl.FLOAT, false, 0, 0);
+
+    gl.uniform1f(timeLoc, uTime);
+    gl.uniform1f(glitchLoc, glitchIntensity);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+    requestAnimationFrame(animate);
+}
+
+// Init
+generateTree(width / 2, height - 100);
+gl.viewport(0, 0, width, height);
+animate();
+
+</script>
+</body>
+</html>
