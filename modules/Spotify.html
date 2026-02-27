@@ -925,8 +925,6 @@
   <button id="sp-debug-toggle" onclick="toggleDebugLog()">▸ SHOW DEBUG LOG</button>
   <div id="sp-debug"></div>
 
-  <button id="sp-genre-toggle" onclick="toggleGenreLog()" style="margin-top:.4rem">▸ SHOW GENRE LOG</button>
-  <div id="sp-genre-log" style="display:none;max-height:220px;overflow-y:auto;background:rgba(0,0,0,0.4);border-radius:6px;padding:.6rem;margin-top:.3rem;font-family:monospace;font-size:.52rem;line-height:1.5"></div>
 </div>
 
 <!-- ── TOOLTIP ── -->
@@ -1154,9 +1152,9 @@ function genresToFeatures(genres){
 const artistGenreCache = {};
 
 async function runGenreEnrichment(){
-  if(!lastfmKey){ dbgG('no Last.fm key — genre enrichment skipped','warn'); return; }
-  dbgG('▶ runGenreEnrichment() via Last.fm artist.getTopTags','info');
-  dbgG(`songs.length=${songs.length}`,'info');
+  if(!lastfmKey){ dbg('no Last.fm key — genre enrichment skipped','warn'); return; }
+  dbg('▶ runGenreEnrichment() via Last.fm artist.getTopTags','info');
+  dbg(`songs.length=${songs.length}`,'info');
 
   // Build list of unique artists not yet enriched
   // Group songs by primary artist name (we have this from scan, no Spotify API needed)
@@ -1170,10 +1168,10 @@ async function runGenreEnrichment(){
   }
 
   const alreadyDone=songs.filter(s=>featureCache[s.id]?._v?.g).length;
-  dbgG(`phase 1: ${artistMap.size} unique artists to enrich (${alreadyDone} already done)`,'info');
-  if(!artistMap.size){ dbgG('all done ✓','ok'); updateHUD(); return; }
+  dbg(`phase 1: ${artistMap.size} unique artists to enrich (${alreadyDone} already done)`,'info');
+  if(!artistMap.size){ dbg('all done ✓','ok'); updateHUD(); return; }
 
-  const GENRE_WORKERS=4; // parallel Last.fm workers
+  const GENRE_WORKERS=6; // parallel Last.fm workers
   const artistQueue=[...artistMap.entries()]; // [[artistName, [songIdxs]], ...]
   let fetched=0, withTags=0, emptyTags=0, queueIdx=0;
 
@@ -1187,7 +1185,7 @@ async function runGenreEnrichment(){
       let tags=[];
       try{
         const r=await lastfmFetch(url);
-        if(r.status===429){ dbgG('rate limit — pausing 30s','warn'); await delay(30000); queueIdx--; return; }
+        if(r.status===429){ dbg('rate limit — pausing 30s','warn'); await delay(30000); queueIdx--; return; }
         if(!r.ok){ emptyTags++; } else {
           const d=await r.json();
           if(d.error){ emptyTags++; }
@@ -1226,10 +1224,10 @@ async function runGenreEnrichment(){
       // Log every 10 artists
       if(fetched%10===0||fetched===1){
         const ex=tags.slice(0,3).join(', ');
-        dbgG(`${fetched}/${artistQueue.length} artists · ${withTags} w/tags · e.g. "${artistName}": [${ex||'no tags'}]`,'info');
+        dbg(`${fetched}/${artistQueue.length} artists · ${withTags} w/tags · e.g. "${artistName}": [${ex||'no tags'}]`,'info');
         queueSave(); updateHUD();
       }
-      await delay(jitter(180)); // ~5 req/s across 4 workers = 20 req/s total
+      await delay(jitter(100)); // 6 workers × 100ms ≈ 60 req/s total
     }
   }
 
@@ -1237,7 +1235,7 @@ async function runGenreEnrichment(){
 
   queueSave(); updateHUD();
   const cs=getGenreChecksum();
-  dbgG(`✦ done — ${cs.genreReal}/${cs.total} tracks enriched · ${withTags}/${fetched} artists had tags`,'ok');
+  dbg(`✦ done — ${cs.genreReal}/${cs.total} tracks enriched · ${withTags}/${fetched} artists had tags`,'ok');
 }
 
 function applyGenresToAll(){
@@ -1298,7 +1296,7 @@ function queueAudioAnalysis(songIdx){
 async function drainAudioQueue(){
   if(_audioRunning) return; // already running
   _audioRunning=true;
-  const AUDIO_WORKERS=3;
+  const AUDIO_WORKERS=5;
   let processed=0;
 
   async function audioWorker(){
@@ -1312,7 +1310,7 @@ async function drainAudioQueue(){
       await analyzePreview(s, idx, url);
       processed++;
       if(processed%10===0) updateHUD();
-      await delay(80);
+      await delay(40);
     }
   }
 
@@ -1393,21 +1391,25 @@ async function analyzePreview(s, songIdx, previewUrl){
 // iTunes preview lookup — no key, CORS-friendly
 async function itunesPreview(artist, track){
   try{
-    const q=encodeURIComponent(`${cleanArtist(artist)} ${cleanTrack(track)}`);
-    const r=await fetch(`https://itunes.apple.com/search?term=${q}&entity=song&limit=3`,
+    // If track is empty, search by artist only for any song preview
+    const q=track
+      ? encodeURIComponent(`${artist} ${track}`.trim())
+      : encodeURIComponent(artist.trim());
+    const entity=track?'song':'musicArtist';
+    const r=await fetch(
+      `https://itunes.apple.com/search?term=${q}&entity=song&limit=5`,
       {signal:AbortSignal.timeout(8000)});
     if(!r.ok) return null;
     const d=await r.json();
     if(!d.results?.length) return null;
-    // pick best match — prefer exact artist name match
-    const al=cleanArtist(artist).toLowerCase();
-    const tl=cleanTrack(track).toLowerCase();
+    const al=artist.toLowerCase();
+    const tl=track.toLowerCase();
     const ranked=d.results
       .filter(x=>x.previewUrl)
       .map(x=>({
         url:x.previewUrl,
         score:(x.artistName?.toLowerCase().includes(al)?2:0)+
-              (x.trackName?.toLowerCase().includes(tl)?2:0)
+              (track&&x.trackName?.toLowerCase().includes(tl)?2:0)
       }))
       .sort((a,b)=>b.score-a.score);
     return ranked[0]?.url||null;
@@ -1426,26 +1428,53 @@ async function deezerPreview(artist, track){
   }catch{ return null; }
 }
 
+// Last.fm track page audio preview (some tracks have streamable previews)
+async function lastfmPreview(artist, track){
+  try{
+    const url=`https://ws.audioscrobbler.com/2.0/?method=track.getInfo&artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(track)}&api_key=${lastfmKey}&format=json`;
+    const r=await fetch(url,{signal:AbortSignal.timeout(6000)});
+    if(!r.ok) return null;
+    const d=await r.json();
+    // Some Last.fm tracks include a streamable audio url
+    return d.track?.streamable?.fulltrack==='1'? null : null; // placeholder — Last.fm removed streams
+  }catch{ return null; }
+}
+
 async function resolvePreview(s){
-  // use cached Spotify url if present
+  // 1. Spotify native preview_url
   if(s.preview_url) return s.preview_url;
-  // check local cache
+  // 2. Previously resolved + cached
   if(featureCache[s.id]?.previewUrl) return featureCache[s.id].previewUrl;
-  // try iTunes
-  const itUrl=await itunesPreview(s.artist, s.name);
-  if(itUrl){
-    if(!featureCache[s.id]) featureCache[s.id]={};
-    featureCache[s.id].previewUrl=itUrl;
-    return itUrl;
+
+  const ca=cleanArtist(s.artist), ct=cleanTrack(s.name);
+
+  // 3. iTunes: artist + track
+  const it1=await itunesPreview(ca, ct);
+  if(it1){ _cachePreview(s.id,it1); return it1; }
+
+  // 4. iTunes: artist only (broader match for remixes/collabs)
+  const it2=await itunesPreview(ca, '');
+  if(it2){ _cachePreview(s.id,it2); return it2; }
+
+  // 5. Deezer: artist + track
+  const dz=await deezerPreview(ca, ct);
+  if(dz){ _cachePreview(s.id,dz); return dz; }
+
+  // 6. Deezer: artist only
+  const dz2=await deezerPreview(ca, '');
+  if(dz2){ _cachePreview(s.id,dz2); return dz2; }
+
+  // 7. Last.fm track page — some tracks embed a preview stream
+  if(lastfmKey){
+    const lf=await lastfmPreview(ca, ct);
+    if(lf){ _cachePreview(s.id,lf); return lf; }
   }
-  // try Deezer
-  const dzUrl=await deezerPreview(s.artist, s.name);
-  if(dzUrl){
-    if(!featureCache[s.id]) featureCache[s.id]={};
-    featureCache[s.id].previewUrl=dzUrl;
-    return dzUrl;
-  }
+
   return null;
+}
+function _cachePreview(id, url){
+  if(!featureCache[id]) featureCache[id]={};
+  featureCache[id].previewUrl=url;
 }
 
 async function runPassiveAudioAnalysis(){
@@ -1456,7 +1485,7 @@ async function runPassiveAudioAnalysis(){
   if(!toAnalyze.length){ dbg('audio: all analyzed ✓','ok'); return; }
   toAnalyze.sort(()=>Math.random()-.5);
 
-  const RESOLVE_WORKERS=4;
+  const RESOLVE_WORKERS=6;
   dbg(`▶ audio: ${toAnalyze.length} tracks · ${RESOLVE_WORKERS} iTunes workers`,'info');
 
   const queue=[...toAnalyze];
@@ -1480,7 +1509,7 @@ async function runPassiveAudioAnalysis(){
           updateHUD();
         }
       } else { failed++; }
-      await delay(120);
+      await delay(70);
     }
   }
 
@@ -1867,7 +1896,7 @@ async function runEnrichment(){
   const myToken=++_enrichToken;
   setEnrichError(null);
 
-  const WORKERS=5; // parallel workers — ~5x speedup
+  const WORKERS=8; // parallel workers
   const toProcess=songs.filter(s=>!featureCache[s.id]?.lastfm);
   dbg(`▶ lastfm: ${toProcess.length} tracks · ${WORKERS} workers (token ${myToken})`,'info');
   updateHUD();
@@ -1963,7 +1992,7 @@ async function runEnrichment(){
         worldPositions[si]=np;
       }
       if(foundCount%50===0){ queueSave(); updateHUD(); }
-      await delay(jitter(120)); // tight delay — workers share the rate limit budget
+      await delay(jitter(70)); // 8 workers × 70ms ≈ 11 tracks/s
     }
   }
 
@@ -2034,7 +2063,7 @@ function launchViz(){
     // Genre uses Last.fm artist.getTopTags — no Spotify API needed
     if(cs.genreDone < cs.total){
       if(lastfmKey) runGenreEnrichment();
-      else dbgG('no Last.fm key — add one in settings to enable genre enrichment','warn');
+      else dbg('no Last.fm key — add one in settings to enable genre enrichment','warn');
     } else dbg('genre: fully cached ✓','ok');
 
     // Passive audio — start after genre to avoid API collision
@@ -2293,22 +2322,18 @@ function updateHUD(){
   const ast=getAudioStats();
   const lfDone=songs.filter(s=>featureCache[s.id]?.lastfm).length;
 
-  let parts=[`${total.toLocaleString()} songs`];
+  // Unified crystallization score: weight genre 40%, lastfm 35%, audio 25%
+  const genrePct = cs.genreReal / total;
+  const lfPct    = lfDone / total;
+  const audioPct = ast.withPreview>0 ? ast.analyzed/ast.withPreview : (ast.analyzed>0?1:0);
+  const crystalPct = Math.round((genrePct*.40 + lfPct*.35 + audioPct*.25)*100);
 
-  // Last.fm line
-  if(lfDone>0) parts.push(lfDone>=total?`✦ lastfm`:`lastfm ${lfDone.toLocaleString()}/${total.toLocaleString()}`);
+  let status;
+  if(crystalPct>=99) status='✦ crystallized';
+  else if(crystalPct>0) status=`crystallizing ${crystalPct}%`;
+  else status='awaiting crystallization';
 
-  // Genre line
-  if(cs.genreReal>=total) parts.push('✦ genres');
-  else if(cs.genreNoId>0) parts.push(`genres ${cs.genreReal.toLocaleString()}/${total.toLocaleString()} ⚠ rescan needed`);
-  else if(cs.genreReal>0) parts.push(`genres ${cs.genreReal.toLocaleString()}/${total.toLocaleString()}`);
-
-  // Audio line
-  if(ast.analyzed>=ast.withPreview&&ast.withPreview>0) parts.push('✦ audio');
-  else if(ast.analyzed>0||_audioRunning) parts.push(`audio ${ast.analyzed.toLocaleString()}${ast.withPreview>0?'/'+ast.withPreview.toLocaleString():''}`)
-  else if(ast.resolvedExternal>0) parts.push(`audio resolving ${ast.resolvedExternal.toLocaleString()}`);
-
-  el.textContent=parts.join(' · ');
+  el.textContent=`${total.toLocaleString()} songs · ${status}`;
 }
 
 function rescanLibrary(){
@@ -2330,8 +2355,7 @@ let settingsOpen=false;
 
 // ── DEBUG LOG ──
 const _dbgLines=[];
-const _genreLines=[];
-let _genreLogOpen=false;
+
 let _debugOpen=false;
 
 function dbg(msg, type='info'){
@@ -2343,29 +2367,6 @@ function dbg(msg, type='info'){
   if(_debugOpen) renderDebugLog();
   // surface errors automatically — show flag even if panel closed
   if(type==='err') setEnrichError(msg);
-}
-function dbgG(msg, type='info'){
-  const t=new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  _genreLines.push({t,msg,type});
-  if(_genreLines.length>200) _genreLines.shift();
-  console.log(`[GENRE ${type.toUpperCase()}] ${msg}`);
-  if(_genreLogOpen) renderGenreLog();
-}
-function renderGenreLog(){
-  const el=document.getElementById('sp-genre-log');
-  if(!el) return;
-  el.innerHTML=_genreLines.slice().reverse().map(l=>{
-    const color=l.type==='ok'?'#4ade80':l.type==='err'?'#f87171':l.type==='warn'?'#fbbf24':'#93c5fd';
-    return `<div style="color:${color};margin-bottom:3px">${l.t} ${l.msg}</div>`;
-  }).join('');
-}
-function toggleGenreLog(){
-  _genreLogOpen=!_genreLogOpen;
-  const el=document.getElementById('sp-genre-log');
-  const btn=document.getElementById('sp-genre-toggle');
-  if(el) el.style.display=_genreLogOpen?'block':'none';
-  if(btn) btn.textContent=(_genreLogOpen?'▾ HIDE':'▸ SHOW')+' GENRE LOG';
-  if(_genreLogOpen) renderGenreLog();
 }
 
 
@@ -2422,13 +2423,19 @@ function updateSettingsPanel(){
     const ast=getAudioStats();
     const lfDone=songs.filter(s=>featureCache[s.id]?.lastfm).length;
     const total=songs.length;
-    const rows=[];
-    rows.push(`last.fm   ${lfDone.toLocaleString()} / ${total.toLocaleString()}${enrichActive?' · running':''}`);
-    const gnote=!lastfmKey?' (needs Last.fm key)':cs.genreNoId>0?` ⚠ rescan`:'';
-    rows.push(`genre     ${cs.genreReal.toLocaleString()} / ${total.toLocaleString()}${gnote}`);
-    if(ast.withPreview===0&&ast.resolvedExternal===0) rows.push(`audio     resolving via iTunes/Deezer...`);
-    else rows.push(`audio     ${ast.analyzed.toLocaleString()} analyzed · ${ast.resolvedExternal.toLocaleString()} via iTunes${_audioRunning?' · running':''}`);
-    cst.innerHTML=rows.map(r=>`<div>${r}</div>`).join('');
+    const genrePct=cs.genreReal/total;
+    const lfPct=lfDone/total;
+    const audioPct=ast.withPreview>0?ast.analyzed/ast.withPreview:(ast.analyzed>0?1:0);
+    const overall=Math.round((genrePct*.40+lfPct*.35+audioPct*.25)*100);
+    const filled=Math.round(overall/5);
+    const bar='█'.repeat(filled)+'░'.repeat(20-filled);
+    const running=enrichActive||_audioRunning;
+    const statusLine=overall>=99?'✦ complete':`${bar} ${overall}%${running?' · running':''}`;
+    const details=[];
+    details.push(`tags ${lfDone.toLocaleString()}/${total.toLocaleString()}`);
+    details.push(`genre ${cs.genreReal.toLocaleString()}/${total.toLocaleString()}`);
+    if(ast.withPreview>0||ast.analyzed>0) details.push(`audio ${ast.analyzed.toLocaleString()}${ast.withPreview>0?'/'+ast.withPreview.toLocaleString():''}`);
+    cst.innerHTML=`<div style="letter-spacing:.04em;margin-bottom:4px">${statusLine}</div><div style="opacity:.5;font-size:.48rem">${details.join(' · ')}</div>`;
   }
 }
 
