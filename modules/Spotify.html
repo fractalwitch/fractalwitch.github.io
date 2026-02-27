@@ -230,6 +230,13 @@
     pointer-events: none;
   }
 
+  #grid-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+  }
+
   #viz-canvas {
     position: fixed;
     inset: 0;
@@ -868,6 +875,7 @@
 </div>
 
 <!-- ── MAIN VIZ CANVAS ── -->
+<canvas id="grid-canvas"></canvas>
 <canvas id="viz-canvas" class="hidden"></canvas>
 
 <!-- ── LEGEND ── -->
@@ -2045,14 +2053,140 @@ async function requestAudioAnalysis(songIdx){
 // VISUALIZATION
 // ═══════════════════════════════════════════════════
 const canvas=document.getElementById('viz-canvas');
-const ctx=canvas.getContext('2d');
+const gridCanvas=document.getElementById('grid-canvas');
+const gctx=gridCanvas.getContext('2d'); // lightweight 2D for grid + hover rings
+let gl=null, glProg=null;
+// WebGL attribute/uniform locations (cached at init)
+let _aPos, _aColor, _aSize, _aAlpha, _aGlow;
+let _uRes, _uCamX, _uCamY, _uZoom;
+// Pre-allocated GPU arrays (reused every frame)
+let _gpuPos=null, _gpuColor=null, _gpuSize=null, _gpuAlpha=null, _gpuGlow=null;
+let _bufPos, _bufColor, _bufSize, _bufAlpha, _bufGlow;
+
+// ═══════════════════════════════════════════════════
+// WEBGL RENDERER
+// ═══════════════════════════════════════════════════
+const VERT_SRC=`
+  attribute vec2 a_pos;
+  attribute vec3 a_col;
+  attribute float a_sz;
+  attribute float a_alpha;
+  attribute float a_glow;
+  uniform vec2 u_res;
+  uniform float u_cx;
+  uniform float u_cy;
+  uniform float u_zoom;
+  varying vec3 v_col;
+  varying float v_alpha;
+  varying float v_glow;
+  void main(){
+    // apply camera: zoom around center then pan
+    float canvasCx=u_res.x*.5;
+    float canvasCy=u_res.y*.5;
+    float px=(a_pos.x-canvasCx)*u_zoom+canvasCx+u_cx;
+    float py=(a_pos.y-canvasCy)*u_zoom+canvasCy+u_cy;
+    vec2 clip=(vec2(px,py)/u_res)*2.0-1.0;
+    gl_Position=vec4(clip*vec2(1,-1),0,1);
+    gl_PointSize=clamp(a_sz*u_zoom,1.0,80.0);
+    v_col=a_col; v_alpha=a_alpha; v_glow=a_glow;
+  }
+`;
+const FRAG_SRC=`
+  precision mediump float;
+  varying vec3 v_col;
+  varying float v_alpha;
+  varying float v_glow;
+  void main(){
+    vec2 coord=gl_PointCoord-vec2(0.5);
+    float dist=length(coord);
+    if(dist>0.5) discard;
+    // dual-layer glow: tight core + soft halo
+    float core=smoothstep(0.5,0.05,dist);
+    float halo=smoothstep(0.5,0.3,dist)*0.4*v_glow;
+    float alpha=v_alpha*(core+halo);
+    gl_FragColor=vec4(v_col,alpha);
+  }
+`;
+
+function hslToRgb(h,s,l){
+  s/=100; l/=100;
+  const k=n=>(n+h/30)%12;
+  const a=s*Math.min(l,1-l);
+  const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
+  return[f(0),f(8),f(4)];
+}
+function parseHsl(hslStr){
+  // parses "hsl(H,S%,L%)" → [r,g,b] 0..1
+  const m=hslStr.match(/hsl\(([^,]+),([^%]+)%,([^%]+)%\)/);
+  if(!m) return[.5,.5,.5];
+  return hslToRgb(parseFloat(m[1]),parseFloat(m[2]),parseFloat(m[3]));
+}
+
+function initWebGL(){
+  gl=canvas.getContext('webgl',{premultipliedAlpha:false,alpha:true});
+  if(!gl){ console.warn('WebGL unavailable — falling back to 2D'); return false; }
+
+  function compileShader(type,src){
+    const sh=gl.createShader(type);
+    gl.shaderSource(sh,src); gl.compileShader(sh);
+    if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS)){
+      console.error('Shader error:',gl.getShaderInfoLog(sh)); return null;
+    }
+    return sh;
+  }
+  const vert=compileShader(gl.VERTEX_SHADER,VERT_SRC);
+  const frag=compileShader(gl.FRAGMENT_SHADER,FRAG_SRC);
+  glProg=gl.createProgram();
+  gl.attachShader(glProg,vert); gl.attachShader(glProg,frag);
+  gl.linkProgram(glProg);
+  if(!gl.getProgramParameter(glProg,gl.LINK_STATUS)){
+    console.error('Program link error:',gl.getProgramInfoLog(glProg)); return false;
+  }
+  gl.useProgram(glProg);
+
+  // Cache attribute locations
+  _aPos=gl.getAttribLocation(glProg,'a_pos');
+  _aColor=gl.getAttribLocation(glProg,'a_col');
+  _aSize=gl.getAttribLocation(glProg,'a_sz');
+  _aAlpha=gl.getAttribLocation(glProg,'a_alpha');
+  _aGlow=gl.getAttribLocation(glProg,'a_glow');
+
+  // Cache uniform locations
+  _uRes=gl.getUniformLocation(glProg,'u_res');
+  _uCamX=gl.getUniformLocation(glProg,'u_cx');
+  _uCamY=gl.getUniformLocation(glProg,'u_cy');
+  _uZoom=gl.getUniformLocation(glProg,'u_zoom');
+
+  // Create buffers
+  _bufPos=gl.createBuffer(); _bufColor=gl.createBuffer();
+  _bufSize=gl.createBuffer(); _bufAlpha=gl.createBuffer();
+  _bufGlow=gl.createBuffer();
+
+  // Additive blending — cluster glow accumulates like real light
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
+
+  return true;
+}
+
+function bindAttr(buf, loc, data, size){
+  gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER,data,gl.DYNAMIC_DRAW);
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc,size,gl.FLOAT,false,0,0);
+}
+
 
 function launchViz(){
   hide('loading-screen');canvas.classList.remove('hidden');showHUD();
   songs.forEach(s=>{s.f=getFeatures(s);});
   worldPositions=songs.map(s=>computeWorldPos(s,colorMode));
   updateAxisLabels(colorMode);
-  updateHUD();resizeCanvas();
+  updateHUD();
+  // Init WebGL (falls back gracefully if unavailable)
+  const webglOk=initWebGL();
+  if(!webglOk) console.warn('WebGL init failed — running without GPU acceleration');
+  resizeCanvas();
   window.addEventListener('resize',resizeCanvas);
   setupInteraction();resetView();renderLoop();
   // Checksum: determine what enrichment pipelines still need to run
@@ -2078,7 +2212,12 @@ function launchViz(){
     if(lastfmKey) setTimeout(runEnrichment, 5000);
   }, 2000);
 }
-function resizeCanvas(){canvas.width=innerWidth;canvas.height=innerHeight;}
+function resizeCanvas(){
+  const w=innerWidth, h=innerHeight;
+  canvas.width=w; canvas.height=h;
+  gridCanvas.width=w; gridCanvas.height=h;
+  if(gl) gl.viewport(0,0,w,h);
+}
 
 // Axis config per mode — what each filter maps to X and Y
 const MODE_AXES = {
@@ -2153,46 +2292,132 @@ function getColor(s,mode){
 function getSize(s){return 1.5+(s.f?.danceability||.5)*3.5;}
 
 function render(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  const q=searchQuery.toLowerCase();
-  ctx.strokeStyle='rgba(255,255,255,0.03)';ctx.lineWidth=1;
+  // ── WebGL: draw 10k song points ──────────────────────
+  if(!gl){
+    // 2D fallback (no WebGL)
+    const ctx2=canvas.getContext('2d');
+    ctx2.clearRect(0,0,canvas.width,canvas.height);
+    const q2=searchQuery.toLowerCase();
+    for(let i=0;i<songs.length;i++){
+      const s=songs[i];
+      const{wx,wy}=getPos(i);
+      const{sx,sy}=worldToScreen(wx,wy);
+      if(sx<-20||sx>canvas.width+20||sy<-20||sy>canvas.height+20) continue;
+      const r=getSize(s)*Math.max(.5,Math.min(2,camZoom*.8));
+      const col=getColor(s,colorMode);
+      const isHov=hoveredSong===i||pinnedSong===i;
+      const isMatch=q2&&(s.name.toLowerCase().includes(q2)||s.artist.toLowerCase().includes(q2));
+      const isDim=q2&&!isMatch;
+      const isCryst=!!(featureCache[s.id]?.lastfm||featureCache[s.id]?.audio);
+      ctx2.globalAlpha=isDim?.04:isHov?1:isCryst?.88:.62;
+      ctx2.shadowBlur=isHov?22:isCryst?4:0; ctx2.shadowColor=col;
+      ctx2.beginPath();ctx2.arc(sx,sy,isHov?r*2.2:r,0,Math.PI*2);
+      ctx2.fillStyle=col;ctx2.fill();
+    }
+    ctx2.globalAlpha=1;ctx2.shadowBlur=0;
+  }
+  if(gl){
+    gl.viewport(0,0,canvas.width,canvas.height);
+    gl.clearColor(0,0,0,0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    const n=songs.length;
+    // Allocate/reuse flat GPU arrays
+    if(!_gpuPos||_gpuPos.length!==n*2){
+      _gpuPos=new Float32Array(n*2);
+      _gpuColor=new Float32Array(n*3);
+      _gpuSize=new Float32Array(n);
+      _gpuAlpha=new Float32Array(n);
+      _gpuGlow=new Float32Array(n);
+    }
+
+    const q=searchQuery.toLowerCase();
+    const canvasCx=canvas.width/2, canvasCy=canvas.height/2;
+    const sz=Math.min(canvas.width,canvas.height)*.85;
+
+    for(let i=0;i<n;i++){
+      const s=songs[i];
+      const{wx,wy}=getPos(i);
+      // pixel position (camera applied in vertex shader)
+      _gpuPos[i*2]  =canvasCx+(wx-.5)*sz;
+      _gpuPos[i*2+1]=canvasCy+(wy-.5)*sz;
+
+      const col=getColor(s,colorMode);
+      const rgb=parseHsl(col);
+      _gpuColor[i*3]=rgb[0]; _gpuColor[i*3+1]=rgb[1]; _gpuColor[i*3+2]=rgb[2];
+
+      const baseSize=getSize(s)*2.2;
+      const isHov=hoveredSong===i||pinnedSong===i;
+      _gpuSize[i]=isHov?baseSize*2.4:baseSize;
+
+      const isMatch=q&&(s.name.toLowerCase().includes(q)||s.artist.toLowerCase().includes(q));
+      const isDim=q&&!isMatch;
+      const isCryst=!!(featureCache[s.id]?.lastfm||featureCache[s.id]?.audio||featureCache[s.id]?.genre);
+      _gpuAlpha[i]=isDim?.03:isHov?.95:isCryst?.82:.52;
+      _gpuGlow[i]=isHov?1.0:isMatch?.8:(isCryst?.5:.15);
+    }
+
+    bindAttr(_bufPos,  _aPos,   _gpuPos,   2);
+    bindAttr(_bufColor,_aColor, _gpuColor, 3);
+    bindAttr(_bufSize, _aSize,  _gpuSize,  1);
+    bindAttr(_bufAlpha,_aAlpha, _gpuAlpha, 1);
+    bindAttr(_bufGlow, _aGlow,  _gpuGlow,  1);
+
+    // Camera uniforms (cached locations, set every frame — cheap)
+    gl.uniform2f(_uRes, canvas.width, canvas.height);
+    gl.uniform1f(_uCamX, camX);
+    gl.uniform1f(_uCamY, camY);
+    gl.uniform1f(_uZoom, camZoom);
+
+    gl.drawArrays(gl.POINTS, 0, n);
+  }
+
+  // ── 2D grid-canvas overlay: grid lines + hover ring + transit rings ──
+  const gw=gridCanvas.width, gh=gridCanvas.height;
+  gctx.clearRect(0,0,gw,gh);
+
+  // Grid lines
+  gctx.strokeStyle='rgba(255,255,255,0.025)'; gctx.lineWidth=1;
   for(let g=.1;g<1;g+=.1){
     const{sx}=worldToScreen(g,0),{sy}=worldToScreen(0,g);
-    ctx.beginPath();ctx.moveTo(sx,0);ctx.lineTo(sx,canvas.height);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(0,sy);ctx.lineTo(canvas.width,sy);ctx.stroke();
+    gctx.beginPath(); gctx.moveTo(sx,0); gctx.lineTo(sx,gh); gctx.stroke();
+    gctx.beginPath(); gctx.moveTo(0,sy); gctx.lineTo(gw,sy); gctx.stroke();
   }
-  ctx.strokeStyle='rgba(167,139,250,0.1)';ctx.lineWidth=1.5;
-  const{sx:cx,sy:cy}=worldToScreen(.5,.5);
-  ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(canvas.width,cy);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,canvas.height);ctx.stroke();
-  for(let i=0;i<songs.length;i++){
-    const s=songs[i];
+  // Center crosshairs
+  gctx.strokeStyle='rgba(167,139,250,0.08)'; gctx.lineWidth=1.5;
+  const{sx:ccx,sy:ccy}=worldToScreen(.5,.5);
+  gctx.beginPath(); gctx.moveTo(0,ccy); gctx.lineTo(gw,ccy); gctx.stroke();
+  gctx.beginPath(); gctx.moveTo(ccx,0); gctx.lineTo(ccx,gh); gctx.stroke();
+
+  // Hover / pinned ring
+  const hi=hoveredSong!==null?hoveredSong:(pinnedSong!==null?pinnedSong:-1);
+  if(hi>=0){
+    const hs=songs[hi];
+    const{wx,wy}=getPos(hi);
+    const{sx,sy}=worldToScreen(wx,wy);
+    const hr=getSize(hs)*Math.max(.5,Math.min(2,camZoom*.8));
+    const hcol=getColor(hs,colorMode);
+    gctx.globalAlpha=.22;
+    gctx.beginPath(); gctx.arc(sx,sy,hr*4.8,0,Math.PI*2);
+    gctx.strokeStyle=hcol; gctx.lineWidth=.8; gctx.stroke();
+    gctx.globalAlpha=1;
+  }
+
+  // Transit pulse rings (songs currently moving)
+  const now=performance.now();
+  for(const[idx,t] of Object.entries(posTransitions)){
+    const i=parseInt(idx);
+    if(i<0||i>=songs.length) continue;
     const{wx,wy}=getPos(i);
     const{sx,sy}=worldToScreen(wx,wy);
-    if(sx<-20||sx>canvas.width+20||sy<-20||sy>canvas.height+20) continue;
-    const r=getSize(s)*Math.max(.5,Math.min(2,camZoom*.8));
-    const color=getColor(s,colorMode);
-    const isHov=hoveredSong===i||pinnedSong===i;
-    const isMatch=q&&(s.name.toLowerCase().includes(q)||s.artist.toLowerCase().includes(q));
-    const isDim=q&&!isMatch;
-    const isCryst=!!(featureCache[s.id]?.lastfm||featureCache[s.id]?.audio);
-    const inTransit=!!posTransitions[i];
-    ctx.globalAlpha=isDim?.04:isHov?1:isCryst?.88:.62;
-    ctx.shadowBlur=isHov?22:(isMatch?14:(isCryst?4:0));
-    ctx.shadowColor=color;
-    ctx.beginPath();ctx.arc(sx,sy,isHov?r*2.2:r,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();
-    if(isHov){
-      ctx.globalAlpha=.28;ctx.beginPath();ctx.arc(sx,sy,r*4.5,0,Math.PI*2);
-      ctx.strokeStyle=color;ctx.lineWidth=.8;ctx.stroke();
-    }
-    if(inTransit){
-      ctx.globalAlpha=.4+.3*Math.sin(performance.now()*.004);
-      ctx.beginPath();ctx.arc(sx,sy,r*2,0,Math.PI*2);
-      ctx.strokeStyle='rgba(255,255,255,0.7)';ctx.lineWidth=.5;ctx.stroke();
-    }
+    const pr=getSize(songs[i])*Math.max(.5,Math.min(2,camZoom*.8));
+    gctx.globalAlpha=.35+.25*Math.sin(now*.004);
+    gctx.beginPath(); gctx.arc(sx,sy,pr*2,0,Math.PI*2);
+    gctx.strokeStyle='rgba(255,255,255,0.6)'; gctx.lineWidth=.5; gctx.stroke();
   }
-  ctx.globalAlpha=1;ctx.shadowBlur=0;
+  gctx.globalAlpha=1;
 }
+
 let _raf=null;
 function renderLoop(){render();_raf=requestAnimationFrame(renderLoop);}
 
