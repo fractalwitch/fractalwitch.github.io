@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✦ The Undivided Flesh — Homology Atlas</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300;1,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #040410;
+  --cyan: #00e5ff;
+  --violet: #b44fff;
+  --rose: #ff6eb4;
+  --orange: #ff8c42;
+  --gold: #ffd700;
+  --green: #39ff9a;
+  --text: #e8e0f5;
+  --dim: #6a608a;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Cormorant Garamond', serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+.stars {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(1px 1px at 8% 18%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1px 1px at 25% 72%, rgba(180,79,255,0.45), transparent),
+    radial-gradient(1px 1px at 67% 12%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1px 1px at 88% 83%, rgba(0,229,255,0.4), transparent),
+    radial-gradient(1px 1px at 52% 92%, rgba(255,110,180,0.4), transparent),
+    radial-gradient(2px 2px at 42% 38%, rgba(255,255,255,0.25), transparent),
+    radial-gradient(1px 1px at 91% 52%, rgba(255,215,0,0.3), transparent),
+    radial-gradient(1px 1px at 15% 55%, rgba(0,229,255,0.25), transparent),
+    radial-gradient(1px 1px at 78% 35%, rgba(255,110,180,0.3), transparent);
+}
+.wrap {
+  position: relative; z-index: 1;
+  max-width: 900px; margin: 0 auto;
+  padding: 3rem 1.5rem 6rem;
+}
+header { text-align: center; margin-bottom: 2.5rem; }
+.eyebrow {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem; letter-spacing: 0.4em;
+  color: var(--violet); text-transform: uppercase;
+  margin-bottom: 0.9rem;
+}
+h1 {
+  font-size: clamp(2rem, 6vw, 3.4rem);
+  font-weight: 300; line-height: 1.08;
+  background: linear-gradient(135deg, var(--rose) 0%, var(--violet) 50%, var(--cyan) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.7rem;
+}
+.subtitle {
+  font-style: italic; font-size: 1.1rem; color: var(--dim);
+  max-width: 500px; margin: 0 auto; line-height: 1.65;
+}
+.science-note {
+  background: linear-gradient(135deg, rgba(180,79,255,0.07), rgba(0,229,255,0.04));
+  border: 1px solid rgba(180,79,255,0.18);
+  border-radius: 12px;
+  padding: 1.3rem 1.7rem;
+  margin-bottom: 2.5rem;
+  font-size: 1rem; line-height: 1.75; color: #c0b4e0;
+}
+.science-note strong { color: var(--cyan); font-style: italic; }
+
+/* ── SIMULATOR ─────────────────────────── */
+.sim-card {
+  background: linear-gradient(170deg, #080818, #0c0c22);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 20px;
+  padding: 2rem 2rem 2.5rem;
+  margin-bottom: 2.5rem;
+}
+
+/* slider */
+.slider-wrap { margin-bottom: 1.8rem; }
+.slider-row {
+  display: flex; justify-content: space-between;
+  font-family: 'Space Mono', monospace; font-size: 0.58rem;
+  letter-spacing: 0.08em; margin-bottom: 0.5rem;
+}
+.slider-row .el { color: var(--rose); }
+.slider-row .mid { color: var(--gold); text-align: center; font-size: 0.55rem; }
+.slider-row .tl { color: var(--cyan); text-align: right; }
+
+input[type=range].slider {
+  width: 100%; -webkit-appearance: none; appearance: none;
+  height: 5px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--rose), var(--violet) 50%, var(--cyan));
+  outline: none; cursor: pointer;
+}
+input[type=range].slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff 15%, var(--gold) 70%);
+  box-shadow: 0 0 14px rgba(255,215,0,0.8), 0 0 28px rgba(255,215,0,0.3);
+  cursor: pointer; transition: box-shadow 0.15s;
+}
+input[type=range].slider:active::-webkit-slider-thumb {
+  box-shadow: 0 0 22px rgba(255,215,0,1), 0 0 44px rgba(255,215,0,0.5);
+}
+.slider-readout {
+  text-align: center; margin-top: 0.6rem;
+  font-family: 'Space Mono', monospace; font-size: 0.65rem;
+  color: var(--gold); letter-spacing: 0.06em; min-height: 2.4em;
+  line-height: 1.4;
+}
+
+/* diagram */
+.diagram-wrap {
+  display: flex; justify-content: center;
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+.svg-stage {
+  width: 100%; max-width: 420px;
+  position: relative;
+}
+.svg-stage svg {
+  width: 100%; height: auto;
+  overflow: visible;
+}
+
+/* state badge */
+.state-badge {
+  text-align: center;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem; letter-spacing: 0.2em;
+  padding: 0.4rem 1.2rem;
+  border-radius: 20px;
+  display: inline-block;
+  margin: 0 auto 1.5rem;
+  transition: all 0.4s;
+}
+.state-badge-wrap { text-align: center; }
+
+/* undiff pulse */
+@keyframes undiff-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+.undiff-active #undiffGlow {
+  animation: undiff-pulse 1.8s ease-in-out infinite;
+}
+
+/* legend */
+.legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.65rem; margin-bottom: 1.2rem;
+}
+.legend-item {
+  display: flex; align-items: center; gap: 0.7rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer; transition: all 0.2s;
+}
+.legend-item:hover { background: rgba(255,255,255,0.055); transform: translateY(-1px); }
+.legend-item.active { border-color: rgba(255,255,255,0.18); background: rgba(255,255,255,0.055); }
+.ldot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+.ltext { font-size: 0.78rem; line-height: 1.35; font-family: 'Space Mono', monospace; }
+.lname-e { font-size: 0.6rem; color: var(--rose); }
+.lbridge { font-size: 0.55rem; color: var(--dim); margin: 1px 0; }
+.lname-t { font-size: 0.6rem; color: var(--cyan); }
+
+.info-panel {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 1.1rem 1.4rem;
+  min-height: 75px;
+  font-size: 0.95rem; line-height: 1.7; color: #bfb4dc;
+  transition: all 0.3s;
+}
+.info-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem; letter-spacing: 0.18em;
+  text-transform: uppercase; margin-bottom: 0.45rem;
+  color: var(--violet);
+}
+
+/* ── HRT SECTION ─────────────────────────── */
+.section-divider {
+  display: flex; align-items: center; gap: 1rem;
+  margin: 3.5rem 0 2rem;
+}
+.section-divider::before, .section-divider::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+}
+.section-title {
+  font-size: 1.6rem; font-weight: 300; font-style: italic;
+  color: var(--text); white-space: nowrap;
+}
+
+.hrt-intro {
+  font-size: 1.05rem; line-height: 1.75; color: #bfb4dc;
+  margin-bottom: 2rem; text-align: center; max-width: 640px;
+  margin-left: auto; margin-right: auto;
+}
+.hrt-intro em { color: var(--gold); font-style: italic; }
+
+.hrt-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+@media (max-width: 600px) { .hrt-grid { grid-template-columns: 1fr; } }
+
+.hrt-card {
+  border-radius: 16px; padding: 1.6rem;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.hrt-card.e-hrt {
+  background: linear-gradient(160deg, rgba(255,110,180,0.07), rgba(180,79,255,0.04));
+  border-color: rgba(255,110,180,0.18);
+}
+.hrt-card.t-hrt {
+  background: linear-gradient(160deg, rgba(0,229,255,0.06), rgba(180,79,255,0.04));
+  border-color: rgba(0,229,255,0.18);
+}
+.hrt-card-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.62rem; letter-spacing: 0.22em;
+  text-transform: uppercase; margin-bottom: 1.2rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.e-hrt .hrt-card-title { color: var(--rose); }
+.t-hrt .hrt-card-title { color: var(--cyan); }
+
+.hrt-change {
+  display: flex; gap: 0.9rem; align-items: flex-start;
+  margin-bottom: 1rem; padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.hrt-change:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+.hrt-timeline {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.52rem; letter-spacing: 0.05em;
+  color: var(--dim); flex-shrink: 0; padding-top: 0.15rem;
+  min-width: 52px; text-align: right;
+}
+.hrt-change-body { flex: 1; }
+.hrt-change-title {
+  font-size: 0.88rem; color: var(--text); margin-bottom: 0.2rem;
+  font-weight: 600; font-style: normal;
+}
+.hrt-change-desc {
+  font-size: 0.82rem; color: var(--dim); line-height: 1.5;
+}
+.hrt-change-desc em { color: var(--violet); font-style: italic; }
+
+.hrt-recapitulation {
+  background: linear-gradient(135deg, rgba(255,215,0,0.05), rgba(180,79,255,0.05));
+  border: 1px solid rgba(255,215,0,0.15);
+  border-radius: 12px; padding: 1.4rem 1.7rem;
+  font-size: 1rem; line-height: 1.75; color: #c4b8e0;
+  margin-bottom: 2rem;
+}
+.hrt-recapitulation strong { color: var(--gold); }
+
+/* ── ACCORDION ─── */
+.section-divider.clickable {
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.2s;
+}
+.section-divider.clickable:hover { opacity: 0.82; }
+.section-divider.clickable:hover .section-title { color: var(--violet); }
+.accordion-arrow {
+  font-size: 0.75rem;
+  font-family: 'Space Mono', monospace;
+  color: var(--dim);
+  transition: transform 0.4s ease, color 0.3s;
+  display: inline-block;
+  margin-left: 0.6rem;
+  vertical-align: middle;
+}
+.section-divider.open .accordion-arrow {
+  transform: rotate(180deg);
+  color: var(--violet);
+}
+.accordion-body {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.4s ease;
+}
+.accordion-body.open {
+  max-height: 3000px;
+  opacity: 1;
+}
+
+/* spectrum */
+.spectrum-bar {
+  height: 44px; border-radius: 8px; margin-bottom: 0.5rem;
+  background: linear-gradient(90deg,
+    #ff6eb4 0%, #b44fff 25%, #ffd700 50%, #b44fff 75%, #00e5ff 100%);
+  position: relative;
+}
+.spectrum-labels {
+  display: flex; justify-content: space-between;
+  font-family: 'Space Mono', monospace; font-size: 0.55rem;
+  letter-spacing: 0.06em; color: var(--dim);
+  margin-bottom: 1.5rem;
+}
+.spectrum-facts {
+  display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center;
+  margin-bottom: 1rem;
+}
+.sfact {
+  text-align: center; font-size: 0.78rem; color: var(--dim);
+  padding: 0.5rem 1rem; border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 20px; background: rgba(255,255,255,0.02); line-height: 1.5;
+}
+.sfact em { color: var(--violet); font-style: italic; }
+
+.manifesto {
+  text-align: center; padding: 3rem 1.5rem 2rem;
+  font-style: italic; font-size: 1.15rem; line-height: 2;
+  color: var(--dim);
+  border-top: 1px solid rgba(255,255,255,0.05); margin-top: 3rem;
+}
+.manifesto em { color: var(--rose); font-style: normal; }
+.manifesto .sigil {
+  font-family: 'Space Mono', monospace; font-size: 0.6rem;
+  letter-spacing: 0.3em; color: rgba(180,79,255,0.5);
+  margin-top: 1.5rem; display: block;
+}
+</style>
+</head>
+<body>
+<div class="stars"></div>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">✦ developmental biology ✦ genital homology ✦ educational atlas ✦</div>
+  <h1>The Undivided Flesh</h1>
+  <p class="subtitle">One origin. Infinite forms. Drag the slider to watch the same tissue differentiate.</p>
+</header>
+
+<div class="science-note">
+  Every human embryo begins with <strong>bipotential genital tissue</strong> — identical undifferentiated cells that carry the blueprint for all configurations. Between weeks 6–12, hormonal signals choreograph which paths are taken. The clitoris and penis, labia and scrotum, are not opposites: they are the <strong>same matter, differently becoming.</strong> There is no original, no copy — only variations on one continuous theme.
+</div>
+
+<!-- ══════════ SIMULATOR ══════════ -->
+<div class="sim-card" id="simCard">
+
+  <div class="slider-wrap">
+    <div class="slider-row">
+      <span class="el">ESTROGEN<br>DOMINANT</span>
+      <span class="mid">◈ drag to morph ◈<br>same tissue throughout</span>
+      <span class="tl">ANDROGEN<br>DOMINANT</span>
+    </div>
+    <input type="range" class="slider" id="hormoneSlider" min="0" max="100" value="0">
+    <div class="slider-readout" id="sliderReadout">Estrogen-dominant environment — full vulvar configuration</div>
+  </div>
+
+  <!-- SINGLE OVERLAY SVG -->
+  <div class="diagram-wrap">
+    <div class="svg-stage" id="svgStage">
+      <svg id="mainSVG" viewBox="0 0 300 310" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- undifferentiated glow gradient -->
+          <radialGradient id="undiffGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#ffd700" stop-opacity="0.45"/>
+            <stop offset="60%" stop-color="#b44fff" stop-opacity="0.15"/>
+            <stop offset="100%" stop-color="#b44fff" stop-opacity="0"/>
+          </radialGradient>
+          <!-- glans glow -->
+          <filter id="glansGlow" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="softGlow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <!-- undiff origin glow (peaks at slider midpoint) -->
+        <ellipse id="undiffGlow" cx="150" cy="155" rx="90" ry="100"
+          fill="url(#undiffGrad)" opacity="0"/>
+
+        <!-- crura (internal extensions of clitoral/penile body) -->
+        <path id="cruraL" stroke="#00e5ff" stroke-width="1.5"
+          stroke-dasharray="5 3" opacity="0.45" fill="none"/>
+        <path id="cruraR" stroke="#00e5ff" stroke-width="1.5"
+          stroke-dasharray="5 3" opacity="0.45" fill="none"/>
+
+        <!-- outer folds — labioscrotal swellings (rose) -->
+        <ellipse id="outerL"
+          fill="rgba(255,110,180,0.07)" stroke="#ff6eb4" stroke-width="1.8" opacity="0.85"/>
+        <ellipse id="outerR"
+          fill="rgba(255,110,180,0.07)" stroke="#ff6eb4" stroke-width="1.8" opacity="0.85"/>
+
+        <!-- scrotal raphe — midline fusion scar -->
+        <line id="raphe" x1="150" y1="230" x2="150" y2="290"
+          stroke="#ff6eb4" stroke-width="1.2" stroke-dasharray="3 2" opacity="0"/>
+
+        <!-- inner folds — labia minora / urethral folds (orange) -->
+        <path id="innerL" stroke="#ff8c42" stroke-width="1.6"
+          fill="rgba(255,140,66,0.04)" opacity="0.9"/>
+        <path id="innerR" stroke="#ff8c42" stroke-width="1.6"
+          fill="rgba(255,140,66,0.04)" opacity="0.9"/>
+
+        <!-- vaginal opening (green → fades) -->
+        <ellipse id="vagOs" cx="150" cy="218"
+          fill="rgba(57,255,154,0.08)" stroke="#39ff9a" stroke-width="1.5"/>
+
+        <!-- shaft / clitoral body (violet) -->
+        <path id="shaft"
+          fill="rgba(180,79,255,0.09)" stroke="#b44fff" stroke-width="1.8"/>
+
+        <!-- hood / prepuce (violet, lighter) -->
+        <path id="hood"
+          fill="rgba(180,79,255,0.06)" stroke="#b44fff" stroke-width="1.4" opacity="0.75"/>
+
+        <!-- glans — glans clitoris / glans penis (cyan) -->
+        <ellipse id="glans" cx="150"
+          fill="rgba(0,229,255,0.12)" stroke="#00e5ff" stroke-width="2.2"
+          filter="url(#glansGlow)"/>
+
+        <!-- urethra (gold) -->
+        <circle id="urethra" cx="150"
+          fill="rgba(255,215,0,0.3)" stroke="#ffd700" stroke-width="1.4"/>
+
+        <!-- ── SVG LABELS ── -->
+        <!-- Glans label -->
+        <text id="lblGlans" x="168" font-size="7.5"
+          font-family="'Space Mono', monospace" fill="#00e5ff" opacity="0.9"/>
+        <!-- Hood label -->
+        <text id="lblHood" font-size="7"
+          font-family="'Space Mono', monospace" fill="#b44fff" opacity="0.8"/>
+        <!-- Shaft label -->
+        <text id="lblShaft" x="168" font-size="7"
+          font-family="'Space Mono', monospace" fill="#b44fff" opacity="0.8"/>
+        <!-- Urethra label -->
+        <text id="lblUrethra" font-size="6.5"
+          font-family="'Space Mono', monospace" fill="#ffd700" opacity="0.8"/>
+        <!-- Inner folds label -->
+        <text id="lblInner" x="12" font-size="7"
+          font-family="'Space Mono', monospace" fill="#ff8c42" opacity="0.85"/>
+        <!-- Outer folds label -->
+        <text id="lblOuter" x="12" font-size="7"
+          font-family="'Space Mono', monospace" fill="#ff6eb4" opacity="0.85"/>
+        <!-- Vaginal os label -->
+        <text id="lblVagOs" x="168" font-size="6.5"
+          font-family="'Space Mono', monospace" fill="#39ff9a" opacity="0.85"/>
+        <!-- Raphe label -->
+        <text id="lblRaphe" x="155" font-size="6"
+          font-family="'Space Mono', monospace" fill="#ff6eb4" opacity="0"/>
+
+        <!-- Midpoint: UNDIFFERENTIATED label -->
+        <text id="lblUndiff" x="150" y="155" text-anchor="middle" font-size="9"
+          font-family="'Space Mono', monospace" fill="#ffd700"
+          letter-spacing="2" opacity="0">UNDIFFERENTIATED ORIGIN</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- state badge -->
+  <div class="state-badge-wrap">
+    <span class="state-badge" id="stateBadge"
+      style="background:rgba(255,110,180,0.1);color:#ff6eb4;border:1px solid rgba(255,110,180,0.25)">
+      ✦ vulvar configuration
+    </span>
+  </div>
+
+  <!-- Homolog Legend -->
+  <div class="legend">
+    <div class="legend-item" data-id="glans" onclick="clickLegend('glans')">
+      <div class="ldot" style="background:#00e5ff;box-shadow:0 0 7px #00e5ff"></div>
+      <div class="ltext">
+        <div class="lname-e">glans clitoris</div>
+        <div class="lbridge">⟷ same tissue ⟷</div>
+        <div class="lname-t">glans penis</div>
+      </div>
+    </div>
+    <div class="legend-item" data-id="hood" onclick="clickLegend('hood')">
+      <div class="ldot" style="background:#b44fff;box-shadow:0 0 7px #b44fff"></div>
+      <div class="ltext">
+        <div class="lname-e">clitoral hood + body</div>
+        <div class="lbridge">⟷ same tissue ⟷</div>
+        <div class="lname-t">prepuce + shaft</div>
+      </div>
+    </div>
+    <div class="legend-item" data-id="outer" onclick="clickLegend('outer')">
+      <div class="ldot" style="background:#ff6eb4;box-shadow:0 0 7px #ff6eb4"></div>
+      <div class="ltext">
+        <div class="lname-e">labia majora</div>
+        <div class="lbridge">⟷ same tissue ⟷</div>
+        <div class="lname-t">scrotum</div>
+      </div>
+    </div>
+    <div class="legend-item" data-id="inner" onclick="clickLegend('inner')">
+      <div class="ldot" style="background:#ff8c42;box-shadow:0 0 7px #ff8c42"></div>
+      <div class="ltext">
+        <div class="lname-e">labia minora</div>
+        <div class="lbridge">⟷ same tissue ⟷</div>
+        <div class="lname-t">urethral folds (fused)</div>
+      </div>
+    </div>
+    <div class="legend-item" data-id="urethra" onclick="clickLegend('urethra')">
+      <div class="ldot" style="background:#ffd700;box-shadow:0 0 7px #ffd700"></div>
+      <div class="ltext">
+        <div class="lname-e">urethral opening</div>
+        <div class="lbridge">⟷ same structure ⟷</div>
+        <div class="lname-t">urethral meatus (migrated)</div>
+      </div>
+    </div>
+    <div class="legend-item" data-id="vagos" onclick="clickLegend('vagos')">
+      <div class="ldot" style="background:#39ff9a;box-shadow:0 0 7px #39ff9a"></div>
+      <div class="ltext">
+        <div class="lname-e">vaginal os</div>
+        <div class="lbridge">⟷ Müllerian remnant ⟷</div>
+        <div class="lname-t">prostatic utricle</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Info Panel -->
+  <div class="info-panel" id="infoPanel">
+    <div class="info-title" id="infoTitle">✦ click any homolog pair to learn more</div>
+    <div id="infoText">All genital structures emerge from three bipotential precursors: the <em>genital tubercle</em> (→ glans), the <em>urogenital folds</em> (→ inner lips or urethral folds), and the <em>labioscrotal swellings</em> (→ labia majora or scrotum). Drag the slider to watch the same matter take different paths through hormonal space.</div>
+  </div>
+</div>
+
+<!-- ══════════ HRT RECAPITULATION ══════════ -->
+<div class="section-divider clickable" id="hrtToggle" onclick="toggleHRT()" role="button" aria-expanded="false" aria-controls="hrtBody">
+  <span class="section-title">HRT Recapitulates Embryology<span class="accordion-arrow" id="hrtArrow">▼</span></span>
+</div>
+
+<div class="accordion-body" id="hrtBody">
+<p class="hrt-intro">
+  When trans people begin hormone therapy, their bodies don't do something unprecedented —
+  they <em>re-enter the developmental conversation</em>. The same hormonal signals that shaped
+  the original form speak again to the same receptive tissue. HRT is embryology happening
+  in adult time.
+</p>
+
+<div class="hrt-recapitulation">
+  <strong>Key principle:</strong> Genital tissue retains hormone receptors throughout life. Estrogen and androgen pathways remain accessible — they can be re-activated, modulated, partially reversed. The body remembers its blueprint and can re-read it with new chemical instructions. This is not transformation into something alien; it is the <strong>original tissue finding a different expression of itself.</strong>
+</div>
+
+<div class="hrt-grid">
+
+  <!-- E-HRT column -->
+  <div class="hrt-card e-hrt">
+    <div class="hrt-card-title">Feminizing HRT (Estrogen + anti-androgens)</div>
+
+    <div class="hrt-change">
+      <div class="hrt-timeline">1–3 mo</div>
+      <div class="hrt-change-body">
+        <div class="hrt-change-title">Scrotal tissue softens + lightens</div>
+        <div class="hrt-change-desc">The fused labioscrotal tissue begins un-tensing. Skin texture, color, and subcutaneous fat distribution shift toward the labia majora phenotype. <em>The fusion never reverses, but the tissue character transforms.</em></div>
+      </div>
+    </div>
+
+    <div class="hrt-change">
+      <div class="hrt-timeline">1–6 mo</div>
+      <div class="hrt-change-body">
+        <div class="hrt-change-title">Genital atrophy + sensitivity shift</div>
+        <div class="hrt-change-desc">Without testosterone, penile/scrotal erectile tissue gradually atrophies and reduces in size. Simultaneously, nerve density and sensitivity patterns can shift — many report qualitatively different, more diffuse sensation. <em>Erectile tissue is still erectile tissue.</em></div>
+      </div>
+    </div>
+
+    <div class="hrt-change">
+      <div class="hrt-timeline">3–12 mo</div>
+      <div class="hrt-change-body">
+        <div class="hrt-change-title">Clitoral identity reclamation</div>
+        <div class="hrt-change-desc">The glans — formerly read as "penile" — is still the same neural structure, the same tissue with the same ~8,000 nerve endings. Many trans women describe a perceptual re-mapping: same organ, different ontology. <em>Nothing was added. The framework changed.</em></div>
+      </div>
+    </div>
+
+    <div class="hrt-change">
+      <div class="hrt-timeline">ongoing</div>
+      <div class="hrt-change-body">
+        <div class="hrt-change-title">Prostatic tissue changes</div>
+        <div class="hrt-change-desc">The prostate (homolog to the Skene's glands) responds to estrogen. It typically reduces in size and changes its secretory profile. Some trans women report prostate-mediated pleasure as an entirely new experiential dimension opening up.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- T-HRT column -->
+  <div class="hrt-card t-hrt">
+    <div class="hrt-card-title">Masculinizing HRT (Testosterone)</div>
+
+    <div class="hrt-change">
+      <div class="hrt-timeline">1–3 mo</div>
+      <div class="hrt-change-body">
+        <div class="hrt-change-title">Clitoral growth (clitoromegaly)</div>
+        <div class="hrt-change-desc">The clitoral glans and body respond to testosterone — often the first and most consistent genital change. Growth of 1–5cm is common, occasionally more. This is the genital tubercle re-entering androgen-dominant developmental logic. <em>The same tissue, choosing a different size.</em></div>
+      </div>
+    </div>
+
+    <div class="hrt-change">
+      <div class="hrt-timeline">1–6 mo</div>
+      <div class="hrt-change-body">
+        <div class="hrt-change-title">Labial tissue shifts</div>
+        <div class="hrt-change-desc">Labia majora often increase in size and alter in texture under androgen influence, moving toward the labioscrotal phenotype. Hair follicle activity increases. The tissue is expressing the latent androgenic developmental program it always carried. <em>Never became something else — always had this option.</em></div>
+      </div>
+    </div>
+
+    <div class="hrt-change">
+      <div class="hrt-timeline">3–12 mo</div>
+      <div class="hrt-change-body">
+        <div class="hrt-change-title">Vaginal atrophy</div>
+        <div class="hrt-change-desc">Mucosal tissue of the vaginal canal thins and its pH changes under low-estrogen / high-androgen conditions. This is the Müllerian tissue responding — the structure that, in androgenic embryological development, would have regressed. Requires management (lubricants, topical E).</div>
+      </div>
+    </div>
+
+    <div class="hrt-change">
+      <div class="hrt-timeline">ongoing</div>
+      <div class="hrt-change-body">
+        <div class="hrt-change-title">Erectile tissue density + sensitivity</div>
+        <div class="hrt-change-desc">Clitoral and vestibular erectile tissue becomes more vascularly responsive. Many trans men report dramatically increased sensitivity and arousal capacity. <em>Testosterone didn't create new pleasure architecture — it amplified what was always there.</em></div>
+      </div>
+    </div>
+  </div><!-- /.hrt-card.t-hrt -->
+</div><!-- /.hrt-grid -->
+</div><!-- /.accordion-body -->
+
+<div class="section-divider">
+  <span class="section-title">The Real Spectrum</span>
+</div>
+<div class="spectrum-bar"></div>
+<div class="spectrum-labels">
+  <span>46,XX high-E</span>
+  <span>CAH / androgen excess</span>
+  <span>↔ intersex continuum ↔</span>
+  <span>AIS / androgen insensitivity</span>
+  <span>46,XY high-T</span>
+</div>
+<div class="spectrum-facts">
+  <div class="sfact">Clitoromegaly ↔ Micropenis<br><em>same structure, different scale</em></div>
+  <div class="sfact">~1.7% of people are intersex<br><em>roughly as common as red hair</em></div>
+  <div class="sfact">Trans bodies disrupt<br>all binary maps<br><em>HRT recapitulates embryology</em></div>
+  <div class="sfact">Erectile tissue is<br>erectile tissue —<br><em>in all configurations</em></div>
+  <div class="sfact">Hypospadias: 1 in 200 births<br><em>urethral migration visible</em></div>
+</div>
+
+<div class="manifesto">
+  There is no <em>opposite sex</em>.<br>
+  Only the same luminous matter, folded differently<br>
+  by time, hormone, and the slow grammar of becoming.<br><br>
+  <span class="sigil">✦ non-binary trans pride ✦ the undivided flesh ✦</span>
+</div>
+
+</div><!-- .wrap -->
+
+<script>
+// ─────────────────────────────────────────────────────
+// MORPHING ENGINE
+// ─────────────────────────────────────────────────────
+const slider = document.getElementById('hormoneSlider');
+const readout = document.getElementById('sliderReadout');
+const stateBadge = document.getElementById('stateBadge');
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+function r(n) { return Math.round(n * 100) / 100; }
+
+// ─── READOUT MESSAGES ────────────────────────────────
+const messages = [
+  'Estrogen-dominant environment — full vulvar configuration',
+  'High-estrogen: compact glans, open labioscrotal folds, clitoral hood',
+  'Predominantly estrogenic — classic vulvar anatomy',
+  'Mild androgen elevation — subtle clitoral hypertrophy, labioscrotal shift beginning',
+  'Moderate androgens — labioscrotal swellings start converging, glans enlarging',
+  '◈ BIPOTENTIAL MIDPOINT — undifferentiated origin territory ◈',
+  'Moderate androgens — labioscrotal fusion progressing, genital tubercle elongating',
+  'High androgen — near-complete labioscrotal fusion, shaft lengthening, urethra migrating',
+  'Strong androgen environment — scrotal configuration, penile shaft prominent',
+  'Predominantly androgenic — urethral meatus approaching glans tip',
+  'Androgen-dominant environment — full penile/scrotal configuration'
+];
+
+// ─── SVG ELEMENT CACHE ───────────────────────────────
+const els = {
+  glans:      document.getElementById('glans'),
+  hood:       document.getElementById('hood'),
+  shaft:      document.getElementById('shaft'),
+  innerL:     document.getElementById('innerL'),
+  innerR:     document.getElementById('innerR'),
+  outerL:     document.getElementById('outerL'),
+  outerR:     document.getElementById('outerR'),
+  raphe:      document.getElementById('raphe'),
+  cruraL:     document.getElementById('cruraL'),
+  cruraR:     document.getElementById('cruraR'),
+  urethra:    document.getElementById('urethra'),
+  vagOs:      document.getElementById('vagOs'),
+  undiffGlow: document.getElementById('undiffGlow'),
+  lblGlans:   document.getElementById('lblGlans'),
+  lblHood:    document.getElementById('lblHood'),
+  lblShaft:   document.getElementById('lblShaft'),
+  lblUrethra: document.getElementById('lblUrethra'),
+  lblInner:   document.getElementById('lblInner'),
+  lblOuter:   document.getElementById('lblOuter'),
+  lblVagOs:   document.getElementById('lblVagOs'),
+  lblRaphe:   document.getElementById('lblRaphe'),
+  lblUndiff:  document.getElementById('lblUndiff'),
+  simCard:    document.getElementById('simCard'),
+};
+
+// ─── MAIN UPDATE FUNCTION ────────────────────────────
+function updateDiagram(raw) {
+  const t = raw / 100;
+  const cx = 150;
+
+  // ── GLANS (genital tubercle)
+  const gCy = r(lerp(145, 108, t));
+  const gRx = r(lerp(8, 17, t));
+  const gRy = r(lerp(8.5, 19.5, t));
+  els.glans.setAttribute('cy', gCy);
+  els.glans.setAttribute('rx', gRx);
+  els.glans.setAttribute('ry', gRy);
+  const glowR = r(lerp(5, 11, t));
+  const glowO = r(lerp(0.45, 0.85, t));
+  els.glans.style.filter = `drop-shadow(0 0 ${glowR}px rgba(0,229,255,${glowO}))`;
+
+  // ── HOOD / PREPUCE (genital fold)
+  // base at shaft top, arch over glans
+  const hBaseHW = r(lerp(11, 16, t));
+  const hBaseY  = r(lerp(150, 126, t));
+  const hTipY   = r(lerp(132, 90, t));
+  const hCtrlX  = r(lerp(14, 19, t));  // inset of bezier control from center
+  const hCtrlY  = r(lerp(134, 100, t));
+  els.hood.setAttribute('d',
+    `M ${cx-hBaseHW},${hBaseY} Q ${cx-hCtrlX},${hCtrlY} ${cx},${hTipY} Q ${cx+hCtrlX},${hCtrlY} ${cx+hBaseHW},${hBaseY} Z`
+  );
+
+  // ── SHAFT (clitoral body → penile shaft)
+  const hw   = r(lerp(4, 15.5, t));
+  const sTop = r(lerp(150, 126, t));
+  const sBot = r(lerp(168, 222, t));
+  const sBQ  = r(lerp(171, 232, t));
+  els.shaft.setAttribute('d',
+    `M ${cx-hw},${sTop} L ${cx-hw},${sBot} Q ${cx},${sBQ} ${cx+hw},${sBot} L ${cx+hw},${sTop} Z`
+  );
+
+  // ── INNER FOLDS (labia minora → urethral folds)
+  // left inner fold
+  const ilSx  = r(lerp(140, 134.5, t));
+  const ilSy  = r(lerp(155, 128, t));
+  const ilC0x = r(lerp(129, 133, t));
+  const ilC0y = r(lerp(184, 174, t));
+  const ilE0x = r(lerp(131, 134.5, t));
+  const ilE0y = r(lerp(210, 220, t));
+  const ilC1x = r(lerp(137, 135, t));
+  const ilC1y = r(lerp(220, 228, t));
+  const ilE1x = r(lerp(146, 136, t));
+  const ilE1y = r(lerp(222, 229, t));
+  els.innerL.setAttribute('d',
+    `M ${ilSx},${ilSy} Q ${ilC0x},${ilC0y} ${ilE0x},${ilE0y} Q ${ilC1x},${ilC1y} ${ilE1x},${ilE1y}`
+  );
+  // right (mirror)
+  els.innerR.setAttribute('d',
+    `M ${300-ilSx},${ilSy} Q ${300-ilC0x},${ilC0y} ${300-ilE0x},${ilE0y} Q ${300-ilC1x},${ilC1y} ${300-ilE1x},${ilE1y}`
+  );
+
+  // ── OUTER FOLDS (labia majora → scrotum)
+  const olCx = r(lerp(107, 129, t));
+  const olCy = r(lerp(194, 258, t));
+  const olRx = r(lerp(26, 27, t));
+  const olRy = r(lerp(53, 24, t));
+  els.outerL.setAttribute('cx', olCx);
+  els.outerL.setAttribute('cy', olCy);
+  els.outerL.setAttribute('rx', olRx);
+  els.outerL.setAttribute('ry', olRy);
+  els.outerR.setAttribute('cx', 300 - olCx);
+  els.outerR.setAttribute('cy', olCy);
+  els.outerR.setAttribute('rx', olRx);
+  els.outerR.setAttribute('ry', olRy);
+
+  // ── RAPHE (midline fusion line, appears at high T)
+  els.raphe.style.opacity = r(lerp(0, 0.55, t));
+
+  // ── CRURA (internal roots)
+  const crSx = r(lerp(146, 134.5, t));
+  const crSy = r(lerp(167, 222, t));
+  const crCx = r(lerp(124, 108, t));
+  const crCy = r(lerp(162, 212, t));
+  const crEx = r(lerp(104, 90, t));
+  const crEy = r(lerp(148, 198, t));
+  els.cruraL.setAttribute('d',  `M ${crSx},${crSy} Q ${crCx},${crCy} ${crEx},${crEy}`);
+  els.cruraR.setAttribute('d',  `M ${300-crSx},${crSy} Q ${300-crCx},${crCy} ${300-crEx},${crEy}`);
+
+  // ── URETHRA (migrates up as shaft forms)
+  const uCy = r(lerp(178, 92, t));
+  els.urethra.setAttribute('cy', uCy);
+  els.urethra.setAttribute('r', r(lerp(3.5, 3, t)));
+
+  // ── VAGINAL OS (fades out with androgens)
+  const voRx = r(lerp(11, 0, t));
+  const voRy = r(lerp(13.5, 0, t));
+  els.vagOs.setAttribute('rx', voRx);
+  els.vagOs.setAttribute('ry', voRy);
+  els.vagOs.style.opacity = r(lerp(0.9, 0, t));
+
+  // ── UNDIFF GLOW (Gaussian centered at t=0.5)
+  const gIntensity = Math.max(0, 1 - Math.pow((t - 0.5) / 0.22, 2));
+  els.undiffGlow.style.opacity = r(gIntensity * 0.65);
+  els.lblUndiff.style.opacity  = r(gIntensity * 0.8);
+
+  // ── LABELS
+  updateLabels(t, gCy, hBaseY, sTop, sBot, uCy, olCy, olRy);
+
+  // ── READOUT + BADGE
+  const msgIdx = Math.round(t * 10);
+  readout.textContent = messages[Math.min(msgIdx, messages.length - 1)];
+
+  // badge state
+  if (t < 0.35) {
+    stateBadge.style.background = 'rgba(255,110,180,0.1)';
+    stateBadge.style.color = '#ff6eb4';
+    stateBadge.style.borderColor = 'rgba(255,110,180,0.25)';
+    stateBadge.textContent = '✦ vulvar configuration';
+  } else if (t > 0.65) {
+    stateBadge.style.background = 'rgba(0,229,255,0.08)';
+    stateBadge.style.color = '#00e5ff';
+    stateBadge.style.borderColor = 'rgba(0,229,255,0.2)';
+    stateBadge.textContent = '✦ penile/scrotal configuration';
+  } else {
+    stateBadge.style.background = 'rgba(255,215,0,0.08)';
+    stateBadge.style.color = '#ffd700';
+    stateBadge.style.borderColor = 'rgba(255,215,0,0.25)';
+    stateBadge.textContent = '◈ bipotential — both / neither / all';
+  }
+
+  // undiff pulse class
+  if (Math.abs(t - 0.5) < 0.12) {
+    els.simCard.classList.add('undiff-active');
+  } else {
+    els.simCard.classList.remove('undiff-active');
+  }
+}
+
+function updateLabels(t, gCy, hBaseY, sTop, sBot, uCy, olCy, olRy) {
+  const cx = 150;
+  const sMid = r((sTop + sBot) / 2);
+
+  // Glans label — right side
+  els.lblGlans.setAttribute('x', '168');
+  els.lblGlans.setAttribute('y', r(gCy + 4));
+  els.lblGlans.textContent = t < 0.35 ? 'glans clitoris' : t > 0.65 ? 'glans penis' : '≈ glans ≈';
+
+  // Hood label — right side, above glans
+  const hoodMidY = r(lerp(138, 108, t));
+  els.lblHood.setAttribute('x', '168');
+  els.lblHood.setAttribute('y', r(hoodMidY));
+  els.lblHood.textContent = t < 0.35 ? 'clitoral hood' : t > 0.65 ? 'prepuce' : '≈ hood/prepuce ≈';
+
+  // Shaft label — right side
+  els.lblShaft.setAttribute('x', '168');
+  els.lblShaft.setAttribute('y', r(sMid + 3));
+  els.lblShaft.textContent = t < 0.35 ? 'clitoral body' : t > 0.65 ? 'penile shaft' : '≈ shaft/body ≈';
+  els.lblShaft.style.opacity = t < 0.08 ? r(lerp(0, 0.8, t / 0.08)) : '0.8';
+
+  // Urethra label — right
+  els.lblUrethra.setAttribute('x', '158');
+  els.lblUrethra.setAttribute('y', r(uCy - 5));
+  els.lblUrethra.textContent = t < 0.35 ? 'urethra' : t > 0.65 ? 'meatus' : '≈ urethra ≈';
+
+  // Inner folds — left side
+  const innerMidY = r(lerp(185, 174, t));
+  els.lblInner.setAttribute('x', '12');
+  els.lblInner.setAttribute('y', r(innerMidY));
+  els.lblInner.textContent = t < 0.35 ? 'labia minora' : t > 0.65 ? 'urethral folds' : '≈ folds ≈';
+
+  // Outer folds — left side
+  els.lblOuter.setAttribute('x', '12');
+  els.lblOuter.setAttribute('y', r(olCy + 3));
+  els.lblOuter.textContent = t < 0.35 ? 'labia majora' : t > 0.65 ? 'scrotum' : '≈ outer folds ≈';
+
+  // Vaginal os — right, fades
+  els.lblVagOs.setAttribute('x', '164');
+  els.lblVagOs.setAttribute('y', '222');
+  els.lblVagOs.textContent = 'vaginal os';
+  els.lblVagOs.style.opacity = r(lerp(0.8, 0, t));
+
+  // Raphe — center, appears at high T
+  els.lblRaphe.setAttribute('y', r(lerp(230, 258, t)));
+  els.lblRaphe.textContent = 'raphe';
+  els.lblRaphe.style.opacity = r(lerp(0, 0.55, t));
+}
+
+// ─── INFO PANEL DATA ─────────────────────────────────
+const infos = {
+  glans: {
+    title: 'Genital Tubercle → Glans',
+    color: '#00e5ff',
+    text: 'The glans penis and glans clitoris are the same structure — both developed from the embryonic genital tubercle. The clitoris has approximately 8,000–10,000 nerve endings concentrated in a much smaller area than the penile glans, making it one of the densest sensory organs in the human body. Under androgen influence, the tubercle elongates dramatically; under estrogen, it remains compact. Both are primary erogenous structures. Neither is more "advanced" or more "basic."'
+  },
+  hood: {
+    title: 'Genital Fold → Hood / Prepuce',
+    color: '#b44fff',
+    text: 'The clitoral hood and penile foreskin (prepuce) are homologous — both form from the same fold of tissue that wraps over the glans. In androgen-dominant development, this tissue elongates to form the foreskin and the outer layer of the penile shaft. In estrogen-dominant development, it remains as the hood. The internal clitoral body and the penile shaft share the same origin: the elongated genital tubercle and surrounding erectile tissue (corpora cavernosa), which exists in all configurations.'
+  },
+  outer: {
+    title: 'Labioscrotal Swellings → Labia Majora / Scrotum',
+    color: '#ff6eb4',
+    text: 'The labia majora and scrotum are the same structure. In androgen-dominant development, the labioscrotal swellings fuse at the midline, descend, and house the testes. In estrogen-dominant development, they remain open, forming the outer lips. The scrotal raphe — the visible seam running down the center of the scrotum — is literally the midline fusion scar: the line where the two labia majora would have remained open. Running your finger along it traces developmental history.'
+  },
+  inner: {
+    title: 'Urogenital Folds → Labia Minora / Urethral Folds',
+    color: '#ff8c42',
+    text: 'The labia minora and the tissue forming the underside of the penile shaft share the same embryonic origin — the urogenital (urethral) folds. Under androgen influence, these folds wrap around the elongating urethra and fuse to form the shaft\'s ventral surface. Under estrogen, they remain open as the inner lips. Both are richly vascularized with erectile-adjacent tissue, responsive to arousal. Hypospadias — where urethral fold fusion is incomplete — occurs in ~1 in 200 births, leaving the urethra opening on the shaft underside.'
+  },
+  urethra: {
+    title: 'Urethral Migration',
+    color: '#ffd700',
+    text: 'In estrogen-dominant development, the urethral opening sits in the vestibule, between the clitoris and vaginal entrance. In androgen-dominant development, as the genital tubercle elongates and the urethral folds fuse around it, the urethral opening migrates all the way to the tip of the glans. This migration is what makes hypospadias visible: incomplete fusion leaves the opening partway along the shaft. The urethra is the same tube in all bodies — it\'s its position that changes, not its nature.'
+  },
+  vagos: {
+    title: 'Müllerian Structures → Vaginal Os / Prostatic Utricle',
+    color: '#39ff9a',
+    text: 'The vaginal canal and uterus develop from the Müllerian ducts — structures present in all early embryos. In androgen-dominant development, MIS (Müllerian Inhibiting Substance) causes these to regress, leaving only a small remnant: the prostatic utricle, a blind pouch in the prostate. In estrogen-dominant development, they fully develop. In androgen insensitivity syndrome (AIS), XY individuals with non-functioning androgen receptors develop full Müllerian anatomy — demonstrating that "XY = male anatomy" is not the rule, just one path.'
+  }
+};
+
+let activeId = null;
+function clickLegend(id) {
+  if (activeId === id) {
+    activeId = null;
+    document.querySelectorAll('.legend-item').forEach(el => el.classList.remove('active'));
+    document.getElementById('infoTitle').textContent = '✦ click any homolog pair to learn more';
+    document.getElementById('infoTitle').style.color = 'var(--violet)';
+    document.getElementById('infoText').innerHTML = 'All genital structures emerge from three bipotential precursors: the <em>genital tubercle</em> (→ glans), the <em>urogenital folds</em> (→ inner lips or urethral folds), and the <em>labioscrotal swellings</em> (→ labia majora or scrotum). Drag the slider to watch the same matter take different paths through hormonal space.';
+    return;
+  }
+  activeId = id;
+  document.querySelectorAll('.legend-item').forEach(el => el.classList.remove('active'));
+  document.querySelector(`[data-id="${id}"]`).classList.add('active');
+  const info = infos[id];
+  document.getElementById('infoTitle').textContent = '✦ ' + info.title;
+  document.getElementById('infoTitle').style.color = info.color;
+  document.getElementById('infoText').textContent = info.text;
+}
+
+// ─── SLIDER EVENT ────────────────────────────────────
+slider.addEventListener('input', () => {
+  updateDiagram(parseInt(slider.value));
+});
+
+// ─── INITIAL RENDER ──────────────────────────────────
+updateDiagram(0);
+
+// ─── HRT ACCORDION ───────────────────────────────────
+function toggleHRT() {
+  const body    = document.getElementById('hrtBody');
+  const toggle  = document.getElementById('hrtToggle');
+  const isOpen  = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  toggle.classList.toggle('open', !isOpen);
+  toggle.setAttribute('aria-expanded', String(!isOpen));
+}
+</script>
+</body>
+</html>
