@@ -2441,7 +2441,7 @@ function launchViz(){
   window.addEventListener('resize',resizeCanvas);
   setupInteraction();resetView();renderLoop();
   // Checksum: determine what enrichment pipelines still need to run
-  setTimeout(()=>{
+  setTimeout(async ()=>{
     const cs=getGenreChecksum();
     dbg(`checksum — genre:${cs.genreDone}/${cs.total} audio:${cs.audioDone}/${cs.total}`,'info');
 
@@ -2452,7 +2452,7 @@ function launchViz(){
     } else dbg('genre: fully cached ✓','ok');
 
     // Passive audio — start after genre to avoid API collision
-    setTimeout(()=>{
+    setTimeout(async ()=>{
       const ast=getAudioStats();
       dbg(`audio check: ${ast.analyzed} analyzed, ${ast.withPreview} have preview_url (will also try iTunes/Deezer)`,'info');
       if(ast.analyzed >= songs.length) dbg('audio: all tracks analyzed ✓','ok');
