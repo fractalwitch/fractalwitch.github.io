@@ -759,28 +759,46 @@ const VIBES = [
   { id: 'contemplative', label: '🪷 contemplative', color: '#5eead4', keywords: [2535,6877,1585,180547], genres: [18] },
 ];
 
-// ── GENRE MAPS ──
-const MOVIE_GENRES = [
-  {id:28,name:'Action'},{id:12,name:'Adventure'},{id:16,name:'Animation'},
-  {id:35,name:'Comedy'},{id:80,name:'Crime'},{id:99,name:'Documentary'},
-  {id:18,name:'Drama'},{id:10751,name:'Family'},{id:14,name:'Fantasy'},
-  {id:36,name:'History'},{id:27,name:'Horror'},{id:10402,name:'Music'},
-  {id:9648,name:'Mystery'},{id:10749,name:'Romance'},{id:878,name:'Sci-Fi'},
-  {id:53,name:'Thriller'},{id:10752,name:'War'},{id:37,name:'Western'}
-];
-const TV_GENRES = [
-  {id:10759,name:'Action'},{id:16,name:'Animation'},{id:35,name:'Comedy'},
-  {id:80,name:'Crime'},{id:99,name:'Documentary'},{id:18,name:'Drama'},
-  {id:10751,name:'Family'},{id:10762,name:'Kids'},{id:9648,name:'Mystery'},
-  {id:10763,name:'News'},{id:10764,name:'Reality'},{id:10765,name:'Sci-Fi'},
-  {id:10766,name:'Soap'},{id:10767,name:'Talk'},{id:10768,name:'War'},
-  {id:37,name:'Western'}
+// ── UNIFIED GENRE SYSTEM ──
+// Users see ONE consistent genre list. IDs get translated per media type at query time.
+// Genres with no TV equivalent use keyword injection instead.
+const UNIFIED_GENRES = [
+  { name:'Action',      movie:28,    tv:10759 },
+  { name:'Adventure',   movie:12,    tv:10759 },  // TV merges action+adventure
+  { name:'Animation',   movie:16,    tv:16 },
+  { name:'Comedy',      movie:35,    tv:35 },
+  { name:'Crime',       movie:80,    tv:80 },
+  { name:'Documentary', movie:99,    tv:99 },
+  { name:'Drama',       movie:18,    tv:18 },
+  { name:'Family',      movie:10751, tv:10751 },
+  { name:'Fantasy',     movie:14,    tv:10765 },  // TV: Sci-Fi & Fantasy
+  { name:'History',     movie:36,    tv:null, keywords:[818,156177,4344] },
+  { name:'Horror',      movie:27,    tv:null, keywords:[186092,155588,226306,6054,10090,224636,12339,162846] },
+  { name:'Music',       movie:10402, tv:null, keywords:[3691,207317] },
+  { name:'Mystery',     movie:9648,  tv:9648 },
+  { name:'Romance',     movie:10749, tv:null, keywords:[9840,478,11322] },
+  { name:'Sci-Fi',      movie:878,   tv:10765 },
+  { name:'Thriller',    movie:53,    tv:null, keywords:[10090,5927,155588,180547] },
+  { name:'War',         movie:10752, tv:10768 },
+  { name:'Western',     movie:37,    tv:37 },
 ];
 
-// ── GENRE LOOKUP (both movie + TV merged for display) ──
+// Build lookup maps
 const ALL_GENRES = {};
-MOVIE_GENRES.forEach(g => ALL_GENRES[g.id] = g.name);
-TV_GENRES.forEach(g => { if(!ALL_GENRES[g.id]) ALL_GENRES[g.id] = g.name; });
+UNIFIED_GENRES.forEach(g => {
+  if (g.movie) ALL_GENRES[g.movie] = g.name;
+  if (g.tv && g.tv !== g.movie) ALL_GENRES[g.tv] = g.name;
+});
+
+// Resolve a unified genre name → {genreId, keywords} for a given media type
+function resolveGenre(genreName, type) {
+  const g = UNIFIED_GENRES.find(u => u.name === genreName);
+  if (!g) return { genreId: null, keywords: [] };
+  const id = type === 'tv' ? g.tv : g.movie;
+  // If no native genre ID for this type, fall back to keywords
+  if (!id && g.keywords) return { genreId: null, keywords: g.keywords };
+  return { genreId: id, keywords: [] };
+}
 
 // ── INIT ──
 document.addEventListener('DOMContentLoaded', () => {
@@ -818,14 +836,13 @@ function renderVibes() {
 }
 
 function renderGenres() {
-  const genres = mediaType === 'tv' ? TV_GENRES : MOVIE_GENRES;
   const el = document.getElementById('genre-chips');
-  el.innerHTML = genres.map(g =>
-    `<div class="genre-chip" data-genre="${g.id}" onclick="toggleGenre(${g.id})">${g.name}</div>`
+  el.innerHTML = UNIFIED_GENRES.map(g =>
+    `<div class="genre-chip" data-genre="${g.name}" onclick="toggleGenre('${g.name}')">${g.name}</div>`
   ).join('');
   // re-apply active state
-  activeGenres.forEach(gid => {
-    const chip = el.querySelector(`[data-genre="${gid}"]`);
+  activeGenres.forEach(gname => {
+    const chip = el.querySelector(`[data-genre="${gname}"]`);
     if (chip) chip.classList.add('active');
   });
 }
@@ -838,10 +855,10 @@ function toggleVibe(id) {
   renderActiveFilters();
 }
 
-function toggleGenre(id) {
-  if (activeGenres.has(id)) activeGenres.delete(id);
-  else activeGenres.add(id);
-  document.querySelector(`[data-genre="${id}"]`)?.classList.toggle('active');
+function toggleGenre(name) {
+  if (activeGenres.has(name)) activeGenres.delete(name);
+  else activeGenres.add(name);
+  document.querySelector(`[data-genre="${name}"]`)?.classList.toggle('active');
   renderActiveFilters();
 }
 
@@ -860,9 +877,8 @@ function renderActiveFilters() {
     const v = VIBES.find(x => x.id === vid);
     if (v) html += `<div class="active-filter-tag" style="border-color:${v.color}40;color:${v.color}">${v.label} <span class="remove" onclick="toggleVibe('${vid}')">✕</span></div>`;
   });
-  activeGenres.forEach(gid => {
-    const name = ALL_GENRES[gid] || gid;
-    html += `<div class="active-filter-tag">${name} <span class="remove" onclick="toggleGenre(${gid})">✕</span></div>`;
+  activeGenres.forEach(gname => {
+    html += `<div class="active-filter-tag">${gname} <span class="remove" onclick="toggleGenre('${gname}')">✕</span></div>`;
   });
   el.innerHTML = html;
 }
@@ -880,35 +896,56 @@ async function tmdbFetch(endpoint, params = {}) {
 }
 
 // ── BUILD DISCOVER PARAMS ──
-function buildDiscoverParams(type, page = 1) {
+function buildDiscoverParams(type, page = 1, sortStrategy = 'vote_count.desc') {
   const params = {
     page,
-    sort_by: 'vote_count.desc', // popularity weighted by actual votes
-    'vote_count.gte': 50,
+    sort_by: sortStrategy,
+    'vote_count.gte': sortStrategy === 'vote_average.desc' ? 100 : 30,
     include_adult: false,
     language: 'en-US',
   };
 
-  // Genres: merge active genre selections + vibe-implied genres
-  const genreSet = new Set(activeGenres);
-  activeVibes.forEach(vid => {
-    const v = VIBES.find(x => x.id === vid);
-    if (v) v.genres.forEach(g => genreSet.add(g));
+  // ── GENRE CROSS-MAPPING ──
+  // Resolve unified genre names → proper IDs for this media type
+  // Genres without a native ID for this type get converted to keywords
+  const genreIds = new Set();
+  const extraKeywords = new Set();
+
+  activeGenres.forEach(gname => {
+    const resolved = resolveGenre(gname, type);
+    if (resolved.genreId) genreIds.add(resolved.genreId);
+    resolved.keywords.forEach(k => extraKeywords.add(k));
   });
 
-  // For movie vs TV, map genre IDs appropriately
-  if (genreSet.size > 0) {
-    params.with_genres = [...genreSet].join(',');
+  // Vibe-implied genres also need cross-mapping
+  activeVibes.forEach(vid => {
+    const v = VIBES.find(x => x.id === vid);
+    if (!v) return;
+    v.genres.forEach(movieGenreId => {
+      // Find the unified genre entry that has this movie ID
+      const ug = UNIFIED_GENRES.find(u => u.movie === movieGenreId || u.tv === movieGenreId);
+      if (ug) {
+        const resolved = resolveGenre(ug.name, type);
+        if (resolved.genreId) genreIds.add(resolved.genreId);
+        resolved.keywords.forEach(k => extraKeywords.add(k));
+      } else {
+        genreIds.add(movieGenreId); // fallback — pass through
+      }
+    });
+  });
+
+  if (genreIds.size > 0) {
+    // Use | (OR) for genres when multiple selected — broader results
+    params.with_genres = [...genreIds].join('|');
   }
 
-  // Keywords from vibes (union of all active vibe keywords)
-  const kwSet = new Set();
+  // Keywords from vibes + genre-fallback keywords
+  const kwSet = new Set(extraKeywords);
   activeVibes.forEach(vid => {
     const v = VIBES.find(x => x.id === vid);
     if (v) v.keywords.forEach(k => kwSet.add(k));
   });
   if (kwSet.size > 0) {
-    // Use | (OR) between keywords for broader results
     params.with_keywords = [...kwSet].join('|');
   }
 
@@ -947,10 +984,8 @@ async function doSeek() {
 
   try {
     if (query) {
-      // Text search mode
       await doTextSearch(query, 1);
     } else {
-      // Discover mode (vibe + genre + filters)
       await doDiscover(1);
     }
   } catch (err) {
@@ -971,12 +1006,8 @@ async function doTextSearch(query, page) {
     if (type === types[0]) totalPages = Math.min(data.total_pages, 20);
   }
 
-  // Sort by popularity
   allResults.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
-
-  // Apply client-side vibe/genre filters if set
   allResults = clientFilter(allResults);
-
   currentResults = currentResults.concat(allResults);
   currentPage = page;
   renderResults(allResults, page === 1);
@@ -984,40 +1015,77 @@ async function doTextSearch(query, page) {
   document.getElementById('load-more-wrap').style.display = currentPage < totalPages ? 'block' : 'none';
 }
 
+// ── MULTI-STRATEGY DISCOVER ──
+// Run 3 parallel sort strategies per type and merge/dedup for much richer spread
+const SORT_STRATEGIES = [
+  'popularity.desc',
+  'vote_count.desc',
+  'vote_average.desc',
+];
+
 async function doDiscover(page) {
   const types = mediaType === 'all' ? ['movie', 'tv'] : [mediaType];
+  const seenIds = new Set();
   let allResults = [];
+  let maxPages = 1;
 
+  // Fire all strategy × type combos in parallel
+  const fetches = [];
   for (const type of types) {
-    const params = buildDiscoverParams(type, page);
-    const data = await tmdbFetch(`/discover/${type}`, params);
-    const tagged = data.results.map(r => ({ ...r, _type: type }));
-    allResults = allResults.concat(tagged);
-    if (type === types[0]) totalPages = Math.min(data.total_pages, 50);
+    for (const strat of SORT_STRATEGIES) {
+      fetches.push(
+        tmdbFetch(`/discover/${type}`, buildDiscoverParams(type, page, strat))
+          .then(data => ({ type, strat, data }))
+          .catch(() => ({ type, strat, data: { results: [], total_pages: 0 } }))
+      );
+    }
   }
 
-  // Sort by vote_average * log(vote_count) for quality weighting
+  const responses = await Promise.all(fetches);
+
+  for (const { type, strat, data } of responses) {
+    if (strat === 'popularity.desc') {
+      maxPages = Math.max(maxPages, Math.min(data.total_pages || 1, 50));
+    }
+    for (const r of (data.results || [])) {
+      const uid = `${type}_${r.id}`;
+      if (seenIds.has(uid)) continue;
+      seenIds.add(uid);
+      allResults.push({ ...r, _type: type });
+    }
+  }
+
+  // Quality-weighted sort: rating × log(votes) with slight popularity boost
   allResults.sort((a, b) => {
-    const sa = (a.vote_average || 0) * Math.log10((a.vote_count || 1) + 1);
-    const sb = (b.vote_average || 0) * Math.log10((b.vote_count || 1) + 1);
+    const sa = (a.vote_average || 0) * Math.log10((a.vote_count || 1) + 1) + (a.popularity || 0) * 0.01;
+    const sb = (b.vote_average || 0) * Math.log10((b.vote_count || 1) + 1) + (b.popularity || 0) * 0.01;
     return sb - sa;
   });
 
+  totalPages = maxPages;
   currentResults = currentResults.concat(allResults);
   currentPage = page;
   renderResults(allResults, page === 1);
 
   const vibeNames = [...activeVibes].map(v => VIBES.find(x => x.id === v)?.label || v).join(' + ');
-  setStatus(`${currentResults.length} results · ${vibeNames || 'no vibes selected'}`, false);
+  const genreNames = [...activeGenres].join(' + ');
+  const filterDesc = [vibeNames, genreNames].filter(Boolean).join(' · ');
+  setStatus(`${currentResults.length} results · ${filterDesc || 'no filters selected'}`, false);
   document.getElementById('load-more-wrap').style.display = currentPage < totalPages ? 'block' : 'none';
 }
 
 function clientFilter(results) {
-  // If we have active genres from genre chips, filter
+  // If we have active genres, filter using unified genre mapping
   if (activeGenres.size > 0) {
     results = results.filter(r => {
       const gids = r.genre_ids || [];
-      return [...activeGenres].some(g => gids.includes(g));
+      const type = r._type || 'movie';
+      return [...activeGenres].some(gname => {
+        const ug = UNIFIED_GENRES.find(u => u.name === gname);
+        if (!ug) return false;
+        // Check both movie and tv IDs since search results may use either
+        return (ug.movie && gids.includes(ug.movie)) || (ug.tv && gids.includes(ug.tv));
+      });
     });
   }
   return results;
@@ -1087,7 +1155,13 @@ function renderResults(items, clear = false) {
 
 function matchVibes(genreIds) {
   if (!genreIds.length) return [];
-  return VIBES.filter(v => v.genres.some(g => genreIds.includes(g)));
+  return VIBES.filter(v => v.genres.some(movieGid => {
+    // Direct match
+    if (genreIds.includes(movieGid)) return true;
+    // Cross-map: find the unified genre and check TV equivalent
+    const ug = UNIFIED_GENRES.find(u => u.movie === movieGid);
+    return ug && ug.tv && genreIds.includes(ug.tv);
+  }));
 }
 
 // ── DETAIL MODAL ──
