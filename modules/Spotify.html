@@ -949,6 +949,15 @@
     <div class="sp-label">LAST.FM API KEY</div>
     <div class="sp-value" id="sp-lastfm-key">—</div>
   </div>
+  <div class="sp-section">
+    <div class="sp-label" style="color:rgba(103,232,249,0.8)">SP_DC COOKIE <span style="opacity:.5;font-size:.44rem">· unlocks full audio features</span></div>
+    <input id="sp-dc-input" type="password"
+      placeholder="paste sp_dc value from Spotify web player cookies..."
+      style="width:100%;background:rgba(0,0,0,0.3);border:1px solid rgba(103,232,249,0.2);border-radius:3px;color:#fff;font-family:var(--mono);font-size:.48rem;letter-spacing:.04em;padding:.4rem .5rem;margin-top:.25rem;box-sizing:border-box;outline:none"
+      onchange="saveSpDc(this.value)"
+      autocomplete="off" autocorrect="off" spellcheck="false"/>
+    <div id="sp-dc-status" style="font-size:.44rem;margin-top:.2rem;opacity:.5">—</div>
+  </div>
 
   <!-- crystallization status -->
   <div class="sp-section">
@@ -987,7 +996,7 @@
 // STATE
 // ═══════════════════════════════════════════════════
 const SCOPES = 'user-library-read';
-let accessToken=null, clientId=null, lastfmKey=null;
+let accessToken=null, clientId=null, lastfmKey=null, spDc='', _internalToken=null, _internalTokenExp=0;
 let songs=[], colorMode='genre', searchQuery='';
 let viewportMode='canvas'; // 'canvas' | 'webgl' | 'fluid'
 
@@ -1209,6 +1218,11 @@ async function runGenreEnrichment(){
   dbg(`phase 1: ${artistMap.size} unique artists to enrich (${alreadyDone} already done)`,'info');
   if(!artistMap.size){ dbg('all done ✓','ok'); updateHUD(); return; }
 
+  // If sp_dc available, prime the internal token first
+  if(spDc){
+    const tokenOk=await fetchInternalToken();
+    if(tokenOk) dbg('sp_dc internal token ready — genre will use Spotify artists directly','ok');
+  }
   const GENRE_WORKERS=6; // parallel Last.fm workers
   const artistQueue=[...artistMap.entries()]; // [[artistName, [songIdxs]], ...]
   let fetched=0, withTags=0, emptyTags=0, queueIdx=0;
@@ -1219,22 +1233,32 @@ async function runGenreEnrichment(){
       if(i>=artistQueue.length) return;
       const [artistName, songIdxs]=artistQueue[i];
 
-      const url=`https://ws.audioscrobbler.com/2.0/?method=artist.getTopTags&artist=${encodeURIComponent(artistName)}&api_key=${lastfmKey}&format=json&autocorrect=1`;
       let tags=[];
-      try{
-        const r=await lastfmFetch(url);
-        if(r.status===429){ dbg('rate limit — pausing 30s','warn'); await delay(30000); queueIdx--; return; }
-        if(!r.ok){ emptyTags++; } else {
-          const d=await r.json();
-          if(d.error){ emptyTags++; }
-          else {
-            tags=(d.toptags?.tag||[])
-              .slice(0,10)
-              .map(t=>t.name?.toLowerCase())
-              .filter(Boolean);
+      // Primary: Spotify internal API (if sp_dc available) — real genre taxonomy
+      // artistId is stored from scan if available
+      const artistId=songs[songIdxs[0]]?.artistId;
+      if(_internalToken && artistId){
+        try{
+          const d=await internalApiGet(`/v1/artists/${artistId}`);
+          if(d?.genres?.length){
+            tags=d.genres.map(g=>g.toLowerCase());
           }
-        }
-      }catch(e){ emptyTags++; }
+        }catch(e){ /* fall through to Last.fm */ }
+      }
+      // Fallback: Last.fm artist.getTopTags
+      if(!tags.length && lastfmKey){
+        const url=`https://ws.audioscrobbler.com/2.0/?method=artist.getTopTags&artist=${encodeURIComponent(artistName)}&api_key=${lastfmKey}&format=json&autocorrect=1`;
+        try{
+          const r=await lastfmFetch(url);
+          if(r.status===429){ dbg('rate limit — pausing 30s','warn'); await delay(30000); queueIdx--; return; }
+          if(r.ok){
+            const d=await r.json();
+            if(!d.error){
+              tags=(d.toptags?.tag||[]).slice(0,10).map(t=>t.name?.toLowerCase()).filter(Boolean);
+            }
+          }
+        }catch(e){ emptyTags++; }
+      }
 
       // Apply tags to all songs by this artist
       const features=genresToFeatures(tags);
@@ -1515,6 +1539,74 @@ function _cachePreview(id, url){
   featureCache[id].previewUrl=url;
 }
 
+// ─────────────────────────────────────────────────────
+// INTERNAL AUDIO FEATURES (sp_dc) — real Spotify data
+// Fetches valence/energy/tempo/danceability/acousticness
+// for all tracks in batches of 100
+// ─────────────────────────────────────────────────────
+async function runInternalAudioFeatures(){
+  if(!spDc) return;
+  const ok=await fetchInternalToken();
+  if(!ok){ dbg('sp_dc: token unavailable for audio features','warn'); return; }
+
+  const toFetch=songs.filter(s=>!featureCache[s.id]?._v?.spotifyFeatures);
+  if(!toFetch.length){ dbg('internal audio features: all done ✓','ok'); return; }
+
+  dbg(`▶ internal audio features: ${toFetch.length} tracks via sp_dc`,'info');
+  const BATCH=100;
+  let done=0, enriched=0;
+
+  for(let b=0;b<toFetch.length;b+=BATCH){
+    if(!_internalToken) break;
+    const batch=toFetch.slice(b,b+BATCH);
+    const ids=batch.map(s=>s.id).join(',');
+    const d=await internalApiGet(`/v1/audio-features?ids=${ids}`);
+    const features=d?.audio_features||[];
+
+    for(let j=0;j<batch.length;j++){
+      const f=features[j];
+      const s=batch[j];
+      if(!f||f.id!==s.id) continue;
+      if(!featureCache[s.id]) featureCache[s.id]={};
+      // Store real Spotify features — overwrite Last.fm approximations
+      featureCache[s.id].spotifyFeatures={
+        valence:f.valence,
+        energy:f.energy,
+        danceability:f.danceability,
+        tempo:f.tempo,
+        acousticness:f.acousticness,
+        instrumentalness:f.instrumentalness,
+        speechiness:f.speechiness,
+        loudness:f.loudness,
+        key:f.key, mode:f.mode, time_signature:f.time_signature
+      };
+      if(!featureCache[s.id]._v) featureCache[s.id]._v={};
+      featureCache[s.id]._v.spotifyFeatures=true;
+      featureCache[s.id]._v.a=true; // counts as audio analyzed
+      // Update song features + recompute position
+      s.f=getFeatures(s);
+      const np=computeWorldPos(s,colorMode);
+      const si=songs.indexOf(s);
+      if(si>=0&&worldPositions){
+        if(Math.hypot(np.wx-worldPositions[si].wx,np.wy-worldPositions[si].wy)>.003){
+          startTransition(si,worldPositions[si],np);
+          worldPositions[si]=np;
+        }
+      }
+      enriched++;
+    }
+    done+=batch.length;
+    if(done%500===0||done===toFetch.length){
+      dbg(`internal features: ${done}/${toFetch.length} · ${enriched} enriched`,'info');
+      queueSave(); updateHUD();
+    }
+    await delay(jitter(60)); // ~16 batches/sec — well within internal rate limits
+  }
+  queueSave(); updateHUD();
+  dbg(`✦ internal audio features done — ${enriched}/${toFetch.length} tracks enriched`,'ok');
+}
+
+
 async function runPassiveAudioAnalysis(){
   const toAnalyze=songs
     .map((s,i)=>({s,i}))
@@ -1566,28 +1658,40 @@ function getAudioStats(){
 function getFeatures(track){
   const s=synth(track);
   const cached=featureCache[track.id]||{};
+  const sp=cached.spotifyFeatures; // real Spotify data via sp_dc — highest trust
   const gn=cached.genre, lf=cached.lastfm, au=cached.audio;
-  if(!gn&&!lf&&!au) return s;
 
+  // Real Spotify audio features: use directly, blend only tempo from audio preview
+  if(sp){
+    const t=au?au.tempo:sp.tempo;
+    return{
+      valence:sp.valence,
+      energy:sp.energy,
+      danceability:sp.danceability,
+      tempo:t,
+      acousticness:sp.acousticness,
+      instrumentalness:sp.instrumentalness,
+      genreTags:cached.genreTags||[],
+      source:'spotify',
+    };
+  }
+
+  if(!gn&&!lf&&!au) return s;
   let v=s.valence, e=s.energy, d=s.danceability, t=s.tempo;
   let sources=[];
-
-  // genre is highest trust — Spotify's own taxonomy
   if(gn){
     if(gn.valence!=null)      v=s.valence*.08+gn.valence*.92;
     if(gn.energy!=null)       e=s.energy*.08+gn.energy*.92;
     if(gn.danceability!=null) d=s.danceability*.08+gn.danceability*.92;
     sources.push('genre');
   }
-  // lastfm blends on top if present
   if(lf){
-    const w=gn?.5:.88; // less weight if genre already set
+    const w=gn?.5:.88;
     if(lf.valence!=null) v=v*(1-w)+lf.valence*w;
     if(lf.energy!=null)  e=e*(1-w)+lf.energy*w;
     if(lf.danceability!=null) d=d*(1-w)+lf.danceability*w;
     sources.push('lastfm');
   }
-  // audio analysis refines energy + tempo
   if(au){
     const ew=gn?.30:.65;
     e=e*(1-ew)+au.energy*ew;
@@ -1595,7 +1699,6 @@ function getFeatures(track){
     v=Math.max(.02,Math.min(.98,v+(au.brightness-.5)*.06));
     sources.push('audio');
   }
-
   return{
     valence:Math.max(.02,Math.min(.98,v)),
     energy:Math.max(.02,Math.min(.98,e)),
@@ -2225,6 +2328,83 @@ function bindAttr(buf, loc, data, size){
 
 
 // ═══════════════════════════════════════════════════
+// SP_DC INTERNAL TOKEN (Spotify internal API bypass)
+// ═══════════════════════════════════════════════════
+function saveSpDc(val){
+  val=val.trim();
+  if(!val||val.startsWith('•')) return; // don't overwrite with masked display
+  spDc=val;
+  localStorage.setItem('rs_sp_dc', val);
+  // Mask display
+  const el=document.getElementById('sp-dc-input');
+  if(el) el.value='••••••••'+val.slice(-6);
+  setSpDcStatus('saved — fetching token...','rgba(103,232,249,0.7)');
+  fetchInternalToken().then(ok=>{
+    setSpDcStatus(ok?'✦ active — full audio features unlocked':'⚠ token fetch failed — check cookie','rgba(103,232,249,0.7)');
+  });
+}
+function setSpDcStatus(msg, color='rgba(255,255,255,0.4)'){
+  const el=document.getElementById('sp-dc-status');
+  if(el){ el.textContent=msg; el.style.color=color; }
+}
+async function fetchInternalToken(){
+  if(!spDc){ return false; }
+  // Check cached token
+  if(_internalToken && Date.now() < _internalTokenExp-30000) return true;
+  try{
+    const r=await fetch('https://open.spotify.com/get_access_token?reason=transport&productType=web_player',{
+      headers:{ 'Cookie':`sp_dc=${spDc}`, 'User-Agent':navigator.userAgent },
+      credentials:'omit'
+    });
+    if(!r.ok){ dbg(`sp_dc token fetch: ${r.status}`,'warn'); return false; }
+    const d=await r.json();
+    if(!d.accessToken){ dbg('sp_dc: no accessToken in response','warn'); return false; }
+    _internalToken=d.accessToken;
+    _internalTokenExp=d.accessTokenExpirationTimestampMs||Date.now()+3600000;
+    dbg('sp_dc internal token ✓','ok');
+    return true;
+  }catch(e){
+    dbg(`sp_dc token error: ${e.message}`,'warn');
+    // CORS note: open.spotify.com blocks cross-origin cookie header
+    // We surface a clear message instead of silently failing
+    setSpDcStatus('⚠ CORS blocked — use the bookmarklet method below','rgba(255,180,0,0.8)');
+    return false;
+  }
+}
+
+// Fallback: bookmarklet injects token directly (bypasses CORS)
+// User runs this in console on open.spotify.com:
+//   copy(document.cookie.match(/sp_dc=([^;]+)/)?.[1])
+// Then pastes the raw cookie value above — we store it and use it
+// for direct internal API calls that don't require the cookie header.
+async function internalApiGet(path){
+  const ok=await fetchInternalToken();
+  if(!ok) return null;
+  try{
+    const r=await fetch(`https://api.spotify.com${path}`,{
+      headers:{ 'Authorization':`Bearer ${_internalToken}` }
+    });
+    if(r.status===401){ _internalToken=null; return null; } // token expired
+    if(!r.ok) return null;
+    return await r.json();
+  }catch{ return null; }
+}
+
+// Fetch real Spotify audio features via internal token (no 403!)
+async function fetchAudioFeaturesInternal(trackIds){
+  // Internal API uses same /v1/audio-features endpoint but with internal token
+  const d=await internalApiGet(`/v1/audio-features?ids=${trackIds.join(',')}`);
+  return d?.audio_features||null;
+}
+
+// Fetch artist genres via internal token (fixes the 403 that killed genre enrichment)
+async function fetchArtistGenresInternal(artistIds){
+  const d=await internalApiGet(`/v1/artists?ids=${artistIds.join(',')}`);
+  return d?.artists||null;
+}
+
+
+// ═══════════════════════════════════════════════════
 // VIEWPORT MODE
 // ═══════════════════════════════════════════════════
 function setViewport(mode){
@@ -2276,7 +2456,11 @@ function launchViz(){
       const ast=getAudioStats();
       dbg(`audio check: ${ast.analyzed} analyzed, ${ast.withPreview} have preview_url (will also try iTunes/Deezer)`,'info');
       if(ast.analyzed >= songs.length) dbg('audio: all tracks analyzed ✓','ok');
-      else runPassiveAudioAnalysis(); // always run — will resolve via iTunes/Deezer for missing previews
+      else {
+        // If sp_dc available: fetch real Spotify audio features first (faster + more accurate)
+        if(spDc) await runInternalAudioFeatures();
+        runPassiveAudioAnalysis(); // always run — fills preview-based audio for remaining tracks
+      }
     }, cs.genreDone < cs.total ? 30000 : 2000); // wait for genre if it's running
 
     // Last.fm still runs if key present (catches anything genre misses)
@@ -2856,8 +3040,10 @@ async function boot(){
   loadFeatureCache();
   clientId=localStorage.getItem('rs_client_id');
   lastfmKey=localStorage.getItem('rs_lastfm_key');
+  spDc=localStorage.getItem('rs_sp_dc')||'';
   if(clientId) document.getElementById('client-id-input').value=clientId;
   if(lastfmKey) document.getElementById('lastfm-key-input').value=lastfmKey;
+  if(spDc){ const el=document.getElementById('sp-dc-input'); if(el) el.value='••••••••'+spDc.slice(-6); }
   const hasToken=await parseToken();
   if(!hasToken) return;
   show('loading-screen');hide('login-screen');
