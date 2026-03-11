@@ -950,13 +950,19 @@
     <div class="sp-value" id="sp-lastfm-key">—</div>
   </div>
   <div class="sp-section">
-    <div class="sp-label" style="color:rgba(103,232,249,0.8)">SP_DC COOKIE <span style="opacity:.5;font-size:.44rem">· unlocks full audio features</span></div>
-    <input id="sp-dc-input" type="password"
-      placeholder="paste sp_dc value from Spotify web player cookies..."
-      style="width:100%;background:rgba(0,0,0,0.3);border:1px solid rgba(103,232,249,0.2);border-radius:3px;color:#fff;font-family:var(--mono);font-size:.48rem;letter-spacing:.04em;padding:.4rem .5rem;margin-top:.25rem;box-sizing:border-box;outline:none"
-      onchange="saveSpDc(this.value)"
+    <div class="sp-label" style="color:rgba(103,232,249,0.8)">SPOTIFY INTERNAL TOKEN <span style="opacity:.5;font-size:.44rem">· unlocks real audio features</span></div>
+    <div style="font-size:.44rem;opacity:.55;margin:.2rem 0 .4rem;line-height:1.7;font-family:var(--mono)">
+      1. Open <span style="color:rgba(103,232,249,0.8)">open.spotify.com</span> while logged in<br>
+      2. Open DevTools console (F12)<br>
+      3. Run: <span style="color:rgba(167,139,250,0.9);user-select:all">copy((await fetch('/get_access_token?reason=transport&productType=web_player').then(r=>r.json())).accessToken)</span><br>
+      4. Paste result below ↓
+    </div>
+    <input id="sp-internal-token-input" type="password"
+      placeholder="paste internal token here..."
+      style="width:100%;background:rgba(0,0,0,0.3);border:1px solid rgba(103,232,249,0.25);border-radius:3px;color:#fff;font-family:var(--mono);font-size:.48rem;letter-spacing:.04em;padding:.4rem .5rem;margin-top:.15rem;box-sizing:border-box;outline:none"
+      onchange="saveInternalToken(this.value)"
       autocomplete="off" autocorrect="off" spellcheck="false"/>
-    <div id="sp-dc-status" style="font-size:.44rem;margin-top:.2rem;opacity:.5">—</div>
+    <div id="sp-dc-status" style="font-size:.44rem;margin-top:.25rem;opacity:.6">—</div>
   </div>
 
   <!-- crystallization status -->
@@ -1218,10 +1224,10 @@ async function runGenreEnrichment(){
   dbg(`phase 1: ${artistMap.size} unique artists to enrich (${alreadyDone} already done)`,'info');
   if(!artistMap.size){ dbg('all done ✓','ok'); updateHUD(); return; }
 
-  // If sp_dc available, prime the internal token first
-  if(spDc){
+  // Prime internal token if available
+  if(_internalToken||localStorage.getItem('rs_internal_token')){
     const tokenOk=await fetchInternalToken();
-    if(tokenOk) dbg('sp_dc internal token ready — genre will use Spotify artists directly','ok');
+    if(tokenOk) dbg('internal token ready — genre will use Spotify artists directly','ok');
   }
   const GENRE_WORKERS=6; // parallel Last.fm workers
   const artistQueue=[...artistMap.entries()]; // [[artistName, [songIdxs]], ...]
@@ -2330,53 +2336,38 @@ function bindAttr(buf, loc, data, size){
 // ═══════════════════════════════════════════════════
 // SP_DC INTERNAL TOKEN (Spotify internal API bypass)
 // ═══════════════════════════════════════════════════
-function saveSpDc(val){
+function saveInternalToken(val){
   val=val.trim();
-  if(!val||val.startsWith('•')) return; // don't overwrite with masked display
-  spDc=val;
-  localStorage.setItem('rs_sp_dc', val);
-  // Mask display
-  const el=document.getElementById('sp-dc-input');
-  if(el) el.value='••••••••'+val.slice(-6);
-  setSpDcStatus('saved — fetching token...','rgba(103,232,249,0.7)');
-  fetchInternalToken().then(ok=>{
-    setSpDcStatus(ok?'✦ active — full audio features unlocked':'⚠ token fetch failed — check cookie','rgba(103,232,249,0.7)');
-  });
+  if(!val||val.startsWith('•')) return;
+  _internalToken=val;
+  // Tokens last ~1hr from Spotify; store with 55min expiry as safe default
+  _internalTokenExp=Date.now()+55*60*1000;
+  localStorage.setItem('rs_internal_token', val);
+  localStorage.setItem('rs_internal_token_exp', String(_internalTokenExp));
+  const el=document.getElementById('sp-internal-token-input');
+  if(el) el.value='••••••••'+val.slice(-8);
+  setSpDcStatus('✦ active — full audio features unlocked · expires ~55min','rgba(103,232,249,0.8)');
+  dbg('internal token saved ✓','ok');
+  // Immediately kick off enrichment with real features
+  runInternalAudioFeatures();
 }
 function setSpDcStatus(msg, color='rgba(255,255,255,0.4)'){
   const el=document.getElementById('sp-dc-status');
   if(el){ el.textContent=msg; el.style.color=color; }
 }
 async function fetchInternalToken(){
-  if(!spDc){ return false; }
-  // Check cached token
+  // Token is provided directly by user — just check if still valid
   if(_internalToken && Date.now() < _internalTokenExp-30000) return true;
-  try{
-    const r=await fetch('https://open.spotify.com/get_access_token?reason=transport&productType=web_player',{
-      headers:{ 'Cookie':`sp_dc=${spDc}`, 'User-Agent':navigator.userAgent },
-      credentials:'omit'
-    });
-    if(!r.ok){ dbg(`sp_dc token fetch: ${r.status}`,'warn'); return false; }
-    const d=await r.json();
-    if(!d.accessToken){ dbg('sp_dc: no accessToken in response','warn'); return false; }
-    _internalToken=d.accessToken;
-    _internalTokenExp=d.accessTokenExpirationTimestampMs||Date.now()+3600000;
-    dbg('sp_dc internal token ✓','ok');
+  // Try restoring from localStorage
+  const stored=localStorage.getItem('rs_internal_token');
+  const exp=parseInt(localStorage.getItem('rs_internal_token_exp')||'0');
+  if(stored && Date.now() < exp-30000){
+    _internalToken=stored;
+    _internalTokenExp=exp;
     return true;
-  }catch(e){
-    dbg(`sp_dc token error: ${e.message}`,'warn');
-    // CORS note: open.spotify.com blocks cross-origin cookie header
-    // We surface a clear message instead of silently failing
-    setSpDcStatus('⚠ CORS blocked — use the bookmarklet method below','rgba(255,180,0,0.8)');
-    return false;
   }
+  return false;
 }
-
-// Fallback: bookmarklet injects token directly (bypasses CORS)
-// User runs this in console on open.spotify.com:
-//   copy(document.cookie.match(/sp_dc=([^;]+)/)?.[1])
-// Then pastes the raw cookie value above — we store it and use it
-// for direct internal API calls that don't require the cookie header.
 async function internalApiGet(path){
   const ok=await fetchInternalToken();
   if(!ok) return null;
@@ -2458,7 +2449,8 @@ function launchViz(){
       if(ast.analyzed >= songs.length) dbg('audio: all tracks analyzed ✓','ok');
       else {
         // If sp_dc available: fetch real Spotify audio features first (faster + more accurate)
-        if(spDc) await runInternalAudioFeatures();
+        const hasIntToken=await fetchInternalToken();
+        if(hasIntToken) await runInternalAudioFeatures();
         runPassiveAudioAnalysis(); // always run — fills preview-based audio for remaining tracks
       }
     }, cs.genreDone < cs.total ? 30000 : 2000); // wait for genre if it's running
@@ -3040,10 +3032,19 @@ async function boot(){
   loadFeatureCache();
   clientId=localStorage.getItem('rs_client_id');
   lastfmKey=localStorage.getItem('rs_lastfm_key');
-  spDc=localStorage.getItem('rs_sp_dc')||'';
+  // Restore internal token
+  const _storedTok=localStorage.getItem('rs_internal_token');
+  const _storedExp=parseInt(localStorage.getItem('rs_internal_token_exp')||'0');
+  if(_storedTok && Date.now() < _storedExp-30000){
+    _internalToken=_storedTok; _internalTokenExp=_storedExp;
+    const _tel=document.getElementById('sp-internal-token-input');
+    if(_tel) _tel.value='••••••••'+_storedTok.slice(-8);
+    setSpDcStatus('✦ active · expires '+new Date(_storedExp).toLocaleTimeString(),'rgba(103,232,249,0.7)');
+  } else if(_storedTok){
+    setSpDcStatus('⚠ token expired — re-run console snippet on open.spotify.com','rgba(255,180,0,0.7)');
+  }
   if(clientId) document.getElementById('client-id-input').value=clientId;
   if(lastfmKey) document.getElementById('lastfm-key-input').value=lastfmKey;
-  if(spDc){ const el=document.getElementById('sp-dc-input'); if(el) el.value='••••••••'+spDc.slice(-6); }
   const hasToken=await parseToken();
   if(!hasToken) return;
   show('loading-screen');hide('login-screen');
