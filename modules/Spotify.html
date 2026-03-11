@@ -1003,6 +1003,7 @@
 // ═══════════════════════════════════════════════════
 const SCOPES = 'user-library-read';
 let accessToken=null, clientId=null, lastfmKey=null, spDc='', _internalToken=null, _internalTokenExp=0;
+let _spotifyFeaturesDone=0, _spotifyFeaturesTotal=0;
 let songs=[], colorMode='genre', searchQuery='';
 let viewportMode='canvas'; // 'canvas' | 'webgl' | 'fluid'
 
@@ -1551,65 +1552,71 @@ function _cachePreview(id, url){
 // for all tracks in batches of 100
 // ─────────────────────────────────────────────────────
 async function runInternalAudioFeatures(){
-  if(!spDc) return;
-  const ok=await fetchInternalToken();
-  if(!ok){ dbg('sp_dc: token unavailable for audio features','warn'); return; }
+  // Gate on _internalToken directly (sp_dc path removed — token is pasted directly)
+  if(!_internalToken){ dbg('no internal token — paste from Spotify network tab','warn'); return; }
 
-  const toFetch=songs.filter(s=>!featureCache[s.id]?._v?.spotifyFeatures);
-  if(!toFetch.length){ dbg('internal audio features: all done ✓','ok'); return; }
+  // Build index: trackId → songIndex for O(1) lookup
+  const songIndex=new Map(songs.map((s,i)=>[s.id,i]));
 
-  dbg(`▶ internal audio features: ${toFetch.length} tracks via sp_dc`,'info');
+  const toFetch=songs
+    .map((s,i)=>({s,i}))
+    .filter(({s})=>!featureCache[s.id]?._v?.spotifyFeatures);
+
+  if(!toFetch.length){ dbg('spotify features: all done ✓','ok'); updateHUD(); return; }
+
+  _spotifyFeaturesTotal=toFetch.length;
+  _spotifyFeaturesDone=0;
+  dbg(`▶ spotify features: ${toFetch.length} tracks to enrich (${songs.length-toFetch.length} already done)`,'info');
+  setSpDcStatus(`fetching features · 0/${toFetch.length}...`,'rgba(103,232,249,0.8)');
+
   const BATCH=100;
-  let done=0, enriched=0;
+  let enriched=0;
 
   for(let b=0;b<toFetch.length;b+=BATCH){
     if(!_internalToken) break;
     const batch=toFetch.slice(b,b+BATCH);
-    const ids=batch.map(s=>s.id).join(',');
+    const ids=batch.map(({s})=>s.id).join(',');
     const d=await internalApiGet(`/v1/audio-features?ids=${ids}`);
     const features=d?.audio_features||[];
 
     for(let j=0;j<batch.length;j++){
       const f=features[j];
-      const s=batch[j];
-      if(!f||f.id!==s.id) continue;
+      const {s,i}=batch[j];
+      if(!f) continue;
       if(!featureCache[s.id]) featureCache[s.id]={};
-      // Store real Spotify features — overwrite Last.fm approximations
       featureCache[s.id].spotifyFeatures={
-        valence:f.valence,
-        energy:f.energy,
-        danceability:f.danceability,
-        tempo:f.tempo,
-        acousticness:f.acousticness,
-        instrumentalness:f.instrumentalness,
-        speechiness:f.speechiness,
-        loudness:f.loudness,
+        valence:f.valence, energy:f.energy,
+        danceability:f.danceability, tempo:f.tempo,
+        acousticness:f.acousticness, instrumentalness:f.instrumentalness,
+        speechiness:f.speechiness, loudness:f.loudness,
         key:f.key, mode:f.mode, time_signature:f.time_signature
       };
       if(!featureCache[s.id]._v) featureCache[s.id]._v={};
       featureCache[s.id]._v.spotifyFeatures=true;
-      featureCache[s.id]._v.a=true; // counts as audio analyzed
-      // Update song features + recompute position
+      featureCache[s.id]._v.a=true;
+      // Recompute position with real data
       s.f=getFeatures(s);
-      const np=computeWorldPos(s,colorMode);
-      const si=songs.indexOf(s);
-      if(si>=0&&worldPositions){
-        if(Math.hypot(np.wx-worldPositions[si].wx,np.wy-worldPositions[si].wy)>.003){
-          startTransition(si,worldPositions[si],np);
-          worldPositions[si]=np;
+      if(worldPositions){
+        const np=computeWorldPos(s,colorMode);
+        if(Math.hypot(np.wx-worldPositions[i].wx,np.wy-worldPositions[i].wy)>.003){
+          startTransition(i,worldPositions[i],np);
+          worldPositions[i]=np;
         }
       }
       enriched++;
     }
-    done+=batch.length;
-    if(done%500===0||done===toFetch.length){
-      dbg(`internal features: ${done}/${toFetch.length} · ${enriched} enriched`,'info');
-      queueSave(); updateHUD();
-    }
-    await delay(jitter(60)); // ~16 batches/sec — well within internal rate limits
+    _spotifyFeaturesDone=b+batch.length;
+    // Update UI every batch
+    const pct=Math.round(_spotifyFeaturesDone/toFetch.length*100);
+    setSpDcStatus(`fetching · ${_spotifyFeaturesDone.toLocaleString()}/${toFetch.length.toLocaleString()} (${pct}%)`,
+      'rgba(103,232,249,0.8)');
+    updateHUD();
+    if(_spotifyFeaturesDone%500===0) queueSave();
+    await delay(jitter(60));
   }
   queueSave(); updateHUD();
-  dbg(`✦ internal audio features done — ${enriched}/${toFetch.length} tracks enriched`,'ok');
+  setSpDcStatus(`✦ done · ${enriched.toLocaleString()} tracks enriched with real Spotify data`,'rgba(103,232,249,1)');
+  dbg(`✦ spotify features done — ${enriched}/${toFetch.length} enriched`,'ok');
 }
 
 
@@ -2818,10 +2825,23 @@ function updateHUD(){
   const audioPct = ast.withPreview>0 ? ast.analyzed/ast.withPreview : (ast.analyzed>0?1:0);
   const crystalPct = Math.round((genrePct*.40 + lfPct*.35 + audioPct*.25)*100);
 
+  // Spotify features boost: if running, show dedicated progress
+  const spDone=songs.filter(s=>featureCache[s.id]?._v?.spotifyFeatures).length;
+  const spRunning=_spotifyFeaturesTotal>0&&_spotifyFeaturesDone<_spotifyFeaturesTotal;
+
   let status;
-  if(crystalPct>=99) status='✦ crystallized';
-  else if(crystalPct>0) status=`crystallizing ${crystalPct}%`;
-  else status='awaiting crystallization';
+  if(spRunning){
+    const spPct=Math.round(_spotifyFeaturesDone/_spotifyFeaturesTotal*100);
+    status=`✦ spotify features ${spPct}% · crystallizing ${crystalPct}%`;
+  } else if(spDone>0&&crystalPct>=99){
+    status='✦ crystallized · spotify data active';
+  } else if(crystalPct>=99){
+    status='✦ crystallized';
+  } else if(crystalPct>0){
+    status=`crystallizing ${crystalPct}%`;
+  } else {
+    status='awaiting crystallization';
+  }
 
   el.textContent=`${total.toLocaleString()} songs · ${status}`;
 }
@@ -2921,10 +2941,12 @@ function updateSettingsPanel(){
     const bar='█'.repeat(filled)+'░'.repeat(20-filled);
     const running=enrichActive||_audioRunning;
     const statusLine=overall>=99?'✦ complete':`${bar} ${overall}%${running?' · running':''}`;
+    const spDoneCount=songs.filter(s=>featureCache[s.id]?._v?.spotifyFeatures).length;
     const details=[];
     details.push(`tags ${lfDone.toLocaleString()}/${total.toLocaleString()}`);
     details.push(`genre ${cs.genreReal.toLocaleString()}/${total.toLocaleString()}`);
     if(ast.withPreview>0||ast.analyzed>0) details.push(`audio ${ast.analyzed.toLocaleString()}${ast.withPreview>0?'/'+ast.withPreview.toLocaleString():''}`);
+    if(spDoneCount>0) details.push(`<span style="color:rgba(103,232,249,0.8)">✦ spotify ${spDoneCount.toLocaleString()}/${total.toLocaleString()}</span>`);
     cst.innerHTML=`<div style="letter-spacing:.04em;margin-bottom:4px">${statusLine}</div><div style="opacity:.5;font-size:.48rem">${details.join(' · ')}</div>`;
   }
 }
