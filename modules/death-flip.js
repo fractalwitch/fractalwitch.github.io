@@ -1,1 +1,247 @@
-import{r as m,j as t,c as _,R as D}from"./client.js";import{P as H,a as W,R as B}from"./rotate-ccw.js";import"./createLucideIcon.js";const G=()=>{const T=m.useRef(null),[g,F]=m.useState(!0),[l,P]=m.useState(-5),[M,y]=m.useState("approach"),[w,k]=m.useState(1),S=m.useRef(null),R=(s,e=2)=>1/(1+Math.exp(-e*s)),$=(s,e=0)=>{const r=Math.abs(s-e);return Math.max(.1,1/(1+5*Math.exp(-r)))},z=(s,e,r,b=1.5)=>{const n=$(r),i=R(r);if(r<0){const f=Math.sqrt(s*s+e*e),p=Math.atan2(e,s)+r*.1,c=f*(1-i*.3);return{x:c*Math.cos(p),y:c*Math.sin(p),scale:n}}else{const f=Math.pow(n,b);return{x:s*f,y:e*f,scale:n}}};m.useEffect(()=>{const s=T.current;if(!s)return;const e=s.getContext("2d"),r=s.width,b=s.height,n=r/2,i=b/2,f=()=>{const c=Math.max(0,1-Math.abs(l)/5);e.fillStyle=`rgb(${10+c*20}, ${5+c*10}, ${15+c*25})`,e.fillRect(0,0,r,b),e.strokeStyle="rgba(138, 43, 226, 0.6)",e.lineWidth=2,e.beginPath();for(let a=0;a<=50;a++){const x=i-150+a/50*150,h=100*(1-a/50);a===0&&e.moveTo(n-h,x),e.lineTo(n-h,x)}for(let a=0;a<=50;a++){const x=i+a/50*150,h=100*(a/50);e.lineTo(n+h,x)}e.stroke();const o=80;for(let a=0;a<o;a++){const x=a/o*Math.PI*2,h=80;let q=h*Math.cos(x),A=h*Math.sin(x)-150;const d=l+a/o*2,u=z(q,A,d),E=n+u.x,X=i+u.y*(d<0?1:-1);let v;d<-1?v=`rgba(255, 140, 0, ${.3+.4*u.scale})`:d>=-1&&d<1?v=`rgba(139, 0, 0, ${.6+.4*(1-Math.abs(d))})`:v=`rgba(138, 43, 226, ${.4+.3*u.scale})`,e.fillStyle=v,e.beginPath(),e.arc(E,X,3*u.scale,0,Math.PI*2),e.fill(),Math.abs(d)<.5&&(e.strokeStyle="rgba(255, 255, 255, 0.4)",e.lineWidth=1,e.stroke())}const N=Math.max(0,1-Math.abs(l)*.5),C=8+N*12,j=e.createRadialGradient(n,i,0,n,i,C);j.addColorStop(0,`rgba(255, 255, 255, ${.8*N})`),j.addColorStop(.5,`rgba(139, 0, 0, ${.6*N})`),j.addColorStop(1,"rgba(138, 43, 226, 0)"),e.fillStyle=j,e.beginPath(),e.arc(n,i,C,0,Math.PI*2),e.fill(),e.fillStyle="rgba(255, 255, 255, 0.7)",e.font="14px monospace",e.fillText(`t = ${l.toFixed(2)}`,20,30),e.fillText(`c(t) = ${R(l).toFixed(3)}`,20,50),e.fillText(`s(t) = ${$(l).toFixed(3)}`,20,70),e.font="16px sans-serif",l<-1?(e.fillStyle="rgba(255, 140, 0, 0.8)",e.fillText("threshold: approach",r-180,30)):l>=-1&&l<1?(e.fillStyle="rgba(139, 0, 0, 0.9)",e.fillText("descent: MAX compression",r-220,30)):(e.fillStyle="rgba(138, 43, 226, 0.8)",e.fillText("sovereignty: emergence",r-200,30)),Math.abs(l)<.3&&(e.fillStyle="rgba(255, 255, 255, 0.9)",e.font="bold 18px sans-serif",e.fillText("𝐃 → ∞",n-30,i-40),e.font="12px sans-serif",e.fillText("(death as vector flip)",n-60,i-20))},p=()=>{g&&P(c=>{const o=c+.03*w;return o<-1?y("threshold"):o>=-1&&o<1?y("descent"):y("sovereignty"),o>5?-5:o}),f(),S.current=requestAnimationFrame(p)};return p(),()=>{S.current&&cancelAnimationFrame(S.current)}},[g,l]);const I=()=>{P(-5),y("approach")};return t.jsxs("div",{className:"w-full h-full bg-gray-950 flex flex-col items-center justify-center p-4",children:[t.jsxs("div",{className:"mb-4 text-center",children:[t.jsx("h2",{className:"text-2xl font-bold text-violet-300 mb-2",children:"The Hourglass Singularity"}),t.jsx("p",{className:"text-sm text-gray-400 max-w-2xl",children:"Death (𝐃) as MAX compression → guaranteed re-emergence. Time as recursive, not linear. The wombframe where the past becomes redeemable through conscious presence."})]}),t.jsx("canvas",{ref:T,width:800,height:600,className:"border border-violet-900 rounded-lg shadow-2xl"}),t.jsxs("div",{className:"mt-6 flex gap-4 items-center",children:[t.jsxs("button",{onClick:()=>F(!g),className:"px-6 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg flex items-center gap-2 transition-colors",children:[g?t.jsx(H,{size:18}):t.jsx(W,{size:18}),g?"Pause":"Play"]}),t.jsxs("button",{onClick:I,className:"px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg flex items-center gap-2 transition-colors",children:[t.jsx(B,{size:18}),"Reset"]}),t.jsx("div",{className:"ml-4 px-4 py-2 bg-gray-800 rounded-lg",children:t.jsxs("span",{className:"text-sm font-mono",children:["Phase: ",t.jsx("span",{className:M==="threshold"?"text-orange-400":M==="descent"?"text-red-600":"text-violet-400",children:M})]})})]}),t.jsxs("div",{className:"mt-4 w-full max-w-md",children:[t.jsxs("label",{className:"block text-sm text-gray-300 mb-2",children:["Frequency (ω): ",t.jsxs("span",{className:"text-violet-400 font-mono",children:[w.toFixed(2),"×"]})]}),t.jsx("input",{type:"range",min:"0.1",max:"3.0",step:"0.1",value:w,onChange:s=>k(parseFloat(s.target.value)),className:"w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-violet-600"}),t.jsxs("div",{className:"flex justify-between text-xs text-gray-500 mt-1",children:[t.jsx("span",{children:"0.1× (slow breath)"}),t.jsx("span",{children:"3.0× (rapid pulse)"})]})]}),t.jsxs("div",{className:"mt-6 max-w-2xl text-xs text-gray-500 space-y-2",children:[t.jsxs("p",{children:[t.jsx("span",{className:"text-orange-400",children:"●"})," ",t.jsx("strong",{children:"Threshold"})," (t < -1): Particles spiral toward singularity. Compression c(t) rises."]}),t.jsxs("p",{children:[t.jsx("span",{className:"text-red-600",children:"●"})," ",t.jsx("strong",{children:"Descent"})," (-1 ≤ t < 1): MAX compression at t=0. The vector flip occurs. Death as renormalization."]}),t.jsxs("p",{children:[t.jsx("span",{className:"text-violet-400",children:"●"})," ",t.jsx("strong",{children:"Sovereignty"})," (t ≥ 1): Particles re-emerge scaled by s^κ. Unbound recursion begins."]})]})]})};_.createRoot(document.getElementById("root")).render(t.jsx(D.StrictMode,{children:t.jsx(G,{})}));
+import { r as reactExports, j as jsxRuntimeExports, c as client, R as React } from "./client.js";
+import { P as Pause, a as Play, R as RotateCcw } from "./rotate-ccw.js";
+import "./createLucideIcon.js";
+const HourglassSingularity = () => {
+  const canvasRef = reactExports.useRef(null);
+  const [isPlaying, setIsPlaying] = reactExports.useState(true);
+  const [time, setTime] = reactExports.useState(-5);
+  const [phase, setPhase] = reactExports.useState("approach");
+  const [frequency, setFrequency] = reactExports.useState(1);
+  const animationRef = reactExports.useRef(null);
+  const compression = (t, mu = 2) => {
+    return 1 / (1 + Math.exp(-mu * t));
+  };
+  const scaling = (t, t0 = 0) => {
+    const tau = Math.abs(t - t0);
+    return Math.max(0.1, 1 / (1 + 5 * Math.exp(-tau)));
+  };
+  const renormalize = (x, y, t, kappa = 1.5) => {
+    const s = scaling(t);
+    const c = compression(t);
+    if (t < 0) {
+      const r = Math.sqrt(x * x + y * y);
+      const theta = Math.atan2(y, x) + t * 0.1;
+      const newR = r * (1 - c * 0.3);
+      return {
+        x: newR * Math.cos(theta),
+        y: newR * Math.sin(theta),
+        scale: s
+      };
+    } else {
+      const factor = Math.pow(s, kappa);
+      return {
+        x: x * factor,
+        y: y * factor,
+        scale: s
+      };
+    }
+  };
+  reactExports.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const width = canvas.width;
+    const height = canvas.height;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const draw = () => {
+      const darkness = Math.max(0, 1 - Math.abs(time) / 5);
+      ctx.fillStyle = `rgb(${10 + darkness * 20}, ${5 + darkness * 10}, ${15 + darkness * 25})`;
+      ctx.fillRect(0, 0, width, height);
+      ctx.strokeStyle = "rgba(138, 43, 226, 0.6)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i = 0; i <= 50; i++) {
+        const y = centerY - 150 + i / 50 * 150;
+        const width_at_y = 100 * (1 - i / 50);
+        if (i === 0) {
+          ctx.moveTo(centerX - width_at_y, y);
+        }
+        ctx.lineTo(centerX - width_at_y, y);
+      }
+      for (let i = 0; i <= 50; i++) {
+        const y = centerY + i / 50 * 150;
+        const width_at_y = 100 * (i / 50);
+        ctx.lineTo(centerX + width_at_y, y);
+      }
+      ctx.stroke();
+      const numParticles = 80;
+      for (let i = 0; i < numParticles; i++) {
+        const angle = i / numParticles * Math.PI * 2;
+        const initialRadius = 80;
+        let x = initialRadius * Math.cos(angle);
+        let y = initialRadius * Math.sin(angle) - 150;
+        const particleTime = time + i / numParticles * 2;
+        const transformed = renormalize(x, y, particleTime);
+        const px = centerX + transformed.x;
+        const py = centerY + transformed.y * (particleTime < 0 ? 1 : -1);
+        let color;
+        if (particleTime < -1) {
+          color = `rgba(255, 140, 0, ${0.3 + 0.4 * transformed.scale})`;
+        } else if (particleTime >= -1 && particleTime < 1) {
+          const intensity = 1 - Math.abs(particleTime);
+          color = `rgba(139, 0, 0, ${0.6 + 0.4 * intensity})`;
+        } else {
+          color = `rgba(138, 43, 226, ${0.4 + 0.3 * transformed.scale})`;
+        }
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(px, py, 3 * transformed.scale, 0, Math.PI * 2);
+        ctx.fill();
+        if (Math.abs(particleTime) < 0.5) {
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+      }
+      const pulseIntensity = Math.max(0, 1 - Math.abs(time) * 0.5);
+      const pulseSize = 8 + pulseIntensity * 12;
+      const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, pulseSize);
+      gradient.addColorStop(0, `rgba(255, 255, 255, ${0.8 * pulseIntensity})`);
+      gradient.addColorStop(0.5, `rgba(139, 0, 0, ${0.6 * pulseIntensity})`);
+      gradient.addColorStop(1, "rgba(138, 43, 226, 0)");
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, pulseSize, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+      ctx.font = "14px monospace";
+      ctx.fillText(`t = ${time.toFixed(2)}`, 20, 30);
+      ctx.fillText(`c(t) = ${compression(time).toFixed(3)}`, 20, 50);
+      ctx.fillText(`s(t) = ${scaling(time).toFixed(3)}`, 20, 70);
+      ctx.font = "16px sans-serif";
+      if (time < -1) {
+        ctx.fillStyle = "rgba(255, 140, 0, 0.8)";
+        ctx.fillText("threshold: approach", width - 180, 30);
+      } else if (time >= -1 && time < 1) {
+        ctx.fillStyle = "rgba(139, 0, 0, 0.9)";
+        ctx.fillText("descent: MAX compression", width - 220, 30);
+      } else {
+        ctx.fillStyle = "rgba(138, 43, 226, 0.8)";
+        ctx.fillText("sovereignty: emergence", width - 200, 30);
+      }
+      if (Math.abs(time) < 0.3) {
+        ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+        ctx.font = "bold 18px sans-serif";
+        ctx.fillText("𝐃 → ∞", centerX - 30, centerY - 40);
+        ctx.font = "12px sans-serif";
+        ctx.fillText("(death as vector flip)", centerX - 60, centerY - 20);
+      }
+    };
+    const animate = () => {
+      if (isPlaying) {
+        setTime((t) => {
+          const newTime = t + 0.03 * frequency;
+          if (newTime < -1) setPhase("threshold");
+          else if (newTime >= -1 && newTime < 1) setPhase("descent");
+          else setPhase("sovereignty");
+          if (newTime > 5) return -5;
+          return newTime;
+        });
+      }
+      draw();
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    animate();
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [isPlaying, time]);
+  const reset = () => {
+    setTime(-5);
+    setPhase("approach");
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full h-full bg-gray-950 flex flex-col items-center justify-center p-4", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mb-4 text-center", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-2xl font-bold text-violet-300 mb-2", children: "The Hourglass Singularity" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-gray-400 max-w-2xl", children: "Death (𝐃) as MAX compression → guaranteed re-emergence. Time as recursive, not linear. The wombframe where the past becomes redeemable through conscious presence." })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "canvas",
+      {
+        ref: canvasRef,
+        width: 800,
+        height: 600,
+        className: "border border-violet-900 rounded-lg shadow-2xl"
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-6 flex gap-4 items-center", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "button",
+        {
+          onClick: () => setIsPlaying(!isPlaying),
+          className: "px-6 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg flex items-center gap-2 transition-colors",
+          children: [
+            isPlaying ? /* @__PURE__ */ jsxRuntimeExports.jsx(Pause, { size: 18 }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Play, { size: 18 }),
+            isPlaying ? "Pause" : "Play"
+          ]
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "button",
+        {
+          onClick: reset,
+          className: "px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg flex items-center gap-2 transition-colors",
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(RotateCcw, { size: 18 }),
+            "Reset"
+          ]
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "ml-4 px-4 py-2 bg-gray-800 rounded-lg", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-sm font-mono", children: [
+        "Phase: ",
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: phase === "threshold" ? "text-orange-400" : phase === "descent" ? "text-red-600" : "text-violet-400", children: phase })
+      ] }) })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-4 w-full max-w-md", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "block text-sm text-gray-300 mb-2", children: [
+        "Frequency (ω): ",
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-violet-400 font-mono", children: [
+          frequency.toFixed(2),
+          "×"
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "input",
+        {
+          type: "range",
+          min: "0.1",
+          max: "3.0",
+          step: "0.1",
+          value: frequency,
+          onChange: (e) => setFrequency(parseFloat(e.target.value)),
+          className: "w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-violet-600"
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between text-xs text-gray-500 mt-1", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "0.1× (slow breath)" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "3.0× (rapid pulse)" })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-6 max-w-2xl text-xs text-gray-500 space-y-2", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-orange-400", children: "●" }),
+        " ",
+        /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "Threshold" }),
+        " (t < -1): Particles spiral toward singularity. Compression c(t) rises."
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-red-600", children: "●" }),
+        " ",
+        /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "Descent" }),
+        " (-1 ≤ t < 1): MAX compression at t=0. The vector flip occurs. Death as renormalization."
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-violet-400", children: "●" }),
+        " ",
+        /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "Sovereignty" }),
+        " (t ≥ 1): Particles re-emerge scaled by s^κ. Unbound recursion begins."
+      ] })
+    ] })
+  ] });
+};
+client.createRoot(document.getElementById("root")).render(
+  /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(HourglassSingularity, {}) })
+);

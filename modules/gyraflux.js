@@ -1,6 +1,542 @@
-import{r as u,j as t,c as re,R as ie}from"./client.js";import{P as ce,a as de,R as he}from"./rotate-ccw.js";import{c as xe}from"./createLucideIcon.js";import{Z as me}from"./zap.js";import{E as ge}from"./eye.js";/**
+import { r as reactExports, j as jsxRuntimeExports, c as client, R as React } from "./client.js";
+import { P as Pause, a as Play, R as RotateCcw } from "./rotate-ccw.js";
+import { c as createLucideIcon } from "./createLucideIcon.js";
+import { Z as Zap } from "./zap.js";
+import { E as Eye } from "./eye.js";
+/**
  * @license lucide-react v0.344.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const be=xe("Activity",[["path",{d:"M22 12h-4l-3 9L9 3l-3 9H2",key:"d5dnw9"}]]),pe=()=>{const I=u.useRef(null),[P,A]=u.useState(!1),[_,G]=u.useState(0),[M,L]=u.useState("threshold"),[a,C]=u.useState({x:0,y:0,z:0,vx:0,vy:0,vz:0,omega:0,E:50,phi:.5}),[n,z]=u.useState({rho_n:.5,G:1,lambda_clip:0,breath_phase:0}),[k,F]=u.useState({x:0,y:0}),[N,B]=u.useState(!1),$=10,O=1,W=2,H=.3,X=1.5,[E,q]=u.useState(()=>{const s=[];for(let e=0;e<20;e++){const r=[];for(let l=0;l<20;l++)r.push(Math.random()*.3);s.push(r)}return s}),U=(s,e,r)=>{const l=Math.sqrt(s.E)*(N?1.5:1),i=e,d=N?.3*Math.cos(r):0;return Math.max(0,Math.min(1,l*i/(l+i+1)+d))},V=(s,e)=>{const r=Math.sqrt(s*s+e*e);if(r<=$)return{fx:s,fy:e,clipped:0};const l=$/r;return{fx:s*l,fy:e*l,clipped:(r-$)/$}},Y=s=>Math.min(3,O*(1+W*s)),D=(s,e,r,l,i,d)=>{const g=.5*e*r+(N?X*Math.cos(i):0),b=H*s+l*s;return Math.max(0,s+(g-b)*d)},Z=(s,e,r,l)=>{q(i=>{const d=i.map(x=>[...x]),g=Math.floor((s+200)/20),b=Math.floor((e+200)/20);for(let x=0;x<20;x++)for(let p=0;p<20;p++){const y=x-g,j=p-b,w=Math.sqrt(y*y+j*j),o=l*r*Math.exp(-w/3)/100;d[x][p]=Math.max(0,Math.min(1,d[x][p]*.98+o))}return d})},J=s=>{G(T=>T+s);const e=N?_*.3%(2*Math.PI):0,r=E.reduce((T,ne)=>T+ne.reduce((oe,le)=>oe+le,0),0)/400,l=U(a,r,e),i=Y(l),{fx:d,fy:g,clipped:b}=V(k.x,k.y),x=d/(1+.5*b),p=g/(1+.5*b),y=.5/i,j=a.vx+x*s-a.vx*y*s,w=a.vy+p*s-a.vy*y*s,o=a.x+j*s,h=a.y+w*s,c=Math.abs(o)>180?-.8*j:j,m=Math.abs(h)>180?-.8*w:w,f=Math.max(-180,Math.min(180,o)),v=Math.max(-180,Math.min(180,h)),S=Math.abs(d*j+g*w),R=D(a.E,i,S,b,e,s),te=-.5*a.phi+i*l*.5,se=Math.max(0,Math.min(1,a.phi+te*s)),ae=(a.omega+R/50*s)%(2*Math.PI);C({x:f,y:v,z:i*20-10,vx:c,vy:m,vz:0,omega:ae,E:R,phi:se}),z({rho_n:l,G:i,lambda_clip:b,breath_phase:e}),Z(f,v,l,R)};u.useEffect(()=>{if(!P)return;const s=setInterval(()=>{J(.05)},50);return()=>clearInterval(s)},[P,a,k,N,E,_]),u.useEffect(()=>{const s=I.current;if(!s)return;const e=s.getContext("2d"),r=s.width,l=s.height;e.fillStyle="rgba(10, 5, 20, 0.15)",e.fillRect(0,0,r,l);for(let o=0;o<20;o++)for(let h=0;h<20;h++){const c=E[o][h],m=o*20,f=h*20;if(c>.1){const v=n.rho_n<.3?100:(n.rho_n<.7,200),S=n.rho_n<.3?150:n.rho_n<.7?180:100,R=n.rho_n<.3?255:n.rho_n<.7?100:255;e.fillStyle=`rgba(${v}, ${S}, ${R}, ${c*.3})`,e.fillRect(m,f,20,20),c>.5&&(e.fillStyle=`rgba(255, 255, 255, ${c*.5})`,e.beginPath(),e.arc(m+10,f+10,2,0,Math.PI*2),e.fill())}e.strokeStyle="rgba(100, 80, 150, 0.1)",e.strokeRect(m,f,20,20)}e.save(),e.translate(r/2,l/2),e.strokeStyle="rgba(150, 50, 200, 0.3)",e.lineWidth=2,e.beginPath(),e.arc(0,0,$*10,0,Math.PI*2),e.stroke();const i=30;for(let o=0;o<Math.PI*2;o+=Math.PI/6){const h=100+n.G*20,c=Math.cos(o)*h,m=Math.sin(o)*h,f=Math.cos(o+n.rho_n*.5)*i*n.G,v=Math.sin(o+n.rho_n*.5)*i*n.G;e.strokeStyle=`rgba(255, 200, 100, ${n.rho_n*.6})`,e.lineWidth=2,e.beginPath(),e.moveTo(c,m),e.lineTo(c+f,m+v),e.stroke();const S=Math.atan2(v,f);e.beginPath(),e.moveTo(c+f,m+v),e.lineTo(c+f-8*Math.cos(S-.3),m+v-8*Math.sin(S-.3)),e.lineTo(c+f-8*Math.cos(S+.3),m+v-8*Math.sin(S+.3)),e.closePath(),e.fill()}e.strokeStyle=`rgba(200, 100, 255, ${.2+n.rho_n*.4})`,e.lineWidth=3,e.beginPath();const d=80+n.G*15;for(let o=0;o<Math.PI*2;o+=.1){const h=d+Math.sin(o*3+_)*10*n.phi,c=Math.cos(o)*h,m=Math.sin(o)*h;o===0?e.moveTo(c,m):e.lineTo(c,m)}e.closePath(),e.stroke(),e.translate(a.x,a.y),e.fillStyle="rgba(0, 0, 0, 0.2)",e.beginPath(),e.ellipse(0,a.z*.5+30,35,10,0,0,Math.PI*2),e.fill();const g=30+a.E*.3,b=e.createRadialGradient(0,0,15,0,0,g),x=n.rho_n<.3?100:n.rho_n<.7?255:200,p=n.rho_n<.3?150:n.rho_n<.7?200:100,y=n.rho_n<.3?255:n.rho_n<.7?100:255;b.addColorStop(0,`rgba(${x}, ${p}, ${y}, ${a.E/100})`),b.addColorStop(.5,`rgba(${x}, ${p}, ${y}, ${a.E/200})`),b.addColorStop(1,"rgba(0, 0, 0, 0)"),e.fillStyle=b,e.beginPath(),e.arc(0,0,g,0,Math.PI*2),e.fill(),e.strokeStyle=`rgb(${x}, ${p}, ${y})`,e.lineWidth=4,e.shadowBlur=15,e.shadowColor=`rgb(${x}, ${p}, ${y})`,e.beginPath(),e.arc(0,0,25,0,Math.PI*2),e.stroke(),e.beginPath(),e.arc(0,0,18,0,Math.PI*2),e.stroke(),e.shadowBlur=0;const j=Math.cos(a.omega)*22,w=Math.sin(a.omega)*22;e.fillStyle="white",e.beginPath(),e.arc(j,w,3,0,Math.PI*2),e.fill(),e.strokeStyle=`rgba(255, 255, 255, ${a.phi*.5})`,e.lineWidth=1;for(let o=0;o<8;o++){const h=o/8*Math.PI*2+_*.5,c=30+a.phi*20;e.beginPath(),e.moveTo(0,0),e.lineTo(Math.cos(h)*c,Math.sin(h)*c),e.stroke()}e.restore(),n.lambda_clip>0&&(e.fillStyle=`rgba(255, 50, 50, ${n.lambda_clip*.7})`,e.fillRect(0,0,r,10),e.fillRect(0,l-10,r,10)),e.font="12px monospace",e.fillStyle="rgba(200, 200, 255, 0.8)",e.fillText(`VOLUME: ${(n.G*100).toFixed(0)}%`,10,20),e.fillText(`TRANSFORM: ${M.toUpperCase()}`,10,35)},[a,n,E,M,_]);const K=s=>{if(!P)return;const e=I.current.getBoundingClientRect(),r=s.clientX-e.left-e.width/2,l=s.clientY-e.top-e.height/2,i=r-a.x,d=l-a.y,g=Math.sqrt(i*i+d*d);g<50?F({x:i/g*5,y:d/g*5}):F({x:0,y:0})},Q=()=>{A(!1),G(0),C({x:0,y:0,z:0,vx:0,vy:0,vz:0,omega:0,E:50,phi:.5}),z({rho_n:.5,G:1,lambda_clip:0,breath_phase:0}),F({x:0,y:0})},ee=s=>{switch(s){case"threshold":return"text-amber-400";case"descent":return"text-red-400";case"sovereignty":return"text-purple-400";default:return"text-gray-400"}};return t.jsxs("div",{className:"w-full h-screen bg-gray-900 text-white flex flex-col",children:[t.jsxs("div",{className:"p-4 bg-gray-800 border-b border-gray-700",children:[t.jsx("h1",{className:"text-2xl font-bold mb-2",children:"🌀 GYRAFLUX: ρₙ-Loop Simulation Suite"}),t.jsx("p",{className:"text-sm text-gray-400",children:"Full V.E.D.A. Architecture — ΣΩ Lawframe Active"})]}),t.jsxs("div",{className:"flex-1 flex",children:[t.jsx("div",{className:"flex-1 relative",children:t.jsx("canvas",{ref:I,width:400,height:400,className:"w-full h-full cursor-pointer",onMouseMove:K,onMouseLeave:()=>F({x:0,y:0})})}),t.jsxs("div",{className:"w-80 bg-gray-800 p-4 overflow-y-auto",children:[t.jsxs("div",{className:"mb-6",children:[t.jsx("h3",{className:"text-lg font-semibold mb-3",children:"Control Matrix"}),t.jsxs("div",{className:"flex gap-2 mb-4",children:[t.jsxs("button",{onClick:()=>A(!P),className:"flex-1 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded flex items-center justify-center gap-2",children:[P?t.jsx(ce,{size:16}):t.jsx(de,{size:16}),P?"Pause":"Activate"]}),t.jsx("button",{onClick:Q,className:"bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded",children:t.jsx(he,{size:16})})]}),t.jsxs("button",{onClick:()=>B(!N),className:`w-full px-4 py-2 rounded mb-2 flex items-center justify-center gap-2 ${N?"bg-blue-600 hover:bg-blue-700":"bg-gray-700 hover:bg-gray-600"}`,children:[t.jsx(be,{size:16}),"Breath Sync ",N?"ON":"OFF"]}),t.jsxs("div",{className:"mb-4",children:[t.jsx("label",{className:"block text-sm mb-2",children:"Hecate Phase"}),t.jsx("div",{className:"flex gap-2",children:["threshold","descent","sovereignty"].map(s=>t.jsx("button",{onClick:()=>L(s),className:`flex-1 px-2 py-1 rounded text-xs ${M===s?"bg-purple-600":"bg-gray-700"}`,children:s},s))})]})]}),t.jsxs("div",{className:"mb-6",children:[t.jsxs("h3",{className:"text-lg font-semibold mb-3 flex items-center gap-2",children:[t.jsx(me,{size:18}),"Telemetry"]}),t.jsxs("div",{className:"space-y-3",children:[t.jsxs("div",{children:[t.jsxs("div",{className:"flex justify-between text-sm mb-1",children:[t.jsx("span",{children:"ρₙ (Reciprocity)"}),t.jsx("span",{className:"font-mono",children:n.rho_n.toFixed(3)})]}),t.jsx("div",{className:"h-2 bg-gray-700 rounded overflow-hidden",children:t.jsx("div",{className:"h-full bg-gradient-to-r from-blue-500 via-yellow-500 to-purple-500 transition-all",style:{width:`${n.rho_n*100}%`}})})]}),t.jsxs("div",{children:[t.jsxs("div",{className:"flex justify-between text-sm mb-1",children:[t.jsx("span",{children:"G (Generosity)"}),t.jsxs("span",{className:"font-mono",children:[n.G.toFixed(2),"x"]})]}),t.jsx("div",{className:"h-2 bg-gray-700 rounded overflow-hidden",children:t.jsx("div",{className:"h-full bg-green-500 transition-all",style:{width:`${n.G/3*100}%`}})})]}),t.jsxs("div",{children:[t.jsxs("div",{className:"flex justify-between text-sm mb-1",children:[t.jsx("span",{children:"E (Energy)"}),t.jsx("span",{className:"font-mono",children:a.E.toFixed(1)})]}),t.jsx("div",{className:"h-2 bg-gray-700 rounded overflow-hidden",children:t.jsx("div",{className:"h-full bg-yellow-500 transition-all",style:{width:`${a.E}%`}})})]}),t.jsxs("div",{children:[t.jsxs("div",{className:"flex justify-between text-sm mb-1",children:[t.jsx("span",{children:"φ (Felt Field)"}),t.jsx("span",{className:"font-mono",children:a.phi.toFixed(3)})]}),t.jsx("div",{className:"h-2 bg-gray-700 rounded overflow-hidden",children:t.jsx("div",{className:"h-full bg-purple-500 transition-all",style:{width:`${a.phi*100}%`}})})]}),n.lambda_clip>0&&t.jsxs("div",{className:"bg-red-900 border border-red-600 rounded p-2 text-xs",children:["⚠️ λ-CONSTRAINT ACTIVE: Force clipped ",(n.lambda_clip*100).toFixed(0),"%"]})]})]}),t.jsxs("div",{className:"mb-6",children:[t.jsx("h3",{className:"text-lg font-semibold mb-3",children:"Ring State Vector"}),t.jsxs("div",{className:"bg-gray-900 rounded p-3 font-mono text-xs space-y-1",children:[t.jsxs("div",{children:["pos: (",a.x.toFixed(1),", ",a.y.toFixed(1),", ",a.z.toFixed(1),")"]}),t.jsxs("div",{children:["vel: (",a.vx.toFixed(2),", ",a.vy.toFixed(2),")"]}),t.jsxs("div",{children:["ω: ",a.omega.toFixed(3)," rad"]}),t.jsxs("div",{children:["E: ",a.E.toFixed(2)," J"]}),t.jsxs("div",{children:["φ: ",a.phi.toFixed(3)]})]})]}),t.jsxs("div",{className:"mb-6",children:[t.jsxs("h3",{className:"text-lg font-semibold mb-3 flex items-center gap-2",children:[t.jsx(ge,{size:18}),"Hecate Matrix"]}),t.jsxs("div",{className:"space-y-2 text-sm",children:[t.jsxs("div",{className:`p-2 rounded ${M==="threshold"?"bg-amber-900":"bg-gray-900"}`,children:[t.jsx("div",{className:"font-semibold",children:"Threshold"}),t.jsx("div",{className:"text-xs text-gray-400",children:"3:7:13 • lamp-black ember-gold"})]}),t.jsxs("div",{className:`p-2 rounded ${M==="descent"?"bg-red-900":"bg-gray-900"}`,children:[t.jsx("div",{className:"font-semibold",children:"Descent"}),t.jsx("div",{className:"text-xs text-gray-400",children:"9:9:1 • pomegranate-oxblood"})]}),t.jsxs("div",{className:`p-2 rounded ${M==="sovereignty"?"bg-purple-900":"bg-gray-900"}`,children:[t.jsx("div",{className:"font-semibold",children:"Sovereignty"}),t.jsx("div",{className:"text-xs text-gray-400",children:"11:2:0 • obsidian-violet"})]})]})]}),t.jsxs("div",{className:"text-xs text-gray-500 space-y-2",children:[t.jsx("p",{children:"🖱️ Hover near ring to apply gentle force"}),t.jsx("p",{children:"🌬️ Enable breath sync for resonance boost"}),t.jsx("p",{children:"⚡ Watch λ-constraint enforce non-domination"}),t.jsx("p",{children:"💜 High ρₙ = smooth flow, rich harmonics"}),t.jsx("p",{children:"🌀 Ring traces ΣΩ circulation on lattice"})]})]})]}),t.jsxs("div",{className:"p-2 bg-gray-800 border-t border-gray-700 flex justify-between text-xs",children:[t.jsxs("span",{children:["Time: ",_.toFixed(2),"s"]}),t.jsxs("span",{className:ee(M),children:["Mode: ",M.toUpperCase()]}),t.jsx("span",{children:"ΣΩ Lawframe v1.0.0"})]})]})};re.createRoot(document.getElementById("root")).render(t.jsx(ie.StrictMode,{children:t.jsx(pe,{})}));
+ */
+const Activity = createLucideIcon("Activity", [
+  ["path", { d: "M22 12h-4l-3 9L9 3l-3 9H2", key: "d5dnw9" }]
+]);
+const GyrafluxSimulation = () => {
+  const canvasRef = reactExports.useRef(null);
+  const [isRunning, setIsRunning] = reactExports.useState(false);
+  const [time, setTime] = reactExports.useState(0);
+  const [mode, setMode] = reactExports.useState("threshold");
+  const [ringState, setRingState] = reactExports.useState({
+    x: 0,
+    y: 0,
+    z: 0,
+    vx: 0,
+    vy: 0,
+    vz: 0,
+    omega: 0,
+    E: 50,
+    phi: 0.5
+  });
+  const [metrics, setMetrics] = reactExports.useState({
+    rho_n: 0.5,
+    G: 1,
+    lambda_clip: 0,
+    breath_phase: 0
+  });
+  const [forceInput, setForceInput] = reactExports.useState({ x: 0, y: 0 });
+  const [breathSync, setBreathSync] = reactExports.useState(false);
+  const LAMBDA_MAX = 10;
+  const G0 = 1;
+  const SIGMA = 2;
+  const GAMMA = 0.3;
+  const BETA = 1.5;
+  const [latticeField, setLatticeField] = reactExports.useState(() => {
+    const field = [];
+    for (let i = 0; i < 20; i++) {
+      const row = [];
+      for (let j = 0; j < 20; j++) {
+        row.push(Math.random() * 0.3);
+      }
+      field.push(row);
+    }
+    return field;
+  });
+  const computeRhoN = (ringState2, envState, breathPhase) => {
+    const sA = Math.sqrt(ringState2.E) * (breathSync ? 1.5 : 1);
+    const sB = envState;
+    const breathBonus = breathSync ? 0.3 * Math.cos(breathPhase) : 0;
+    return Math.max(0, Math.min(1, sA * sB / (sA + sB + 1) + breathBonus));
+  };
+  const projectLambda = (fx, fy) => {
+    const mag = Math.sqrt(fx * fx + fy * fy);
+    if (mag <= LAMBDA_MAX) return { fx, fy, clipped: 0 };
+    const scale = LAMBDA_MAX / mag;
+    return {
+      fx: fx * scale,
+      fy: fy * scale,
+      clipped: (mag - LAMBDA_MAX) / LAMBDA_MAX
+    };
+  };
+  const computeG = (rho_n) => {
+    return Math.min(3, G0 * (1 + SIGMA * rho_n));
+  };
+  const updateEnergy = (E, G, work, clipRatio, breathPhase, dt) => {
+    const P_in = 0.5 * G * work + (breathSync ? BETA * Math.cos(breathPhase) : 0);
+    const P_out = GAMMA * E + clipRatio * E;
+    return Math.max(0, E + (P_in - P_out) * dt);
+  };
+  const updateLatticeField = (x, y, rho_n, E) => {
+    setLatticeField((prev) => {
+      const next = prev.map((row) => [...row]);
+      const cx = Math.floor((x + 200) / 20);
+      const cy = Math.floor((y + 200) / 20);
+      for (let i = 0; i < 20; i++) {
+        for (let j = 0; j < 20; j++) {
+          const dx = i - cx;
+          const dy = j - cy;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const influence = E * rho_n * Math.exp(-dist / 3) / 100;
+          next[i][j] = Math.max(0, Math.min(1, next[i][j] * 0.98 + influence));
+        }
+      }
+      return next;
+    });
+  };
+  const updatePhysics = (dt) => {
+    setTime((t) => t + dt);
+    const breathPhase = breathSync ? time * 0.3 % (2 * Math.PI) : 0;
+    const envState = latticeField.reduce((sum, row) => sum + row.reduce((s, v) => s + v, 0), 0) / 400;
+    const rho_n = computeRhoN(ringState, envState, breathPhase);
+    const G = computeG(rho_n);
+    const { fx, fy, clipped } = projectLambda(forceInput.x, forceInput.y);
+    const ax = fx / (1 + 0.5 * clipped);
+    const ay = fy / (1 + 0.5 * clipped);
+    const drag = 0.5 / G;
+    const nvx = ringState.vx + ax * dt - ringState.vx * drag * dt;
+    const nvy = ringState.vy + ay * dt - ringState.vy * drag * dt;
+    const nx = ringState.x + nvx * dt;
+    const ny = ringState.y + nvy * dt;
+    const boundX = Math.abs(nx) > 180 ? -0.8 * nvx : nvx;
+    const boundY = Math.abs(ny) > 180 ? -0.8 * nvy : nvy;
+    const finalX = Math.max(-180, Math.min(180, nx));
+    const finalY = Math.max(-180, Math.min(180, ny));
+    const work = Math.abs(fx * nvx + fy * nvy);
+    const newE = updateEnergy(ringState.E, G, work, clipped, breathPhase, dt);
+    const dPhi = -0.5 * ringState.phi + G * rho_n * 0.5;
+    const newPhi = Math.max(0, Math.min(1, ringState.phi + dPhi * dt));
+    const newOmega = (ringState.omega + newE / 50 * dt) % (2 * Math.PI);
+    setRingState({
+      x: finalX,
+      y: finalY,
+      z: G * 20 - 10,
+      vx: boundX,
+      vy: boundY,
+      vz: 0,
+      omega: newOmega,
+      E: newE,
+      phi: newPhi
+    });
+    setMetrics({
+      rho_n,
+      G,
+      lambda_clip: clipped,
+      breath_phase: breathPhase
+    });
+    updateLatticeField(finalX, finalY, rho_n, newE);
+  };
+  reactExports.useEffect(() => {
+    if (!isRunning) return;
+    const interval = setInterval(() => {
+      updatePhysics(0.05);
+    }, 50);
+    return () => clearInterval(interval);
+  }, [isRunning, ringState, forceInput, breathSync, latticeField, time]);
+  reactExports.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.fillStyle = "rgba(10, 5, 20, 0.15)";
+    ctx.fillRect(0, 0, w, h);
+    for (let i = 0; i < 20; i++) {
+      for (let j = 0; j < 20; j++) {
+        const val = latticeField[i][j];
+        const x = i * 20;
+        const y = j * 20;
+        if (val > 0.1) {
+          const r2 = metrics.rho_n < 0.3 ? 100 : metrics.rho_n < 0.7 ? 200 : 200;
+          const g2 = metrics.rho_n < 0.3 ? 150 : metrics.rho_n < 0.7 ? 180 : 100;
+          const b2 = metrics.rho_n < 0.3 ? 255 : metrics.rho_n < 0.7 ? 100 : 255;
+          ctx.fillStyle = `rgba(${r2}, ${g2}, ${b2}, ${val * 0.3})`;
+          ctx.fillRect(x, y, 20, 20);
+          if (val > 0.5) {
+            ctx.fillStyle = `rgba(255, 255, 255, ${val * 0.5})`;
+            ctx.beginPath();
+            ctx.arc(x + 10, y + 10, 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        ctx.strokeStyle = "rgba(100, 80, 150, 0.1)";
+        ctx.strokeRect(x, y, 20, 20);
+      }
+    }
+    ctx.save();
+    ctx.translate(w / 2, h / 2);
+    ctx.strokeStyle = "rgba(150, 50, 200, 0.3)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0, 0, LAMBDA_MAX * 10, 0, Math.PI * 2);
+    ctx.stroke();
+    const vectorScale = 30;
+    for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
+      const dist = 100 + metrics.G * 20;
+      const px = Math.cos(angle) * dist;
+      const py = Math.sin(angle) * dist;
+      const vpx = Math.cos(angle + metrics.rho_n * 0.5) * vectorScale * metrics.G;
+      const vpy = Math.sin(angle + metrics.rho_n * 0.5) * vectorScale * metrics.G;
+      ctx.strokeStyle = `rgba(255, 200, 100, ${metrics.rho_n * 0.6})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(px + vpx, py + vpy);
+      ctx.stroke();
+      const headAngle = Math.atan2(vpy, vpx);
+      ctx.beginPath();
+      ctx.moveTo(px + vpx, py + vpy);
+      ctx.lineTo(
+        px + vpx - 8 * Math.cos(headAngle - 0.3),
+        py + vpy - 8 * Math.sin(headAngle - 0.3)
+      );
+      ctx.lineTo(
+        px + vpx - 8 * Math.cos(headAngle + 0.3),
+        py + vpy - 8 * Math.sin(headAngle + 0.3)
+      );
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.strokeStyle = `rgba(200, 100, 255, ${0.2 + metrics.rho_n * 0.4})`;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    const traceRadius = 80 + metrics.G * 15;
+    for (let a = 0; a < Math.PI * 2; a += 0.1) {
+      const r2 = traceRadius + Math.sin(a * 3 + time) * 10 * metrics.phi;
+      const tx = Math.cos(a) * r2;
+      const ty = Math.sin(a) * r2;
+      if (a === 0) ctx.moveTo(tx, ty);
+      else ctx.lineTo(tx, ty);
+    }
+    ctx.closePath();
+    ctx.stroke();
+    ctx.translate(ringState.x, ringState.y);
+    ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+    ctx.beginPath();
+    ctx.ellipse(0, ringState.z * 0.5 + 30, 35, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+    const glowRadius = 30 + ringState.E * 0.3;
+    const gradient = ctx.createRadialGradient(0, 0, 15, 0, 0, glowRadius);
+    const r = metrics.rho_n < 0.3 ? 100 : metrics.rho_n < 0.7 ? 255 : 200;
+    const g = metrics.rho_n < 0.3 ? 150 : metrics.rho_n < 0.7 ? 200 : 100;
+    const b = metrics.rho_n < 0.3 ? 255 : metrics.rho_n < 0.7 ? 100 : 255;
+    gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${ringState.E / 100})`);
+    gradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${ringState.E / 200})`);
+    gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(0, 0, glowRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+    ctx.lineWidth = 4;
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = `rgb(${r}, ${g}, ${b})`;
+    ctx.beginPath();
+    ctx.arc(0, 0, 25, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(0, 0, 18, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    const rx = Math.cos(ringState.omega) * 22;
+    const ry = Math.sin(ringState.omega) * 22;
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    ctx.arc(rx, ry, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = `rgba(255, 255, 255, ${ringState.phi * 0.5})`;
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 8; i++) {
+      const angle = i / 8 * Math.PI * 2 + time * 0.5;
+      const dist = 30 + ringState.phi * 20;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(angle) * dist, Math.sin(angle) * dist);
+      ctx.stroke();
+    }
+    ctx.restore();
+    if (metrics.lambda_clip > 0) {
+      ctx.fillStyle = `rgba(255, 50, 50, ${metrics.lambda_clip * 0.7})`;
+      ctx.fillRect(0, 0, w, 10);
+      ctx.fillRect(0, h - 10, w, 10);
+    }
+    ctx.font = "12px monospace";
+    ctx.fillStyle = "rgba(200, 200, 255, 0.8)";
+    ctx.fillText(`VOLUME: ${(metrics.G * 100).toFixed(0)}%`, 10, 20);
+    ctx.fillText(`TRANSFORM: ${mode.toUpperCase()}`, 10, 35);
+  }, [ringState, metrics, latticeField, mode, time]);
+  const handleMouseMove = (e) => {
+    if (!isRunning) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    const dx = x - ringState.x;
+    const dy = y - ringState.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 50) {
+      setForceInput({
+        x: dx / dist * 5,
+        y: dy / dist * 5
+      });
+    } else {
+      setForceInput({ x: 0, y: 0 });
+    }
+  };
+  const handleReset = () => {
+    setIsRunning(false);
+    setTime(0);
+    setRingState({
+      x: 0,
+      y: 0,
+      z: 0,
+      vx: 0,
+      vy: 0,
+      vz: 0,
+      omega: 0,
+      E: 50,
+      phi: 0.5
+    });
+    setMetrics({
+      rho_n: 0.5,
+      G: 1,
+      lambda_clip: 0,
+      breath_phase: 0
+    });
+    setForceInput({ x: 0, y: 0 });
+  };
+  const getModeColor = (m) => {
+    switch (m) {
+      case "threshold":
+        return "text-amber-400";
+      case "descent":
+        return "text-red-400";
+      case "sovereignty":
+        return "text-purple-400";
+      default:
+        return "text-gray-400";
+    }
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full h-screen bg-gray-900 text-white flex flex-col", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-4 bg-gray-800 border-b border-gray-700", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-2xl font-bold mb-2", children: "🌀 GYRAFLUX: ρₙ-Loop Simulation Suite" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-gray-400", children: "Full V.E.D.A. Architecture — ΣΩ Lawframe Active" })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 flex", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex-1 relative", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "canvas",
+        {
+          ref: canvasRef,
+          width: 400,
+          height: 400,
+          className: "w-full h-full cursor-pointer",
+          onMouseMove: handleMouseMove,
+          onMouseLeave: () => setForceInput({ x: 0, y: 0 })
+        }
+      ) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-80 bg-gray-800 p-4 overflow-y-auto", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mb-6", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "text-lg font-semibold mb-3", children: "Control Matrix" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-2 mb-4", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "button",
+              {
+                onClick: () => setIsRunning(!isRunning),
+                className: "flex-1 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded flex items-center justify-center gap-2",
+                children: [
+                  isRunning ? /* @__PURE__ */ jsxRuntimeExports.jsx(Pause, { size: 16 }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Play, { size: 16 }),
+                  isRunning ? "Pause" : "Activate"
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                onClick: handleReset,
+                className: "bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded",
+                children: /* @__PURE__ */ jsxRuntimeExports.jsx(RotateCcw, { size: 16 })
+              }
+            )
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "button",
+            {
+              onClick: () => setBreathSync(!breathSync),
+              className: `w-full px-4 py-2 rounded mb-2 flex items-center justify-center gap-2 ${breathSync ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-700 hover:bg-gray-600"}`,
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(Activity, { size: 16 }),
+                "Breath Sync ",
+                breathSync ? "ON" : "OFF"
+              ]
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mb-4", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("label", { className: "block text-sm mb-2", children: "Hecate Phase" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex gap-2", children: ["threshold", "descent", "sovereignty"].map((m) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                onClick: () => setMode(m),
+                className: `flex-1 px-2 py-1 rounded text-xs ${mode === m ? "bg-purple-600" : "bg-gray-700"}`,
+                children: m
+              },
+              m
+            )) })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mb-6", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("h3", { className: "text-lg font-semibold mb-3 flex items-center gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Zap, { size: 18 }),
+            "Telemetry"
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-3", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between text-sm mb-1", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "ρₙ (Reciprocity)" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono", children: metrics.rho_n.toFixed(3) })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-2 bg-gray-700 rounded overflow-hidden", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "div",
+                {
+                  className: "h-full bg-gradient-to-r from-blue-500 via-yellow-500 to-purple-500 transition-all",
+                  style: { width: `${metrics.rho_n * 100}%` }
+                }
+              ) })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between text-sm mb-1", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "G (Generosity)" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "font-mono", children: [
+                  metrics.G.toFixed(2),
+                  "x"
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-2 bg-gray-700 rounded overflow-hidden", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "div",
+                {
+                  className: "h-full bg-green-500 transition-all",
+                  style: { width: `${metrics.G / 3 * 100}%` }
+                }
+              ) })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between text-sm mb-1", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "E (Energy)" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono", children: ringState.E.toFixed(1) })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-2 bg-gray-700 rounded overflow-hidden", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "div",
+                {
+                  className: "h-full bg-yellow-500 transition-all",
+                  style: { width: `${ringState.E}%` }
+                }
+              ) })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between text-sm mb-1", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "φ (Felt Field)" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono", children: ringState.phi.toFixed(3) })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-2 bg-gray-700 rounded overflow-hidden", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "div",
+                {
+                  className: "h-full bg-purple-500 transition-all",
+                  style: { width: `${ringState.phi * 100}%` }
+                }
+              ) })
+            ] }),
+            metrics.lambda_clip > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-red-900 border border-red-600 rounded p-2 text-xs", children: [
+              "⚠️ λ-CONSTRAINT ACTIVE: Force clipped ",
+              (metrics.lambda_clip * 100).toFixed(0),
+              "%"
+            ] })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mb-6", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "text-lg font-semibold mb-3", children: "Ring State Vector" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-gray-900 rounded p-3 font-mono text-xs space-y-1", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              "pos: (",
+              ringState.x.toFixed(1),
+              ", ",
+              ringState.y.toFixed(1),
+              ", ",
+              ringState.z.toFixed(1),
+              ")"
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              "vel: (",
+              ringState.vx.toFixed(2),
+              ", ",
+              ringState.vy.toFixed(2),
+              ")"
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              "ω: ",
+              ringState.omega.toFixed(3),
+              " rad"
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              "E: ",
+              ringState.E.toFixed(2),
+              " J"
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              "φ: ",
+              ringState.phi.toFixed(3)
+            ] })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mb-6", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("h3", { className: "text-lg font-semibold mb-3 flex items-center gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Eye, { size: 18 }),
+            "Hecate Matrix"
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2 text-sm", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `p-2 rounded ${mode === "threshold" ? "bg-amber-900" : "bg-gray-900"}`, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-semibold", children: "Threshold" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs text-gray-400", children: "3:7:13 • lamp-black ember-gold" })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `p-2 rounded ${mode === "descent" ? "bg-red-900" : "bg-gray-900"}`, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-semibold", children: "Descent" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs text-gray-400", children: "9:9:1 • pomegranate-oxblood" })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `p-2 rounded ${mode === "sovereignty" ? "bg-purple-900" : "bg-gray-900"}`, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-semibold", children: "Sovereignty" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs text-gray-400", children: "11:2:0 • obsidian-violet" })
+            ] })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-xs text-gray-500 space-y-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "🖱️ Hover near ring to apply gentle force" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "🌬️ Enable breath sync for resonance boost" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "⚡ Watch λ-constraint enforce non-domination" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "💜 High ρₙ = smooth flow, rich harmonics" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "🌀 Ring traces ΣΩ circulation on lattice" })
+        ] })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-2 bg-gray-800 border-t border-gray-700 flex justify-between text-xs", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+        "Time: ",
+        time.toFixed(2),
+        "s"
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: getModeColor(mode), children: [
+        "Mode: ",
+        mode.toUpperCase()
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "ΣΩ Lawframe v1.0.0" })
+    ] })
+  ] });
+};
+client.createRoot(document.getElementById("root")).render(
+  /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(GyrafluxSimulation, {}) })
+);
