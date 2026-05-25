@@ -18,7 +18,8 @@ export default defineConfig({
         'death-flip': resolve(__dirname, 'death-flip-entry.html'),
         'nodal-network': resolve(__dirname, 'nodal-network-entry.html'),
         'rcm-visual': resolve(__dirname, 'rcm-visual-entry.html'),
-        'triphase-matrix': resolve(__dirname, 'triphase-matrix-entry.html')
+        'triphase-matrix': resolve(__dirname, 'triphase-matrix-entry.html'),
+        superradiance: resolve(__dirname, 'superradiance-entry.html')
       },
       output: {
         entryFileNames: '[name].js',
