@@ -32,12 +32,14 @@
   --shout-orange:#ff3d00;          /* the diagonal banner color, flat */
   --paper:       #f5ead9;          /* cream flyer stock, not void */
 
-  /* chrome is a gradient, never a flat color */
+  /* chrome is a gradient, never a flat color — now holographic foil,
+     not silver: the same mechanism, an oil-slick rainbow instead of
+     a mirror. built from the existing palette, no new hues needed. */
   --chrome: linear-gradient(
-    177deg,
-    #f8fbff 0%, #cfd9e6 18%, #8fa3b8 34%,
-    #f2f7fc 46%, #5a6d82 58%,
-    #d9e4f0 72%, #93a7bc 86%, #eef4fb 100%
+    135deg,
+    var(--hotpink) 0%, var(--gold) 14%, var(--rose) 28%,
+    var(--lavender) 42%, var(--cyan) 56%, var(--hotpink) 70%,
+    var(--gold) 84%, var(--lavender) 100%
   );
 
   --ink:         #f4ecff;          /* body text on void */
@@ -132,22 +134,26 @@ a:hover { color: var(--rose); }
   letter-spacing: -.01em;    /* Bungee runs wide; Shrikhand didn't need this */
 }
 
-/* CHROME: the six-inch-date treatment. background-clip + travelling shine. */
+/* CHROME: the six-inch-date treatment — holographic foil, ALL CAPS,
+   80s-signage energy. background-clip + a shimmer that travels on
+   both axes, like foil catching light as you tilt it. */
 .chrome-text {
   font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: .02em;
   background: var(--chrome);
-  background-size: 100% 240%;
+  background-size: 300% 300%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  -webkit-text-stroke: 1px rgba(255,255,255,.14);
+  -webkit-text-stroke: 1px rgba(255,255,255,.22);
   filter: drop-shadow(0 2px 0 rgba(0,0,0,.75))
-          drop-shadow(0 0 22px rgba(201,160,255,.30));
-  animation: chrome-shine 7s ease-in-out infinite;
+          drop-shadow(0 0 26px rgba(255,46,136,.35));
+  animation: chrome-shine 6s ease-in-out infinite;
 }
 @keyframes chrome-shine {
-  0%,100% { background-position: 50% 12%; }
-  50%     { background-position: 50% 88%; }
+  0%,100% { background-position: 0% 30%; }
+  50%     { background-position: 100% 70%; }
 }
 
 /* neon: for room names on hover — glow without blur soup */
