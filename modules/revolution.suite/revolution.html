@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en" data-motion="full">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Human Sexual Revolution (Ongoing) · Side A</title>
+<meta name="description" content="An interactive history of the sexual revolution, navigated like a record. Drop the needle on a room.">
+<link rel="stylesheet" href="revolution.css">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   THE TURNTABLE — there is no menu. you drop the needle.
+   EMOTIONAL TARGET: the half-second of held breath between stylus
+   touching vinyl and the first note. Navigation as anticipation.
+   ═══════════════════════════════════════════════════════════════ */
+
+body { overflow-y: auto; }
+
+.deck-stage {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: 4vh 4vw 6vh;
+  gap: 1rem;
+}
+
+header.masthead { text-align: center; }
+header.masthead h1 {
+  font-size: clamp(1.7rem, 4.6vw, 3.1rem);
+  line-height: 1.1;
+}
+header.masthead .eyebrow { margin-bottom: .6rem; }
+
+.table-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+#table {
+  width: min(78vh, 94vw);
+  height: min(78vh, 94vw);
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+/* the readout — what the needle is hovering */
+.readout {
+  min-height: 5.4rem;
+  text-align: center;
+}
+.readout .room-name {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 4vw, 2.4rem);
+  color: var(--hotpink);
+  text-shadow: 0 0 10px rgba(255,46,136,.8), 0 0 34px rgba(255,46,136,.4);
+  min-height: 1.2em;
+}
+.readout .room-sub {
+  font-family: var(--font-mono);
+  color: var(--ink-dim);
+  font-size: .85rem;
+  letter-spacing: .04em;
+}
+
+/* liner notes — the tracklist IS the accessible navigation */
+.liner {
+  max-width: 620px;
+  margin: 4vh auto 0;
+  z-index: 2;
+  position: relative;
+  padding: 0 1.5rem 8vh;
+}
+.liner h2 {
+  font-family: var(--font-geo);
+  font-weight: 600;
+  font-size: .78rem;
+  letter-spacing: .34em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-bottom: 1rem;
+}
+.liner .pressing-note {
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  color: var(--ink-dim);
+  margin-top: 1.6rem;
+  line-height: 1.8;
+}
+.liner .pressing-note a { color: var(--ink-dim); }
+
+@media (max-width: 700px) {
+  .deck-stage { padding-top: 6vh; }
+}
+</style>
+</head>
+<body>
+
+<div class="deck-stage">
+  <header class="masthead">
+    <p class="eyebrow">side a · 33⅓ rpm · stereo</p>
+    <h1 class="display chrome-text">The Human Sexual Revolution</h1>
+    <p class="archive-voice" style="color:var(--ink-dim); font-size:.8rem;">(ongoing)</p>
+  </header>
+
+  <div class="table-wrap">
+    <canvas id="table" aria-hidden="true"></canvas>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="room-name" id="ro-name">&nbsp;</div>
+    <div class="room-sub" id="ro-sub">hover a groove · drop the needle</div>
+  </div>
+</div>
+
+<!-- LINER NOTES — real links. This list is the keyboard path,
+     the screen-reader path, and a design object in its own right. -->
+<nav class="liner" aria-label="Rooms">
+  <h2>Liner notes / tracklist</h2>
+  <ol class="tracklist" id="tracklist"></ol>
+  <p class="pressing-note">
+    Every room works with motion stilled and sound off — tune both at the
+    <a href="threshold.html">threshold</a>. Nothing on this record tracks you.
+  </p>
+</nav>
+
+<script src="revolution.js"></script>
+<script>
+REV.boot({ scene: 'hub', room: null });
+
+/* ─────────────────────────────────────────────────────────────────
+   THE RECORD
+   Bands run outer edge (oldest) toward the center label (now) —
+   time spirals inward, the way a record actually plays.
+   `built` flips to true as each room comes off the press.
+   ──────────────────────────────────────────────────────────────── */
+const ROOMS = [
+  { id:'ancestors', title:'The Ancestors',  sub:'gender as abundance · 2400 BCE → 1866',   href:'ancestors.html', tone:164.8, built:true,  gate:false },
+  { id:'thecode',   title:'The Code',       sub:'the closet as technology · 1867–1965',    href:'thecode.html',   tone:196.0, built:false, gate:false },
+  { id:'theriot',   title:'The Riot',       sub:'two holes in the archive · 1966–1969',    href:'theriot.html',   tone:110.0, built:true,  gate:false },
+  { id:'thefloor',  title:'The Floor',      sub:'the glam core · 1970–1979',               href:'thefloor.html',  tone:246.9, built:true,  gate:false },
+  { id:'deck',      title:'The Deviance Deck', sub:'frank · anatomical · adult · gated',   href:'deck.html',      tone:277.2, built:false, gate:true  },
+  { id:'ongoing',   title:'Ongoing',        sub:'1980 → you are standing in it',           href:'ongoing.html',   tone:329.6, built:false, gate:false }
+];
+
+/* ── tracklist (the honest nav) ─────────────────────────────────── */
+(function buildTracklist(){
+  const ol = document.getElementById('tracklist');
+  ROOMS.forEach(function (r, i) {
+    const li = document.createElement('li');
+    if (!r.built) li.className = 'unreleased';
+    const n = document.createElement('span');
+    n.className = 'tno';
+    n.textContent = 'A' + (i + 1);
+    const a = document.createElement('a');
+    a.href = r.built ? r.href : '#';
+    a.textContent = r.title;
+    if (!r.built) a.setAttribute('aria-disabled', 'true');
+    a.addEventListener('click', function (e) { routeTo(r, e); });
+    const d = document.createElement('span');
+    d.className = 'dur';
+    d.textContent = r.sub.split('·').pop().trim();
+    li.appendChild(n); li.appendChild(a); li.appendChild(d);
+    ol.appendChild(li);
+  });
+})();
+
+/* gate logic: the Deck asks the threshold, never a popup */
+function routeTo(room, e) {
+  if (e) e.preventDefault();
+  if (!room.built) {
+    setReadout(room.title, 'still in the pressing plant — this groove is being cut');
+    REV.audio.crackle(0.4);
+    return;
+  }
+  if (room.gate && !REV.state.adult) {
+    setReadout(room.title, 'this room asks the threshold first — routing you there');
+    setTimeout(function(){ location.href = 'threshold.html'; }, 900);
+    return;
+  }
+  REV.audio.crackle(0.65);
+  document.title = '▶ ' + room.title;
+  setTimeout(function(){ location.href = room.href; }, REV.stilled() ? 60 : 620);
+}
+
+function setReadout(name, sub) {
+  document.getElementById('ro-name').textContent = name;
+  document.getElementById('ro-sub').textContent = sub;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   THE TURNTABLE RENDERER
+   Platter at a true 33⅓ RPM (ω ≈ 3.49 rad/s). Grooved bands are
+   the rooms. The tonearm pivots from upper right and swings on a
+   real arc — tonearms are radial creatures, not straight-line ones.
+   ──────────────────────────────────────────────────────────────── */
+const canvas = document.getElementById('table');
+const ctx = canvas.getContext('2d');
+const RPM = 100 / 3;                       // 33.333…
+const OMEGA = RPM / 60 * Math.PI * 2;      // rad/s
+let W, H, CX, CY, R, dpr;
+
+const BAND_OUT = 0.96, BAND_IN = 0.42;     // annulus of playable vinyl
+const LABEL_R = 0.34;
+
+let phase = 0;                              // platter rotation
+let hover = -1;                             // hovered band index
+let armAngle = -0.62;                       // current tonearm angle (rad)
+let armTarget = -0.62;                      // resting pose
+let dropping = false;
+let lastT = performance.now();
+
+function resize() {
+  dpr = Math.min(devicePixelRatio || 1, 2);
+  const size = canvas.getBoundingClientRect().width;
+  canvas.width = size * dpr;
+  canvas.height = size * dpr;
+  W = H = size; CX = W / 2; CY = H / 2;
+  R = size * 0.47;
+}
+addEventListener('resize', resize);
+resize();
+
+/* band geometry: outer → inner, equal annular thickness */
+function bandRadii(i) {
+  const step = (BAND_OUT - BAND_IN) / ROOMS.length;
+  const out = BAND_OUT - step * i;
+  return { out: out * R, inn: (out - step) * R, mid: (out - step / 2) * R };
+}
+function bandAt(dist) {
+  for (let i = 0; i < ROOMS.length; i++) {
+    const b = bandRadii(i);
+    if (dist <= b.out && dist >= b.inn) return i;
+  }
+  return -1;
+}
+
+/* tonearm: pivot floats off the platter's top right corner */
+function pivot() { return { x: CX + R * 1.02, y: CY - R * 1.02 }; }
+function armAngleFor(radius) {
+  // aim the stylus at a point on the platter's right side at `radius`
+  const p = pivot();
+  const target = { x: CX + radius * 0.72, y: CY - radius * 0.12 };
+  return Math.atan2(target.y - p.y, target.x - p.x);
+}
+
+/* ── draw ───────────────────────────────────────────────────────── */
+function draw(now) {
+  const dt = Math.min(0.05, (now - lastT) / 1000);
+  lastT = now;
+  if (!REV.stilled()) phase += OMEGA * dt;
+  armAngle += (armTarget - armAngle) * Math.min(1, dt * 6);
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+
+  /* plinth shadow */
+  ctx.beginPath(); ctx.arc(CX, CY + 6, R, 0, 7);
+  ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fill();
+
+  /* vinyl body */
+  const vinyl = ctx.createRadialGradient(CX, CY, R * 0.1, CX, CY, R);
+  vinyl.addColorStop(0, '#17081f');
+  vinyl.addColorStop(0.6, '#0b0310');
+  vinyl.addColorStop(1, '#050108');
+  ctx.beginPath(); ctx.arc(CX, CY, R, 0, 7);
+  ctx.fillStyle = vinyl; ctx.fill();
+
+  /* rotating sheen — the light that tells your eye it's spinning */
+  ctx.save();
+  ctx.translate(CX, CY); ctx.rotate(phase * 0.5);
+  const sheen = ctx.createLinearGradient(-R, 0, R, 0);
+  sheen.addColorStop(0.42, 'rgba(201,160,255,0)');
+  sheen.addColorStop(0.5, 'rgba(201,160,255,.10)');
+  sheen.addColorStop(0.58, 'rgba(201,160,255,0)');
+  ctx.beginPath(); ctx.arc(0, 0, R, 0, 7);
+  ctx.fillStyle = sheen; ctx.fill();
+  ctx.restore();
+
+  /* grooves */
+  ctx.lineWidth = 1;
+  for (let g = 0; g < 64; g++) {
+    const r = (BAND_IN + (BAND_OUT - BAND_IN) * (g / 64)) * R;
+    ctx.beginPath(); ctx.arc(CX, CY, r, 0, 7);
+    ctx.strokeStyle = 'rgba(255,255,255,' + (g % 8 === 0 ? 0.07 : 0.028) + ')';
+    ctx.stroke();
+  }
+
+  /* band edges + hover glow */
+  for (let i = 0; i < ROOMS.length; i++) {
+    const b = bandRadii(i);
+    if (i === hover) {
+      ctx.beginPath(); ctx.arc(CX, CY, b.mid, 0, 7);
+      ctx.lineWidth = (b.out - b.inn) * 0.86;
+      ctx.strokeStyle = ROOMS[i].built ? 'rgba(255,46,136,.13)' : 'rgba(157,143,176,.09)';
+      ctx.stroke();
+      ctx.beginPath(); ctx.arc(CX, CY, b.mid, 0, 7);
+      ctx.lineWidth = 1.4;
+      ctx.strokeStyle = ROOMS[i].built ? 'rgba(255,46,136,.75)' : 'rgba(157,143,176,.5)';
+      ctx.stroke();
+    }
+    ctx.beginPath(); ctx.arc(CX, CY, b.inn, 0, 7);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(2,0,5,.9)';
+    ctx.stroke();
+  }
+
+  /* center label — harvest gold, spinning title, spindle */
+  ctx.save();
+  ctx.translate(CX, CY); ctx.rotate(phase);
+  const lg = ctx.createRadialGradient(0, 0, 2, 0, 0, LABEL_R * R);
+  lg.addColorStop(0, '#f7d33f');
+  lg.addColorStop(1, '#b98f0e');
+  ctx.beginPath(); ctx.arc(0, 0, LABEL_R * R, 0, 7);
+  ctx.fillStyle = lg; ctx.fill();
+  ctx.fillStyle = '#241a2e';
+  ctx.font = '600 ' + Math.max(10, R * 0.045) + 'px "Josefin Sans", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('THE HUMAN SEXUAL', 0, -R * 0.06);
+  ctx.fillText('REVOLUTION', 0, -R * 0.015);
+  ctx.font = 'italic ' + Math.max(8, R * 0.032) + 'px "Courier Prime", monospace';
+  ctx.fillText('(ongoing) · 33⅓', 0, R * 0.045);
+  ctx.beginPath(); ctx.arc(0, 0, R * 0.014, 0, 7);
+  ctx.fillStyle = '#050108'; ctx.fill();
+  ctx.restore();
+
+  drawArm();
+
+  requestAnimationFrame(draw);
+}
+
+function drawArm() {
+  const p = pivot();
+  const len = R * 1.35;
+  const ex = p.x + Math.cos(armAngle) * len;
+  const ey = p.y + Math.sin(armAngle) * len;
+
+  /* counterweight + pivot base */
+  ctx.beginPath(); ctx.arc(p.x, p.y, R * 0.055, 0, 7);
+  ctx.fillStyle = '#2a1a33'; ctx.fill();
+  ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(201,160,255,.35)'; ctx.stroke();
+  const back = R * 0.16;
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y);
+  ctx.lineTo(p.x - Math.cos(armAngle) * back, p.y - Math.sin(armAngle) * back);
+  ctx.lineWidth = R * 0.028;
+  ctx.strokeStyle = '#8fa3b8'; ctx.stroke();
+
+  /* the arm — chrome line with a soft shadow beneath */
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y); ctx.lineTo(ex, ey + 3);
+  ctx.lineWidth = R * 0.02;
+  ctx.strokeStyle = 'rgba(0,0,0,.4)'; ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y); ctx.lineTo(ex, ey);
+  ctx.lineWidth = R * 0.016;
+  const arm = ctx.createLinearGradient(p.x, p.y, ex, ey);
+  arm.addColorStop(0, '#d9e4f0'); arm.addColorStop(1, '#8fa3b8');
+  ctx.strokeStyle = arm; ctx.stroke();
+
+  /* headshell + stylus */
+  ctx.save();
+  ctx.translate(ex, ey);
+  ctx.rotate(armAngle + 0.5);
+  ctx.fillStyle = dropping ? '#ff2e88' : '#f5c518';
+  ctx.fillRect(-R * 0.035, -R * 0.014, R * 0.07, R * 0.028);
+  ctx.restore();
+}
+
+requestAnimationFrame(draw);
+
+/* ── pointer ────────────────────────────────────────────────────── */
+canvas.addEventListener('pointermove', function (e) {
+  if (dropping) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left, y = e.clientY - rect.top;
+  const dist = Math.hypot(x - CX, y - CY);
+  const i = bandAt(dist);
+  if (i !== hover) {
+    hover = i;
+    if (i >= 0) {
+      const r = ROOMS[i];
+      setReadout(r.title, r.sub + (r.built ? '' : ' · pressing soon'));
+      armTarget = armAngleFor(bandRadii(i).mid);
+      REV.audio.preview(r.tone);       // 2s lead-in: the room hums hello
+    } else {
+      setReadout('\u00a0', 'hover a groove · drop the needle');
+      armTarget = -0.62;
+    }
+  }
+});
+canvas.addEventListener('pointerleave', function () {
+  if (dropping) return;
+  hover = -1;
+  setReadout('\u00a0', 'hover a groove · drop the needle');
+  armTarget = -0.62;
+});
+canvas.addEventListener('click', function () {
+  if (hover < 0 || dropping) return;
+  const room = ROOMS[hover];
+  dropping = true;
+  REV.audio.thunk();
+  setTimeout(function(){ dropping = false; routeTo(room, null); }, 240);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en" data-motion="full">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Ancestors · gender as abundance · 2400 BCE → now</title>
+<meta name="description" content="Gender play and love as abundance across the deep record — and the living communities the record must not extract from.">
+<link rel="stylesheet" href="revolution.css">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   THE ANCESTORS — two registers in one room, on purpose.
+
+   THE DEPICTED: the dead, in the record. Full glam — polaroids,
+   gold, halftone, the mirrorball plays over them like light on
+   a reliquary. The archive kept them; we celebrate the keeping.
+
+   THE LIVING: present tense. The glam treatment DOES NOT TOUCH
+   them. No scraped photographs, no pop-outs, no mirrorball —
+   the section is lightless not in grief but in respect: our
+   light is not the light they need. Names, their own words'
+   direction, doors out. The visitor should FEEL the tense change.
+
+   EMOTIONAL TARGET: first, lineage — "we were never new."
+   Then, responsibility — "and some of this is not 'were' at all."
+   ═══════════════════════════════════════════════════════════════ */
+
+.anc-wrap {
+  position: relative;
+  z-index: 2;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 12vh 1.5rem 14vh;
+}
+section { margin-bottom: 16vh; }
+
+h1 { font-size: clamp(2.6rem, 8vw, 5rem); }
+h2.roomlabel {
+  font-family: var(--font-geo);
+  font-weight: 600;
+  font-size: .8rem;
+  letter-spacing: .4em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-bottom: 1.4rem;
+}
+.lede {
+  font-size: 1.06rem;
+  max-width: 58ch;
+  margin-top: 1.4rem;
+}
+.lede em { color: var(--gold); font-style: normal; }
+
+/* ── DEPICTED: the reliquary grid ───────────────────────────────── */
+.reliquary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.2rem;
+  align-items: start;
+}
+@media (max-width: 760px) { .reliquary { grid-template-columns: 1fr; } }
+
+.reliquary .polaroid { max-width: none; }
+
+/* typographic tablets — for ancestors the camera never met */
+.tablet {
+  border: 1px solid var(--line);
+  background: linear-gradient(165deg, rgba(245,197,24,.05), rgba(13,4,16,.7) 55%);
+  padding: 1.6rem 1.6rem 1.4rem;
+}
+.tablet .t-era {
+  font-family: var(--font-mono);
+  font-size: .68rem;
+  letter-spacing: .28em;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+.tablet .t-name {
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 3.4vw, 1.9rem);
+  color: var(--ink);
+  margin: .5rem 0 .8rem;
+  line-height: 1.1;
+}
+.tablet .t-body {
+  font-family: var(--font-mono);
+  font-size: .82rem;
+  line-height: 1.95;
+  color: var(--ink-dim);
+}
+.tablet .t-body em { color: var(--rose); font-style: normal; }
+.tablet .t-body a { color: var(--lavender); }
+.tablet .t-glyph {
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  color: var(--gold);
+  opacity: .8;
+  line-height: 1;
+  margin-bottom: .4rem;
+}
+
+/* the hero — We'wha gets the widest frame in the room */
+.hero-frame { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.1fr); gap: 2.2rem; align-items: center; }
+@media (max-width: 760px) { .hero-frame { grid-template-columns: 1fr; } }
+
+/* ── THE EMBRACE — original line drawing, noses drifting together ─ */
+.embrace-stage {
+  grid-column: 1 / -1;
+  border: 1px solid var(--line);
+  background: rgba(13,4,16,.55);
+  padding: 2.4rem 1.6rem 1.8rem;
+  text-align: center;
+}
+.embrace-svg { width: min(420px, 86%); height: auto; overflow: visible; }
+.embrace-svg .face { fill: none; stroke-width: 2.5; stroke-linecap: round; }
+.embrace-svg .face.left  { stroke: var(--gold); }
+.embrace-svg .face.right { stroke: var(--hotpink); }
+.embrace-svg .face.left  { animation: drift-l 4s var(--ease-needle) forwards; }
+.embrace-svg .face.right { animation: drift-r 4s var(--ease-needle) forwards; }
+@keyframes drift-l { from { transform: translateX(-26px); } to { transform: translateX(0); } }
+@keyframes drift-r { from { transform: translateX(26px);  } to { transform: translateX(0); } }
+.embrace-cap {
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  color: var(--ink-dim);
+  line-height: 1.9;
+  margin-top: 1.2rem;
+}
+.embrace-cap em { color: var(--gold); font-style: normal; }
+
+/* ── the colonial break — a wall between the registers ──────────── */
+.break-wall {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 3.4rem 0;
+  text-align: center;
+}
+.break-wall .bw-line {
+  font-family: var(--font-mono);
+  font-size: clamp(.9rem, 2vw, 1.1rem);
+  line-height: 2.4;
+  letter-spacing: .05em;
+}
+.break-wall .hot { color: var(--hotpink); }
+.break-wall .dim { color: var(--ink-dim); }
+
+/* ── THE LIVING — the glam does not touch this section ──────────── */
+.living {
+  /* lightless: not grief here — respect. our light is not theirs. */
+  background: #04020a;
+  border: 1px solid rgba(157,143,176,.2);
+  padding: 4.5rem clamp(1.2rem, 5vw, 3.5rem);
+}
+.living h2.roomlabel { color: var(--rose); }
+.living .register {
+  font-family: var(--font-mono);
+  font-size: clamp(.95rem, 2vw, 1.15rem);
+  line-height: 2.3;
+  letter-spacing: .04em;
+  margin-bottom: 3.5rem;
+}
+.living .register .hot { color: var(--hotpink); }
+.living .register .dim { color: var(--ink-dim); }
+
+.names { list-style: none; display: flex; flex-direction: column; }
+.names li {
+  padding: 1.5rem 0;
+  border-bottom: 1px dotted rgba(157,143,176,.25);
+}
+.names .n-word {
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 5vw, 2.6rem);
+  color: var(--ink);
+  line-height: 1.1;
+}
+.names .n-who {
+  font-family: var(--font-mono);
+  font-size: .8rem;
+  color: var(--ink-dim);
+  line-height: 1.9;
+  margin-top: .45rem;
+  max-width: 62ch;
+}
+.names .n-who em { color: var(--rose); font-style: normal; }
+.names .n-door {
+  font-family: var(--font-mono);
+  font-size: .74rem;
+  margin-top: .5rem;
+}
+.names .n-door a { color: var(--cyan); }
+
+.living .doors-note {
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  line-height: 2;
+  color: var(--ink-dim);
+  margin-top: 3rem;
+  border-left: 2px solid var(--rose);
+  padding-left: 1.2rem;
+  max-width: 60ch;
+}
+
+/* ── exits ──────────────────────────────────────────────────────── */
+.exits {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.4rem;
+  flex-wrap: wrap;
+  font-family: var(--font-mono);
+  font-size: .78rem;
+}
+.exits a { color: var(--ink-dim); text-decoration: none; }
+.exits a:hover { color: var(--hotpink); }
+</style>
+</head>
+<body>
+
+<main class="anc-wrap">
+
+  <!-- ── ENTRY ──────────────────────────────────────────────────── -->
+  <section aria-labelledby="anc-title">
+    <h2 class="roomlabel" id="anc-title">room one · 2400 BCE → 1866 · and also right now</h2>
+    <h1 class="display chrome-text">The Ancestors</h1>
+    <p class="lede">
+      The story you were sold is that queerness is new and the binary is
+      ancient. <em>The record says the opposite.</em> Abundance is the
+      old thing — genders in threes and fives, love beyond category,
+      carved into temple walls and painted into tombs. The narrow version
+      is the recent invention, and it arrived, in most places,
+      <em>by boat.</em>
+    </p>
+  </section>
+
+  <!-- ── THE DEPICTED — full glam. the record kept them. ────────── -->
+  <section aria-labelledby="dep-title">
+    <h2 class="roomlabel" id="dep-title">the depicted · what the record kept</h2>
+
+    <div class="reliquary">
+
+      <!-- HERO: We'wha -->
+      <div class="hero-frame">
+        <figure class="polaroid" style="--tilt:-1.8deg;">
+          <img data-asset="assets/nara/wewha-weaving-523797.jpg"
+               alt="We'wha, a Zuni lhamana, seated and weaving on a loom, photographed by John K. Hillers in the 1880s."
+               class="halftone">
+          <figcaption class="caption">We'wha of Zuni, weaving · 1880s</figcaption>
+          <p class="credit">John K. Hillers · U.S. National Archives (523797) ·
+            public domain</p>
+        </figure>
+        <div class="tablet">
+          <div class="t-era">zuni · 1849 – 1896</div>
+          <div class="t-name">We'wha, lhamana</div>
+          <p class="t-body">
+            Weaver, potter, diplomat. In 1886 We'wha spent six months in
+            Washington, met President Cleveland, and was celebrated by
+            society press — as <em>"the Zuni princess."</em>
+            The archive's own label calls them <em>"a Zuni woman."</em>
+            They were lhamana: a role their people had a name for, and
+            the visitors' language didn't.<br><br>
+            We show you the mislabel on purpose. The mislabel is the
+            point — the record could hold the picture and still not
+            hold the person.
+          </p>
+        </div>
+      </div>
+
+      <!-- THE EMBRACE: Niankhkhnum & Khnumhotep -->
+      <div class="embrace-stage">
+        <svg class="embrace-svg" viewBox="0 0 400 220" role="img"
+             aria-label="Two abstract profiles in gold and pink drifting together until their noses touch — after the embrace of Niankhkhnum and Khnumhotep.">
+          <!-- original line drawing after the Saqqara pose; ours, in the palette -->
+          <path class="face left"
+            d="M150 40 C 128 52, 118 78, 122 102 C 124 116, 132 122, 140 126
+               C 148 130, 152 138, 150 148 C 148 160, 138 168, 128 176
+               M140 126 L 168 118 M150 40 C 158 58, 162 84, 168 118"/>
+          <path class="face right"
+            d="M250 40 C 272 52, 282 78, 278 102 C 276 116, 268 122, 260 126
+               C 252 130, 248 138, 250 148 C 252 160, 262 168, 272 176
+               M260 126 L 232 118 M250 40 C 242 58, 238 84, 232 118"/>
+          <!-- the meeting point -->
+          <circle cx="200" cy="118" r="3" fill="#f5c518" opacity=".9"/>
+        </svg>
+        <p class="embrace-cap">
+          <em>Niankhkhnum &amp; Khnumhotep · Saqqara, c. 2400 BCE.</em><br>
+          Two men, royal manicurists, buried in one tomb — painted
+          nose-to-nose, <em>the most intimate pose the Egyptian canon had,
+          the one reserved for spouses.</em> Forty-four centuries old, and
+          it is still the oldest known depiction of its kind.
+        </p>
+        <figure class="polaroid" style="--tilt:1.4deg; margin: 2rem auto 0;">
+          <img data-asset="assets/commons/niankhkhnum-khnumhotep-embrace.jpg"
+               alt="Painted relief from the tomb of Niankhkhnum and Khnumhotep at Saqqara: the two men embracing, noses touching."
+               class="halftone">
+          <figcaption class="caption">The embrace itself, on the tomb wall.</figcaption>
+          <p class="credit">via Wikimedia Commons · verify per-file license
+            before ship (see ASSET_MANIFEST)</p>
+        </figure>
+      </div>
+
+      <!-- Sappho -->
+      <div class="tablet">
+        <div class="t-era">lesbos · c. 630 – 570 BCE</div>
+        <div class="t-name">Sappho</div>
+        <p class="t-body">
+          A woman writing desire for women so well that antiquity
+          allegedly called her <em>the tenth Muse</em> — and two of our
+          plainest words, <em>sapphic</em> and <em>lesbian</em>, are just
+          her name and her island. Of nine books of poems, fragments
+          survive. One of them, loosely rendered:<br><br>
+          <em>"someone, I tell you, will remember us — even in another
+          time."</em><br><br>
+          She was right.
+        </p>
+      </div>
+
+      <!-- The cut sleeve -->
+      <div class="tablet">
+        <div class="t-glyph">断袖</div>
+        <div class="t-era">han dynasty · c. 6 BCE</div>
+        <div class="t-name">The Cut Sleeve</div>
+        <p class="t-body">
+          Emperor Ai of Han woke with his beloved, Dong Xian, asleep on
+          the sleeve of his robe. Rather than wake him, <em>the emperor
+          cut the sleeve off and rose without it.</em> For two thousand
+          years, "the passion of the cut sleeve" was simply how Chinese
+          literature said it — tender, imperial, unremarkable. The
+          scandal came much later, and from elsewhere.
+        </p>
+      </div>
+
+      <!-- The galli -->
+      <div class="tablet">
+        <div class="t-era">rome &amp; anatolia · from c. 200 BCE</div>
+        <div class="t-name">The Galli of Cybele</div>
+        <p class="t-body">
+          Priestesses of the Great Mother who left manhood behind —
+          dress, hair, name, body — and served openly in the streets of
+          Rome for centuries. Roman writers clutched their togas;
+          <em>the goddess kept hiring.</em> Gender-crossing as a sacred
+          vocation, on the public payroll of the ancient world.
+        </p>
+      </div>
+
+      <!-- Khajuraho + tritiya-prakriti -->
+      <div class="tablet">
+        <div class="t-era">india · c. 300 CE &amp; 950 – 1050 CE</div>
+        <div class="t-name">Third Nature, Sacred Walls</div>
+        <p class="t-body">
+          The Kama Sutra names <em>tritiya-prakriti</em> — a third
+          nature — and discusses their pleasures without alarm. Seven
+          centuries later the Chandela dynasty carved the temples of
+          Khajuraho: erotic abundance, including same-sex scenes,
+          <em>on the outside of sacred buildings,</em> facing the sun.
+          Not hidden. Load-bearing.
+        </p>
+      </div>
+
+      <!-- Wakashu: two Met prints, two slots -->
+      <figure class="polaroid" style="--tilt:1.6deg;">
+        <img data-asset="assets/met/wakashu-897105.jpg"
+             alt="Edo-period print: a wakashu — a male youth — elegantly dressed, wearing two swords."
+             class="halftone">
+        <figcaption class="caption">Wakashu with two swords · Edo Japan.
+          The Met's own label: "the product of a culture in which male-male
+          sexual liaisons were not stigmatized."</figcaption>
+        <p class="credit">The Metropolitan Museum of Art, Open Access (897105) ·
+          CC0 · verify object flag</p>
+      </figure>
+
+      <figure class="polaroid" style="--tilt:-1.2deg;">
+        <img data-asset="assets/met/wakashu-845151.jpg"
+             alt="Edo-period print of a wakashu dressed as a stylish woman; only the forehead hairstyle reveals the difference."
+             class="halftone">
+        <figcaption class="caption">Wakashu dressed as a stylish woman —
+          gender at three removes; only the forelock tells. The explicit
+          nanshoku handscroll waits in the Deck, behind the gate,
+          where frank things live.</figcaption>
+        <p class="credit">The Metropolitan Museum of Art, Open Access (845151) ·
+          CC0 · verify object flag</p>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ── THE COLONIAL BREAK — the wall between tenses ───────────── -->
+  <section class="break-wall" aria-label="The colonial break">
+    <p class="bw-line">
+      Then the boats.<br>
+      <span class="dim">Missionary schools. Penal codes. Section 377,
+      drafted in London, exported everywhere.</span><br>
+      <span class="hot">Of the countries that still criminalize queer
+      love, roughly half inherited the law from the British Empire.</span><br>
+      <span class="dim">The binary is not your ancestor. It's your
+      colonizer.</span>
+    </p>
+  </section>
+
+  <!-- ── THE LIVING — the tense changes. the glam stops here. ───── -->
+  <section class="living" data-lightless aria-labelledby="liv-title">
+    <h2 class="roomlabel" id="liv-title">the living · present tense</h2>
+
+    <p class="register">
+      THIS IS NOT HISTORY.<br>
+      <span class="dim">FEWER THAN FIFTY BURRNESHA REMAIN.</span><br>
+      <span class="dim">THE BISSU WERE BANNED, ASSIMILATED BY FORCE,
+      KILLED — WITHIN LIVING MEMORY, AND AGAIN LATELY.</span><br>
+      THEY ARE STILL HERE. THEY ARE STILL BEING ERASED.<br>
+      <span class="hot">WE DID NOT TAKE THEIR PICTURE. THE MIRRORBALL
+      DOES NOT PLAY OVER THIS WALL. ASK THEM YOURSELF. →</span>
+    </p>
+
+    <ul class="names">
+      <li>
+        <div class="n-word">bissu · calalai · calabai</div>
+        <p class="n-who">
+          Three of the <em>five</em> genders the Bugis of Sulawesi have
+          named for at least six centuries — alongside makkunrai and
+          oroané. Not "third gender." <em>Five.</em> The bissu are
+          shamans and blessing-givers whose role predates the mosque
+          and the church both, and whose numbers were devastated by
+          persecution within living memory.
+        </p>
+      </li>
+      <li>
+        <div class="n-word">hijra</div>
+        <p class="n-who">
+          South Asia's oldest continuous gender-diverse communities —
+          blessing births and weddings for centuries, criminalized
+          wholesale by a British statute in 1871, and still fighting
+          the residue of it. Legal recognition arrived in India, Pakistan,
+          and Bangladesh only in the last two decades. <em>The paperwork
+          is new. They are not.</em>
+        </p>
+      </li>
+      <li>
+        <div class="n-word">fa'afafine &amp; fa'afatama</div>
+        <p class="n-who">
+          Samoa. Raised in the manner of women, in the manner of men —
+          woven into family structure, not exiled from it.
+        </p>
+        <p class="n-door"><a href="https://www.facebook.com/SamoaFaafafineAssociation/" rel="noopener">Samoa Fa'afafine Association →</a></p>
+      </li>
+      <li>
+        <div class="n-word">māhū</div>
+        <p class="n-who">
+          Hawai'i and Tahiti. Keepers of hula, chant, and genealogy —
+          a role missionaries tried to shame out of existence and
+          could not.
+        </p>
+      </li>
+      <li>
+        <div class="n-word">muxe</div>
+        <p class="n-who">
+          Juchitán, Oaxaca. Zapotec communities where a third way of
+          being has a name, a wardrobe, and a place at every fiesta.
+        </p>
+      </li>
+      <li>
+        <div class="n-word">burrnesha</div>
+        <p class="n-who">
+          The Albanian highlands. Sworn to live as men under the old
+          mountain law — the last of them are elders now.
+          <em>Fewer than fifty.</em> When they go, an entire way of
+          holding gender goes with them, and the record will hold
+          only what they chose to give it.
+        </p>
+      </li>
+      <li>
+        <div class="n-word">Two-Spirit</div>
+        <p class="n-who">
+          The word is young — chosen in 1990, in Winnipeg, at a
+          gathering of Indigenous people who wanted an umbrella of
+          their own making, not anthropology's. The roles it shelters
+          — like We'wha's lhamana, upstairs in the glam — are older
+          than the border that runs through their lands.
+        </p>
+        <p class="n-door"><a href="https://www.baaits.org/" rel="noopener">Bay Area American Indian Two-Spirits →</a></p>
+      </li>
+    </ul>
+
+    <p class="doors-note">
+      A note on doors: we link only where we're confident the door is
+      theirs. For the rest, we've spelled every name the way its people
+      spell it — go looking in their own words, not ours. That's the
+      whole design: this page sends you out, it does not pull them in.
+    </p>
+  </section>
+
+  <!-- ── EXITS ──────────────────────────────────────────────────── -->
+  <section class="exits" aria-label="Exits">
+    <a href="revolution.html">⏏ lift the needle</a>
+    <a href="thecode.html">the code · 1867–1965 →</a>
+  </section>
+
+</main>
+
+<script src="revolution.js"></script>
+<script>
+/* Scene 'ancestors': the bed at a murmur — ancient, sparse.
+   Fourth wall armed: this room carries the line about being told
+   not to exist. It will speak once, only to someone who stayed. */
+REV.boot({ scene: 'ancestors', room: 'ancestors' });
+
+/* asset slots — graceful until archive files land per ASSET_MANIFEST */
+(function () {
+  document.querySelectorAll('img[data-asset]').forEach(function (img) {
+    img.src = img.dataset.asset;
+    img.addEventListener('error', function () {
+      const slot = document.createElement('div');
+      slot.className = 'asset-slot';
+      slot.style.cssText = 'aspect-ratio:4/3;background:repeating-linear-gradient(45deg,#efe8db 0 12px,#e6ddcc 12px 24px);display:grid;place-items:center;text-align:center;font-family:var(--font-mono);font-size:.62rem;line-height:1.7;color:#6f5f80;padding:1rem;';
+      slot.innerHTML = 'AWAITING PRESSING<br>drop the archive file at<br><strong>'
+        + img.dataset.asset + '</strong><br>see ASSET_MANIFEST.md';
+      img.replaceWith(slot);
+    }, { once: true });
+  });
+})();
+</script>
+</body>
+</html>

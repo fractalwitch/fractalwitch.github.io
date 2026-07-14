@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" data-motion="full">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Deviance Deck · frank · anatomical · adult · gated</title>
+<meta name="description" content="Still in the pressing plant — the Deviance Deck, frank and anatomical, gated by the threshold.">
+<link rel="stylesheet" href="revolution.css">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   THE DEVIANCE DECK — not built yet, and the one room where that
+   matters twice over: it's also the gated room. Anyone who lands
+   here — from the hub, from thefloor's exit link, or a bare URL —
+   gets the same consent check. The membrane doesn't trust its
+   callers; it enforces itself.
+   ═══════════════════════════════════════════════════════════════ */
+
+.deck-wrap {
+  position: relative;
+  z-index: 2;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 14vh 1.5rem 12vh;
+}
+section { margin-bottom: 10vh; }
+
+h1 { font-size: clamp(2.4rem, 7vw, 4.2rem); }
+h2.roomlabel {
+  font-family: var(--font-geo);
+  font-weight: 600;
+  font-size: .8rem;
+  letter-spacing: .4em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-bottom: 1.4rem;
+}
+.lede {
+  font-size: 1.02rem;
+  max-width: 58ch;
+  margin-top: 1.4rem;
+  color: var(--ink-dim);
+}
+.lede em { color: var(--gold); font-style: normal; }
+
+.suits {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-top: 2.4rem;
+}
+@media (max-width: 620px) { .suits { grid-template-columns: repeat(2, 1fr); } }
+.suit {
+  border: 1px solid var(--line);
+  background: rgba(13,4,16,.5);
+  padding: 1.2rem .8rem;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  letter-spacing: .18em;
+  color: var(--lavender);
+}
+
+.pressing-plate {
+  margin-top: 3rem;
+  border: 1px dashed rgba(157,143,176,.35);
+  padding: 2.4rem 1.6rem;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  line-height: 2;
+  color: var(--ink-dim);
+}
+.pressing-plate .hot { color: var(--hotpink); }
+
+.gate-check {
+  min-height: 60vh;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: .95rem;
+  color: var(--ink-dim);
+  padding: 0 1.5rem;
+}
+.gate-check .hot { color: var(--hotpink); }
+
+.exits {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.4rem;
+  flex-wrap: wrap;
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  margin-top: 2rem;
+}
+.exits a { color: var(--ink-dim); text-decoration: none; }
+.exits a:hover { color: var(--hotpink); }
+</style>
+</head>
+<body>
+
+<!-- Shown only if the threshold hasn't been crossed; script below
+     replaces this with the room, or redirects, before paint settles. -->
+<main class="deck-wrap" id="gate-blocked" hidden>
+  <div class="gate-check">
+    <p>this room asks the threshold first — routing you there<span class="hot">.&nbsp;.&nbsp;.</span></p>
+  </div>
+</main>
+
+<main class="deck-wrap" id="deck-room" hidden>
+
+  <section aria-labelledby="deck-title">
+    <h2 class="roomlabel" id="deck-title">room five · frank · anatomical · adult · still being cut</h2>
+    <h1 class="display chrome-text">The Deviance Deck</h1>
+    <p class="lede">
+      This room isn't pressed yet. Four suits — <em>TONGUE, HAND, HOLE,
+      KNOT</em> — dealt from the mirrorball. A 1538 flap-anatomy sheet
+      as the flip mechanic. Odile Fillod's 3D clitoris, chrome-gold,
+      drag to rotate. Consent as the load-bearing card, not the fine
+      print.
+    </p>
+    <div class="suits">
+      <div class="suit">TONGUE</div>
+      <div class="suit">HAND</div>
+      <div class="suit">HOLE</div>
+      <div class="suit">KNOT</div>
+    </div>
+  </section>
+
+  <section aria-label="What's coming">
+    <div class="pressing-plate">
+      STILL IN THE PRESSING PLANT — THIS GROOVE IS BEING CUT.<br>
+      your dials are already set — depth is
+      <strong id="depth-readout" style="color:var(--ink); font-style:normal;">suggestive</strong>,
+      changeable any time at the <a href="threshold.html">threshold</a>.<br>
+      <span class="hot">the honest version of this page is the one that admits it isn't done.</span>
+    </div>
+  </section>
+
+  <section class="exits" aria-label="Exits">
+    <a href="thefloor.html">← the floor · 1970–1979</a>
+    <a href="revolution.html">⏏ lift the needle</a>
+    <a href="ongoing.html">ongoing · 1980 → you →</a>
+  </section>
+
+</main>
+
+<script src="revolution.js"></script>
+<script>
+/* The gate: checked here, not just at the hub. Anyone who reaches
+   this URL by any path gets asked the same question. */
+(function () {
+  var blocked = document.getElementById('gate-blocked');
+  var room = document.getElementById('deck-room');
+
+  if (!REV.state.adult) {
+    blocked.hidden = false;
+    REV.boot({ scene: 'threshold', noAudioToggle: true, noBall: true });
+    setTimeout(function () { location.href = 'threshold.html'; }, 1100);
+    return;
+  }
+
+  room.hidden = false;
+  document.getElementById('depth-readout').textContent = REV.state.depth;
+  REV.boot({ scene: 'deck', room: 'deck' });
+})();
+</script>
+</body>
+</html>
