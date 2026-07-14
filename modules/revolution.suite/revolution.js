@@ -17,7 +17,7 @@
   'use strict';
 
   const REV = {};
-  const PALETTE = ['#ff2e88', '#26e0e0', '#f5c518', '#c9a0ff', '#ff9ecb'];
+  const PALETTE = ['#ff2e88', '#26e0e0', '#f5c518', '#c9a0ff', '#ff9ecb', '#39ff14', '#ff3d00'];
 
   /* ─────────────────────────────────────────────────────────────────
      STATE — the threshold dials.

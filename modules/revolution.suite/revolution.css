@@ -10,7 +10,7 @@
    · protects contact    → [data-motion="stilled"] quiets EVERYTHING
    ═══════════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Shrikhand&family=Josefin+Sans:ital,wght@0,300;0,400;0,600;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bungee&family=Josefin+Sans:ital,wght@0,300;0,400;0,600;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap');
 
 /* ── TOKENS ─────────────────────────────────────────────────────── */
 :root {
@@ -27,6 +27,11 @@
   --avocado:     #9db02c;          /* used sparingly. it earned the 70s. */
   --rose:        #ff9ecb;
 
+  /* the maximalist layer — xerox punk + disco poster + activist zine */
+  --neon-green:  #39ff14;          /* Girl Bar's acid duotone */
+  --shout-orange:#ff3d00;          /* the diagonal banner color, flat */
+  --paper:       #f5ead9;          /* cream flyer stock, not void */
+
   /* chrome is a gradient, never a flat color */
   --chrome: linear-gradient(
     177deg,
@@ -39,7 +44,7 @@
   --ink-dim:     #9d8fb0;
   --line:        rgba(201,160,255,.18);
 
-  --font-display: 'Shrikhand', 'Cooper Black', serif;     /* fat glam */
+  --font-display: 'Bungee', 'Impact', sans-serif;         /* fat glam, now a shout */
   --font-geo:     'Josefin Sans', 'Avant Garde', sans-serif;
   --font-mono:    'Courier Prime', 'Courier New', monospace;
 
@@ -124,7 +129,7 @@ a:hover { color: var(--rose); }
   font-family: var(--font-display);
   font-weight: 400;
   line-height: 1.04;
-  letter-spacing: .01em;
+  letter-spacing: -.01em;    /* Bungee runs wide; Shrikhand didn't need this */
 }
 
 /* CHROME: the six-inch-date treatment. background-clip + travelling shine. */
@@ -192,6 +197,55 @@ a:hover { color: var(--rose); }
   filter: grayscale(1) contrast(1.1) sepia(1)
           hue-rotate(287deg) saturate(3.4) brightness(.92);
 }
+/* the Girl Bar mood: acid xerox-green instead of hot pink. same trick,
+   different photocopier toner. */
+.duotone-neon img, img.duotone-neon {
+  filter: grayscale(1) contrast(1.25) sepia(1)
+          hue-rotate(62deg) saturate(4.6) brightness(1.05);
+}
+
+/* ── SHOUT-BANNER — the "DIVAS FIGHT AIDS" device ────────────────
+   A flat diagonal band that yells. Reusable wherever a room needs
+   to raise its voice; leave it out entirely where the room needs
+   to stay quiet (theriot, the Living register of ancestors). ──── */
+.shout-banner {
+  display: inline-block;
+  position: relative;
+  background: var(--shout-orange);
+  color: var(--void);
+  font-family: var(--font-display);
+  font-size: clamp(1.3rem, 5vw, 2.6rem);
+  line-height: 1.05;
+  letter-spacing: -.02em;
+  padding: .5em .9em;
+  transform: rotate(-3deg);
+  box-shadow: 0 10px 0 rgba(0,0,0,.35), 0 18px 40px rgba(255,61,0,.35);
+}
+.shout-banner.pink { background: var(--hotpink); color: var(--void); }
+.shout-banner.green { background: var(--neon-green); color: var(--void); }
+
+/* ── LINE-ART FLOURISHES — small hand-drawn-feeling accents ──────
+   Naive-flyer punctuation, in the palette. Sparse by design: a
+   sprinkle near a headline, never a pattern that competes with it. */
+.flourish {
+  display: inline-block;
+  width: 1.4em; height: 1.4em;
+  vertical-align: middle;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  pointer-events: none;
+}
+.flourish-sparkle {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 2 L24 16 L38 20 L24 24 L20 38 L16 24 L2 20 L16 16 Z' fill='%23f5c518'/%3E%3C/svg%3E");
+}
+.flourish-squiggle {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 24'%3E%3Cpath d='M2 12 Q10 2, 18 12 T34 12 T50 12 T58 12' fill='none' stroke='%23ff2e88' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  width: 2.2em; height: .9em;
+}
+.flourish-burst {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg stroke='%2326e0e0' stroke-width='2.5' stroke-linecap='round'%3E%3Cline x1='20' y1='2' x2='20' y2='12'/%3E%3Cline x1='20' y1='28' x2='20' y2='38'/%3E%3Cline x1='2' y1='20' x2='12' y2='20'/%3E%3Cline x1='28' y1='20' x2='38' y2='20'/%3E%3Cline x1='7' y1='7' x2='14' y2='14'/%3E%3Cline x1='26' y1='26' x2='33' y2='33'/%3E%3Cline x1='33' y1='7' x2='26' y2='14'/%3E%3Cline x1='14' y1='26' x2='7' y2='33'/%3E%3C/g%3E%3C/svg%3E");
+}
 
 /* ── POLAROID pop-out (credit line baked in — it IS the artwork) ── */
 .polaroid {
@@ -216,6 +270,49 @@ a:hover { color: var(--rose); }
   font-size: .66rem;
   color: #6f5f80;
   padding: 0 4px 12px;
+}
+
+/* ── FLYER-CARD — a Polaroid's punk cousin ───────────────────────
+   Taped to a wall, not kept in a box: cream stock, a torn bottom
+   edge, two rotated tape-strips at the top corners. Alternate to
+   .polaroid where a room wants DIY-flyer texture instead of
+   reliquary-glam. ──────────────────────────────────────────────── */
+.flyer-card {
+  position: relative;
+  background: var(--paper);
+  color: #241a2e;
+  padding: 14px 14px 22px;
+  max-width: 380px;
+  transform: rotate(var(--tilt, 1.4deg));
+  box-shadow: 0 16px 40px rgba(0,0,0,.6);
+  clip-path: polygon(
+    0 0, 100% 0, 100% 94%,
+    92% 100%, 80% 93%, 68% 100%, 56% 94%, 44% 100%, 32% 93%, 20% 100%, 8% 94%, 0 100%
+  );
+  transition: transform .5s var(--ease-needle);
+}
+.flyer-card:hover { transform: rotate(0deg) scale(1.015); }
+.flyer-card img { display:block; width:100%; }
+.flyer-card::before, .flyer-card::after {
+  content:'';
+  position:absolute; top:-10px;
+  width: 54px; height: 22px;
+  background: rgba(245,197,24,.35);
+  border: 1px solid rgba(245,197,24,.5);
+}
+.flyer-card::before { left: 10%; transform: rotate(-8deg); }
+.flyer-card::after  { right: 10%; transform: rotate(6deg); }
+.flyer-card .caption {
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  line-height: 1.5;
+  padding: 10px 4px 0;
+}
+.flyer-card .credit {
+  font-family: var(--font-mono);
+  font-size: .66rem;
+  color: #6f5f80;
+  padding: 4px 4px 0;
 }
 
 /* ── DIALS (the threshold controls — tuned, not checked) ────────── */
