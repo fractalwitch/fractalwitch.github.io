@@ -56,7 +56,7 @@ h2.roomlabel {
   max-width: 58ch;
   margin-top: 1.4rem;
 }
-.lede em { color: var(--gold); font-style: normal; }
+.lede em { color: var(--gold-t); font-style: normal; }
 
 /* ── THE TWO FILMS — the argument in one wall ───────────────────── */
 .films {
@@ -66,9 +66,17 @@ h2.roomlabel {
 }
 @media (max-width: 760px) { .films { grid-template-columns: 1fr; } }
 
+/* the film frames and the lit dancefloor tiles stay dark on the white
+   ground — lit panels reading against paper — so they keep light text. */
+.film, .tile {
+  --ink: #f4ecff;
+  --ink-dim: #9d8fb0;
+}
 .film {
-  border: 1px solid var(--line);
-  background: rgba(13,4,16,.6);
+  border: 1px solid rgba(20,4,12,.14);
+  background: #14040c;
+  color: var(--ink);              /* light: descendants inherit from here */
+  box-shadow: 0 12px 34px rgba(0,0,0,.18);
 }
 .film .crt {
   position: relative;
@@ -443,6 +451,74 @@ h2.roomlabel {
         <span class="t-what">The party doesn't end. It gets interrupted. The next room is called Ongoing.</span>
         <span class="t-sub">you are standing in it</span></div>
 
+    </div>
+  </section>
+
+  <!-- ── THE BALLROOM IS BORN — Crystal LaBeija & the first houses ── -->
+  <section aria-labelledby="ball-title">
+    <h2 class="roomlabel" id="ball-title">the ballroom is born · harlem · 1967 → 1972</h2>
+    <p style="margin-bottom:1.4rem;">
+      <span class="shout-banner pink">THE CATEGORY IS: A WHOLE NEW WORLD</span>
+    </p>
+    <p class="lede">
+      In 1967 a Black drag queen named <em>Crystal LaBeija</em> placed as
+      a runner-up in a Manhattan pageant she knew was rigged for white
+      contestants — and, on camera, <em>refused to be gracious about it.</em>
+      That walk-out is one of the most electric moments in queer film.
+      Five years later she stopped entering other people's pageants and
+      built her own: <em>the House of LaBeija, 1972 — the first "house."</em>
+    </p>
+    <p class="lede" style="margin-top:1.2rem;">
+      A house is a chosen family with a mother at its head, and it is
+      also a team that competes. Out of that single idea grew the entire
+      Harlem ball scene: runways, trophies, and shade, invented by the
+      Black and Latino queer kids the other rooms kept locking out.
+      <em>They were not given a seat at the table, so they built the
+      whole ballroom.</em>
+    </p>
+
+    <div class="ball-floor" aria-label="Ballroom categories">
+      <div class="ball-category">
+        <div class="cat-eyebrow">the category is</div>
+        <div class="cat-name">Realness</div>
+        <div class="cat-note">passing so completely the world never clocks you — survival, scored as art.</div>
+      </div>
+      <div class="ball-category">
+        <div class="cat-eyebrow">the category is</div>
+        <div class="cat-name">Face</div>
+        <div class="cat-note">beauty, bone structure, and the nerve to let it be looked at.</div>
+      </div>
+      <div class="ball-category">
+        <div class="cat-eyebrow">the category is</div>
+        <div class="cat-name">Body</div>
+        <div class="cat-note">the silhouette, the walk, the arrival.</div>
+      </div>
+      <div class="ball-category">
+        <div class="cat-eyebrow">the house of</div>
+        <div class="cat-name">LaBeija</div>
+        <div class="cat-note">est. 1972 · the first house · chosen family as a working technology.</div>
+      </div>
+    </div>
+
+    <p class="ethics-note">
+      The 1967 walk-out is preserved in the documentary <em>The Queen</em>
+      (1968) and the scene has been widely written about; the film and
+      its stills are rights-restricted, so we point you to it rather than
+      lift from it.
+      <a href="https://en.wikipedia.org/wiki/Crystal_LaBeija" rel="noopener">Crystal LaBeija →</a> ·
+      <a href="https://en.wikipedia.org/wiki/House_of_LaBeija" rel="noopener">House of LaBeija →</a>
+    </p>
+
+    <!-- image slot: rights-restricted; drop a licensed file here later -->
+    <div style="display:flex; justify-content:center; margin-top:2rem;">
+      <figure class="flyer-card" style="--tilt:-1.5deg;">
+        <img data-asset="assets/ball/labeija-placeholder.jpg"
+             alt="Placeholder for a licensed image relating to the House of LaBeija or the 1967 pageant."
+             class="halftone">
+        <figcaption class="caption">The House of LaBeija · Harlem, 1972 →</figcaption>
+        <p class="credit">image rights-restricted · link out above ·
+          drop a licensed file at assets/ball/ to press this frame</p>
+      </figure>
     </div>
   </section>
 

@@ -48,7 +48,7 @@ h2.roomlabel {
   max-width: 58ch;
   margin-top: 1.4rem;
 }
-.lede em { color: var(--gold); font-style: normal; }
+.lede em { color: var(--gold-t); font-style: normal; }
 
 /* ── DEPICTED: the reliquary grid ───────────────────────────────── */
 .reliquary {
@@ -61,24 +61,33 @@ h2.roomlabel {
 
 .reliquary .polaroid { max-width: none; }
 
-/* typographic tablets — for ancestors the camera never met */
+/* typographic tablets — for ancestors the camera never met.
+   now paper cards on the white ground, each tinted its own color
+   (the disco-grid patchwork), dark ink for guaranteed contrast. */
 .tablet {
-  border: 1px solid var(--line);
-  background: linear-gradient(165deg, rgba(245,197,24,.05), rgba(13,4,16,.7) 55%);
+  border: 1px solid rgba(20,4,12,.14);
+  background: #fffaf0;
+  color: #14040c;
   padding: 1.6rem 1.6rem 1.4rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,.10);
 }
+/* per-card color: cycle the palette as pale tints so text stays black */
+.reliquary .tablet:nth-of-type(4n+1) { background: #fff2f7; }   /* rose */
+.reliquary .tablet:nth-of-type(4n+2) { background: #f0fbfb; }   /* cyan */
+.reliquary .tablet:nth-of-type(4n+3) { background: #fdf6dc; }   /* gold */
+.reliquary .tablet:nth-of-type(4n)   { background: #f6f0ff; }   /* lavender */
 .tablet .t-era {
   font-family: var(--font-mono);
   font-size: .68rem;
   letter-spacing: .28em;
-  color: var(--gold);
+  color: var(--gold-t);
   text-transform: uppercase;
 }
 .tablet .t-name {
   font-family: var(--font-display);
   font-weight: 400;
   font-size: clamp(1.4rem, 3.4vw, 1.9rem);
-  color: var(--ink);
+  color: #14040c;
   margin: .5rem 0 .8rem;
   line-height: 1.1;
 }
@@ -86,15 +95,15 @@ h2.roomlabel {
   font-family: var(--font-mono);
   font-size: .82rem;
   line-height: 1.95;
-  color: var(--ink-dim);
+  color: #3a2b40;
 }
-.tablet .t-body em { color: var(--rose); font-style: normal; }
-.tablet .t-body a { color: var(--lavender); }
+.tablet .t-body em { color: var(--rose-t); font-style: normal; font-weight: 700; }
+.tablet .t-body a { color: var(--link); }
 .tablet .t-glyph {
   font-family: var(--font-display);
   font-size: 2.6rem;
-  color: var(--gold);
-  opacity: .8;
+  color: var(--gold-t);
+  opacity: .95;
   line-height: 1;
   margin-bottom: .4rem;
 }
@@ -107,9 +116,9 @@ h2.roomlabel {
   color: var(--ink-dim);
   margin-top: 1rem;
   padding-top: .8rem;
-  border-top: 1px dotted rgba(157,143,176,.25);
+  border-top: 1px dotted rgba(20,4,12,.2);
 }
-.t-further a { color: var(--cyan); }
+.t-further a { color: var(--link); }
 
 /* the hero — We'wha gets the widest frame in the room */
 .hero-frame { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.1fr); gap: 2.2rem; align-items: center; }
@@ -118,8 +127,9 @@ h2.roomlabel {
 /* ── THE EMBRACE — original line drawing, noses drifting together ─ */
 .embrace-stage {
   grid-column: 1 / -1;
-  border: 1px solid var(--line);
-  background: rgba(13,4,16,.55);
+  border: 1px solid rgba(20,4,12,.14);
+  background: #14040c;                 /* one deliberate dark block on the wall */
+  color: #f4ecff;
   padding: 2.4rem 1.6rem 1.8rem;
   text-align: center;
 }
@@ -134,11 +144,14 @@ h2.roomlabel {
 .embrace-cap {
   font-family: var(--font-mono);
   font-size: .78rem;
-  color: var(--ink-dim);
+  color: #b9a9c9;                  /* light: this block is dark on purpose */
   line-height: 1.9;
   margin-top: 1.2rem;
 }
 .embrace-cap em { color: var(--gold); font-style: normal; }
+.embrace-stage .t-name { color: #f4ecff; }
+.embrace-stage .t-further { color: #b9a9c9; border-top-color: rgba(201,160,255,.25); }
+.embrace-stage .t-further a { color: var(--cyan); }
 
 /* ── the colonial break — a wall between the registers ──────────── */
 .break-wall {
@@ -578,7 +591,7 @@ h2.roomlabel {
   </section>
 
   <!-- ── THE LIVING — the tense changes. the glam stops here. ───── -->
-  <section class="living" data-lightless aria-labelledby="liv-title">
+  <section class="living" data-lightless data-ground="dark" aria-labelledby="liv-title">
     <h2 class="roomlabel" id="liv-title">the living · present tense</h2>
 
     <p class="register">

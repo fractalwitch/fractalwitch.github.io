@@ -91,7 +91,12 @@
     if (mirror.canvas) return;
     const c = document.createElement('canvas');
     c.setAttribute('aria-hidden', 'true');
-    c.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:38;mix-blend-mode:screen;';
+    // On the white ground the specks must DARKEN to be seen (multiply);
+    // in the dark carve-out rooms they GLOW (screen). 2ω·d physics is
+    // identical either way — only the compositing flips.
+    var darkGround = document.documentElement.dataset.ground === 'dark';
+    c.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:38;mix-blend-mode:'
+      + (darkGround ? 'screen' : 'multiply') + ';';
     document.body.appendChild(c);
     mirror.canvas = c;
     mirror.ctx = c.getContext('2d');
@@ -538,6 +543,11 @@
   REV.boot = function (opts) {
     opts = opts || {};
     applyState();
+
+    // ground: rooms whose darkness is load-bearing pass ground:'dark'.
+    // Set before mirrorInit so the cursor picks the right blend mode.
+    // (theriot also hardcodes data-ground on <html> to avoid any flash.)
+    if (opts.ground) document.documentElement.dataset.ground = opts.ground;
 
     // atmosphere (unless a room opts out — theriot keeps only grain)
     if (!opts.bare) {
