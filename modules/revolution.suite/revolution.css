@@ -10,7 +10,7 @@
    · protects contact    → [data-motion="stilled"] quiets EVERYTHING
    ═══════════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Bungee&family=Josefin+Sans:ital,wght@0,300;0,400;0,600;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bungee&family=DM+Serif+Display:ital@0;1&family=Josefin+Sans:ital,wght@0,300;0,400;0,600;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap');
 
 /* ── TOKENS ─────────────────────────────────────────────────────── */
 :root {
@@ -47,6 +47,7 @@
   --line:        rgba(201,160,255,.18);
 
   --font-display: 'Bungee', 'Impact', sans-serif;         /* fat glam, now a shout */
+  --font-serif:   'DM Serif Display', 'Playfair Display', Georgia, serif; /* the grief/tabloid voice */
   --font-geo:     'Josefin Sans', 'Avant Garde', sans-serif;
   --font-mono:    'Courier Prime', 'Courier New', monospace;
 
@@ -229,6 +230,77 @@ a:hover { color: var(--rose); }
 }
 .shout-banner.pink { background: var(--hotpink); color: var(--void); }
 .shout-banner.green { background: var(--neon-green); color: var(--void); }
+
+/* ── THE GRIEF / TABLOID LAYER ───────────────────────────────────
+   High-contrast, pink-or-white grounds, a dramatic serif set TIGHT.
+   The "RELAX. HOMOSEXUALS ARE EVERYWHERE!" register — where the
+   camp headline and the real grief are the same size and the same
+   font, because on this site they were never separate things.
+
+   The KERNING is the instrument. Slammed shut for dread and force
+   (a tabloid screaming), thrown wide for the neon-sign hush. ──── */
+
+/* a section that inverts the void: paper or hot-pink ground, black
+   ink, no velvet. Used sparingly — the light coming up hard. */
+.contrast-panel {
+  position: relative;
+  z-index: 2;
+  background: var(--paper);
+  color: #14040c;
+  padding: clamp(2.6rem, 8vw, 6rem) clamp(1.4rem, 6vw, 4rem);
+  margin: 8vh 0;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.15), 0 30px 80px rgba(0,0,0,.6);
+}
+.contrast-panel.pink { background: var(--hotpink); color: #14040c; }
+.contrast-panel.pink a { color: #14040c; text-decoration-color: rgba(0,0,0,.4); }
+.contrast-panel.ink  { background: #f4f0ea; color: #0a0a0a; }   /* newsprint white */
+.contrast-panel a { color: #7a1340; }
+
+/* the tabloid headline: heavy serif, negative leading, kerning shut.
+   size it big; let it break where it wants. */
+.tabloid-head {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: clamp(2.4rem, 11vw, 6rem);
+  line-height: .92;
+  letter-spacing: -.03em;
+  text-transform: uppercase;
+  margin: 0 0 .4em;
+}
+.tabloid-head em { font-style: italic; }               /* DM Serif has a real italic */
+.tabloid-sub {
+  font-family: var(--font-serif);
+  font-size: clamp(1.1rem, 3.4vw, 1.9rem);
+  line-height: 1.1;
+  letter-spacing: -.01em;
+}
+.tabloid-byline {
+  font-family: var(--font-mono);
+  font-size: .74rem;
+  letter-spacing: .04em;
+  line-height: 1.8;
+  opacity: .8;
+  margin-top: 1.4rem;
+}
+
+/* KERNING utilities — spacing as pure expression. */
+.kern-tight { letter-spacing: -.04em; }
+.kern-shut  { letter-spacing: -.07em; }               /* dread; letters colliding */
+.kern-loose { letter-spacing: .18em; }
+.kern-wild  { letter-spacing: .5em; }                 /* the neon-sign hush */
+
+/* a serif display heading that stays ON the void (not inverted) —
+   for grief beats that shouldn't flip the whole ground to paper. */
+.serif-cry {
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 8vw, 4.4rem);
+  line-height: .95;
+  letter-spacing: -.02em;
+  color: var(--ink);
+  text-transform: uppercase;
+}
+.serif-cry .hot { color: var(--hotpink); }
+.serif-cry em { font-style: italic; color: var(--rose); }
 
 /* ── LINE-ART FLOURISHES — small hand-drawn-feeling accents ──────
    Naive-flyer punctuation, in the palette. Sparse by design: a

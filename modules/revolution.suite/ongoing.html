@@ -75,6 +75,47 @@ h2.roomlabel {
 }
 .runout .hot { color: var(--hotpink); }
 
+/* the grief panel breaks the max-width to go full-bleed; the light
+   comes up hard here, on purpose. */
+.ong-fullbleed {
+  max-width: none;
+  width: 100%;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding-left: max(1.5rem, calc(50vw - 360px));
+  padding-right: max(1.5rem, calc(50vw - 360px));
+}
+.grief-body {
+  font-family: var(--font-mono);
+  font-size: .9rem;
+  line-height: 2;
+  max-width: 60ch;
+}
+.grief-body em { font-style: normal; font-weight: 700; }
+/* the quilt: a grid of hand-sewn cells, each a name we don't fill in.
+   the emptiness is the point, same as theriot's calendar. */
+.quilt {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 8px;
+  margin-top: 2.4rem;
+}
+.quilt .panel {
+  aspect-ratio: 1;
+  border: 1px solid rgba(20,4,12,.25);
+  display: grid;
+  place-items: center;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: .58rem;
+  line-height: 1.4;
+  color: rgba(20,4,12,.5);
+  padding: .3rem;
+  background:
+    repeating-linear-gradient(45deg, rgba(0,0,0,.03) 0 6px, transparent 6px 12px);
+}
+.quilt .panel.lit { background: var(--hotpink); color: #14040c; border-color: #14040c; }
+
 .exits {
   display: flex;
   justify-content: space-between;
@@ -93,33 +134,104 @@ h2.roomlabel {
 <main class="ong-wrap">
 
   <section aria-labelledby="ong-title">
-    <h2 class="roomlabel" id="ong-title">room six · 1980 → now · still being cut</h2>
+    <h2 class="roomlabel" id="ong-title">room six · 1980 → you are standing in it</h2>
     <h1 class="display chrome-text">Ongoing <span class="flourish flourish-sparkle" aria-hidden="true"></span></h1>
     <p class="lede">
-      This room isn't pressed yet. It will carry ACT UP's
-      <em>Silence = Death</em>, the AIDS Quilt, and the decades since —
-      up to the exact moment you're standing in, reading this
-      sentence. The record doesn't end. It runs out toward the
-      label and hands the needle back to you.
+      The floor was still warm when it started. The same rooms that had
+      just learned to dance became the rooms that learned to bury people
+      — <em>fast, and young, and by the thousands.</em> This is the
+      groove that runs out toward the label, and it does not resolve.
+      It hands you the needle instead.
     </p>
   </section>
 
-  <section aria-label="What's coming">
+  <!-- ── THE GRIEF PANEL — the light comes up hard ──────────────── -->
+  <section class="ong-fullbleed" aria-labelledby="grief-title">
+    <div class="contrast-panel ink">
+      <p class="eyebrow" style="color:#7a1340;" id="grief-title">1981 → · the plague years</p>
+      <h2 class="tabloid-head kern-shut">Silence <em>=</em> Death</h2>
+      <p class="tabloid-sub" style="margin-bottom:1.6rem;">
+        Six men in New York put four words on a poster in 1987. The
+        government had said almost nothing for six years. The words were
+        an accusation, and they were correct.
+      </p>
+      <p class="grief-body">
+        By the time a President said the word <em>AIDS</em> out loud in
+        public, tens of thousands of Americans were already dead. The
+        people the earlier rooms are about — the ones who marched in
+        1970, who danced at the Loft, who sewed the first flag — a
+        generation of them went in a decade. <em>ACT UP</em> turned
+        the grief into a tactic: die-ins on cathedral steps, ashes on
+        the White House lawn, <em>the loudest mourning the country had
+        ever been made to watch.</em>
+      </p>
+      <p class="tabloid-byline">
+        "Silence = Death" is rendered here in type, never as the emblem
+        itself — the poster is the collective work of the Silence=Death
+        Project, and it is theirs. ·
+        <a href="https://actupny.org/" rel="noopener">ACT UP New York →</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ── THE QUILT — every cell a name we do not fill in ────────── -->
+  <section class="ong-fullbleed" aria-labelledby="quilt-title">
+    <div class="contrast-panel pink">
+      <p class="eyebrow" style="color:#14040c;" id="quilt-title">1985 → · the names project</p>
+      <h2 class="tabloid-head kern-tight">A blanket<br>the size of<br>a country.</h2>
+      <p class="grief-body" style="color:#14040c; max-width:56ch;">
+        Someone realized the dead were being denied funerals, and
+        started sewing. Each panel of the AIDS Memorial Quilt is three
+        feet by six — <em>the size of a grave</em> — made by the people
+        left behind. Laid out on the National Mall it became the largest
+        piece of community folk art on Earth, and you still cannot see
+        all of it at once.<br><br>
+        We do not print their names here. <em>We don't have the right,
+        and we won't borrow it.</em> The empty cells are honest; the
+        Quilt itself is where the names live.
+      </p>
+      <div class="quilt" aria-hidden="true">
+        <div class="panel">a name</div><div class="panel lit">a name</div>
+        <div class="panel">a name</div><div class="panel">a name</div>
+        <div class="panel lit">a name</div><div class="panel">a name</div>
+        <div class="panel">a name</div><div class="panel">a name</div>
+        <div class="panel lit">a name</div><div class="panel">a name</div>
+        <div class="panel">a name</div><div class="panel lit">a name</div>
+      </div>
+      <p class="tabloid-byline" style="color:#14040c;">
+        <a href="https://www.aidsmemorial.org/quilt" rel="noopener">The National AIDS Memorial Quilt →</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ── AND THEY DANCED ANYWAY — camp held with the grief ──────── -->
+  <section aria-labelledby="anyway-title">
+    <h2 class="roomlabel" id="anyway-title">and still · the wild expression, embraced</h2>
+    <p class="serif-cry">
+      They kept <em>throwing</em> the party<br>
+      <span class="hot">at the funeral.</span>
+    </p>
     <div class="fragments">
-      <p><span class="yr">1987</span> · ACT UP forms in New York. Silence = Death becomes the decade's loudest sentence.</p>
-      <p><span class="yr">1990s</span> · the AIDS Memorial Quilt spreads across the National Mall, panel by hand-sewn panel.</p>
-      <p><span class="yr">2015</span> · marriage nationwide — a door, not the door.</p>
-      <p><span class="yr">now</span> · you, reading this, on whatever device is in your hand.</p>
+      <p><span class="yr">1987</span> · ACT UP's rage is also a runway — the graphics are gorgeous on purpose. Grief that looks this good is a refusal.</p>
+      <p><span class="yr">1990</span> · the ball houses of Harlem are filmed voguing through the epidemic — chosen family as survival technology, camp as armor.</p>
+      <p><span class="yr">1992</span> · Marsha P. Johnson is pulled from the Hudson. The riot's own get old, or don't. The record keeps almost losing them, and we keep pulling them back.</p>
+      <p><span class="yr">2015 →</span> · a marriage license, a bathroom bill, a banned book, a drag ban, a Pride that is a party and a picket in the same block. <em>The argument is not finished.</em></p>
     </div>
+    <p class="lede" style="margin-top:2.6rem; color:var(--ink);">
+      That is the whole thesis of this record, said one last way: the
+      grief and the glitter were never two things. The mirrorball hangs
+      over the wake. <em>They are the same people, refusing the same
+      erasure, in the same sequins.</em>
+    </p>
+  </section>
 
-    <div class="pressing-plate">
-      STILL IN THE PRESSING PLANT — THIS GROOVE IS BEING CUT.<br>
-      <span class="hot">the honest version of this page is the one that admits it isn't done.</span>
-    </div>
-
+  <!-- ── THE CLOSE — overflow, the loop handed back ─────────────── -->
+  <section aria-label="The close">
     <p class="runout">
-      nothing here is tracking you. sit as long as you like.<br>
-      <span class="hot">the loop completes when you leave and do something.</span>
+      you have reached the run-out groove.<br>
+      there is no more record — <span class="hot">there is only you, and the room you're in.</span><br><br>
+      nothing here tracked you. nothing here kept you. sit as long as you like.<br>
+      <span class="hot">the loop completes when you leave and go do something loving with it.</span>
     </p>
   </section>
 
