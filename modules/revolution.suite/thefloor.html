@@ -56,7 +56,7 @@ h2.roomlabel {
   max-width: 58ch;
   margin-top: 1.4rem;
 }
-.lede em { color: var(--gold); font-style: normal; }
+.lede em { color: var(--gold-t); font-style: normal; }
 
 /* ── THE TWO FILMS — the argument in one wall ───────────────────── */
 .films {
@@ -66,9 +66,17 @@ h2.roomlabel {
 }
 @media (max-width: 760px) { .films { grid-template-columns: 1fr; } }
 
+/* the film frames and the lit dancefloor tiles stay dark on the white
+   ground — lit panels reading against paper — so they keep light text. */
+.film, .tile {
+  --ink: #f4ecff;
+  --ink-dim: #9d8fb0;
+}
 .film {
-  border: 1px solid var(--line);
-  background: rgba(13,4,16,.6);
+  border: 1px solid rgba(20,4,12,.14);
+  background: #14040c;
+  color: var(--ink);              /* light: descendants inherit from here */
+  box-shadow: 0 12px 34px rgba(0,0,0,.18);
 }
 .film .crt {
   position: relative;

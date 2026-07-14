@@ -42,9 +42,23 @@
     var(--gold) 84%, var(--lavender) 100%
   );
 
-  --ink:         #f4ecff;          /* body text on void */
-  --ink-dim:     #9d8fb0;
-  --line:        rgba(201,160,255,.18);
+  /* ── GROUND: the site now lives on white, colored per container.
+     --page is the ground; --ink is "readable foreground on the CURRENT
+     ground." Default = light. Dark contexts flip these below via
+     [data-ground="dark"], so contrast is guaranteed by construction and
+     no text is ever left invisible on its own background. ──────────── */
+  --page:        #f7f4ef;          /* warm white — the universal ground */
+  --ink:         #1a0a14;          /* dark ink, readable on white */
+  --ink-dim:     #6b5d72;          /* muted, still readable on white */
+  --line:        rgba(20,4,12,.16);
+  --link:        #b0176b;          /* deep pink — readable link on white */
+
+  /* text-safe accents: vivid hues wash out on white, so emphasis TEXT
+     uses darkened variants. The vivid tokens above stay for grounds,
+     borders, glows, the flag, and the mirrorball. */
+  --gold-t:      #9a6a00;          /* amber, for gold emphasis on white */
+  --cyan-t:      #0b7d7d;          /* teal, for cyan emphasis on white */
+  --rose-t:      #b0176b;          /* deep rose, for rose emphasis on white */
 
   --font-display: 'Bungee', 'Impact', sans-serif;         /* fat glam, now a shout */
   --font-serif:   'DM Serif Display', 'Playfair Display', Georgia, serif; /* the grief/tabloid voice */
@@ -55,6 +69,22 @@
   --beat: 517ms;                                /* one beat @ 116 BPM */
 }
 
+/* DARK CONTEXT — the carve-outs whose darkness is load-bearing: the
+   riot (holes in the archive), the Living register of ancestors, and
+   anything else that opts in with data-ground="dark" or .on-dark.
+   Flips the ground tokens back to the original velvet-dark values so
+   light text stays readable. */
+[data-ground="dark"], .on-dark {
+  --page:    var(--void);
+  --ink:     #f4ecff;
+  --ink-dim: #9d8fb0;
+  --line:    rgba(201,160,255,.18);
+  --link:    var(--cyan);
+  --gold-t:  var(--gold);
+  --cyan-t:  var(--cyan);
+  --rose-t:  var(--rose);
+}
+
 /* ── RESET / BODY ───────────────────────────────────────────────── */
 * { margin:0; padding:0; box-sizing:border-box; }
 
@@ -62,7 +92,7 @@ html { scroll-behavior:smooth; }
 html[data-motion="stilled"] { scroll-behavior:auto; }
 
 body {
-  background: var(--void);
+  background: var(--page);
   color: var(--ink);
   font-family: var(--font-geo);
   font-weight: 300;
@@ -72,20 +102,23 @@ body {
   overflow-x: hidden;
 }
 
-::selection { background: var(--hotpink); color: var(--void); }
+::selection { background: var(--hotpink); color: #fff; }
 
-a { color: var(--cyan); text-decoration-color: rgba(38,224,224,.4); text-underline-offset: 3px; }
-a:hover { color: var(--rose); }
+a { color: var(--link); text-decoration-color: rgba(176,23,107,.4); text-underline-offset: 3px; }
+a:hover { color: var(--hotpink); }
+[data-ground="dark"] a, .on-dark a { text-decoration-color: rgba(38,224,224,.4); }
+[data-ground="dark"] a:hover, .on-dark a:hover { color: var(--rose); }
 
 :focus-visible {
-  outline: 2px solid var(--gold);
+  outline: 2px solid var(--hotpink);
   outline-offset: 3px;
   border-radius: 2px;
 }
 
 /* ── ATMOSPHERE LAYERS (fixed, pointer-transparent) ─────────────── */
 
-/* CRT scanlines — the Nexus signature, kept quiet */
+/* CRT scanlines — near-silent on the white ground; restored to full
+   presence only inside the dark carve-out rooms. */
 .scanlines {
   position: fixed; inset: 0;
   background: repeating-linear-gradient(
@@ -95,9 +128,10 @@ a:hover { color: var(--rose); }
   );
   pointer-events: none;
   z-index: 40;
-  opacity: .5;
+  opacity: .12;
   animation: scan-drift 9s linear infinite;
 }
+[data-ground="dark"] .scanlines { opacity: .5; }
 @keyframes scan-drift { to { transform: translateY(6px); } }
 
 /* film grain via feTurbulence — real texture, no image request */
@@ -117,13 +151,18 @@ a:hover { color: var(--rose); }
   100% { transform: translate(0,0); }
 }
 
-/* velvet vignette — pulls every room toward its center */
+/* velvet vignette — on white it's the faintest warm edge-shade; inside
+   the dark carve-out rooms it becomes the full center-pulling velvet. */
 .velvet {
   position: fixed; inset: 0;
-  background: radial-gradient(ellipse 90% 70% at 50% 42%,
-              transparent 0%, rgba(2,0,5,.55) 78%, rgba(2,0,5,.92) 100%);
+  background: radial-gradient(ellipse 96% 80% at 50% 42%,
+              transparent 0%, rgba(120,60,20,.05) 82%, rgba(90,40,10,.10) 100%);
   pointer-events: none;
   z-index: 39;
+}
+[data-ground="dark"] .velvet {
+  background: radial-gradient(ellipse 90% 70% at 50% 42%,
+              transparent 0%, rgba(2,0,5,.55) 78%, rgba(2,0,5,.92) 100%);
 }
 
 /* ── TYPE TREATMENTS ────────────────────────────────────────────── */
@@ -175,7 +214,7 @@ a:hover { color: var(--rose); }
   line-height: 1.9;
   letter-spacing: .01em;
 }
-.archive-voice em { color: var(--gold); font-style: normal; }
+.archive-voice em { color: var(--gold-t); font-style: normal; }
 
 /* eyebrow labels */
 .eyebrow {
@@ -480,15 +519,17 @@ a:hover { color: var(--rose); }
 .btn-ghost {
   font-family: var(--font-geo); font-weight: 600;
   font-size: .78rem; letter-spacing: .2em; text-transform: uppercase;
-  color: var(--lavender);
+  color: var(--rose-t);                 /* deep rose on white; lavender on dark */
   background: transparent;
-  border: 1px solid var(--line);
+  border: 1px solid var(--rose-t);
   border-radius: 999px;
   padding: .55rem 1.4rem;
   cursor: pointer;
-  transition: border-color .25s, color .25s;
+  transition: border-color .25s, color .25s, background .25s;
 }
-.btn-ghost:hover { border-color: var(--lavender); color: var(--ink); }
+.btn-ghost:hover { background: var(--hotpink); border-color: var(--hotpink); color: #fff; }
+[data-ground="dark"] .btn-ghost { color: var(--lavender); border-color: var(--line); }
+[data-ground="dark"] .btn-ghost:hover { background: transparent; border-color: var(--lavender); color: var(--ink); }
 
 /* ── FOURTH WALL (the page notices you — rare, earned) ──────────── */
 .fourthwall {
@@ -499,10 +540,10 @@ a:hover { color: var(--rose); }
   max-width: min(80vw, 640px);
   font-family: var(--font-mono);
   font-size: clamp(.85rem, 1.6vw, 1.05rem);
-  color: var(--ink);
+  color: #f4ecff;                 /* stays light: this overlay is always dark */
   text-align: center;
   padding: 1rem 1.4rem;
-  background: rgba(2,0,5,.82);
+  background: rgba(2,0,5,.92);
   border-top: 1px solid rgba(255,46,136,.5);
   border-bottom: 1px solid rgba(38,224,224,.4);
   opacity: 0;
@@ -558,9 +599,9 @@ a:hover { color: var(--rose); }
   z-index: 70;
   width: 46px; height: 46px;
   border-radius: 50%;
-  border: 1px solid var(--line);
-  background: rgba(13,4,16,.85);
-  color: var(--ink-dim);
+  border: 1px solid rgba(20,4,12,.25);
+  background: #14040c;              /* dark chip; icon stays light on it */
+  color: #c9a0ff;
   font-size: 1.1rem;
   cursor: pointer;
   transition: color .3s, border-color .3s, box-shadow .3s;

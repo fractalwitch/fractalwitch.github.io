@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-motion="full">
+<html lang="en" data-motion="full" data-ground="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -458,7 +458,7 @@ html[data-strobe="on"] .leader { animation: leader-flicker 1.1s steps(2) infinit
 <script>
 /* This room keeps only grain — no velvet, no scanlines. Bare walls.
    Scene 'theriot' = the bed is gone; projector idle + mains hum only. */
-REV.boot({ scene: 'theriot', skip: ['velvet', 'scanlines'] });
+REV.boot({ scene: 'theriot', ground: 'dark', skip: ['velvet', 'scanlines'] });
 
 /* ── the calendar: 31 blank cells. Aug 1, 1966 was a Monday. ────── */
 (function () {
