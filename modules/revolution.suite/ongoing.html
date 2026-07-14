@@ -283,6 +283,19 @@ h2.roomlabel {
       </div>
     </div>
 
+    <div style="display:flex; justify-content:center; margin-top:2.4rem;">
+      <figure class="flyer-card" style="--tilt:1.6deg;">
+        <img data-asset="assets/ball/house-of-labeija-flyer.jpg"
+             alt="A photocopied ball flyer: 'Chris & Francisco & The House of LaBeija presents Labeija Sunshine IV', with three figures posing below the text."
+             class="halftone">
+        <figcaption class="caption">Chris &amp; Francisco &amp; the House of
+          LaBeija present <em>Labeija Sunshine IV</em> — a real ball flyer,
+          the scene's own paper.</figcaption>
+        <p class="credit">image provided · community ephemera ·
+          verify source before wider use</p>
+      </figure>
+    </div>
+
     <p class="serif-cry" style="margin-top:2.6rem;">
       So many of them<br><span class="hot">did not get old.</span>
     </p>
@@ -296,8 +309,10 @@ h2.roomlabel {
     </p>
 
     <p class="ethics-note">
-      Ball photography and the <em>Paris Is Burning</em> stills are
-      rights-restricted; we link out rather than lift.
+      The flyer above is the scene's own paper, kept and shared by the
+      community. The <em>Paris Is Burning</em> stills and most ball
+      photography are rights-restricted, so for those we link out rather
+      than lift.
       <a href="https://en.wikipedia.org/wiki/Paris_Is_Burning_(film)" rel="noopener">Paris Is Burning (1990) →</a> ·
       <a href="https://en.wikipedia.org/wiki/Ball_culture" rel="noopener">Ball culture →</a> ·
       <a href="https://en.wikipedia.org/wiki/House_of_Xtravaganza" rel="noopener">House of Xtravaganza →</a>
@@ -324,6 +339,22 @@ h2.roomlabel {
 <script src="revolution.js?v=13"></script>
 <script>
 REV.boot({ scene: 'ongoing', room: 'ongoing' });
+
+/* asset slots — graceful until archive files land, same pattern as the
+   other rooms (this room only got images once the ballroom arrived). */
+(function () {
+  document.querySelectorAll('img[data-asset]').forEach(function (img) {
+    img.src = img.dataset.asset;
+    img.addEventListener('error', function () {
+      const slot = document.createElement('div');
+      slot.className = 'asset-slot';
+      slot.style.cssText = 'aspect-ratio:4/3;background:repeating-linear-gradient(45deg,#efe8db 0 12px,#e6ddcc 12px 24px);display:grid;place-items:center;text-align:center;font-family:var(--font-mono);font-size:.62rem;line-height:1.7;color:#6f5f80;padding:1rem;';
+      slot.innerHTML = 'AWAITING PRESSING<br>drop the archive file at<br><strong>'
+        + img.dataset.asset + '</strong>';
+      img.replaceWith(slot);
+    }, { once: true });
+  });
+})();
 </script>
 </body>
 </html>

@@ -120,6 +120,24 @@ h2.roomlabel {
 }
 .t-further a { color: var(--link); }
 
+/* an artifact photo set into a tablet — the object the text is about */
+.tablet-img {
+  margin: 0 0 1.1rem;
+  border: 1px solid rgba(20,4,12,.2);
+  background: #14040c;
+  box-shadow: 0 8px 22px rgba(0,0,0,.18);
+}
+.tablet-img img { display: block; width: 100%; height: auto; }
+.tablet-img figcaption {
+  font-family: var(--font-mono);
+  font-size: .6rem;
+  line-height: 1.5;
+  color: #6f5f80;
+  background: #fffaf0;
+  padding: .5rem .6rem;
+}
+.tablet-img figcaption a { color: var(--link); }
+
 /* the hero — We'wha gets the widest frame in the room */
 .hero-frame { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.1fr); gap: 2.2rem; align-items: center; }
 @media (max-width: 760px) { .hero-frame { grid-template-columns: 1fr; } }
@@ -482,6 +500,12 @@ h2.roomlabel {
 
       <!-- Ishtar's Proposition -->
       <div class="tablet">
+        <figure class="tablet-img">
+          <img data-asset="assets/commons/gilgamesh-tablet.webp"
+               alt="A fragmentary Babylonian clay tablet densely covered in cuneiform script, from the Epic of Gilgamesh.">
+          <figcaption>The Epic of Gilgamesh, in cuneiform · image provided ·
+            verify source &amp; license before ship</figcaption>
+        </figure>
         <div class="t-glyph">𒀭</div>
         <div class="t-era">mesopotamia · epic of gilgamesh, tablet vi · composed c. 2100 – 1200 BCE</div>
         <h3 class="t-name" id="ishtars-proposition">Ishtar's Proposition</h3>
@@ -507,6 +531,12 @@ h2.roomlabel {
 
       <!-- Egyptian New Kingdom love poetry -->
       <div class="tablet">
+        <figure class="tablet-img">
+          <img data-asset="assets/commons/egyptian-love-papyrus.jpg"
+               alt="A fragmentary ancient Egyptian papyrus covered in black hieratic script with some red rubrics.">
+          <figcaption>New Kingdom hieratic on papyrus — the hand these poems
+            survive in · image provided · verify source &amp; license before ship</figcaption>
+        </figure>
         <div class="t-era">egypt · new kingdom · c. 1300 BCE</div>
         <h3 class="t-name" id="the-heart-astray">The Heart Astray</h3>
         <p class="t-body">
