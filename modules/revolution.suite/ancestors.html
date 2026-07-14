@@ -76,6 +76,7 @@ h2.roomlabel {
 }
 .tablet .t-name {
   font-family: var(--font-display);
+  font-weight: 400;
   font-size: clamp(1.4rem, 3.4vw, 1.9rem);
   color: var(--ink);
   margin: .5rem 0 .8rem;
@@ -97,6 +98,18 @@ h2.roomlabel {
   line-height: 1;
   margin-bottom: .4rem;
 }
+/* further reading — a playful, low-stakes citation trail. these point
+   at general encyclopedic context, not at people who can be extracted
+   from; that line is drawn at THE LIVING, below. */
+.t-further {
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  color: var(--ink-dim);
+  margin-top: 1rem;
+  padding-top: .8rem;
+  border-top: 1px dotted rgba(157,143,176,.25);
+}
+.t-further a { color: var(--cyan); }
 
 /* the hero — We'wha gets the widest frame in the room */
 .hero-frame { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.1fr); gap: 2.2rem; align-items: center; }
@@ -168,6 +181,7 @@ h2.roomlabel {
 }
 .names .n-word {
   font-family: var(--font-display);
+  font-weight: 400;
   font-size: clamp(1.7rem, 5vw, 2.6rem);
   color: var(--ink);
   line-height: 1.1;
@@ -252,7 +266,7 @@ h2.roomlabel {
         </figure>
         <div class="tablet">
           <div class="t-era">zuni · 1849 – 1896</div>
-          <div class="t-name">We'wha, lhamana</div>
+          <h3 class="t-name" id="wewha">We'wha, lhamana</h3>
           <p class="t-body">
             Weaver, potter, diplomat. In 1886 We'wha spent six months in
             Washington, met President Cleveland, and was celebrated by
@@ -264,6 +278,8 @@ h2.roomlabel {
             point — the record could hold the picture and still not
             hold the person.
           </p>
+          <p class="t-further">keep reading →
+            <a href="https://en.wikipedia.org/wiki/We%27wha" rel="noopener">Wikipedia: We'wha</a></p>
         </div>
       </div>
 
@@ -283,13 +299,16 @@ h2.roomlabel {
           <!-- the meeting point -->
           <circle cx="200" cy="118" r="3" fill="#f5c518" opacity=".9"/>
         </svg>
+        <h3 class="t-name" id="niankhkhnum-khnumhotep" style="text-align:center;">Niankhkhnum &amp; Khnumhotep</h3>
         <p class="embrace-cap">
-          <em>Niankhkhnum &amp; Khnumhotep · Saqqara, c. 2400 BCE.</em><br>
+          <em>Saqqara, c. 2400 BCE.</em><br>
           Two men, royal manicurists, buried in one tomb — painted
           nose-to-nose, <em>the most intimate pose the Egyptian canon had,
           the one reserved for spouses.</em> Forty-four centuries old, and
           it is still the oldest known depiction of its kind.
         </p>
+        <p class="t-further" style="text-align:center; border-top:0;">keep reading →
+          <a href="https://en.wikipedia.org/wiki/Niankhkhnum_and_Khnumhotep" rel="noopener">Wikipedia: Niankhkhnum and Khnumhotep</a></p>
         <!-- interim hotlink via Special:FilePath; manifest still flags this
              ⚠️ verify per-file license before ship — warning kept below -->
         <figure class="polaroid" style="--tilt:1.4deg; margin: 2rem auto 0;">
@@ -305,7 +324,7 @@ h2.roomlabel {
       <!-- Sappho -->
       <div class="tablet">
         <div class="t-era">lesbos · c. 630 – 570 BCE</div>
-        <div class="t-name">Sappho</div>
+        <h3 class="t-name" id="sappho">Sappho</h3>
         <p class="t-body">
           A woman writing desire for women so well that antiquity
           allegedly called her <em>the tenth Muse</em> — and two of our
@@ -316,13 +335,15 @@ h2.roomlabel {
           time."</em><br><br>
           She was right.
         </p>
+        <p class="t-further">keep reading →
+          <a href="https://en.wikipedia.org/wiki/Sappho" rel="noopener">Wikipedia: Sappho</a></p>
       </div>
 
       <!-- The cut sleeve -->
       <div class="tablet">
         <div class="t-glyph">断袖</div>
         <div class="t-era">han dynasty · c. 6 BCE</div>
-        <div class="t-name">The Cut Sleeve</div>
+        <h3 class="t-name" id="cut-sleeve">The Cut Sleeve</h3>
         <p class="t-body">
           Emperor Ai of Han woke with his beloved, Dong Xian, asleep on
           the sleeve of his robe. Rather than wake him, <em>the emperor
@@ -331,12 +352,15 @@ h2.roomlabel {
           literature said it — tender, imperial, unremarkable. The
           scandal came much later, and from elsewhere.
         </p>
+        <p class="t-further">keep reading →
+          <a href="https://en.wikipedia.org/wiki/Cut_sleeve" rel="noopener">Wikipedia: Cut sleeve</a> ·
+          <a href="https://en.wikipedia.org/wiki/Emperor_Ai_of_Han" rel="noopener">Emperor Ai of Han</a></p>
       </div>
 
       <!-- The galli -->
       <div class="tablet">
         <div class="t-era">rome &amp; anatolia · from c. 200 BCE</div>
-        <div class="t-name">The Galli of Cybele</div>
+        <h3 class="t-name" id="galli-of-cybele">The Galli of Cybele</h3>
         <p class="t-body">
           Priestesses of the Great Mother who left manhood behind —
           dress, hair, name, body — and served openly in the streets of
@@ -344,12 +368,15 @@ h2.roomlabel {
           <em>the goddess kept hiring.</em> Gender-crossing as a sacred
           vocation, on the public payroll of the ancient world.
         </p>
+        <p class="t-further">keep reading →
+          <a href="https://en.wikipedia.org/wiki/Gallus_(priest)" rel="noopener">Wikipedia: Gallus (priest)</a> ·
+          <a href="https://en.wikipedia.org/wiki/Cybele" rel="noopener">Cybele</a></p>
       </div>
 
       <!-- Khajuraho + tritiya-prakriti -->
       <div class="tablet">
         <div class="t-era">india · c. 300 CE &amp; 950 – 1050 CE</div>
-        <div class="t-name">Third Nature, Sacred Walls</div>
+        <h3 class="t-name" id="third-nature-sacred-walls">Third Nature, Sacred Walls</h3>
         <p class="t-body">
           The Kama Sutra names <em>tritiya-prakriti</em> — a third
           nature — and discusses their pleasures without alarm. Seven
@@ -358,10 +385,14 @@ h2.roomlabel {
           <em>on the outside of sacred buildings,</em> facing the sun.
           Not hidden. Load-bearing.
         </p>
+        <p class="t-further">keep reading →
+          <a href="https://en.wikipedia.org/wiki/Khajuraho_Group_of_Monuments" rel="noopener">Wikipedia: Khajuraho Group of Monuments</a> ·
+          <a href="https://en.wikipedia.org/wiki/Kama_Sutra" rel="noopener">Kama Sutra</a></p>
       </div>
 
       <!-- Wakashu: two Met prints, two slots -->
       <figure class="polaroid" style="--tilt:1.6deg;">
+        <h3 class="visually-hidden" id="wakashu-897105">Wakashu with two swords</h3>
         <img data-asset="assets/met/wakashu-897105.jpg"
              alt="Edo-period print: a wakashu — a male youth — elegantly dressed, wearing two swords."
              class="halftone">
@@ -370,10 +401,12 @@ h2.roomlabel {
           sexual liaisons were not stigmatized."</figcaption>
         <p class="credit">The Metropolitan Museum of Art,
           <a href="https://www.metmuseum.org/art/collection/search/897105" rel="noopener">Open Access (897105)</a> ·
-          CC0 · verify object flag</p>
+          CC0 · verify object flag ·
+          <a href="https://en.wikipedia.org/wiki/Wakash%C5%AB" rel="noopener">keep reading: Wakashū</a></p>
       </figure>
 
       <figure class="polaroid" style="--tilt:-1.2deg;">
+        <h3 class="visually-hidden" id="wakashu-845151">Wakashu dressed as a stylish woman</h3>
         <img data-asset="assets/met/wakashu-845151.jpg"
              alt="Edo-period print of a wakashu dressed as a stylish woman; only the forehead hairstyle reveals the difference."
              class="halftone">
@@ -383,11 +416,13 @@ h2.roomlabel {
           where frank things live.</figcaption>
         <p class="credit">The Metropolitan Museum of Art,
           <a href="https://www.metmuseum.org/art/collection/search/845151" rel="noopener">Open Access (845151)</a> ·
-          CC0 · verify object flag</p>
+          CC0 · verify object flag ·
+          <a href="https://en.wikipedia.org/wiki/Nanshoku" rel="noopener">keep reading: nanshoku</a></p>
       </figure>
 
       <!-- Wakashu: two more Met prints, per ASSET_MANIFEST_ROUND2 §3 -->
       <figure class="polaroid" style="--tilt:-1.6deg;">
+        <h3 class="visually-hidden" id="wakashu-816213">Samurai and Wakashu</h3>
         <img data-asset="assets/met/wakashu-816213.jpg"
              alt="Ukiyo-e print by Miyagawa Isshō: an older samurai grasping the sleeve of a wakashu youth, parodying an armor-pulling scene from the Soga Brothers plays."
              class="halftone">
@@ -396,10 +431,12 @@ h2.roomlabel {
           a joke about a vendetta.</figcaption>
         <p class="credit">The Metropolitan Museum of Art,
           <a href="https://www.metmuseum.org/art/collection/search/816213" rel="noopener">Open Access (816213)</a> ·
-          CC0 · verify object flag</p>
+          CC0 · verify object flag ·
+          <a href="https://en.wikipedia.org/wiki/Wakash%C5%AB" rel="noopener">keep reading: Wakashū</a></p>
       </figure>
 
       <figure class="polaroid" style="--tilt:1.1deg;">
+        <h3 class="visually-hidden" id="wakashu-835847">Courtesan with a Young Man beside a Screen</h3>
         <img data-asset="assets/met/wakashu-835847.jpg"
              alt="Ukiyo-e print by Hishikawa Moronobu: a courtesan with a young wakashu man beside a folding screen, from a fourteen-print makura-e set."
              class="halftone">
@@ -408,7 +445,8 @@ h2.roomlabel {
           hints.</figcaption>
         <p class="credit">The Metropolitan Museum of Art,
           <a href="https://www.metmuseum.org/art/collection/search/835847" rel="noopener">Open Access (835847)</a> ·
-          CC0 · verify object flag</p>
+          CC0 · verify object flag ·
+          <a href="https://en.wikipedia.org/wiki/Nanshoku" rel="noopener">keep reading: nanshoku</a></p>
       </figure>
 
     </div>
@@ -443,7 +481,7 @@ h2.roomlabel {
 
     <ul class="names">
       <li>
-        <div class="n-word">bissu · calalai · calabai</div>
+        <h3 class="n-word" id="bissu-calalai-calabai">bissu · calalai · calabai</h3>
         <p class="n-who">
           Three of the <em>five</em> genders the Bugis of Sulawesi have
           named for at least six centuries — alongside makkunrai and
@@ -454,7 +492,7 @@ h2.roomlabel {
         </p>
       </li>
       <li>
-        <div class="n-word">hijra</div>
+        <h3 class="n-word" id="hijra">hijra</h3>
         <p class="n-who">
           South Asia's oldest continuous gender-diverse communities —
           blessing births and weddings for centuries, criminalized
@@ -465,7 +503,7 @@ h2.roomlabel {
         </p>
       </li>
       <li>
-        <div class="n-word">fa'afafine &amp; fa'afatama</div>
+        <h3 class="n-word" id="faafafine-faafatama">fa'afafine &amp; fa'afatama</h3>
         <p class="n-who">
           Samoa. Raised in the manner of women, in the manner of men —
           woven into family structure, not exiled from it.
@@ -473,7 +511,7 @@ h2.roomlabel {
         <p class="n-door"><a href="https://www.facebook.com/SamoaFaafafineAssociation/" rel="noopener">Samoa Fa'afafine Association →</a></p>
       </li>
       <li>
-        <div class="n-word">māhū</div>
+        <h3 class="n-word" id="mahu">māhū</h3>
         <p class="n-who">
           Hawai'i and Tahiti. Keepers of hula, chant, and genealogy —
           a role missionaries tried to shame out of existence and
@@ -481,14 +519,14 @@ h2.roomlabel {
         </p>
       </li>
       <li>
-        <div class="n-word">muxe</div>
+        <h3 class="n-word" id="muxe">muxe</h3>
         <p class="n-who">
           Juchitán, Oaxaca. Zapotec communities where a third way of
           being has a name, a wardrobe, and a place at every fiesta.
         </p>
       </li>
       <li>
-        <div class="n-word">burrnesha</div>
+        <h3 class="n-word" id="burrnesha">burrnesha</h3>
         <p class="n-who">
           The Albanian highlands. Sworn to live as men under the old
           mountain law — the last of them are elders now.
@@ -498,7 +536,7 @@ h2.roomlabel {
         </p>
       </li>
       <li>
-        <div class="n-word">Two-Spirit</div>
+        <h3 class="n-word" id="two-spirit">Two-Spirit</h3>
         <p class="n-who">
           The word is young — chosen in 1990, in Winnipeg, at a
           gathering of Indigenous people who wanted an umbrella of
