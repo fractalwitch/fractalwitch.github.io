@@ -270,6 +270,48 @@ a:hover { color: var(--hotpink); }
 .shout-banner.pink { background: var(--hotpink); color: var(--void); }
 .shout-banner.green { background: var(--neon-green); color: var(--void); }
 
+/* ── BALLROOM CATEGORY PLACARDS — "the category is: REALNESS" ─────
+   The caller's shout made typographic. Each placard is a saturated
+   block with a hard offset shadow (a trophy card slammed on a table),
+   the category name in the display face, huge and tight. Dark ink on
+   bright grounds — readable by construction. ──────────────────────── */
+.ball-floor {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 16px;
+  margin: 2.6rem 0;
+}
+.ball-category {
+  position: relative;
+  background: var(--hotpink);
+  color: #14040c;
+  border: 3px solid #14040c;
+  padding: 1.3rem 1.1rem 1.15rem;
+  text-align: center;
+  box-shadow: 7px 7px 0 rgba(20,4,12,.85);
+}
+.ball-category .cat-eyebrow {
+  font-family: var(--font-mono);
+  font-size: .6rem; letter-spacing: .28em; text-transform: uppercase;
+  opacity: .85;
+}
+.ball-category .cat-name {
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 3.6vw, 1.9rem);
+  line-height: .95; letter-spacing: -.02em; text-transform: uppercase;
+  margin-top: .4rem;
+}
+.ball-category .cat-note {
+  font-family: var(--font-mono);
+  font-size: .64rem; line-height: 1.6; margin-top: .6rem;
+}
+/* cycle the palette so the floor reads as a full ball */
+.ball-floor .ball-category:nth-child(5n+1) { background: var(--hotpink); }
+.ball-floor .ball-category:nth-child(5n+2) { background: var(--cyan); }
+.ball-floor .ball-category:nth-child(5n+3) { background: var(--gold); }
+.ball-floor .ball-category:nth-child(5n+4) { background: var(--lavender); }
+.ball-floor .ball-category:nth-child(5n)   { background: var(--neon-green); }
+
 /* ── THE GRIEF / TABLOID LAYER ───────────────────────────────────
    High-contrast, pink-or-white grounds, a dramatic serif set TIGHT.
    The "RELAX. HOMOSEXUALS ARE EVERYWHERE!" register — where the
