@@ -30,7 +30,8 @@
     depth: 'suggestive',     // 'suggestive' | 'frank'
     strobe: false,           // OFF by default. always.
     motion: 'full',          // 'full' | 'stilled'
-    audio: false             // opt-in, never assumed
+    audio: false,            // opt-in, never assumed
+    theme: 'light'           // 'light' | 'dark' — the corner light switch
   };
 
   function loadState() {
@@ -57,6 +58,15 @@
     doc.dataset.motion = (REV.state.motion === 'stilled' || osReduced) ? 'stilled' : 'full';
     doc.dataset.depth = REV.state.depth;
     doc.dataset.strobe = REV.state.strobe ? 'on' : 'off';
+    // the global light switch. Never overrides a room that hard-codes its
+    // own dark ground (theriot) — that lives on data-ground, not data-theme.
+    if (REV.state.theme === 'dark') doc.dataset.theme = 'disco';
+    else doc.removeAttribute('data-theme');
+    // keep the mirrorball's blend in step with the ground, live on toggle
+    if (mirror && mirror.canvas) {
+      var dk = doc.dataset.ground === 'dark' || doc.dataset.theme === 'disco';
+      mirror.canvas.style.mixBlendMode = dk ? 'screen' : 'multiply';
+    }
   }
   REV.stilled = function () { return document.documentElement.dataset.motion === 'stilled'; };
 
@@ -94,7 +104,8 @@
     // On the white ground the specks must DARKEN to be seen (multiply);
     // in the dark carve-out rooms they GLOW (screen). 2ω·d physics is
     // identical either way — only the compositing flips.
-    var darkGround = document.documentElement.dataset.ground === 'dark';
+    var ds = document.documentElement.dataset;
+    var darkGround = ds.ground === 'dark' || ds.theme === 'disco';
     c.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:38;mix-blend-mode:'
       + (darkGround ? 'screen' : 'multiply') + ';';
     document.body.appendChild(c);
@@ -588,6 +599,26 @@
         addEventListener('pointerdown', once);
         addEventListener('keydown', once);
       }
+    }
+
+    // the light switch — flip the whole site light ↔ disco-dark.
+    // Skipped in rooms that hard-code their own dark ground (theriot):
+    // a light switch there would be a lie, since the room stays dark.
+    var forcedDark = document.documentElement.dataset.ground === 'dark';
+    if (!opts.noLightSwitch && !forcedDark) {
+      const ls = document.createElement('button');
+      ls.className = 'light-switch';
+      ls.setAttribute('role', 'switch');
+      ls.setAttribute('aria-checked', String(REV.state.theme === 'dark'));
+      ls.setAttribute('aria-label', 'Light or disco-dark. Your choice lives on this device only.');
+      ls.innerHTML = '<span class="ls-plate" aria-hidden="true"><span class="ls-knob"></span></span>';
+      ls.addEventListener('click', function () {
+        const dark = REV.state.theme !== 'dark';
+        REV.set('theme', dark ? 'dark' : 'light');
+        ls.setAttribute('aria-checked', String(dark));
+        REV.audio.crackle(0.18);          // a soft physical "clack" if sound is on
+      });
+      document.body.appendChild(ls);
     }
 
     if (opts.scene) setScene(opts.scene);
