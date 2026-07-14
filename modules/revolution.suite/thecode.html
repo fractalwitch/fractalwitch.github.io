@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en" data-motion="full">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Code · the closet as technology · 1867–1965</title>
+<meta name="description" content="Still in the pressing plant — Harlem, Hirschfeld's Institut, and the closet as a technology, 1867–1965.">
+<link rel="stylesheet" href="revolution.css">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   THE CODE — not built yet. This is the label on an unpressed
+   record: honest about what's coming, honest that it isn't here.
+   Same grammar as the finished rooms, none of the glam yet.
+   ═══════════════════════════════════════════════════════════════ */
+
+.code-wrap {
+  position: relative;
+  z-index: 2;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 14vh 1.5rem 12vh;
+}
+section { margin-bottom: 10vh; }
+
+h1 { font-size: clamp(2.4rem, 7vw, 4.2rem); }
+h2.roomlabel {
+  font-family: var(--font-geo);
+  font-weight: 600;
+  font-size: .8rem;
+  letter-spacing: .4em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-bottom: 1.4rem;
+}
+.lede {
+  font-size: 1.02rem;
+  max-width: 58ch;
+  margin-top: 1.4rem;
+  color: var(--ink-dim);
+}
+.lede em { color: var(--gold); font-style: normal; }
+
+.fragments {
+  display: flex; flex-direction: column; gap: 1rem;
+  border-left: 1px solid rgba(157,143,176,.25);
+  padding-left: 1.4rem;
+  font-family: var(--font-mono);
+  font-size: .82rem;
+  color: var(--ink-dim);
+  line-height: 1.85;
+}
+.fragments .yr { color: var(--gold); }
+
+.pressing-plate {
+  margin-top: 3rem;
+  border: 1px dashed rgba(157,143,176,.35);
+  padding: 2.4rem 1.6rem;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  line-height: 2;
+  color: var(--ink-dim);
+}
+.pressing-plate .hot { color: var(--hotpink); }
+
+.exits {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.4rem;
+  flex-wrap: wrap;
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  margin-top: 2rem;
+}
+.exits a { color: var(--ink-dim); text-decoration: none; }
+.exits a:hover { color: var(--hotpink); }
+</style>
+</head>
+<body>
+
+<main class="code-wrap">
+
+  <section aria-labelledby="code-title">
+    <h2 class="roomlabel" id="code-title">room two · 1867 – 1965 · still being cut</h2>
+    <h1 class="display chrome-text">The Code</h1>
+    <p class="lede">
+      This room isn't pressed yet. It will hold the closet as a
+      <em>technology</em> — a system people built to survive inside,
+      not a shame they invented. <em>1869: the first drag ball in
+      United States history, a hundred years before Stonewall.</em>
+      Magnus Hirschfeld's Institut für Sexualwissenschaft, and the
+      night the Nazis emptied its library into the street. Ma Rainey
+      selling her own scandal back to the public. Gladys Bentley,
+      out and loud, then not.
+    </p>
+  </section>
+
+  <section aria-label="What's coming">
+    <div class="fragments">
+      <p><span class="yr">1869</span> · Hamilton Lodge Ball, Harlem — the first drag ball in U.S. history. By its 1920s peak, up to 8,000 dancers and spectators.</p>
+      <p><span class="yr">1919</span> · Magnus Hirschfeld opens the Institut für Sexualwissenschaft, Berlin — the world's first research institute of its kind.</p>
+      <p><span class="yr">1928</span> · Ma Rainey's "Prove It On Me Blues" — a record label sells queerness as scandal, and Rainey uses their own ad copy to say it out loud.</p>
+      <p><span class="yr">May 6 1933</span> · Nazi students burn Hirschfeld's library — roughly 10,000 books, most of them irreplaceable.</p>
+      <p><span class="yr">1952</span> · Gladys Bentley, "I Am Woman Again" — the Lavender Scare's shape, in one woman's own words.</p>
+    </div>
+
+    <div class="pressing-plate">
+      STILL IN THE PRESSING PLANT — THIS GROOVE IS BEING CUT.<br>
+      <span class="hot">the honest version of this page is the one that admits it isn't done.</span><br>
+      the rest of the record plays in the meantime →
+    </div>
+  </section>
+
+  <section class="exits" aria-label="Exits">
+    <a href="ancestors.html">← the ancestors · 2400 BCE → 1866</a>
+    <a href="revolution.html">⏏ lift the needle</a>
+    <a href="theriot.html">the riot · 1966–1969 →</a>
+  </section>
+
+</main>
+
+<script src="revolution.js"></script>
+<script>
+REV.boot({ scene: 'thecode', room: 'thecode' });
+</script>
+</body>
+</html>

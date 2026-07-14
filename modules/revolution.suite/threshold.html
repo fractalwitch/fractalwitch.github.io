@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en" data-motion="full">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Threshold · The Human Sexual Revolution (Ongoing)</title>
+<meta name="description" content="A consent gate for an interactive history of the sexual revolution. This is a door, not a wall.">
+<link rel="stylesheet" href="revolution.css">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   THRESHOLD — the first artwork, not a legal chore.
+   EMOTIONAL TARGET: being carded by someone who winks at you.
+   Crossing should feel like a small ceremony, ~20 seconds long.
+   ═══════════════════════════════════════════════════════════════ */
+
+.gate {
+  max-width: 620px;
+  width: 100%;
+}
+
+/* the ball hangs off-axis, slow, patient. it was here before you. */
+.ball-anchor {
+  position: fixed;
+  top: 9vh; right: 12vw;
+  width: 120px; height: 120px;
+  z-index: 1;
+  pointer-events: none;
+}
+.ball {
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255,255,255,.95), rgba(207,217,230,.5) 30%, rgba(90,109,130,.25) 60%, rgba(2,0,5,.1) 100%),
+    conic-gradient(from 0deg,
+      #8fa3b8 0deg 12deg, #d9e4f0 12deg 24deg, #5a6d82 24deg 36deg,
+      #eef4fb 36deg 48deg, #93a7bc 48deg 60deg, #f8fbff 60deg 72deg,
+      #8fa3b8 72deg 84deg, #cfd9e6 84deg 96deg, #5a6d82 96deg 108deg,
+      #eef4fb 108deg 120deg, #93a7bc 120deg 132deg, #f8fbff 132deg 144deg,
+      #8fa3b8 144deg 156deg, #cfd9e6 156deg 168deg, #5a6d82 168deg 180deg,
+      #eef4fb 180deg 192deg, #93a7bc 192deg 204deg, #f8fbff 204deg 216deg,
+      #8fa3b8 216deg 228deg, #cfd9e6 228deg 240deg, #5a6d82 240deg 252deg,
+      #eef4fb 252deg 264deg, #93a7bc 264deg 276deg, #f8fbff 276deg 288deg,
+      #8fa3b8 288deg 300deg, #cfd9e6 300deg 312deg, #5a6d82 312deg 324deg,
+      #eef4fb 324deg 336deg, #93a7bc 336deg 348deg, #f8fbff 348deg 360deg);
+  animation: ball-turn 24s linear infinite;
+  box-shadow: 0 0 60px rgba(201,160,255,.25), 0 24px 60px rgba(0,0,0,.6);
+}
+@keyframes ball-turn { to { transform: rotate(360deg); } }
+.ball-anchor::before {
+  /* the hanging wire — it's a real object in a real room */
+  content:'';
+  position:absolute; left:50%; bottom:100%;
+  width:1px; height:9vh;
+  background: linear-gradient(180deg, transparent, rgba(201,160,255,.35));
+}
+
+h1 {
+  font-size: clamp(2.2rem, 6.5vw, 3.8rem);
+  margin-bottom: .4rem;
+}
+.gate .sub {
+  font-family: var(--font-geo);
+  font-weight: 300;
+  color: var(--ink-dim);
+  font-size: 1.02rem;
+  max-width: 46ch;
+  margin-bottom: 3rem;
+}
+
+/* the manifesto — Courier, quiet, load-bearing */
+.manifesto {
+  margin: 2.6rem 0 2.2rem;
+  padding: 1.4rem 1.6rem;
+  border-left: 2px solid var(--hotpink);
+  background: linear-gradient(90deg, rgba(255,46,136,.06), transparent 70%);
+}
+.manifesto p { margin: 0; }
+
+/* strobe preview swatch */
+.strobe-preview {
+  flex: none;
+  width: 34px; height: 34px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  background: var(--void-warm);
+}
+.strobe-preview.flashing { animation: strobe-demo 1s steps(2) 1; }
+@keyframes strobe-demo {
+  0%, 40% { background: #fff; }
+  20%, 60% { background: var(--void-warm); }
+  80% { background: #fff; }
+  100% { background: var(--void-warm); }
+}
+
+.enter-row {
+  display: flex;
+  align-items: center;
+  gap: 1.6rem;
+  flex-wrap: wrap;
+  margin-top: 2.8rem;
+}
+.forget {
+  font-family: var(--font-mono);
+  font-size: .74rem;
+  color: var(--ink-dim);
+  background: none; border: none;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+.forget:hover { color: var(--rose); }
+
+.precedent {
+  margin-top: 3.4rem;
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  color: var(--ink-dim);
+  max-width: 52ch;
+  line-height: 1.8;
+}
+.precedent a { color: var(--ink-dim); }
+
+@media (max-width: 700px) {
+  .ball-anchor { width: 74px; height: 74px; right: 6vw; top: 6vh; }
+  .dial-row { flex-direction: column; align-items: flex-start; gap:.8rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="ball-anchor" aria-hidden="true"><div class="ball"></div></div>
+
+<main class="center-stage">
+  <div class="gate">
+    <p class="eyebrow">the human sexual revolution (ongoing)</p>
+    <h1 class="display chrome-text">This is a door,<br>not a wall.</h1>
+    <p class="sub">
+      Six rooms of history are open to everyone, no questions asked.
+      One room — the Deviance Deck — is frank, anatomical, and adult.
+      Tune the space before you come in. It takes twenty seconds.
+    </p>
+
+    <!-- ── THE FOUR DIALS ─────────────────────────────────────── -->
+    <div class="dials">
+
+      <div class="dial-row">
+        <div class="dial-label">
+          <strong>I am eighteen or older</strong>
+          <span>Only guards the Deck. Every history room stays open regardless.</span>
+        </div>
+        <button class="dial" id="dial-adult" role="switch" aria-checked="false"
+                aria-label="I am eighteen or older"></button>
+      </div>
+
+      <div class="dial-row">
+        <div class="dial-label">
+          <strong>Content depth</strong>
+          <span>How plainly the Deck speaks. You can change this any time.</span>
+        </div>
+        <div class="selector" role="group" aria-label="Content depth">
+          <button id="depth-sugg" aria-pressed="true">Suggestive</button>
+          <button id="depth-frank" aria-pressed="false">Frank &amp; anatomical</button>
+        </div>
+      </div>
+
+      <div class="dial-row">
+        <div class="dial-label">
+          <strong>Strobe &amp; flash</strong>
+          <span>Off by default. Turning it on plays a one-second preview first, so the choice is informed.</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:.9rem;">
+          <div class="strobe-preview" id="strobe-preview" aria-hidden="true"></div>
+          <button class="dial" id="dial-strobe" role="switch" aria-checked="false"
+                  aria-label="Allow strobe and flash effects"></button>
+        </div>
+      </div>
+
+      <div class="dial-row">
+        <div class="dial-label">
+          <strong>Motion</strong>
+          <span>Stilled resolves every animation to its calmest frame. Nothing is lost — only quieted.</span>
+        </div>
+        <div class="selector" role="group" aria-label="Motion">
+          <button id="motion-full" aria-pressed="true">Full</button>
+          <button id="motion-still" aria-pressed="false">Stilled</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── THE CONSENT LINE ───────────────────────────────────── -->
+    <div class="manifesto archive-voice" aria-label="Privacy statement">
+      <p>
+        WE COLLECT NOTHING. NO COOKIES. NO ANALYTICS. NO ACCOUNT.<br>
+        YOUR CHOICES LIVE ON THIS DEVICE AND NOWHERE ELSE.<br>
+        USE <em>FORGET ME</em> BELOW AND THE SITE FORGETS YOU.
+        <em>THAT IS ON PURPOSE.</em>
+      </p>
+    </div>
+
+    <div class="enter-row">
+      <a class="btn-needle" id="enter" href="revolution.html">Drop the needle</a>
+      <button class="forget" id="forget">forget me — clear everything this site remembers</button>
+    </div>
+
+    <p class="precedent">
+      Precedent: the <a href="https://www.digitaltransgenderarchive.net/about/policies"
+      rel="noopener">Digital Transgender Archive</a> asks visitors for consent before
+      explicit historical material — a feminist model of consent, in service of education.
+      This gate stands in that lineage.
+    </p>
+  </div>
+</main>
+
+<script src="revolution.js"></script>
+<script>
+/* EMOTIONAL TARGET: every switch should feel physical — a click you
+   can trust. State is written the moment you touch it, not on submit. */
+REV.boot({ scene: 'threshold', noAudioToggle: false });
+
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  // reflect saved state (returning visitors keep their tuning)
+  const s = REV.state;
+  $('dial-adult').setAttribute('aria-checked', String(s.adult));
+  $('dial-strobe').setAttribute('aria-checked', String(s.strobe));
+  setPressed('depth-sugg', s.depth === 'suggestive');
+  setPressed('depth-frank', s.depth === 'frank');
+  setPressed('motion-full', s.motion === 'full');
+  setPressed('motion-still', s.motion === 'stilled');
+
+  function setPressed(id, on) { $(id).setAttribute('aria-pressed', String(on)); }
+
+  $('dial-adult').addEventListener('click', function () {
+    const on = this.getAttribute('aria-checked') !== 'true';
+    this.setAttribute('aria-checked', String(on));
+    REV.set('adult', on);
+  });
+
+  $('dial-strobe').addEventListener('click', function () {
+    const on = this.getAttribute('aria-checked') !== 'true';
+    if (on) {
+      // informed choice: show exactly what you're agreeing to, first
+      const p = $('strobe-preview');
+      p.classList.remove('flashing');
+      void p.offsetWidth;               // restart the animation
+      p.classList.add('flashing');
+    }
+    this.setAttribute('aria-checked', String(on));
+    REV.set('strobe', on);
+  });
+
+  $('depth-sugg').addEventListener('click', function () {
+    setPressed('depth-sugg', true); setPressed('depth-frank', false);
+    REV.set('depth', 'suggestive');
+  });
+  $('depth-frank').addEventListener('click', function () {
+    setPressed('depth-sugg', false); setPressed('depth-frank', true);
+    REV.set('depth', 'frank');
+  });
+
+  $('motion-full').addEventListener('click', function () {
+    setPressed('motion-full', true); setPressed('motion-still', false);
+    REV.set('motion', 'full');
+  });
+  $('motion-still').addEventListener('click', function () {
+    setPressed('motion-full', false); setPressed('motion-still', true);
+    REV.set('motion', 'stilled');
+  });
+
+  $('forget').addEventListener('click', function () {
+    REV.forget();
+    location.reload();
+  });
+
+  // the needle-drop: a breath of crackle, then through the door
+  $('enter').addEventListener('click', function (e) {
+    if (REV.audio.enabled()) {
+      e.preventDefault();
+      REV.audio.crackle(0.6);
+      setTimeout(function () { location.href = 'revolution.html'; }, 520);
+    }
+  });
+})();
+</script>
+</body>
+</html>
