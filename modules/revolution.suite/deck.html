@@ -229,21 +229,37 @@ details.inner-gate summary {
 details.inner-gate[open] summary { color: var(--ink-dim); }
 details.inner-gate .k-body { margin-top: .7rem; }
 
-/* Thingiverse's own embed widget — lives inside the clitoris card */
-.thing-embed {
-  margin-top: .8rem;
-  border: 1px solid rgba(20,4,12,.14);
-  background: #14040c;
+/* THE CLITORIS — a self-contained inline SVG, no third-party embed.
+   The reveal IS the lesson: the bright glans is all most anatomy books
+   drew; lift and the whole organ (body, crura, bulbs) lights up. The
+   flaps, once more. Fully self-hosted — honors the non-extraction rule. */
+.clit-figure { margin: .9rem 0 .3rem; text-align: center; }
+.clit-svg {
+  width: 100%; max-width: 300px; height: auto;
+  cursor: pointer;
+  filter: drop-shadow(0 0 10px rgba(245,197,24,.22));
 }
-.thing-embed iframe { width: 100%; height: 300px; border: 0; display: block; }
-.thing-embed .thing-cap {
-  font-family: var(--font-mono);
-  font-size: .64rem;
-  color: #b9a9c9;
-  padding: .5rem .7rem;
-  border-top: 1px dotted rgba(201,160,255,.25);
+.clit-svg .organ-full { opacity: .16; transition: opacity .9s var(--ease-needle); }
+.clit-svg .glans { filter: drop-shadow(0 0 6px rgba(245,197,24,.9)); }
+.clit-svg .clit-labels { opacity: 0; transition: opacity .7s ease .15s; }
+.clit-svg .clit-labels text { fill: var(--ink-dim); }
+.clit-svg .clit-labels line { stroke: var(--ink-dim); stroke-width: 1; }
+.clit-figure.revealed .clit-svg .organ-full { opacity: 1; }
+.clit-figure.revealed .clit-svg .clit-labels { opacity: 1; }
+.clit-reveal {
+  margin-top: .5rem;
+  font-family: var(--font-mono); font-size: .7rem;
+  letter-spacing: .16em; text-transform: uppercase;
+  background: transparent; color: var(--gold-t);
+  border: 1px solid var(--gold); border-radius: 999px;
+  padding: .45rem 1rem; cursor: pointer;
 }
-.thing-embed .thing-cap a { color: var(--cyan); }
+.clit-reveal[aria-pressed="true"] { background: var(--gold); color: #14040c; }
+.clit-cap {
+  font-family: var(--font-mono); font-size: .64rem; line-height: 1.7;
+  color: var(--ink-dim); margin-top: .7rem; text-align: left;
+}
+.clit-cap a { color: var(--link); }
 
 /* suit banners between sections */
 .suit-banner-row { margin: 0 0 1rem; }
@@ -540,21 +556,56 @@ details.inner-gate .k-body { margin-top: .7rem; }
               means the org chart of half of humanity's pleasure was
               finished <em>after Google was founded.</em> In 2016 Odile
               Fillod published a printable, true-scale 3D model so
-              teachers could put it in students' hands. Here it is —
-              drag it around:
+              teachers could put it in students' hands. Most anatomy books
+              only ever drew the bright tip. Here is the rest:
             </div>
-            <div class="thing-embed">
-              <iframe src="https://www.thingiverse.com/thing:3498662/embed"
-                      title="Anatomical 3D model of the clitoris by Odile Fillod (Thingiverse thing:3498662)"
-                      loading="lazy"></iframe>
-              <p class="thing-cap">
-                3D model by Odile Fillod, with Philippe Cosentino (V2) ·
-                <a href="https://www.thingiverse.com/thing:3498662" rel="noopener">thing:3498662</a> ·
-                V1 with Mélissa Richard / Cité des sciences FabLab ·
-                <a href="https://odilefillod.wixsite.com/clitoris" rel="noopener">viewer &amp; notes</a> ·
-                Creative Commons — verify variant before ship
-              </p>
-            </div>
+            <figure class="clit-figure" id="clit-fig">
+              <svg class="clit-svg" viewBox="0 0 320 300" role="img"
+                   aria-label="Anatomical schematic of the clitoris: the small external glans at the top, and the internal body, two curving crura (legs) and two vestibular bulbs that together make up roughly ninety percent of the organ.">
+                <defs>
+                  <linearGradient id="clit-gold" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#fff2b0"/>
+                    <stop offset=".5" stop-color="#f5c518"/>
+                    <stop offset="1" stop-color="#b98f0e"/>
+                  </linearGradient>
+                </defs>
+                <!-- the ~90% you never see: body + crura + bulbs -->
+                <g class="organ-full" fill="url(#clit-gold)" stroke="#b98f0e" stroke-width="1">
+                  <path class="body" d="M152,60 C149,78 149,90 160,100 C171,90 171,78 168,60 Z"/>
+                  <path class="crus" d="M156,92 C128,98 98,132 86,178 C79,206 76,232 86,236 C95,239 102,214 113,180 C125,142 143,110 156,98 Z"/>
+                  <g transform="translate(320,0) scale(-1,1)">
+                    <path class="crus" d="M156,92 C128,98 98,132 86,178 C79,206 76,232 86,236 C95,239 102,214 113,180 C125,142 143,110 156,98 Z"/>
+                  </g>
+                  <path class="bulb" d="M151,110 C138,118 129,150 129,182 C129,206 139,214 147,204 C155,192 157,146 154,116 C153,110 152,109 151,110 Z"/>
+                  <g transform="translate(320,0) scale(-1,1)">
+                    <path class="bulb" d="M151,110 C138,118 129,150 129,182 C129,206 139,214 147,204 C155,192 157,146 154,116 C153,110 152,109 151,110 Z"/>
+                  </g>
+                </g>
+                <!-- the ~10% most books stop at -->
+                <ellipse class="glans" cx="160" cy="50" rx="15" ry="12" fill="url(#clit-gold)"/>
+                <g class="clit-labels" font-family="'Courier Prime','Courier New',monospace" font-size="11">
+                  <line x1="177" y1="50" x2="232" y2="38"/><text x="236" y="42">glans (the tip)</text>
+                  <line x1="171" y1="82" x2="232" y2="86"/><text x="236" y="90">body</text>
+                  <line x1="150" y1="170" x2="96" y2="196"/><text x="8" y="200">bulbs</text>
+                  <line x1="96" y1="150" x2="40" y2="130"/><text x="8" y="126">crura</text>
+                  <line x1="160" y1="44" x2="160" y2="20"/>
+                  <line x1="292" y1="42" x2="292" y2="236"/>
+                  <text x="270" y="150" transform="rotate(90 288 150)">&#8776; 10 cm</text>
+                </g>
+              </svg>
+              <button class="clit-reveal" id="clit-reveal" aria-pressed="false">
+                reveal the whole organ →
+              </button>
+              <figcaption class="clit-cap">
+                a schematic, drawn here in the palette — not a substitute for
+                the real, true-scale printable model: 3D by Odile Fillod,
+                with Philippe Cosentino ·
+                <a href="https://www.thingiverse.com/thing:3498662" rel="noopener">Thingiverse thing:3498662</a> ·
+                <a href="https://odilefillod.wixsite.com/clitoris" rel="noopener">interactive viewer &amp; notes</a> ·
+                Creative Commons. (Thingiverse blocks embedding, so we link
+                out and draw our own — no third-party trackers on this page.)
+              </figcaption>
+            </figure>
             <p class="subvert">tell one person the ten-centimeter fact
               this week. watch their whole face reorganize. that's the
               feeling this site is made of: <em>oh — THAT's what it is.</em></p>
@@ -1045,6 +1096,21 @@ details.inner-gate .k-body { margin-top: .7rem; }
     pR.setAttribute('aria-pressed', 'true'); pL.setAttribute('aria-pressed', 'false');
     renderHanky();
   });
+
+  /* ── the clitoris reveal — the flaps, lifted (no third-party embed) ─ */
+  var cfig = document.getElementById('clit-fig');
+  var crev = document.getElementById('clit-reveal');
+  function toggleClit() {
+    var on = !cfig.classList.contains('revealed');
+    cfig.classList.toggle('revealed', on);
+    crev.setAttribute('aria-pressed', String(on));
+    crev.textContent = on ? '← that’s the whole thing' : 'reveal the whole organ →';
+    REV.audio.crackle(0.12);
+  }
+  if (crev && cfig) {
+    crev.addEventListener('click', toggleClit);
+    cfig.querySelector('.clit-svg').addEventListener('click', toggleClit);
+  }
 
   syncDepth();
 })();
