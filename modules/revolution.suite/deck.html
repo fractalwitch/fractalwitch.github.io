@@ -4,26 +4,34 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Deviance Deck · frank · anatomical · adult · gated</title>
-<meta name="description" content="Still in the pressing plant — the Deviance Deck, frank and anatomical, gated by the threshold.">
+<meta name="description" content="The Deviance Deck: sex education dealt as a card deck — anatomy, consent, technique, and joy. Frank, adult, and gated by the threshold.">
 <link rel="stylesheet" href="revolution.css?v=15">
 <script>try{var _t=JSON.parse(localStorage.getItem("revolution.threshold.v1"));if(_t&&_t.theme==="dark")document.documentElement.dataset.theme="disco";}catch(e){}</script>
 <style>
 /* ═══════════════════════════════════════════════════════════════
-   THE DEVIANCE DECK — not built yet, and the one room where that
-   matters twice over: it's also the gated room. Anyone who lands
-   here — from the hub, from thefloor's exit link, or a bare URL —
-   gets the same consent check. The membrane doesn't trust its
-   callers; it enforces itself.
+   THE DEVIANCE DECK — the gated room, finally dealt.
+
+   EMOTIONAL TARGET: a deck of tarot cards left on the nightstand
+   by the smartest, kindest slut you ever met. Every card is
+   KNOWLEDGE — anatomy, consent, technique, history — because the
+   most subversive thing a body can be is well-informed and
+   unashamed. "Knowe thyself." The flaps were always meant
+   to be lifted.
+
+   MEMBRANES: the age gate enforces itself (no trusting callers);
+   the DEPTH dial from the threshold controls how plainly the deck
+   speaks, switchable right here; every card ends by handing the
+   visitor something to take home (mutual overflow).
    ═══════════════════════════════════════════════════════════════ */
 
 .deck-wrap {
   position: relative;
   z-index: 2;
-  max-width: 720px;
+  max-width: 980px;
   margin: 0 auto;
-  padding: 14vh 1.5rem 12vh;
+  padding: 12vh 1.5rem 12vh;
 }
-section { margin-bottom: 10vh; }
+section { margin-bottom: 9vh; }
 
 h1 { font-size: clamp(2.4rem, 7vw, 4.2rem); }
 h2.roomlabel {
@@ -39,102 +47,234 @@ h2.roomlabel {
   font-size: 1.02rem;
   max-width: 58ch;
   margin-top: 1.4rem;
-  color: var(--ink-dim);
+  color: var(--ink);
 }
 .lede em { color: var(--gold-t); font-style: normal; }
 
-.suits {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  margin-top: 2.4rem;
+/* ── THE DEPTH DIAL, IN-ROOM — how plainly the deck speaks ──────── */
+.depth-row {
+  display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap;
+  margin-top: 2rem;
+  font-family: var(--font-mono); font-size: .74rem; color: var(--ink-dim);
 }
-@media (max-width: 620px) { .suits { grid-template-columns: repeat(2, 1fr); } }
-.suit {
-  border: 1px solid var(--line);
-  background: rgba(13,4,16,.5);
-  padding: 1.2rem .8rem;
-  text-align: center;
+/* the two registers. default (suggestive) hides .franker;
+   frank hides .softer. nothing is lost — only re-phrased. */
+html[data-depth="frank"] .softer { display: none; }
+html:not([data-depth="frank"]) .franker { display: none; }
+
+/* ── THE CARDS — tarot-scaled, flip to lift the flaps ───────────── */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 1.6rem;
+  align-items: start;
+  margin-top: 2rem;
+}
+.deck-card { perspective: 1400px; }
+.card-inner {
+  display: grid;
+  transform-style: preserve-3d;
+  transition: transform .7s var(--ease-needle);
+}
+.deck-card.flipped .card-inner { transform: rotateY(180deg); }
+.card-face {
+  grid-area: 1 / 1;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border: 2px solid var(--suit, var(--hotpink));
+  background: var(--page);
+  box-shadow: 6px 6px 0 rgba(20,4,12,.5);
+}
+.card-face.back { transform: rotateY(180deg); }
+
+/* card FRONT — the tarot back: suit stripes, number, title, tease */
+.card-face.front {
+  min-height: 22rem;
+  display: flex; flex-direction: column;
+  justify-content: space-between;
+  padding: 1.1rem;
+  background:
+    repeating-linear-gradient(-45deg,
+      color-mix(in srgb, var(--suit, var(--hotpink)) 12%, transparent) 0 10px,
+      transparent 10px 26px);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  font: inherit; color: inherit;
+}
+.card-face.front .c-suit {
   font-family: var(--font-mono);
-  font-size: .72rem;
-  letter-spacing: .18em;
-  color: var(--lavender);
+  font-size: .64rem; letter-spacing: .3em; text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.card-face.front .c-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.3rem, 3vw, 1.7rem);
+  line-height: 1.05;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.card-face.front .c-tease {
+  font-family: var(--font-mono);
+  font-size: .74rem; line-height: 1.7;
+  color: var(--ink-dim);
+}
+.card-face.front .c-flip {
+  align-self: flex-end;
+  font-family: var(--font-mono); font-size: .68rem;
+  letter-spacing: .18em; text-transform: uppercase;
+  color: var(--suit, var(--hotpink));
 }
 
-.pressing-plate {
-  margin-top: 3rem;
-  border: 1px dashed rgba(157,143,176,.35);
-  padding: 2.4rem 1.6rem;
-  text-align: center;
+/* card BACK — the flaps, lifted: the knowledge */
+.card-face.back {
+  padding: 1.2rem 1.2rem 1.4rem;
+  max-height: 36rem;
+  overflow-y: auto;
+}
+.k-head {
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  line-height: 1.05;
+  text-transform: uppercase;
+  letter-spacing: -.01em;
+  margin-bottom: .8rem;
+  color: var(--ink);
+}
+.k-body {
   font-family: var(--font-mono);
   font-size: .78rem;
-  line-height: 2;
-  color: var(--ink-dim);
+  line-height: 1.9;
+  color: var(--ink);
 }
-.pressing-plate .hot { color: var(--hotpink); }
-
-/* ── SOURCES TO COLLECT — an intermediary link list, not a gallery.
-   Every entry is a real citation from the asset manifests; click
-   through and pull the file down by hand before it gets pressed
-   into a card. ─────────────────────────────────────────────────── */
-.sources { margin-top: 3rem; }
-.sources h3 {
-  font-family: var(--font-geo);
-  font-weight: 600;
-  font-size: .72rem;
-  letter-spacing: .28em;
-  text-transform: uppercase;
+.k-body em { font-style: normal; color: var(--rose-t); font-weight: 700; }
+.k-body strong { color: var(--gold-t); font-weight: 700; }
+.k-body a { color: var(--link); }
+.k-body ul { list-style: none; padding-left: 1rem; }
+.k-body li { margin: .35rem 0; text-indent: -1rem; }
+.k-body li::before { content: '· '; color: var(--suit, var(--hotpink)); }
+.subvert {
+  margin-top: 1rem;
+  padding: .7rem .9rem;
+  border-left: 3px solid var(--suit, var(--hotpink));
+  background: color-mix(in srgb, var(--suit, var(--hotpink)) 7%, transparent);
+  font-family: var(--font-mono);
+  font-size: .72rem; line-height: 1.8;
+  color: var(--ink);
+}
+.subvert::before {
+  content: 'LOVING SUBVERSION · take this home';
+  display: block;
+  font-size: .58rem; letter-spacing: .24em;
   color: var(--ink-dim);
-  margin-bottom: 1rem;
+  margin-bottom: .3rem;
+}
+.unflip {
+  margin-top: 1rem;
+  font-family: var(--font-mono); font-size: .68rem;
+  letter-spacing: .18em; text-transform: uppercase;
+  background: none; border: 1px solid var(--line);
+  color: var(--ink-dim);
+  padding: .45rem .9rem; cursor: pointer;
+}
+.unflip:hover { color: var(--ink); border-color: var(--suit, var(--hotpink)); }
+
+/* suit palettes */
+.suit-tongue { --suit: var(--hotpink); }
+.suit-hand   { --suit: var(--gold); }
+.suit-hole   { --suit: var(--cyan); }
+.suit-knot   { --suit: var(--lavender); }
+.suit-major  { --suit: var(--shout-orange); }
+.suit-major .card-face { box-shadow: 6px 6px 0 rgba(255,61,0,.35); }
+
+/* dark contexts: card faces go velvet, ink flips via tokens */
+html[data-theme="disco"] .card-face { background: var(--void-warm); }
+
+/* ── HANKY PICKER ───────────────────────────────────────────────── */
+.hanky-ui { display: flex; flex-direction: column; gap: .7rem; margin: .8rem 0; }
+.hanky-ui select, .hanky-ui .pocket {
+  font-family: var(--font-mono); font-size: .78rem;
+  background: var(--page); color: var(--ink);
+  border: 1px solid var(--line); padding: .5rem .6rem;
+  width: 100%;
+}
+.pocket-row { display: flex; gap: .6rem; }
+.pocket-row button {
+  flex: 1;
+  font-family: var(--font-mono); font-size: .72rem;
+  letter-spacing: .1em; text-transform: uppercase;
+  background: transparent; color: var(--ink-dim);
+  border: 1px solid var(--line); padding: .55rem; cursor: pointer;
+}
+.pocket-row button[aria-pressed="true"] {
+  background: var(--gold); color: #14040c; border-color: #14040c;
+}
+.hanky-out {
+  min-height: 3.4rem;
+  border: 1px dashed var(--gold);
+  padding: .7rem .9rem;
+  font-family: var(--font-mono); font-size: .78rem; line-height: 1.8;
+  color: var(--ink);
+}
+.hanky-out .flag { color: var(--gold-t); font-weight: 700; }
+
+/* ── GATED-WITHIN-GATED (the Ten Scenes reveal) ─────────────────── */
+details.inner-gate { margin-top: .8rem; border: 1px dashed var(--line); padding: .7rem .9rem; }
+details.inner-gate summary {
+  cursor: pointer;
+  font-family: var(--font-mono); font-size: .72rem;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--rose-t);
+}
+details.inner-gate[open] summary { color: var(--ink-dim); }
+details.inner-gate .k-body { margin-top: .7rem; }
+
+/* Thingiverse's own embed widget — lives inside the clitoris card */
+.thing-embed {
+  margin-top: .8rem;
+  border: 1px solid rgba(20,4,12,.14);
+  background: #14040c;
+}
+.thing-embed iframe { width: 100%; height: 300px; border: 0; display: block; }
+.thing-embed .thing-cap {
+  font-family: var(--font-mono);
+  font-size: .64rem;
+  color: #b9a9c9;
+  padding: .5rem .7rem;
+  border-top: 1px dotted rgba(201,160,255,.25);
+}
+.thing-embed .thing-cap a { color: var(--cyan); }
+
+/* suit banners between sections */
+.suit-banner-row { margin: 0 0 1rem; }
+
+/* liner notes / bibliography */
+.sources { margin-top: 1rem; }
+.sources h3 {
+  font-family: var(--font-geo); font-weight: 600;
+  font-size: .72rem; letter-spacing: .28em; text-transform: uppercase;
+  color: var(--ink-dim); margin-bottom: 1rem;
 }
 .sources ul { list-style: none; }
 .sources li {
-  padding: .8rem 0;
+  padding: .6rem 0;
   border-bottom: 1px dotted rgba(157,143,176,.25);
-  font-family: var(--font-mono);
-  font-size: .78rem;
-  line-height: 1.7;
+  font-family: var(--font-mono); font-size: .74rem; line-height: 1.7;
+  color: var(--ink-dim);
 }
-.sources li .s-what { color: var(--ink); }
-.sources li .s-note { color: var(--ink-dim); display: block; margin-top: .2rem; font-size: .72rem; }
 .sources li a { color: var(--link); }
-
-/* Thingiverse's own embed widget — an official iframe, not a guess */
-.thing-embed {
-  margin-top: 1rem;
-  border: 1px solid rgba(20,4,12,.14);
-  background: #14040c;                 /* dark widget block on the white wall */
-}
-.thing-embed iframe { width: 100%; height: 420px; border: 0; display: block; }
-.thing-embed .thing-cap {
-  font-family: var(--font-mono);
-  font-size: .7rem;
-  color: #b9a9c9;                      /* light: sits on the dark block */
-  padding: .6rem .9rem;
-  border-top: 1px dotted rgba(201,160,255,.25);
-}
-.thing-embed .thing-cap a { color: var(--link); }
 
 .gate-check {
   min-height: 60vh;
-  display: grid;
-  place-items: center;
-  text-align: center;
-  font-family: var(--font-mono);
-  font-size: .95rem;
-  color: var(--ink-dim);
-  padding: 0 1.5rem;
+  display: grid; place-items: center; text-align: center;
+  font-family: var(--font-mono); font-size: .95rem;
+  color: var(--ink-dim); padding: 0 1.5rem;
 }
 .gate-check .hot { color: var(--hotpink); }
 
 .exits {
-  display: flex;
-  justify-content: space-between;
-  gap: 1.4rem;
-  flex-wrap: wrap;
-  font-family: var(--font-mono);
-  font-size: .78rem;
-  margin-top: 2rem;
+  display: flex; justify-content: space-between; gap: 1.4rem; flex-wrap: wrap;
+  font-family: var(--font-mono); font-size: .78rem; margin-top: 2rem;
 }
 .exits a { color: var(--ink-dim); text-decoration: none; }
 .exits a:hover { color: var(--hotpink); }
@@ -152,72 +292,632 @@ h2.roomlabel {
 
 <main class="deck-wrap" id="deck-room" hidden>
 
+  <!-- ── ENTRY ──────────────────────────────────────────────────── -->
   <section aria-labelledby="deck-title">
-    <h2 class="roomlabel" id="deck-title">room five · frank · anatomical · adult · still being cut</h2>
+    <h2 class="roomlabel" id="deck-title">room five · frank · anatomical · adult · dealt from the mirrorball</h2>
     <h1 class="display chrome-text">The Deviance Deck <span class="flourish flourish-burst" aria-hidden="true"></span></h1>
     <p class="lede">
-      This room isn't pressed yet. Four suits — <em>TONGUE, HAND, HOLE,
-      KNOT</em> — dealt from the mirrorball. A 1538 flap-anatomy sheet
-      as the flip mechanic. Odile Fillod's 3D clitoris, chrome-gold,
-      drag to rotate. Consent as the load-bearing card, not the fine
-      print.
+      Every other room in this record is about people who were punished
+      for knowing their own bodies. This room is the knowing.
+      <em>Fifteen cards, four suits, three trumps</em> — anatomy,
+      consent, technique, history — because the most subversive thing a
+      body can be is <em>well-informed and unashamed.</em> Flip a card.
+      The flaps were always meant to be lifted. Your imagination is the
+      limit; your communication is the vehicle.
     </p>
-    <div class="suits">
-      <div class="suit">TONGUE</div>
-      <div class="suit">HAND</div>
-      <div class="suit">HOLE</div>
-      <div class="suit">KNOT</div>
+    <div class="depth-row" role="group" aria-label="Content depth">
+      <span>how plainly should this deck speak?</span>
+      <div class="selector">
+        <button id="depth-sugg" aria-pressed="true">Suggestive</button>
+        <button id="depth-frank" aria-pressed="false">Frank &amp; anatomical</button>
+      </div>
+      <span>changeable any time, here or at the <a href="threshold.html">threshold</a>. stored on this device only.</span>
     </div>
   </section>
 
-  <section aria-label="What's coming">
-    <div class="pressing-plate">
-      STILL IN THE PRESSING PLANT — THIS GROOVE IS BEING CUT.<br>
-      your dials are already set — depth is
-      <strong id="depth-readout" style="color:var(--ink); font-style:normal;">suggestive</strong>,
-      changeable any time at the <a href="threshold.html">threshold</a>.<br>
-      <span class="hot">the honest version of this page is the one that admits it isn't done.</span>
-    </div>
+  <!-- ── MAJOR 0 — the deck's own artifact ──────────────────────── -->
+  <section aria-labelledby="majors-title">
+    <h2 class="roomlabel" id="majors-title">the trump cards · knowledge itself</h2>
+    <div class="card-grid">
 
-    <!-- Odile Fillod's 3D clitoris — Thingiverse's own embed widget,
-         an official iframe, not a guessed one. The eventual card loads
-         this mesh in Three.js; for now, here's the model itself. -->
-    <div class="thing-embed">
-      <iframe src="https://www.thingiverse.com/thing:3498662/embed"
-              title="Anatomical 3D model of the clitoris by Odile Fillod (Thingiverse thing:3498662)"
-              loading="lazy"></iframe>
-      <p class="thing-cap">
-        3D model by Odile Fillod, with Philippe Cosentino (V2) ·
-        <a href="https://www.thingiverse.com/thing:3498662" rel="noopener">Thingiverse thing:3498662</a> ·
-        V1 with Mélissa Richard / Cité des sciences FabLab:
-        <a href="https://www.thingiverse.com/thing:1876288" rel="noopener">thing:1876288</a> ·
-        <a href="https://odilefillod.wixsite.com/clitoris" rel="noopener">interactive viewer &amp; notes</a> ·
-        verify exact CC variant on the Thingiverse page before ship
-      </p>
-    </div>
+      <div class="deck-card suit-major">
+        <div class="card-inner">
+          <button class="card-face front flip-toggle" aria-expanded="false">
+            <span class="c-suit">major arcana · 0 · strasbourg, 1538</span>
+            <span class="c-title">Knowe Thyself</span>
+            <span class="c-tease">the flip mechanic of this whole deck is a
+              five-hundred-year-old paper toy. lift to see.</span>
+            <span class="c-flip">flip ⟲</span>
+          </button>
+          <div class="card-face back">
+            <h3 class="k-head" id="card-knowe">Knowe Thyself</h3>
+            <div class="k-body">
+              In 1538, in Strasbourg, Heinrich Vogtherr printed an anatomy
+              sheet with <em>paper flaps</em> — lift the layers and the
+              body opens, organ by organ. They're called <strong>fugitive
+              sheets</strong>, and one of them survives photographed both
+              ways: flaps down
+              (<a href="https://wellcomecollection.org/works/wgnq6kw5" rel="noopener">Wellcome wgnq6kw5</a>)
+              and flaps up
+              (<a href="https://wellcomecollection.org/works/apc2u9px" rel="noopener">apc2u9px</a>).
+              A Renaissance interactive, doing exactly what this card
+              does. The motto printed on them: <em>"Knowe thyself."</em><br><br>
+              That is the deck's whole doctrine. Self-study is a research
+              method: you cannot hand a lover a map you have never drawn.
+              Masturbation isn't the consolation prize — it's the
+              <strong>literature review.</strong>
+            </div>
+            <p class="subvert">one unhurried hour this week, no goal, no
+              finish line — just cartography. take notes if you're the
+              type. you are allowed to be the world expert in you.</p>
+            <button class="unflip">⟲ flip back</button>
+          </div>
+        </div>
+      </div>
 
+    </div>
+  </section>
+
+  <!-- ── SUIT OF TONGUES — speech and its uses ──────────────────── -->
+  <section aria-labelledby="tongue-title">
+    <p class="suit-banner-row"><span class="shout-banner pink">THE SUIT OF TONGUES</span></p>
+    <h2 class="roomlabel" id="tongue-title">speech first · then everything speech makes possible</h2>
+    <div class="card-grid">
+
+      <div class="deck-card suit-tongue">
+        <div class="card-inner">
+          <button class="card-face front flip-toggle" aria-expanded="false">
+            <span class="c-suit">tongue · I</span>
+            <span class="c-title">The Negotiation Is Foreplay</span>
+            <span class="c-tease">asking is not the paperwork before the
+              scene. asking is the scene starting early.</span>
+            <span class="c-flip">flip ⟲</span>
+          </button>
+          <div class="card-face back">
+            <h3 class="k-head" id="card-negotiation">The Negotiation Is Foreplay</h3>
+            <div class="k-body">
+              Scripts, since nobody hands them out in school:
+              <ul>
+                <li><em>"What are you hoping happens tonight?"</em> — the whole genre, one question.</li>
+                <li><em>"What's off the table?"</em> — limits first; freedom lives inside the frame.</li>
+                <li><em>"Show me how you touch yourself. I'll take notes."</em> — outsource to the expert.</li>
+                <li>The four magic dials: <strong>slower · softer · right there · don't stop.</strong> Grant your partner all four, out loud.</li>
+                <li>Afterward: <em>"that was new — how did it land?"</em> Feedback is a love language.</li>
+              </ul>
+              Negotiate clothed, fed, and sober-ish. Mid-scene check-ins
+              ("still good?") are not mood-killers — <em>competence is the
+              mood.</em>
+            </div>
+            <p class="subvert">ask someone — a lover, or yourself in the
+              mirror — "what do you actually like?" and just listen. no
+              fixing, no flinching. listening is the technique.</p>
+            <button class="unflip">⟲ flip back</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="deck-card suit-tongue">
+        <div class="card-inner">
+          <button class="card-face front flip-toggle" aria-expanded="false">
+            <span class="c-suit">tongue · II</span>
+            <span class="c-title">The Orgasm Gap</span>
+            <span class="c-tease">the numbers are public. the fix is not a
+              technique. flip for both.</span>
+            <span class="c-flip">flip ⟲</span>
+          </button>
+          <div class="card-face back">
+            <h3 class="k-head" id="card-gap">The Orgasm Gap</h3>
+            <div class="k-body">
+              The largest study of its kind (~52,000 adults, 2018) asked
+              who usually orgasms during sex:
+              <ul>
+                <li>straight men — <strong>95%</strong></li>
+                <li>gay men — <strong>89%</strong> · bi men — <strong>88%</strong></li>
+                <li>lesbian women — <strong>86%</strong></li>
+                <li>bi women — <strong>66%</strong> · straight women — <strong>65%</strong></li>
+              </ul>
+              Read that middle line again. <em>Lesbian women: 86.</em>
+              The gap is not anatomy — anatomy shows up to every pairing.
+              The gap is a <strong>script</strong>: sex written to end at
+              one particular orgasm. What closes it, per the same data:
+              more oral, more clitoral attention, longer sessions, and
+              partners who <em>ask.</em> Not a maneuver. A conversation.
+            </div>
+            <p class="subvert">retire the word "foreplay" for a month.
+              there is no opening act — it's all the show.</p>
+            <button class="unflip">⟲ flip back</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="deck-card suit-tongue">
+        <div class="card-inner">
+          <button class="card-face front flip-toggle" aria-expanded="false">
+            <span class="c-suit">tongue · III</span>
+            <span class="c-title">Going Down, Correctly</span>
+            <span class="c-tease">enthusiasm outperforms technique.
+              but here's the technique anyway.</span>
+            <span class="c-flip">flip ⟲</span>
+          </button>
+          <div class="card-face back">
+            <h3 class="k-head" id="card-oral">Going Down, Correctly</h3>
+            <div class="k-body softer">
+              The plain-language version of this card is one dial away —
+              but the heart of it survives any register: consistency
+              beats novelty, hands are half the work, ask what's
+              sensitive before assuming, and use a barrier (a dam, or a
+              condom cut lengthwise) when status is unknown. The sexiest
+              sentence in the language is <em>"I could stay here all
+              night."</em> Turn the depth dial above for the anatomy.
+            </div>
+            <div class="k-body franker">
+              <ul>
+                <li><strong>Vulvas:</strong> the glans clitoris wants <em>rhythm and consistency</em>, not a tour. Broad flat tongue to start, point for focus, and when something works — do not innovate. Let hips set the tempo; listen with your hands.</li>
+                <li><strong>Penises:</strong> spit or lube always; a dry mouth-only job is a rookie tell. Hands and mouth share the work. The frenulum (underside, just below the head) is the concentrated page. Ask about teeth before you're told.</li>
+                <li><strong>Everyone:</strong> rimming is common, ancient, and fine — hygiene and a dam when unsure. A gag reflex is a reflex, not a report card. Breathe through the nose, tap out with a hand signal, never push a head down uninvited.</li>
+              </ul>
+              Enthusiasm still outperforms technique. The data on the
+              previous card is largely a map of who receives oral sex.
+            </div>
+            <p class="subvert">give without a stopwatch this week —
+              receiving-only and giving-only nights both count as
+              whole meals.</p>
+            <button class="unflip">⟲ flip back</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── SUIT OF HANDS — touch, signal, care ────────────────────── -->
+  <section aria-labelledby="hand-title">
+    <p class="suit-banner-row"><span class="shout-banner" style="background:var(--gold);">THE SUIT OF HANDS</span></p>
+    <h2 class="roomlabel" id="hand-title">touch · signal · and the care that completes the circuit</h2>
+    <div class="card-grid">
+
+      <div class="deck-card suit-hand">
+        <div class="card-inner">
+          <button class="card-face front flip-toggle" aria-expanded="false">
+            <span class="c-suit">hand · I · a working artifact</span>
+            <span class="c-title">The Hanky Code</span>
+            <span class="c-tease">the 1970s wrote an entire API for desire
+              in bandana cotton. this one still runs. flip to use it.</span>
+            <span class="c-flip">flip ⟲</span>
+          </button>
+          <div class="card-face back">
+            <h3 class="k-head" id="card-hanky">The Hanky Code</h3>
+            <div class="k-body">
+              Gay men of the 1970s, cruising under laws that made asking
+              dangerous, compressed the whole negotiation into a
+              <em>bandana</em>: color = the what, pocket = the role.
+              <strong>Left = giving. Right = receiving.</strong>
+              Pick a flag:
+            </div>
+            <div class="hanky-ui">
+              <select id="hanky-color" aria-label="Bandana color"></select>
+              <div class="pocket-row" role="group" aria-label="Pocket">
+                <button id="pocket-left" aria-pressed="true">left pocket</button>
+                <button id="pocket-right" aria-pressed="false">right pocket</button>
+              </div>
+              <div class="hanky-out" id="hanky-out" aria-live="polite"></div>
+            </div>
+            <div class="k-body">
+              Every bar's printed list differed slightly, and the
+              arguments were half the fun. The teddy bear is real, and it
+              means what you hope it means.
+            </div>
+            <p class="subvert">the code's real lesson: desire can be
+              named plainly, worn in public, and survived. name one of
+              yours out loud this week — pocket optional.</p>
+            <button class="unflip">⟲ flip back</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="deck-card suit-hand">
+        <div class="card-inner">
+          <button class="card-face front flip-toggle" aria-expanded="false">
+            <span class="c-suit">hand · II · the centerfold</span>
+            <span class="c-title">The Clitoris Is Mostly Inside You</span>
+            <span class="c-tease">the only human organ whose sole known
+              job is pleasure — and medicine didn't fully image it
+              until you had email.</span>
+            <span class="c-flip">flip ⟲</span>
+          </button>
+          <div class="card-face back">
+            <h3 class="k-head" id="card-clitoris">The Clitoris Is Mostly Inside You</h3>
+            <div class="k-body">
+              The visible glans is maybe a tenth of it. The whole organ —
+              glans, shaft, two <strong>crura</strong> (legs) and two
+              <strong>vestibular bulbs</strong> — runs about
+              <em>ten centimeters</em>, wraps the vaginal canal, and is
+              erectile from end to end. It carries on the order of
+              <em>10,000 nerve fibers</em>, and it is the only organ in
+              the human body whose sole known function is pleasure.<br><br>
+              Full anatomical MRI mapping arrived in
+              <strong>1998–2005</strong> — Helen O'Connell's work — which
+              means the org chart of half of humanity's pleasure was
+              finished <em>after Google was founded.</em> In 2016 Odile
+              Fillod published a printable, true-scale 3D model so
+              teachers could put it in students' hands. Here it is —
+              drag it around:
+            </div>
+            <div class="thing-embed">
+              <iframe src="https://www.thingiverse.com/thing:3498662/embed"
+                      title="Anatomical 3D model of the clitoris by Odile Fillod (Thingiverse thing:3498662)"
+                      loading="lazy"></iframe>
+              <p class="thing-cap">
+                3D model by Odile Fillod, with Philippe Cosentino (V2) ·
+                <a href="https://www.thingiverse.com/thing:3498662" rel="noopener">thing:3498662</a> ·
+                V1 with Mélissa Richard / Cité des sciences FabLab ·
+                <a href="https://odilefillod.wixsite.com/clitoris" rel="noopener">viewer &amp; notes</a> ·
+                Creative Commons — verify variant before ship
+              </p>
+            </div>
+            <p class="subvert">tell one person the ten-centimeter fact
+              this week. watch their whole face reorganize. that's the
+              feeling this site is made of: <em>oh — THAT's what it is.</em></p>
+            <button class="unflip">⟲ flip back</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="deck-card suit-hand">
+        <div class="card-inner">
+          <button class="card-face front flip-toggle" aria-expanded="false">
+            <span class="c-suit">hand · III</span>
+            <span class="c-title">Aftercare Completes the Circuit</span>
+            <span class="c-tease">the scene isn't over when it's over.
+              chemistry has a second act.</span>
+            <span class="c-flip">flip ⟲</span>
+          </button>
+          <div class="card-face back">
+            <h3 class="k-head" id="card-aftercare">Aftercare Completes the Circuit</h3>
+            <div class="k-body">
+              Intense play and intense sex run on adrenaline, endorphins,
+              dopamine — and what goes up comes down. <strong>Drop</strong>
+              is the comedown: shakes, chills, tears, or a blue mood,
+              minutes or even a day later. It's chemistry, not weakness,
+              and <em>both</em> the doer and the done-to get it. Tops
+              drop too.
+              <ul>
+                <li>water · something sweet · a blanket · body weight</li>
+                <li>negotiate aftercare <em>before</em>, like everything else — held? left alone? fed? praised?</li>
+                <li>a next-day check-in: "what do you want more of?"</li>
+                <li>casual sex deserves aftercare too — a glass of water and a kind word is the minimum standard of civilization.</li>
+              </ul>
+            </div>
+            <p class="subvert">be the person who brings the water without
+              being asked. reputation-making. costs nothing.</p>
+            <button class="unflip">⟲ flip back</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── SUIT OF HOLES — anatomy without apology ────────────────── -->
+  <section aria-labelledby="hole-title">
+    <p class="suit-banner-row"><span class="shout-banner" style="background:var(--cyan);">THE SUIT OF HOLES</span></p>
+    <h2 class="roomlabel" id="hole-title">anatomy, without apology · every body on the guest list</h2>
+    <div class="card-grid">
+
+      <div class="deck-card suit-hole">
+        <div class="card-inner">
+          <button class="card-face front flip-toggle" aria-expanded="false">
+            <span class="c-suit">hole · I</span>
+            <span class="c-title">Anal, Correctly</span>
+            <span class="c-tease">it is not "gay sex." it is anatomy,
+              and everyone has the anatomy. flip for the syllabus.</span>
+            <span class="c-flip">flip ⟲</span>
+          </button>
+          <div class="card-face back">
+            <h3 class="k-head" id="card-anal">Anal, Correctly</h3>
+            <div class="k-body softer">
+              The gentle-register summary: it works beautifully when you
+              bring three things — <em>lubricant, patience, and
+              conversation</em> — and fails painfully when you skip any
+              one of them. Nothing numbing, ever: pain is information.
+              Toys need flared bases. Go at the speed of the slowest
+              body part. The plain-language anatomy is one dial away.
+            </div>
+            <div class="k-body franker">
+              <ul>
+                <li>The anus <strong>does not self-lubricate.</strong> Lube is not optional and the right amount is more than you think. Silicone lasts longest; water-based for silicone toys.</li>
+                <li>Two sphincter rings: the outer one you control, the <em>inner one is autonomic</em> — it opens with warmth, breath, arousal, and time. You cannot negotiate with it. You can only befriend it.</li>
+                <li><strong>Never numbing creams.</strong> Pain is the body's only telegram; don't cut the wire.</li>
+                <li>Start smaller than your ambition: fingers, then toys — <em>flared bases non-negotiable</em> (emergency rooms have a nickname for Friday night).</li>
+                <li>The prostate sits a few centimeters in, toward the belly — a curl of the fingers, "come here." Vulva-owners have every right to this territory too.</li>
+                <li>Prep, honestly: a shower and gentle water rinse is plenty for most; fiber does more than any douche. Relax the standards along with the muscles.</li>
+                <li>Condoms and/or PrEP for penetration with new partners; the next card holds the alphabet.</li>
+              </ul>
+            </div>
+            <p class="subvert">whatever you try, debrief it kindly:
+              "keep / adjust / archive." curiosity without a report card.</p>
+            <button class="unflip">⟲ flip back</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="deck-card suit-hole">
+        <div class="card-inner">
+          <button class="card-face front flip-toggle" aria-expanded="false">
+            <span class="c-suit">hole · II · staying alive</span>
+            <span class="c-title">The Alphabet of Staying Alive</span>
+            <span class="c-tease">PrEP. PEP. U=U. the letters the last
+              room's grief paid for. learn them by heart.</span>
+            <span class="c-flip">flip ⟲</span>
+          </button>
+          <div class="card-face back">
+            <h3 class="k-head" id="card-alphabet">The Alphabet of Staying Alive</h3>
+            <div class="k-body">
+              <ul>
+                <li><strong>PrEP</strong> — a pill (daily or on-demand) that prevents HIV about as well as anything in medicine prevents anything. If you play with new partners, ask a clinic about it. It is the party the AIDS generation never got to attend.</li>
+                <li><strong>PEP</strong> — the emergency brake: started within <em>72 hours</em> of an exposure, taken for 28 days. Know it exists <em>before</em> you need it.</li>
+                <li><strong>U=U</strong> — undetectable = untransmittable. A person with HIV on effective treatment <em>cannot pass it on through sex.</em> Science's love letter to serodiscordant couples; say it to anyone still carrying 1987 in their chest.</li>
+                <li><strong>The rhythm:</strong> testing every 3 months when you're active with new people. Most STIs are curable; all are manageable; none are a verdict on your character.</li>
+                <li>The clinic has seen everything, twice, before lunch. <em>The last untreated epidemic is shame.</em></li>
+              </ul>
+            </div>
+            <p class="subvert">book the test you've been postponing.
+              screenshot this card as the excuse. that's what it's for.</p>
+            <button class="unflip">⟲ flip back</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="deck-card suit-hole">
+        <div class="card-inner">
+          <button class="card-face front flip-toggle" aria-expanded="false">
+            <span class="c-suit">hole · III</span>
+            <span class="c-title">Every Body Is Nonstandard</span>
+            <span class="c-tease">"normal" was never a body. it was a
+              marketing category.</span>
+            <span class="c-flip">flip ⟲</span>
+          </button>
+          <div class="card-face back">
+            <h3 class="k-head" id="card-nonstandard">Every Body Is Nonstandard</h3>
+            <div class="k-body">
+              <ul>
+                <li><strong>Intersex</strong> people are roughly as common as redheads (~1.7%). The binary was never even anatomically true.</li>
+                <li><strong>Trans bodies:</strong> the map is yours to label. Rename your parts and require the rename; hormones re-tune sensitivity (T and E both), so treat a transitioning body as a new instrument — learned, not assumed.</li>
+                <li><strong>Disabled bodies</strong> have sex, want sex, and invented half of the best communication tech out of necessity — planning as foreplay, positioning as collaboration. Access is erotic competence.</li>
+                <li><strong>Aging bodies:</strong> desire doesn't retire. It renegotiates — more lube, more time, more afternoon light. The renegotiation is intimacy.</li>
+                <li><strong>Scarred and rebuilt bodies</strong> — post-mastectomy, post-op, post-anything: nerve maps redraw. Patient re-mapping can turn scar tissue tender in the good way.</li>
+              </ul>
+              Pleasure is not a spec sheet. It's a practice of attention,
+              and attention fits every chassis ever made.
+            </div>
+            <p class="subvert">catch yourself comparing your body to a
+              catalog this week — then thank it, out loud, for one
+              specific thing it felt.</p>
+            <button class="unflip">⟲ flip back</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── SUIT OF KNOTS — the ties that hold ─────────────────────── -->
+  <section aria-labelledby="knot-title">
+    <p class="suit-banner-row"><span class="shout-banner" style="background:var(--lavender);">THE SUIT OF KNOTS</span></p>
+    <h2 class="roomlabel" id="knot-title">the ties that hold · consent is the load-bearing beam</h2>
+    <div class="card-grid">
+
+      <div class="deck-card suit-knot">
+        <div class="card-inner">
+          <button class="card-face front flip-toggle" aria-expanded="false">
+            <span class="c-suit">knot · I · the load-bearing card</span>
+            <span class="c-title">Consent Is Load-Bearing</span>
+            <span class="c-tease">the leather bars wrote better consent
+              theory in 1983 than the universities managed by 2015.</span>
+            <span class="c-flip">flip ⟲</span>
+          </button>
+          <div class="card-face back">
+            <h3 class="k-head" id="card-consent">Consent Is Load-Bearing</h3>
+            <div class="k-body">
+              A short history of an idea, written mostly by perverts:
+              <ul>
+                <li><strong>SSC</strong> (1980s, leather community): <em>Safe, Sane, Consensual</em> — the first popular framework, invented by the kink world to govern itself.</li>
+                <li><strong>RACK</strong>: <em>Risk-Aware Consensual Kink</em> — the honest upgrade. Nothing is perfectly "safe"; adults name the risks and choose with eyes open.</li>
+                <li><strong>FRIES</strong> (Planned Parenthood): consent is <em>Freely given, Reversible, Informed, Enthusiastic, Specific.</em> Reversible means mid-sentence counts.</li>
+              </ul>
+              Working parts: <strong>safewords</strong> (or the traffic
+              lights — green / yellow / red) plus a <em>nonverbal</em>
+              signal for when speech is off the table (three taps, a
+              dropped object). No consent while unconscious, incapacitated,
+              or afraid to say no. <em>The absence of "no" was never
+              "yes."</em> Yes sounds like yes — often louder.
+            </div>
+            <p class="subvert">install the traffic lights in your
+              relationship this week — bed or no bed. "yellow" in the
+              middle of an argument is consent tech too.</p>
+            <button class="unflip">⟲ flip back</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="deck-card suit-knot">
+        <div class="card-inner">
+          <button class="card-face front flip-toggle" aria-expanded="false">
+            <span class="c-suit">knot · II</span>
+            <span class="c-title">Rope, Pain &amp; Other Edges</span>
+            <span class="c-tease">sensation is an instrument. here's how
+              the players keep the orchestra alive.</span>
+            <span class="c-flip">flip ⟲</span>
+          </button>
+          <div class="card-face back">
+            <h3 class="k-head" id="card-rope">Rope, Pain &amp; Other Edges</h3>
+            <div class="k-body softer">
+              The gentle register: bondage and impact play are ancient,
+              common, and fine — <em>with homework.</em> The rules that
+              matter are about circulation, nerves, never leaving a
+              restrained person alone, and warming up. The frank card
+              names the specifics; turn the dial when ready. The one
+              thing said plainly at every depth: <strong>breath play has
+              no fully safe technique. None.</strong> Risk-aware means
+              saying that out loud.
+            </div>
+            <div class="k-body franker">
+              <ul>
+                <li><strong>Rope:</strong> two fingers flat under every wrap; check hands often — tingling or cold means re-tie <em>now</em>. Wrists and the radial nerve are the classic injury; safety shears within reach, always. Never leave a tied person alone. Not to answer the door. Not for anything.</li>
+                <li><strong>Impact:</strong> warm the skin up through the gears. Fleshy and muscled areas take it (thighs, cheeks of both kinds); <em>avoid kidneys, spine, neck, and joints.</em> Thud and sting are different instruments — ask which song.</li>
+                <li><strong>Marks</strong> are negotiated in advance, like everything else.</li>
+                <li><strong>Breath play / choking:</strong> genuinely dangerous, no exceptions, no "safe" technique exists — arterial and vagal anatomy doesn't care how careful you feel. Risk-aware kink means naming the risks that can't be engineered away.</li>
+              </ul>
+            </div>
+            <p class="subvert">whatever your edge is, find its community —
+              the people who've done it for decades wrote safety docs out
+              of love. read before you leap.</p>
+            <button class="unflip">⟲ flip back</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="deck-card suit-knot">
+        <div class="card-inner">
+          <button class="card-face front flip-toggle" aria-expanded="false">
+            <span class="c-suit">knot · III · a deck within the deck</span>
+            <span class="c-title">Ten Scenes, 1700s</span>
+            <span class="c-tease">an entire painted handscroll of queer
+              desire survived three centuries to reach this card.</span>
+            <span class="c-flip">flip ⟲</span>
+          </button>
+          <div class="card-face back">
+            <h3 class="k-head" id="card-tenscenes">Ten Scenes, 1700s</h3>
+            <div class="k-body">
+              Miyagawa Chōshun, early 1700s Edo: a painted handscroll of
+              <em>ten scenes of male-male love</em> — a full work devoted
+              to nanshoku, which makes it a rare survivor. The Met holds
+              it, digitized, CC0, catalogued plainly. The ancestors'
+              room shows you the demure wakashu prints; <strong>this is
+              the frank shelf of the same library.</strong>
+            </div>
+            <div class="k-body softer">
+              At frank depth this card describes the scroll plainly and
+              deals the door. The scroll itself is explicit — even for
+              this room, it waits behind one more deliberate click.
+            </div>
+            <div class="k-body franker">
+              Explicit means explicit: the scroll depicts sex between men
+              and youths of the Edo pleasure quarters, unblushing and
+              gorgeous, ink and gold on silk.
+              <details class="inner-gate">
+                <summary>I understand — deal the door →</summary>
+                <div class="k-body">
+                  <a href="https://www.metmuseum.org/art/collection/search/888663" rel="noopener">
+                  Handscroll of Ten Homoerotic (Nanshoku) Scenes — The Met,
+                  Open Access 888663, CC0 →</a><br>
+                  Three hundred years old, and the archive kept it. That's
+                  the point of this whole record: <em>they always tried to
+                  burn the frank shelf first — and it survives anyway.</em>
+                </div>
+              </details>
+            </div>
+            <p class="subvert">support the institutions that keep the
+              frank shelf public. they are rarer than the scrolls.</p>
+            <button class="unflip">⟲ flip back</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── MAJORS I & II — why any of this matters ────────────────── -->
+  <section aria-labelledby="thesis-title">
+    <h2 class="roomlabel" id="thesis-title">the thesis · and the exit</h2>
+    <div class="card-grid">
+
+      <div class="deck-card suit-major">
+        <div class="card-inner">
+          <button class="card-face front flip-toggle" aria-expanded="false">
+            <span class="c-suit">major arcana · I · audre lorde, 1978</span>
+            <span class="c-title">Uses of the Erotic</span>
+            <span class="c-tease">why a history of pleasure is a history
+              of power. the thesis card.</span>
+            <span class="c-flip">flip ⟲</span>
+          </button>
+          <div class="card-face back">
+            <h3 class="k-head" id="card-lorde">Uses of the Erotic</h3>
+            <div class="k-body">
+              In 1978 Audre Lorde wrote the essay this whole room is
+              secretly footnoting: <em>"Uses of the Erotic: The Erotic as
+              Power."</em> Her argument: the erotic is not decoration and
+              not distraction — it is <strong>information</strong>, a
+              felt measure of what full aliveness is like. And once a
+              person has that measure, they stop accepting less —
+              <em>in bed, at work, from the state.</em><br><br>
+              Which is why every regime in this record — the vice squads,
+              the Secretum, the censors, the Lavender Scare — went after
+              pleasure first. Not because it's trivial.
+              <strong>Because it's a benchmark.</strong> People who know
+              how good things can feel are terrible subjects and
+              excellent revolutionaries.
+            </div>
+            <p class="subvert">read the essay — it's twelve pages and it
+              will rearrange your furniture. then notice, once this week,
+              where you're settling.</p>
+            <button class="unflip">⟲ flip back</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="deck-card suit-major">
+        <div class="card-inner">
+          <button class="card-face front flip-toggle" aria-expanded="false">
+            <span class="c-suit">major arcana · II · the exit card</span>
+            <span class="c-title">Pleasure Activism</span>
+            <span class="c-tease">adrienne maree brown, 2019: "pleasure
+              is a measure of freedom." the door out.</span>
+            <span class="c-flip">flip ⟲</span>
+          </button>
+          <div class="card-face back">
+            <h3 class="k-head" id="card-amb">Pleasure Activism</h3>
+            <div class="k-body">
+              adrienne maree brown's 2019 book takes Lorde's baton and
+              runs: what if justice work <em>felt good?</em> What if
+              feeling good — rested, fed, touched, delighted — were
+              treated as evidence the politics are working, instead of a
+              guilty secret? <em>"Pleasure is a measure of freedom."</em><br><br>
+              That's the deck played out. You've held the anatomy, the
+              consent tech, the alphabet, the history. None of it was
+              ever just about sex. It was about the radical proposition
+              that your one wild body is <strong>yours</strong>, that
+              knowing it is power, and that joy — defended, shared,
+              organized — is a political force with a better beat.
+            </div>
+            <p class="subvert">the loop completes when you leave and do
+              something loving with all this. go. the record's still
+              spinning — <em>ongoing is the next room, and so are you.</em></p>
+            <button class="unflip">⟲ flip back</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── LINER NOTES / BIBLIOGRAPHY ─────────────────────────────── -->
+  <section aria-label="Liner notes">
     <div class="sources">
-      <h3>sources to collect · per ASSET_MANIFEST §D–F, ROUND2 §3</h3>
+      <h3>liner notes · the deck's bibliography</h3>
       <ul>
-        <li><span class="s-what">Fugitive sheet — Female (Eve), flaps RAISED</span>
-          <span class="s-note">Wellcome Collection, work apc2u9px · CC BY 4.0 ·
-            <a href="https://wellcomecollection.org/works/apc2u9px" rel="noopener">wellcomecollection.org/works/apc2u9px</a></span></li>
-        <li><span class="s-what">Fugitive sheet — Female (Eve), all layers LOWERED</span>
-          <span class="s-note">Wellcome Collection, work wgnq6kw5 · CC BY 4.0 ·
-            <a href="https://wellcomecollection.org/works/wgnq6kw5" rel="noopener">wellcomecollection.org/works/wgnq6kw5</a> ·
-            paired with apc2u9px above — same object, open &amp; closed: the flip mechanic itself</span></li>
-        <li><span class="s-what">"The woman" — 5 flaps over thorax/abdomen, English text</span>
-          <span class="s-note">Wellcome Collection, work wufxm5sn · CC BY 4.0 ·
-            <a href="https://wellcomecollection.org/works/wufxm5sn" rel="noopener">wellcomecollection.org/works/wufxm5sn</a></span></li>
-        <li><span class="s-what">Venice, 1611 woodcut — foundation sheet, flaps lost</span>
-          <span class="s-note">Wellcome Collection, work ezt7sqs5 · CC BY 4.0 ·
-            <a href="https://wellcomecollection.org/works/ezt7sqs5" rel="noopener">wellcomecollection.org/works/ezt7sqs5</a></span></li>
-        <li><span class="s-what">Fugitive sheets — concept / overview page</span>
-          <span class="s-note">Wellcome Collection, work ce7rratv ·
-            <a href="https://wellcomecollection.org/works/ce7rratv" rel="noopener">wellcomecollection.org/works/ce7rratv</a></span></li>
-        <li><span class="s-what">Handscroll of Ten Homoerotic (Nanshoku) Scenes — Miyagawa Chōshun</span>
-          <span class="s-note">The Met, Open Access (888663) · CC0 · explicit — belongs behind this gate ·
-            <a href="https://www.metmuseum.org/art/collection/search/888663" rel="noopener">metmuseum.org/art/collection/search/888663</a></span></li>
+        <li>Fugitive sheets (1538 →) — Wellcome Collection, CC BY 4.0:
+          <a href="https://wellcomecollection.org/works/wgnq6kw5" rel="noopener">flaps lowered</a> ·
+          <a href="https://wellcomecollection.org/works/apc2u9px" rel="noopener">flaps raised</a> ·
+          <a href="https://wellcomecollection.org/works/wufxm5sn" rel="noopener">"The woman"</a> ·
+          <a href="https://wellcomecollection.org/works/ezt7sqs5" rel="noopener">Venice 1611</a></li>
+        <li>Helen O'Connell et al., clitoral anatomy via MRI, 1998–2005 · Odile Fillod, printable 3D clitoris, 2016 (Creative Commons)</li>
+        <li>Frederick et al., "Differences in Orgasm Frequency…", <em>Archives of Sexual Behavior</em>, 2018 (~52,000 adults)</li>
+        <li>Planned Parenthood, the FRIES consent framework · leather community lineage: SSC (1980s) → RACK</li>
+        <li>Miyagawa Chōshun, Handscroll of Ten Nanshoku Scenes —
+          <a href="https://www.metmuseum.org/art/collection/search/888663" rel="noopener">The Met, Open Access 888663, CC0</a></li>
+        <li>Audre Lorde, "Uses of the Erotic: The Erotic as Power," 1978 · adrienne maree brown, <em>Pleasure Activism</em>, 2019</li>
+        <li>Sexual-health specifics (PrEP, PEP, U=U, testing): confirm current local guidance with a clinic — this deck is education, not your clinician.</li>
       </ul>
     </div>
   </section>
@@ -246,8 +946,107 @@ h2.roomlabel {
   }
 
   room.hidden = false;
-  document.getElementById('depth-readout').textContent = REV.state.depth;
   REV.boot({ scene: 'deck', room: 'deck' });
+
+  /* ── the depth dial, in-room — same state as the threshold ────── */
+  var bS = document.getElementById('depth-sugg');
+  var bF = document.getElementById('depth-frank');
+  function syncDepth() {
+    var frank = REV.state.depth === 'frank';
+    bS.setAttribute('aria-pressed', String(!frank));
+    bF.setAttribute('aria-pressed', String(frank));
+    renderHanky();
+  }
+  bS.addEventListener('click', function () { REV.set('depth', 'suggestive'); syncDepth(); });
+  bF.addEventListener('click', function () { REV.set('depth', 'frank'); syncDepth(); });
+
+  /* ── card flips — the 1538 mechanic ─────────────────────────────
+     Front is a button (flip open); back has its own (flip closed).
+     Stilled mode: the shared motion rules make the turn instant. */
+  document.querySelectorAll('.flip-toggle').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var card = btn.closest('.deck-card');
+      card.classList.add('flipped');
+      btn.setAttribute('aria-expanded', 'true');
+      REV.audio.crackle(0.15);
+    });
+  });
+  document.querySelectorAll('.unflip').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var card = btn.closest('.deck-card');
+      card.classList.remove('flipped');
+      card.querySelector('.flip-toggle').setAttribute('aria-expanded', 'false');
+      REV.audio.crackle(0.12);
+    });
+  });
+
+  /* ── the hanky code — a working artifact ────────────────────────
+     Two registers per flag: the code's own frank terms, and a gentler
+     phrasing for suggestive depth. left = giving, right = receiving. */
+  var HANKY = [
+    { c: 'navy blue',   soft: ['tops during anal sex', 'bottoms during anal sex'],
+                        frank: ['anal — the fucker', 'anal — the fucked'] },
+    { c: 'light blue',  soft: ['wants oral, receiving', 'gives oral, gladly'],
+                        frank: ['wants head', 'expert at giving head'] },
+    { c: 'red',         soft: ['the giving hand (fisting)', 'the receiving side (fisting)'],
+                        frank: ['fists', 'takes fists'] },
+    { c: 'grey',        soft: ['ties people up (bondage)', 'likes being tied'],
+                        frank: ['bondage — rigger', 'bondage — likes the ropes on'] },
+    { c: 'black',       soft: ['heavy sensation, giving', 'heavy sensation, receiving'],
+                        frank: ['heavy S&M — top', 'heavy S&M — bottom'] },
+    { c: 'yellow',      soft: ['water play, giving', 'water play, receiving'],
+                        frank: ['watersports — pisser', 'watersports — recipient'] },
+    { c: 'brown',       soft: ['the flag nobody’s mother believes exists (giving)', 'same, receiving'],
+                        frank: ['scat — giving', 'scat — receiving'] },
+    { c: 'pink',        soft: ['wields the toy chest', 'enjoys the toy chest'],
+                        frank: ['uses dildos on partners', 'wants the dildo'] },
+    { c: 'purple',      soft: ['piercing play, giving', 'piercing play, receiving'],
+                        frank: ['piercer', 'piercee'] },
+    { c: 'fuchsia',     soft: ['spanks', 'gets spanked'],
+                        frank: ['spanker', 'spankee'] },
+    { c: 'hunter green',soft: ['daddy energy', 'looking for a daddy'],
+                        frank: ['daddy', 'boy looking for daddy'] },
+    { c: 'olive drab',  soft: ['uniforms, wearing', 'uniforms, admiring'],
+                        frank: ['military/uniform top', 'uniform bottom'] },
+    { c: 'orange',      soft: ['up for almost anything', 'window shopping tonight'],
+                        frank: ['anything, anytime', 'nothing tonight — just cruising'] },
+    { c: 'white',       soft: ['mutual touch, giving', 'mutual touch, receiving'],
+                        frank: ['jacks others off', 'wants to be jacked off'] },
+    { c: 'teddy bear',  soft: ['gives the best cuddles', 'urgently requires cuddles'],
+                        frank: ['cuddler — big spoon', 'cuddler — little spoon'] }
+  ];
+  var pocket = 'left';
+  var sel = document.getElementById('hanky-color');
+  var out = document.getElementById('hanky-out');
+  var pL = document.getElementById('pocket-left');
+  var pR = document.getElementById('pocket-right');
+  HANKY.forEach(function (h, i) {
+    var o = document.createElement('option');
+    o.value = i; o.textContent = h.c;
+    sel.appendChild(o);
+  });
+  function renderHanky() {
+    if (!sel || !out) return;
+    var h = HANKY[sel.value | 0];
+    var frank = document.documentElement.dataset.depth === 'frank';
+    var pair = frank ? h.frank : h.soft;
+    var meaning = pocket === 'left' ? pair[0] : pair[1];
+    out.innerHTML = '<span class="flag">' + h.c + ' · ' + pocket + ' pocket</span><br>' +
+      'flying this flag says: <strong>' + meaning + '</strong>';
+  }
+  sel.addEventListener('change', renderHanky);
+  pL.addEventListener('click', function () {
+    pocket = 'left';
+    pL.setAttribute('aria-pressed', 'true'); pR.setAttribute('aria-pressed', 'false');
+    renderHanky();
+  });
+  pR.addEventListener('click', function () {
+    pocket = 'right';
+    pR.setAttribute('aria-pressed', 'true'); pL.setAttribute('aria-pressed', 'false');
+    renderHanky();
+  });
+
+  syncDepth();
 })();
 </script>
 </body>
