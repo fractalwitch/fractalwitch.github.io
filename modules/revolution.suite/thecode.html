@@ -90,6 +90,30 @@ h2.roomlabel {
 .sources li .s-note { color: var(--ink-dim); display: block; margin-top: .2rem; font-size: .72rem; }
 .sources li a { color: var(--link); }
 
+/* image grids for the built-out room */
+.code-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+  margin-top: 2rem;
+}
+@media (max-width: 720px) { .code-grid { grid-template-columns: 1fr; } }
+.code-grid .polaroid, .code-grid .flyer-card { max-width: none; }
+.code-grid.trio { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 720px) { .code-grid.trio { grid-template-columns: 1fr; } }
+
+.institut-body {
+  font-family: var(--font-mono);
+  font-size: .88rem;
+  line-height: 2;
+  max-width: 60ch;
+  margin-top: 1.2rem;
+  color: var(--ink);
+}
+.institut-body em { font-style: normal; color: var(--gold-t); }
+[data-ground="dark"] .institut-body em, html[data-theme="disco"] .institut-body em { color: var(--gold); }
+
 .exits {
   display: flex;
   justify-content: space-between;
@@ -108,65 +132,149 @@ h2.roomlabel {
 <main class="code-wrap">
 
   <section aria-labelledby="code-title">
-    <h2 class="roomlabel" id="code-title">room two · 1867 – 1965 · still being cut</h2>
+    <h2 class="roomlabel" id="code-title">room two · 1867 – 1965</h2>
     <h1 class="display chrome-text">The Code <span class="flourish flourish-squiggle" aria-hidden="true"></span></h1>
     <p class="lede">
-      This room isn't pressed yet. It will hold the closet as a
-      <em>technology</em> — a system people built to survive inside,
-      not a shame they invented. <em>1869: the first drag ball in
-      United States history, a hundred years before Stonewall.</em>
-      Magnus Hirschfeld's Institut für Sexualwissenschaft, and the
-      night the Nazis emptied its library into the street. Ma Rainey
-      selling her own scandal back to the public. Gladys Bentley,
-      out and loud, then not.
+      The closet was not a shame people invented — it was a
+      <em>technology</em> they built to survive inside, and some of them
+      built it into something magnificent. A ballroom. A research
+      institute. A record deal that dared you to prove it. Then the
+      century spent itself trying to take each one back.
     </p>
     <p style="margin-top:2.2rem;">
       <span class="shout-banner">FAG BALLS EXPOSED</span>
     </p>
     <p class="lede" style="font-size:.78rem; font-family:var(--font-mono); margin-top:1rem;">
       a real 1932 tabloid headline about the Hamilton Lodge Ball, recreated
-      typographically — the design object the manifest already called for,
-      not a scan of the original page.
+      typographically — the design object the manifest called for, not a
+      scan of the original page.
     </p>
   </section>
 
-  <section aria-label="What's coming">
+  <!-- ── THE TIMELINE SPINE ─────────────────────────────────────── -->
+  <section aria-labelledby="ball-title">
+    <h2 class="roomlabel" id="ball-title">the first ballroom · harlem · 1869 →</h2>
     <div class="fragments">
-      <p><span class="yr">1869</span> · Hamilton Lodge Ball, Harlem — the first drag ball in U.S. history. By its 1920s peak, up to 8,000 dancers and spectators.</p>
+      <p><span class="yr">1869</span> · Hamilton Lodge Ball, Harlem — the first drag ball in U.S. history. By its 1920s peak, up to 8,000 dancers and spectators, racially integrated, decades before it was safe.</p>
       <p><span class="yr">1919</span> · Magnus Hirschfeld opens the Institut für Sexualwissenschaft, Berlin — the world's first research institute of its kind.</p>
       <p><span class="yr">1928</span> · Ma Rainey's "Prove It On Me Blues" — a record label sells queerness as scandal, and Rainey uses their own ad copy to say it out loud.</p>
-      <p><span class="yr">May 6 1933</span> · Nazi students burn Hirschfeld's library — roughly 10,000 books, most of them irreplaceable.</p>
+      <p><span class="yr">May 6 1933</span> · Nazi brigades empty Hirschfeld's library — roughly 10,000 books, most of them irreplaceable, days later on the bonfire.</p>
       <p><span class="yr">1952</span> · Gladys Bentley, "I Am Woman Again" — the Lavender Scare's shape, in one woman's own words.</p>
     </div>
+  </section>
 
-    <div class="pressing-plate">
-      STILL IN THE PRESSING PLANT — THIS GROOVE IS BEING CUT.<br>
-      <span class="hot">the honest version of this page is the one that admits it isn't done.</span><br>
-      the rest of the record plays in the meantime →
+  <!-- ── THE INSTITUT — built, then burned ──────────────────────── -->
+  <section aria-labelledby="institut-title">
+    <h2 class="roomlabel" id="institut-title">the institut · berlin · 1919 → 1933</h2>
+    <p class="institut-body">
+      In 1919 Magnus Hirschfeld opened the <em>Institut für
+      Sexualwissenschaft</em> — the world's first institute of its kind.
+      It held a public library of roughly 10,000 volumes, ran a clinic,
+      coined the vocabulary, and performed some of the earliest
+      gender-affirming surgeries on Earth. Hirschfeld built it with the
+      people he loved around him — here, with his longtime collaborator
+      Bernhard Schapiro and his student and companion Li Shiu Tong.
+    </p>
+
+    <div class="code-grid">
+      <figure class="polaroid" style="--tilt:-1.6deg;">
+        <img data-asset="assets/commons/hirschfeld-schapiro-taoli.jpg"
+             alt="Three men seated at a table: Bernhard Schapiro, Magnus Hirschfeld (centre, with moustache and glasses), and Li Shiu Tong."
+             class="halftone">
+        <figcaption class="caption">Bernhard Schapiro · Magnus Hirschfeld ·
+          Li Shiu Tong (Tao Li)</figcaption>
+        <p class="credit">c. 1930s · image provided · via Wikimedia Commons ·
+          verify per-file license before ship</p>
+      </figure>
+      <figure class="polaroid" style="--tilt:1.4deg;">
+        <img data-asset="assets/commons/hirschfeld-book.jpg"
+             alt="Title page of a book by Dr. Magnus Hirschfeld, 'Geschlechtliche Entwicklungsstörungen'."
+             class="halftone">
+        <figcaption class="caption">Hirschfeld's own work — one of thousands
+          of volumes the Institut held and published.</figcaption>
+        <p class="credit">Dr. Magnus Hirschfeld · title page · image provided ·
+          verify edition &amp; license before ship</p>
+      </figure>
     </div>
 
+    <p class="serif-cry" style="margin-top:2.8rem;">
+      They burned the library <span class="hot">first.</span>
+    </p>
+    <p class="institut-body">
+      On <em>6 May 1933</em>, Nazi student brigades and SA men emptied the
+      Institut, carting its archive into the street while photographers
+      watched. Days later the books fed the bonfire in the Opernplatz —
+      one of the first and largest of the Nazi book burnings. Hirschfeld,
+      already in exile, is said to have watched newsreel of his life's
+      work burning from a cinema seat in Paris. <em>He never went home.</em>
+      The first thing the new order destroyed was the place that had been
+      trying to understand us.
+    </p>
+
+    <div class="code-grid trio">
+      <figure class="polaroid" style="--tilt:1.2deg;">
+        <img data-asset="assets/commons/institut-plunder-sorting.jpg"
+             alt="Two men picking through a floor strewn with looted books and journals from the Institut; one wears an SA uniform with a swastika armband."
+             class="halftone">
+        <figcaption class="caption">The Institut's library, on the floor.</figcaption>
+        <p class="credit">May 1933 · via archives · verify license before ship</p>
+      </figure>
+      <figure class="polaroid" style="--tilt:-1.5deg;">
+        <img data-asset="assets/commons/institut-plunder-nac.jpg"
+             alt="Three men sorting through the plundered library of the Institut für Sexualwissenschaft, 1933."
+             class="halftone">
+        <figcaption class="caption">Cataloguing what they came to destroy.</figcaption>
+        <p class="credit">Narodowe Archiwum Cyfrowe · 1933-05 · public domain</p>
+      </figure>
+      <figure class="polaroid" style="--tilt:1.6deg;">
+        <img data-asset="assets/commons/institut-plunder-officer.jpg"
+             alt="An SA officer with a swastika armband stands reading a pamphlet over a floor covered in looted books and copies of the journal Die Ehe."
+             class="halftone">
+        <figcaption class="caption">Reading the evidence before the fire ·
+          the journal <em>Die Ehe</em> underfoot.</figcaption>
+        <p class="credit">May 1933 · via archives · verify license before ship</p>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ── GLADYS BENTLEY — out, loud, then made to recant ────────── -->
+  <section aria-labelledby="bentley-title">
+    <h2 class="roomlabel" id="bentley-title">gladys bentley · harlem → the lavender scare</h2>
+    <div class="code-grid">
+      <figure class="polaroid" style="--tilt:-1.8deg;">
+        <img data-asset="assets/harlem/gladys-bentley.jpg"
+             alt="Gladys Bentley posing in a white tuxedo and top hat, holding a cane, in front of a bar."
+             class="halftone">
+        <figcaption class="caption">Gladys Bentley — white tux, top hat, cane,
+          and a growl that filled the room.</figcaption>
+        <p class="credit">image provided · NMAAHC 2013.46.25.82 ·
+          ⚠️ verify usage conditions before ship</p>
+      </figure>
+      <div class="institut-body" style="margin-top:0;">
+        In the Harlem of the late 1920s and '30s, Gladys Bentley
+        headlined in a tuxedo, married a woman on stage, and flirted with
+        the audience in a voice like a trombone. She was <em>out, loud,
+        and paid for it</em> — a Black lesbian blues star at the top of
+        the bill.<br><br>
+        Then the Lavender Scare. Under McCarthy, Bentley put on a dress,
+        and in 1952 published an <em>Ebony</em> essay titled "I Am Woman
+        Again," claiming hormones had "cured" her. <em>The backlash is not
+        a footnote — it is the mechanism.</em> We keep her whole story on
+        the wall, the triumph and the recantation both, because sanding
+        it down would be doing the century's work for it.
+      </div>
+    </div>
+  </section>
+
+  <!-- ── STILL TO COLLECT — only the genuinely missing one ──────── -->
+  <section aria-label="Still to collect">
     <div class="sources">
-      <h3>sources to collect · per ASSET_MANIFEST_ROUND2 §2</h3>
+      <h3>still to collect</h3>
       <ul>
-        <li><span class="s-what">Institut für Sexualwissenschaft, Bibliothek 1933</span>
-          <span class="s-note">Wikimedia Commons ·
-            <a href="https://commons.wikimedia.org/wiki/Special:FilePath/Institut_f%C3%BCr_Sexualwissenschaft_-_Bibliothek_1933.jpg" rel="noopener">direct file</a></span></li>
-        <li><span class="s-what">Nazi students plunder Hirschfeld's library, May 6 1933 (cropped)</span>
-          <span class="s-note">exact filename truncated in the manifest — browse
-            <a href="https://commons.wikimedia.org/wiki/Category:Institut_f%C3%BCr_Sexualwissenschaft" rel="noopener">Commons: Category:Institut für Sexualwissenschaft</a>
-            to find it, plus the Narodowe Archiwum Cyfrowe 1933-05 plundering series</span></li>
-        <li><span class="s-what">Bernhard Schapiro, Magnus Hirschfeld, Tao Lee</span>
-          <span class="s-note">Wikimedia Commons ·
-            <a href="https://commons.wikimedia.org/wiki/Special:FilePath/Bernhard_Schapiro,_Magnus_Hirschfeld,_Tao_Lee.jpg" rel="noopener">direct file</a></span></li>
-        <li><span class="s-what">Hirschfeld portrait</span>
-          <span class="s-note">Wellcome Collection, work L0025695 · CC BY 4.0 ·
-            <a href="https://wellcomecollection.org/search/works?query=L0025695" rel="noopener">search Wellcome for L0025695</a></span></li>
-        <li><span class="s-what">Gladys Bentley, tuxedoed three-quarter profile</span>
-          <span class="s-note">NMAAHC 2013.46.25.82 · ⚠️ usage conditions apply, check object page ·
-            <a href="https://www.si.edu/search?edan_q=2013.46.25.82" rel="noopener">search Smithsonian Open Access for 2013.46.25.82</a></span></li>
-        <li><span class="s-what">Ma Rainey, "Prove It On Me Blues" ad, Chicago Defender, Sept 1928</span>
+        <li><span class="s-what">Ma Rainey, "Prove It On Me Blues" ad · Chicago Defender · Sept 1928</span>
           <span class="s-note">PD in the US since Jan 1 2024 · no clean scan located yet —
-            search Chicago Defender microfilm, Commons, or OutHistory; redraw if none surfaces at print quality</span></li>
+            search Chicago Defender microfilm, Commons, or OutHistory; a faithful redraw
+            in the glam palette is honest if none surfaces at print quality.</span></li>
       </ul>
     </div>
   </section>
@@ -182,6 +290,22 @@ h2.roomlabel {
 <script src="revolution.js?v=14"></script>
 <script>
 REV.boot({ scene: 'thecode', room: 'thecode' });
+
+/* asset slots — graceful until archive files land, same pattern as the
+   other rooms. */
+(function () {
+  document.querySelectorAll('img[data-asset]').forEach(function (img) {
+    img.src = img.dataset.asset;
+    img.addEventListener('error', function () {
+      const slot = document.createElement('div');
+      slot.className = 'asset-slot';
+      slot.style.cssText = 'aspect-ratio:4/3;background:repeating-linear-gradient(45deg,#efe8db 0 12px,#e6ddcc 12px 24px);display:grid;place-items:center;text-align:center;font-family:var(--font-mono);font-size:.62rem;line-height:1.7;color:#6f5f80;padding:1rem;';
+      slot.innerHTML = 'AWAITING PRESSING<br>drop the archive file at<br><strong>'
+        + img.dataset.asset + '</strong>';
+      img.replaceWith(slot);
+    }, { once: true });
+  });
+})();
 </script>
 </body>
 </html>
