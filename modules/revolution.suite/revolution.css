@@ -69,12 +69,13 @@
   --beat: 517ms;                                /* one beat @ 116 BPM */
 }
 
-/* DARK CONTEXT — the carve-outs whose darkness is load-bearing: the
-   riot (holes in the archive), the Living register of ancestors, and
-   anything else that opts in with data-ground="dark" or .on-dark.
-   Flips the ground tokens back to the original velvet-dark values so
-   light text stays readable. */
-[data-ground="dark"], .on-dark {
+/* DARK CONTEXT — three ways in, one set of tokens:
+   · the carve-out rooms (theriot, the Living register) set data-ground
+     ="dark" themselves — always dark, never disco;
+   · the global light/dark switch sets html[data-theme="disco"] — the
+     whole site goes dark AND gets the glow layer further down.
+   Flips the ground tokens back to velvet-dark so light text stays read. */
+[data-ground="dark"], .on-dark, html[data-theme="disco"] {
   --page:    var(--void);
   --ink:     #f4ecff;
   --ink-dim: #9d8fb0;
@@ -106,8 +107,8 @@ body {
 
 a { color: var(--link); text-decoration-color: rgba(176,23,107,.4); text-underline-offset: 3px; }
 a:hover { color: var(--hotpink); }
-[data-ground="dark"] a, .on-dark a { text-decoration-color: rgba(38,224,224,.4); }
-[data-ground="dark"] a:hover, .on-dark a:hover { color: var(--rose); }
+[data-ground="dark"] a, .on-dark a, html[data-theme="disco"] a { text-decoration-color: rgba(38,224,224,.4); }
+[data-ground="dark"] a:hover, .on-dark a:hover, html[data-theme="disco"] a:hover { color: var(--rose); }
 
 :focus-visible {
   outline: 2px solid var(--hotpink);
@@ -131,7 +132,7 @@ a:hover { color: var(--hotpink); }
   opacity: .12;
   animation: scan-drift 9s linear infinite;
 }
-[data-ground="dark"] .scanlines { opacity: .5; }
+[data-ground="dark"] .scanlines, html[data-theme="disco"] .scanlines { opacity: .5; }
 @keyframes scan-drift { to { transform: translateY(6px); } }
 
 /* film grain via feTurbulence — real texture, no image request */
@@ -160,7 +161,7 @@ a:hover { color: var(--hotpink); }
   pointer-events: none;
   z-index: 39;
 }
-[data-ground="dark"] .velvet {
+[data-ground="dark"] .velvet, html[data-theme="disco"] .velvet {
   background: radial-gradient(ellipse 90% 70% at 50% 42%,
               transparent 0%, rgba(2,0,5,.55) 78%, rgba(2,0,5,.92) 100%);
 }
@@ -570,8 +571,8 @@ a:hover { color: var(--hotpink); }
   transition: border-color .25s, color .25s, background .25s;
 }
 .btn-ghost:hover { background: var(--hotpink); border-color: var(--hotpink); color: #fff; }
-[data-ground="dark"] .btn-ghost { color: var(--lavender); border-color: var(--line); }
-[data-ground="dark"] .btn-ghost:hover { background: transparent; border-color: var(--lavender); color: var(--ink); }
+[data-ground="dark"] .btn-ghost, html[data-theme="disco"] .btn-ghost { color: var(--lavender); border-color: var(--line); }
+[data-ground="dark"] .btn-ghost:hover, html[data-theme="disco"] .btn-ghost:hover { background: transparent; border-color: var(--lavender); color: var(--ink); }
 
 /* ── FOURTH WALL (the page notices you — rare, earned) ──────────── */
 .fourthwall {
@@ -653,6 +654,90 @@ a:hover { color: var(--hotpink); }
   border-color: var(--gold);
   box-shadow: 0 0 16px rgba(245,197,24,.3);
 }
+
+/* ── THE LIGHT SWITCH (light ↔ disco-dark) ───────────────────────
+   A real wall switch in the corner. Flip UP for light, DOWN for the
+   disco dark — where even the dark glows. Persists on this device only,
+   like every other dial. ─────────────────────────────────────────── */
+.light-switch {
+  position: fixed;
+  top: 1.1rem; right: 1.1rem;
+  z-index: 71;
+  width: 44px; height: 72px;
+  padding: 6px;
+  border: 0;
+  border-radius: 9px;
+  background: linear-gradient(160deg, #efe9dc, #cfc6b4);
+  box-shadow: 0 4px 12px rgba(0,0,0,.35), inset 0 0 0 1px rgba(0,0,0,.12);
+  cursor: pointer;
+}
+.light-switch .ls-plate {
+  position: relative;
+  width: 100%; height: 100%;
+  border-radius: 5px;
+  background: linear-gradient(160deg, #d8d0c0, #b7ad99);
+  box-shadow: inset 0 0 6px rgba(0,0,0,.35);
+  overflow: hidden;
+}
+.light-switch .ls-knob {
+  position: absolute;
+  left: 50%; width: 66%; height: 42%;
+  transform: translateX(-50%);
+  top: 6%;                                   /* UP = light (default) */
+  border-radius: 4px;
+  background: linear-gradient(180deg, #fdfdfb, #cbc7bd);
+  box-shadow: 0 3px 5px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.8);
+  transition: top .26s var(--ease-needle), background .26s, box-shadow .26s;
+}
+.light-switch .ls-knob::after {           /* the little grip line */
+  content:''; position:absolute; left:22%; right:22%; top: 44%; height:2px;
+  background: rgba(0,0,0,.18); border-radius:2px;
+}
+/* thrown DOWN = disco dark */
+html[data-theme="disco"] .light-switch .ls-knob {
+  top: 52%;
+  background: linear-gradient(180deg, #2a1030, #14040c);
+}
+/* even the dark glows: the switch itself catches the technicolor */
+html[data-theme="disco"] .light-switch {
+  background: linear-gradient(160deg, #1a0a20, #0a0410);
+  animation: disco-glow 6s linear infinite;
+}
+html[data-theme="disco"] .light-switch .ls-plate {
+  background: linear-gradient(160deg, #17081f, #0b0310);
+}
+
+/* ── DISCO GLOW — the RGB-cycling border/aura for dark mode ────────
+   Rides on the card classes that already exist. Staggered so the room
+   shimmers rather than strobes in unison. Sound ≠ motion: honored by
+   the stilled membrane below (it resolves to a calm single hue). */
+@keyframes disco-glow {
+  0%   { border-color: var(--hotpink);    box-shadow: 0 0 18px -3px var(--hotpink),    0 0 40px -14px var(--hotpink); }
+  20%  { border-color: var(--tangerine);  box-shadow: 0 0 18px -3px var(--tangerine),  0 0 40px -14px var(--tangerine); }
+  40%  { border-color: var(--gold);       box-shadow: 0 0 18px -3px var(--gold),       0 0 40px -14px var(--gold); }
+  60%  { border-color: var(--neon-green); box-shadow: 0 0 18px -3px var(--neon-green), 0 0 40px -14px var(--neon-green); }
+  80%  { border-color: var(--cyan);       box-shadow: 0 0 18px -3px var(--cyan),       0 0 40px -14px var(--cyan); }
+  100% { border-color: var(--hotpink);    box-shadow: 0 0 18px -3px var(--hotpink),    0 0 40px -14px var(--hotpink); }
+}
+html[data-theme="disco"] .polaroid,
+html[data-theme="disco"] .flyer-card,
+html[data-theme="disco"] .tablet,
+html[data-theme="disco"] .film,
+html[data-theme="disco"] .contrast-panel,
+html[data-theme="disco"] .ball-category,
+html[data-theme="disco"] .thing-embed,
+html[data-theme="disco"] .tablet-img {
+  border: 2px solid var(--hotpink);
+  animation: disco-glow 6s linear infinite;
+}
+/* offset the phase so the wall shimmers like real mirrorball spill */
+html[data-theme="disco"] .reliquary > *:nth-child(3n)   { animation-delay: -2s; }
+html[data-theme="disco"] .reliquary > *:nth-child(3n+1) { animation-delay: -4s; }
+html[data-theme="disco"] .ball-floor > *:nth-child(2n)  { animation-delay: -3s; }
+html[data-theme="disco"] .kodachrome > *:nth-child(2n)  { animation-delay: -2.5s; }
+/* the lit dancefloor tiles get the technicolor edge too */
+html[data-theme="disco"] .tile.lit { animation: disco-glow 6s linear infinite; }
+html[data-theme="disco"] .tile.lit:nth-child(3n) { animation-delay: -3s; }
 
 /* ── MOTION DISCIPLINE ──────────────────────────────────────────── */
 /* Stilled = every animation resolves to its calmest frame.
