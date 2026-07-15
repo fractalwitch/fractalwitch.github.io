@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Human Sexual Revolution (Ongoing) · Side A</title>
 <meta name="description" content="An interactive history of the sexual revolution, navigated like a record. Drop the needle on a room.">
-<link rel="stylesheet" href="revolution.css?v=15">
+<link rel="stylesheet" href="revolution.css?v=16">
 <script>try{var _t=JSON.parse(localStorage.getItem("revolution.threshold.v1"));if(_t&&_t.theme==="dark")document.documentElement.dataset.theme="disco";}catch(e){}</script>
 <style>
 /* ═══════════════════════════════════════════════════════════════
@@ -41,7 +41,12 @@ header.masthead .eyebrow { margin-bottom: .6rem; }
 #table {
   width: min(78vh, 94vw);
   height: min(78vh, 94vw);
-  touch-action: manipulation;
+  /* the record OWNS your finger — no scroll, no zoom, no browser gesture
+     steals the drag. The rest of the page scrolls normally; only touches
+     that BEGIN on the platter are captured. */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
   cursor: pointer;
 }
 
@@ -125,7 +130,7 @@ header.masthead .eyebrow { margin-bottom: .6rem; }
   </p>
 </nav>
 
-<script src="revolution.js?v=15"></script>
+<script src="revolution.js?v=16"></script>
 <script>
 REV.boot({ scene: 'hub', room: null });
 
@@ -143,6 +148,25 @@ const ROOMS = [
   { id:'deck',      title:'The Deviance Deck', sub:'frank · anatomical · adult · gated',   href:'deck.html',      tone:277.2, built:true,  gate:true  },
   { id:'ongoing',   title:'Ongoing',        sub:'1980 → you are standing in it',           href:'ongoing.html',   tone:329.6, built:true,  gate:false }
 ];
+
+/* Each band has a MOOD — an accent color and a visual temperament that
+   fires the moment the needle finds it. theriot is `dim`: selecting it
+   quiets the platter and throws no sparks, honoring the hole. */
+const MOODS = {
+  ancestors: { accent:'#f5c518', sparks:9,  spin:1.0 },
+  thecode:   { accent:'#26e0e0', sparks:7,  spin:1.0 },
+  theriot:   { accent:'#ff3d00', sparks:0,  spin:0.35, dim:true },
+  thefloor:  { accent:'#ff2e88', sparks:16, spin:1.35 },
+  deck:      { accent:'#c9a0ff', sparks:11, spin:0.9 },
+  ongoing:   { accent:'#39ff14', sparks:14, spin:1.2 }
+};
+function moodOf(i){ return (i >= 0 && MOODS[ROOMS[i].id]) || { accent:'#ff2e88', sparks:10, spin:1.0 }; }
+
+/* coarse pointers (phones/tablets) have no hover — the interaction is
+   touch-to-preview, hold-to-drop. Mice keep hover + click. */
+const COARSE = matchMedia('(hover: none), (pointer: coarse)').matches;
+const REST_SUB = COARSE ? 'touch a groove · hold to drop the needle'
+                        : 'hover a groove · drop the needle';
 
 /* ── tracklist (the honest nav) ─────────────────────────────────── */
 (function buildTracklist(){
@@ -165,6 +189,9 @@ const ROOMS = [
     ol.appendChild(li);
   });
 })();
+
+/* set the resting hint to match the pointer we actually have */
+document.getElementById('ro-sub').textContent = REST_SUB;
 
 /* gate logic: the Deck asks the threshold, never a popup */
 function routeTo(room, e) {
@@ -204,12 +231,51 @@ let W, H, CX, CY, R, dpr;
 const BAND_OUT = 0.96, BAND_IN = 0.42;     // annulus of playable vinyl
 const LABEL_R = 0.34;
 
+const REST_ARM = -0.62;
 let phase = 0;                              // platter rotation
-let hover = -1;                             // hovered band index
-let armAngle = -0.62;                       // current tonearm angle (rad)
-let armTarget = -0.62;                      // resting pose
+let spinScale = 1;                          // eased per-room speed multiplier
+let spinTarget = 1;
+let hover = -1;                             // highlighted band index
+let armAngle = REST_ARM;                    // current tonearm angle (rad)
+let armTarget = REST_ARM;                   // resting pose
 let dropping = false;
 let lastT = performance.now();
+
+/* accent wash — the selected room's color bleeds into the platter */
+let accent = '#ff2e88';
+let accentLevel = 0;                        // 0 → 1 eased
+let accentTarget = 0;
+
+/* sparks thrown off a groove when the needle finds it */
+let sparks = [];                            // {ang, r, life, hue, size}
+
+/* HOLD-TO-DROP (touch): press a band, a ring fills, the needle drops */
+const HOLD_MS = 1400;
+let pressBand = -1;                          // band the finger is holding
+let holdT0 = 0;
+let holdProg = 0;                            // 0 → 1
+let committing = false;
+let lastPT = 'mouse';                        // pointerType of last interaction
+let lastStemT = 0;                           // throttle stem retrigger
+
+function hexA(hex, a) {
+  const n = parseInt(hex.slice(1), 16);
+  return 'rgba(' + (n >> 16 & 255) + ',' + (n >> 8 & 255) + ',' + (n & 255) + ',' + a + ')';
+}
+function igniteSparks(i) {
+  const m = moodOf(i);
+  if (!m.sparks) return;                     // theriot throws none
+  const b = bandRadii(i);
+  for (let k = 0; k < m.sparks; k++) {
+    sparks.push({
+      ang: Math.random() * 6.283,
+      r: (b.inn + Math.random() * (b.out - b.inn)) / R,   // stored as fraction
+      life: 1,
+      hue: m.accent,
+      size: 1 + Math.random() * 2.4
+    });
+  }
+}
 
 function resize() {
   dpr = Math.min(devicePixelRatio || 1, 2);
@@ -249,8 +315,19 @@ function armAngleFor(radius) {
 function draw(now) {
   const dt = Math.min(0.05, (now - lastT) / 1000);
   lastT = now;
-  if (!REV.stilled()) phase += OMEGA * dt;
+  spinScale += (spinTarget - spinScale) * Math.min(1, dt * 3);
+  if (!REV.stilled()) phase += OMEGA * dt * spinScale;
   armAngle += (armTarget - armAngle) * Math.min(1, dt * 6);
+  accentLevel += (accentTarget - accentLevel) * Math.min(1, dt * 5);
+
+  /* hold-to-drop timing (touch): fill the ring, then commit.
+     Runs even in stilled mode — it's a navigation timer, not motion. */
+  if (pressBand >= 0 && !committing) {
+    holdProg = Math.min(1, (now - holdT0) / HOLD_MS);
+    if (holdProg >= 1) commit(ROOMS[pressBand]);
+  } else if (pressBand < 0) {
+    holdProg = 0;
+  }
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, W, H);
@@ -278,6 +355,16 @@ function draw(now) {
   ctx.fillStyle = sheen; ctx.fill();
   ctx.restore();
 
+  /* accent wash — the selected room's color bleeds up through the vinyl */
+  if (accentLevel > 0.01) {
+    const aw = ctx.createRadialGradient(CX, CY, R * 0.2, CX, CY, R);
+    aw.addColorStop(0, hexA(accent, 0.22 * accentLevel));
+    aw.addColorStop(0.7, hexA(accent, 0.08 * accentLevel));
+    aw.addColorStop(1, hexA(accent, 0));
+    ctx.beginPath(); ctx.arc(CX, CY, R, 0, 7);
+    ctx.fillStyle = aw; ctx.fill();
+  }
+
   /* grooves */
   ctx.lineWidth = 1;
   for (let g = 0; g < 64; g++) {
@@ -291,18 +378,54 @@ function draw(now) {
   for (let i = 0; i < ROOMS.length; i++) {
     const b = bandRadii(i);
     if (i === hover) {
+      const acc = moodOf(i).accent;
+      const swell = 1 + holdProg * 0.7;               // the band brightens as you hold
       ctx.beginPath(); ctx.arc(CX, CY, b.mid, 0, 7);
       ctx.lineWidth = (b.out - b.inn) * 0.86;
-      ctx.strokeStyle = ROOMS[i].built ? 'rgba(255,46,136,.13)' : 'rgba(157,143,176,.09)';
+      ctx.strokeStyle = ROOMS[i].built ? hexA(acc, 0.13 * swell) : 'rgba(157,143,176,.09)';
       ctx.stroke();
       ctx.beginPath(); ctx.arc(CX, CY, b.mid, 0, 7);
-      ctx.lineWidth = 1.4;
-      ctx.strokeStyle = ROOMS[i].built ? 'rgba(255,46,136,.75)' : 'rgba(157,143,176,.5)';
+      ctx.lineWidth = 1.4 * swell;
+      ctx.strokeStyle = ROOMS[i].built ? hexA(acc, Math.min(1, 0.75 * swell)) : 'rgba(157,143,176,.5)';
       ctx.stroke();
     }
     ctx.beginPath(); ctx.arc(CX, CY, b.inn, 0, 7);
     ctx.lineWidth = 1;
     ctx.strokeStyle = 'rgba(2,0,5,.9)';
+    ctx.stroke();
+  }
+
+  /* sparks — thrown off the groove when the needle lands, riding the spin */
+  if (sparks.length) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (let s = sparks.length - 1; s >= 0; s--) {
+      const sp = sparks[s];
+      sp.life -= dt * 0.9;
+      if (sp.life <= 0) { sparks.splice(s, 1); continue; }
+      const a = sp.ang + phase * spinScale;            // sparks orbit with the platter
+      const rr = sp.r * R;
+      const px = CX + Math.cos(a) * rr, py = CY + Math.sin(a) * rr;
+      ctx.globalAlpha = sp.life * 0.9;
+      ctx.fillStyle = sp.hue;
+      ctx.beginPath(); ctx.arc(px, py, sp.size * sp.life, 0, 7); ctx.fill();
+    }
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
+  /* hold ring — the needle-drop timer, filling clockwise around the label */
+  if (holdProg > 0) {
+    const rr = LABEL_R * R + R * 0.05;
+    ctx.beginPath(); ctx.arc(CX, CY, rr, 0, 7);
+    ctx.lineWidth = R * 0.02;
+    ctx.strokeStyle = hexA(accent, 0.18);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(CX, CY, rr, -Math.PI / 2, -Math.PI / 2 + holdProg * 6.2832);
+    ctx.lineWidth = R * 0.024;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = hexA(accent, 0.95);
     ctx.stroke();
   }
 
@@ -371,38 +494,93 @@ function drawArm() {
 requestAnimationFrame(draw);
 
 /* ── pointer ────────────────────────────────────────────────────── */
-canvas.addEventListener('pointermove', function (e) {
-  if (dropping) return;
+/* INTERACTION -- one model, two bodies.
+   Mouse: hover a groove to preview, click to drop in (fast path).
+   Touch/pen: touch a groove to preview (the record eats the scroll),
+   then HOLD to drop the needle -- a ring fills and carries you in.
+   A tap alone never navigates: you have to mean it. */
+function pick(e) {
   const rect = canvas.getBoundingClientRect();
   const x = e.clientX - rect.left, y = e.clientY - rect.top;
-  const dist = Math.hypot(x - CX, y - CY);
-  const i = bandAt(dist);
-  if (i !== hover) {
-    hover = i;
-    if (i >= 0) {
-      const r = ROOMS[i];
-      setReadout(r.title, r.sub + (r.built ? '' : ' · pressing soon'));
-      armTarget = armAngleFor(bandRadii(i).mid);
-      REV.audio.preview(r.tone);       // 2s lead-in: the room hums hello
-    } else {
-      setReadout('\u00a0', 'hover a groove · drop the needle');
-      armTarget = -0.62;
-    }
+  return bandAt(Math.hypot(x - CX, y - CY));
+}
+
+function selectBand(i) {
+  if (i === hover) return;
+  hover = i;
+  if (i >= 0) {
+    const r = ROOMS[i], m = moodOf(i);
+    setReadout(r.title, r.built
+      ? (COARSE ? 'hold to drop the needle' : r.sub)
+      : r.sub + ' · pressing soon');
+    armTarget = armAngleFor(bandRadii(i).mid);
+    accent = m.accent; accentTarget = 1; spinTarget = m.spin;
+    igniteSparks(i);
+    const t = performance.now();
+    if (t - lastStemT > 110) { REV.audio.stem(r.id, r.tone); lastStemT = t; }
+  } else {
+    setReadout(' ', REST_SUB);
+    armTarget = REST_ARM;
+    accentTarget = 0; spinTarget = 1;
   }
-});
-canvas.addEventListener('pointerleave', function () {
-  if (dropping) return;
-  hover = -1;
-  setReadout('\u00a0', 'hover a groove · drop the needle');
-  armTarget = -0.62;
-});
-canvas.addEventListener('click', function () {
-  if (hover < 0 || dropping) return;
-  const room = ROOMS[hover];
-  dropping = true;
+}
+
+function liftNeedle() {
+  pressBand = -1; holdProg = 0;
+  selectBand(-1);
+}
+
+function commit(room) {
+  if (committing || dropping) return;
+  committing = true; dropping = true;
   REV.audio.thunk();
-  setTimeout(function(){ dropping = false; routeTo(room, null); }, 240);
+  setTimeout(function () { routeTo(room, null); }, REV.stilled() ? 40 : 260);
+}
+
+/* MOUSE hover previews; TOUCH/PEN drag eats the scroll, reselects the
+   groove, and resets the hold timer whenever the finger crosses bands. */
+canvas.addEventListener('pointermove', function (e) {
+  if (e.pointerType === 'mouse') { if (!dropping) selectBand(pick(e)); return; }
+  if (dropping) return;
+  e.preventDefault();
+  const i = pick(e);
+  if (i !== hover) {
+    selectBand(i);
+    if (i >= 0 && ROOMS[i].built) { pressBand = i; holdT0 = performance.now(); }
+    else pressBand = -1;
+  }
+}, { passive: false });
+
+canvas.addEventListener('pointerleave', function (e) {
+  if (e.pointerType !== 'mouse' || dropping) return;
+  selectBand(-1);
 });
+
+canvas.addEventListener('click', function () {
+  if (lastPT !== 'mouse') return;
+  if (hover < 0 || dropping) return;
+  commit(ROOMS[hover]);
+});
+
+/* TOUCH / PEN -- press to preview, hold to enter */
+canvas.addEventListener('pointerdown', function (e) {
+  lastPT = e.pointerType;
+  if (e.pointerType === 'mouse') return;
+  e.preventDefault();
+  try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+  const i = pick(e);
+  selectBand(i);
+  if (i >= 0 && ROOMS[i].built) { pressBand = i; holdT0 = performance.now(); }
+  else pressBand = -1;
+}, { passive: false });
+
+function touchEnd(e) {
+  if (e.pointerType === 'mouse') return;
+  if (committing) return;
+  liftNeedle();
+}
+canvas.addEventListener('pointerup', touchEnd);
+canvas.addEventListener('pointercancel', touchEnd);
 </script>
 </body>
 </html>
