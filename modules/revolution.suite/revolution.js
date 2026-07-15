@@ -457,13 +457,106 @@
     o.start(t0); o.stop(t0 + 1.5);
   }
 
+  /* ── ROOM STEMS ───────────────────────────────────────────────────
+     Each band on the turntable hums its OWN music when the needle
+     hovers it — a two-second lead-in that tells you what room you're
+     about to fall into before you ever leave the hub. Every stem is
+     built live, note by note; nothing is fetched. theriot is the one
+     that (almost) refuses to sing — a low room-tone and a single
+     struck match. That silence is the composition.
+     ────────────────────────────────────────────────────────────── */
+  function stem(id, tone) {
+    if (!audio.enabled) return;
+    audioEnsure();
+    const now = audio.ctx.currentTime;
+    const bus = audio.ctx.createGain();
+    bus.gain.value = 1;
+    bus.connect(audio.master);
+    const b = tone || 220;
+
+    // a single voiced note with its own envelope + optional lowpass
+    function note(freq, type, at, dur, vol, filt) {
+      const o = audio.ctx.createOscillator(), g = audio.ctx.createGain();
+      o.type = type || 'sine'; o.frequency.value = freq;
+      let node = o;
+      if (filt) {
+        const f = audio.ctx.createBiquadFilter();
+        f.type = 'lowpass'; f.frequency.value = filt;
+        o.connect(f); node = f;
+      }
+      g.gain.setValueAtTime(0.0001, at);
+      g.gain.exponentialRampToValueAtTime(vol, at + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+      node.connect(g).connect(bus);
+      o.start(at); o.stop(at + dur + 0.03);
+    }
+    // a filtered noise transient — ticks, hats, a struck match
+    function hit(at, dur, vol, hp) {
+      const src = audio.ctx.createBufferSource();
+      src.buffer = audio.noiseBuf;
+      const f = audio.ctx.createBiquadFilter();
+      f.type = 'highpass'; f.frequency.value = hp || 6000;
+      const g = audio.ctx.createGain();
+      g.gain.setValueAtTime(vol, at);
+      g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+      src.connect(f).connect(g).connect(bus);
+      src.start(at); src.stop(at + dur + 0.02);
+    }
+
+    switch (id) {
+      case 'ancestors':                 // ancient, modal: root + fifth + a low hand-drum
+        note(b / 2, 'sine', now, 1.5, 0.10, 600);
+        note(b * 1.5, 'sine', now + 0.05, 1.3, 0.05, 900);
+        note(b * 0.75, 'sine', now, 0.34, 0.16, 320);   // soft thump
+        break;
+      case 'thecode':                   // clockwork: constrained ticks + a minor stab
+        for (let k = 0; k < 4; k++) hit(now + k * 0.15, 0.03, 0.05, 9000);
+        note(b, 'triangle', now + 0.02, 0.6, 0.07, 1200);
+        note(b * 1.189, 'triangle', now + 0.16, 0.55, 0.05, 1200); // minor third
+        break;
+      case 'theriot':                   // the hole: room-tone hum + one struck match
+        note(60, 'sine', now, 0.7, 0.05, 120);
+        hit(now + 0.06, 0.13, 0.07, 3800);
+        break;
+      case 'thefloor':                  // disco: kick + octave bass + an open hat
+        note(92, 'sine', now, 0.2, 0.55, 200);
+        note(b / 2, 'sawtooth', now + 0.02, 0.34, 0.13, 620);
+        note(b, 'sawtooth', now + 0.02, 0.34, 0.08, 950);
+        hit(now + 0.13, 0.07, 0.13, 8200);
+        break;
+      case 'deck': {                    // sultry: low bass + a slow upward bend
+        note(b / 2, 'triangle', now, 1.0, 0.15, 420);
+        const o = audio.ctx.createOscillator(), g = audio.ctx.createGain();
+        const f = audio.ctx.createBiquadFilter();
+        f.type = 'lowpass'; f.frequency.value = 720;
+        o.type = 'sawtooth';
+        o.frequency.setValueAtTime(b, now);
+        o.frequency.exponentialRampToValueAtTime(b * 1.06, now + 0.75);
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.exponentialRampToValueAtTime(0.07, now + 0.05);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.95);
+        o.connect(f).connect(g).connect(bus);
+        o.start(now); o.stop(now + 1.0);
+        break;
+      }
+      case 'ongoing':                   // present, open: a bright stacked shimmer
+        note(b, 'sine', now, 1.3, 0.06, 3000);
+        note(b * 2, 'sine', now + 0.08, 1.1, 0.03, 4200);
+        note(b * 3, 'sine', now + 0.16, 0.9, 0.02, 5200);
+        break;
+      default:
+        preview(tone);
+    }
+  }
+
   REV.audio = {
     enable: audioEnable,
     enabled: function () { return audio.enabled; },
     setScene: setScene,
     crackle: crackle,
     thunk: thunk,
-    preview: preview
+    preview: preview,
+    stem: stem
   };
 
   /* ─────────────────────────────────────────────────────────────────
