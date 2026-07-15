@@ -739,6 +739,18 @@ html[data-theme="disco"] .kodachrome > *:nth-child(2n)  { animation-delay: -2.5s
 html[data-theme="disco"] .tile.lit { animation: disco-glow 6s linear infinite; }
 html[data-theme="disco"] .tile.lit:nth-child(3n) { animation-delay: -3s; }
 
+/* NEVER disco — some grief a rainbow would desecrate. Opt any element
+   out with .no-disco. The Nazi plunder of Hirschfeld's Institut is the
+   first and clearest case: no technicolor around the people burning it. */
+html[data-theme="disco"] .no-disco {
+  animation: none !important;
+  border-color: rgba(20,4,12,.2) !important;
+}
+html[data-theme="disco"] .polaroid.no-disco {
+  border: 0 !important;
+  box-shadow: 0 18px 50px rgba(0,0,0,.65) !important;
+}
+
 /* ── MOTION DISCIPLINE ──────────────────────────────────────────── */
 /* Stilled = every animation resolves to its calmest frame.
    Nothing is lost. Only quieted. This is a membrane, not a fallback. */
