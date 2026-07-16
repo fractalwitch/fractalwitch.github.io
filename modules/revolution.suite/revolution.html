@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Human Sexual Revolution (Ongoing) · Side A</title>
 <meta name="description" content="An interactive history of the sexual revolution, navigated like a record. Drop the needle on a room.">
-<link rel="stylesheet" href="revolution.css?v=16">
+<link rel="stylesheet" href="revolution.css?v=17">
 <script>try{var _t=JSON.parse(localStorage.getItem("revolution.threshold.v1"));if(_t&&_t.theme==="dark")document.documentElement.dataset.theme="disco";}catch(e){}</script>
 <style>
 /* ═══════════════════════════════════════════════════════════════
@@ -130,7 +130,7 @@ header.masthead .eyebrow { margin-bottom: .6rem; }
   </p>
 </nav>
 
-<script src="revolution.js?v=16"></script>
+<script src="revolution.js?v=17"></script>
 <script>
 REV.boot({ scene: 'hub', room: null });
 
@@ -145,8 +145,10 @@ const ROOMS = [
   { id:'thecode',   title:'The Code',       sub:'the closet as technology · 1867–1965',    href:'thecode.html',   tone:196.0, built:true,  gate:false },
   { id:'theriot',   title:'The Riot',       sub:'two holes in the archive · 1966–1969',    href:'theriot.html',   tone:110.0, built:true,  gate:false },
   { id:'thefloor',  title:'The Floor',      sub:'the glam core · 1970–1979',               href:'thefloor.html',  tone:246.9, built:true,  gate:false },
+  { id:'whatisgender', title:'The Undivided Flesh', sub:'what is gender · one origin, infinite forms', href:'whatisgender.html', tone:261.6, built:true, gate:false },
   { id:'deck',      title:'The Deviance Deck', sub:'frank · anatomical · adult · gated',   href:'deck.html',      tone:277.2, built:true,  gate:true  },
-  { id:'ongoing',   title:'Ongoing',        sub:'1980 → you are standing in it',           href:'ongoing.html',   tone:329.6, built:true,  gate:false }
+  { id:'ongoing',   title:'Ongoing',        sub:'1980 → you are standing in it',           href:'ongoing.html',   tone:329.6, built:true,  gate:false },
+  { id:'gynarchy',  title:'The Queer Gynarchy', sub:'how to dream freely · you were always already free', href:'gynarchy.html', tone:392.0, built:true, gate:false }
 ];
 
 /* Each band has a MOOD — an accent color and a visual temperament that
@@ -157,8 +159,10 @@ const MOODS = {
   thecode:   { accent:'#26e0e0', sparks:7,  spin:1.0 },
   theriot:   { accent:'#ff3d00', sparks:0,  spin:0.35, dim:true },
   thefloor:  { accent:'#ff2e88', sparks:16, spin:1.35 },
+  whatisgender: { accent:'#b44fff', sparks:10, spin:1.0 },
   deck:      { accent:'#c9a0ff', sparks:11, spin:0.9 },
-  ongoing:   { accent:'#39ff14', sparks:14, spin:1.2 }
+  ongoing:   { accent:'#39ff14', sparks:14, spin:1.2 },
+  gynarchy:  { accent:'#ff1493', sparks:18, spin:1.3 }
 };
 function moodOf(i){ return (i >= 0 && MOODS[ROOMS[i].id]) || { accent:'#ff2e88', sparks:10, spin:1.0 }; }
 
