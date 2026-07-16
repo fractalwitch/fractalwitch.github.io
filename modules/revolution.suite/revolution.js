@@ -238,7 +238,7 @@
   const SCENES = {
     threshold: 0.16, hub: 0.45, ancestors: 0.25, thecode: 0.42,
     theriot: 0.0, thefloor: 1.0, whatisgender: 0.28, deck: 0.7,
-    ongoing: 0.5, gynarchy: 0.9
+    ongoing: 0.5, gynarchy: 0.9, hitraveler: 0.55
   };
 
   function audioEnsure() {
@@ -569,6 +569,14 @@
         hit(now + 0.02, 0.05, 0.1, 9000);                 // a glitter tick on the downbeat
         break;
       }
+      case 'hitraveler': {              // the loop: an arpeggio that circles back to root
+        const steps = [1, 1.5, 2, 1.5, 1];                // out through the center and back
+        steps.forEach(function (m, k) {
+          note(b * m, 'triangle', now + k * 0.1, 0.42, 0.06, 3600);
+        });
+        note(b / 2, 'sine', now, 1.1, 0.05, 500);         // a warm circulating pad underneath
+        break;
+      }
       default:
         preview(tone);
     }
@@ -596,7 +604,8 @@
     whatisgender: 'the same matter wrote you and everyone you will ever want. there was never an opposite.',
     deck:      'knowe thyself. the flaps were always meant to be lifted.',
     ongoing:   'nothing here is tracking you. sit as long as you like. the loop completes when you leave and do something.',
-    gynarchy:  'this part isn\u2019t history. it\u2019s the invitation. you were always already free.'
+    gynarchy:  'this part isn\u2019t history. it\u2019s the invitation. you were always already free.',
+    hitraveler:'the world\u2019s operating system is crashing. you are already running the update. hi, traveler.'
   };
 
   function fourthwallArm(room) {
