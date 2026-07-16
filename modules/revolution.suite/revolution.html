@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Human Sexual Revolution (Ongoing) · Side A</title>
 <meta name="description" content="An interactive history of the sexual revolution, navigated like a record. Drop the needle on a room.">
-<link rel="stylesheet" href="revolution.css?v=18">
+<link rel="stylesheet" href="revolution.css?v=19">
 <script>try{var _t=JSON.parse(localStorage.getItem("revolution.threshold.v1"));if(_t&&_t.theme==="dark")document.documentElement.dataset.theme="disco";}catch(e){}</script>
 <style>
 /* ═══════════════════════════════════════════════════════════════
@@ -130,7 +130,7 @@ header.masthead .eyebrow { margin-bottom: .6rem; }
   </p>
 </nav>
 
-<script src="revolution.js?v=18"></script>
+<script src="revolution.js?v=19"></script>
 <script>
 REV.boot({ scene: 'hub', room: null });
 
@@ -148,7 +148,8 @@ const ROOMS = [
   { id:'ongoing',   title:'Ongoing',        sub:'1980 → now',           href:'ongoing.html',   tone:329.6, built:true,  gate:false },
   { id:'deck',      title:'The Deviance Deck', sub:'frank · anatomical · adult · gated play',   href:'deck.html',      tone:277.2, built:true,  gate:true  },
   { id:'whatisgender', title:'The Undivided Flesh', sub:'what is gender · one origin, infinite forms', note:'interactive', href:'whatisgender.html', tone:261.6, built:true, gate:false },
-  { id:'gynarchy',  title:'The Queer Gynarchy', sub:'how to dream freely · you were always already free', note:'our future?', href:'gynarchy.html', tone:392.0, built:true, gate:false }
+  { id:'gynarchy',  title:'The Queer Gynarchy', sub:'how to dream freely · you were always already free', note:'our future?', href:'gynarchy.html', tone:392.0, built:true, gate:false },
+  { id:'hitraveler', title:'The Circulation', sub:'the outward breath · circulate freely', note:'Dream Freely', href:'hitraveler.html', tone:440.0, built:true, gate:false }
 ];
 
 /* Each band has a MOOD — an accent color and a visual temperament that
@@ -162,7 +163,8 @@ const MOODS = {
   whatisgender: { accent:'#b44fff', sparks:10, spin:1.0 },
   deck:      { accent:'#c9a0ff', sparks:11, spin:0.9 },
   ongoing:   { accent:'#39ff14', sparks:14, spin:1.2 },
-  gynarchy:  { accent:'#ff1493', sparks:18, spin:1.3 }
+  gynarchy:  { accent:'#ff1493', sparks:18, spin:1.3 },
+  hitraveler:{ accent:'#00F2FF', sparks:15, spin:1.25 }
 };
 function moodOf(i){ return (i >= 0 && MOODS[ROOMS[i].id]) || { accent:'#ff2e88', sparks:10, spin:1.0 }; }
 
