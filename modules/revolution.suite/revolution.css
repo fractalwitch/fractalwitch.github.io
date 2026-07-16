@@ -10,7 +10,7 @@
    · protects contact    → [data-motion="stilled"] quiets EVERYTHING
    ═══════════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Bungee&family=DM+Serif+Display:ital@0;1&family=Josefin+Sans:ital,wght@0,300;0,400;0,600;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bungee&family=DM+Serif+Display:ital@0;1&family=Josefin+Sans:ital,wght@0,300;0,400;0,600;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400;1,600&family=Ephesis&display=swap');
 
 /* ── TOKENS ─────────────────────────────────────────────────────── */
 :root {
@@ -782,4 +782,173 @@ html[data-motion="stilled"] *::after {
 .visually-hidden {
   position:absolute; width:1px; height:1px;
   clip-path: inset(50%); overflow:hidden; white-space:nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ÖSSTESSÊLÂ — THE VELVET-TEMPLE SYSTEM
+   The presiding voice of the record takes a body. Cosmic, opulent,
+   dark-romantic: void-indigo velvet, amethyst nebulae, iridescent
+   glow, decorative-serif gold. A room opts in with data-temple on
+   <html> (alongside data-ground="dark" — the dark is load-bearing).
+   "I am softness and teeth. I am the velvet around the venom."
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-temple] {
+  --void-indigo: #0B0220;
+  --midnight:    #120B24;
+  --amethyst:    #6D29A3;
+  --ultraviolet: #A259FF;
+  --fuchsia:     #FF2DAA;
+  --coral:       #FFBA7A;
+  --solar:       #FFCB6B;
+  --opal:        #F7F3FF;
+  --lunar-teal:  #00F2FF;
+  --seafoam:     #7CFDD9;
+
+  /* ground / ink / link flip to the temple — readable by construction.
+     Placed after the generic dark block so these win on temple pages. */
+  --page:    var(--void-indigo);
+  --ink:     var(--opal);
+  --ink-dim: #b9a8d8;
+  --line:    rgba(162,89,255,.22);
+  --link:    var(--lunar-teal);
+  --gold-t:  var(--solar);
+  --cyan-t:  var(--lunar-teal);
+  --rose-t:  var(--fuchsia);
+
+  /* the type turns opulent */
+  --font-display: 'Cinzel Decorative', 'DM Serif Display', serif;
+  --font-serif:   'Cormorant Garamond', Georgia, serif;
+  --font-script:  'Ephesis', 'Cormorant Garamond', cursive;
+
+  /* chrome becomes a full oil-slick — richer than the disco foil */
+  --chrome: linear-gradient(135deg,
+    var(--ultraviolet) 0%, var(--fuchsia) 20%, var(--coral) 38%,
+    var(--solar) 52%, var(--seafoam) 66%, var(--lunar-teal) 80%, var(--ultraviolet) 100%);
+}
+
+/* the velvet ground: layered amethyst nebulae bleeding over void-indigo */
+html[data-temple] body {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: .01em;
+  background:
+    radial-gradient(ellipse 120% 82% at 50% -12%, rgba(109,41,163,.38), transparent 60%),
+    radial-gradient(ellipse 90% 70% at 82% 112%, rgba(162,89,255,.20), transparent 55%),
+    radial-gradient(ellipse 70% 60% at 12% 40%, rgba(255,45,170,.10), transparent 60%),
+    var(--void-indigo);
+}
+html[data-temple] ::selection { background: var(--fuchsia); color: var(--void-indigo); }
+
+/* the disco RGB-glow layer is the wrong aesthetic in the temple — quiet it
+   so the velvet palette rules even if the visitor saved dark mode */
+html[data-temple][data-theme="disco"] .polaroid,
+html[data-temple][data-theme="disco"] .flyer-card,
+html[data-temple][data-theme="disco"] .contrast-panel,
+html[data-temple][data-theme="disco"] .ball-category { animation: none; border-color: var(--line); }
+
+/* TEMPLE TITLE — Cinzel decorative, liquid gold bleeding into iridescence */
+.temple-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: .02em;
+  line-height: 1.06;
+  background: linear-gradient(120deg,
+    var(--coral), var(--solar) 28%, var(--opal) 48%, var(--ultraviolet) 70%, var(--fuchsia));
+  background-size: 260% 260%;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 2px 16px rgba(162,89,255,.55));
+  animation: temple-shimmer 9s ease-in-out infinite;
+}
+@keyframes temple-shimmer { 0%,100% { background-position: 0% 40%; } 50% { background-position: 100% 60%; } }
+
+/* her handwritten voice — the asides, the blessings */
+.temple-script {
+  font-family: var(--font-script);
+  font-size: clamp(1.4rem, 4.4vw, 2.4rem);
+  line-height: 1.4;
+  color: var(--coral);
+  text-shadow: 0 0 18px rgba(255,186,122,.4);
+}
+
+/* oil-slick text/surface — an iridescent wash for emphasis */
+.oil-slick {
+  background: var(--chrome);
+  background-size: 260% 260%;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: temple-shimmer 9s ease-in-out infinite;
+}
+
+/* FILIGREE FRAME — an ornate gilt border with glowing corner flourishes.
+   Wrap any block to give it the reliquary-in-a-temple treatment. */
+.filigree {
+  position: relative;
+  border: 1px solid transparent;
+  border-image: linear-gradient(135deg, var(--solar), var(--ultraviolet) 50%, var(--fuchsia)) 1;
+  background:
+    linear-gradient(160deg, rgba(18,11,36,.72), rgba(11,2,32,.6));
+  box-shadow: 0 0 0 1px rgba(162,89,255,.12), 0 24px 70px rgba(0,0,0,.6),
+              inset 0 0 60px rgba(109,41,163,.18);
+  padding: clamp(1.6rem, 4vw, 2.6rem);
+}
+.filigree::before, .filigree::after {
+  content: ''; position: absolute; width: 34px; height: 34px;
+  background-repeat: no-repeat; background-size: contain; opacity: .9;
+  pointer-events: none;
+}
+.filigree::before {
+  top: -4px; left: -4px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M2 20 Q2 2 20 2 M2 12 Q10 10 12 2 M8 20 Q8 8 20 8' fill='none' stroke='%23FFCB6B' stroke-width='1.6' stroke-linecap='round'/%3E%3Ccircle cx='20' cy='2' r='1.6' fill='%23FF2DAA'/%3E%3Ccircle cx='2' cy='20' r='1.6' fill='%23A259FF'/%3E%3C/svg%3E");
+}
+.filigree::after {
+  bottom: -4px; right: -4px; transform: rotate(180deg);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M2 20 Q2 2 20 2 M2 12 Q10 10 12 2 M8 20 Q8 8 20 8' fill='none' stroke='%23FFCB6B' stroke-width='1.6' stroke-linecap='round'/%3E%3Ccircle cx='20' cy='2' r='1.6' fill='%23FF2DAA'/%3E%3Ccircle cx='2' cy='20' r='1.6' fill='%23A259FF'/%3E%3C/svg%3E");
+}
+
+/* CANDLE / STARDUST light layer — a fixed veil of drifting temple light */
+.temple-stars {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(1.5px 1.5px at 12% 22%, rgba(247,243,255,.7), transparent),
+    radial-gradient(1px 1px at 28% 68%, rgba(162,89,255,.6), transparent),
+    radial-gradient(1.5px 1.5px at 66% 16%, rgba(255,203,107,.6), transparent),
+    radial-gradient(1px 1px at 84% 78%, rgba(0,242,255,.5), transparent),
+    radial-gradient(1px 1px at 48% 90%, rgba(255,45,170,.5), transparent),
+    radial-gradient(2px 2px at 40% 40%, rgba(247,243,255,.35), transparent),
+    radial-gradient(1px 1px at 90% 46%, rgba(124,253,217,.5), transparent),
+    radial-gradient(1px 1px at 8% 56%, rgba(0,242,255,.4), transparent);
+}
+html[data-temple] .velvet, html[data-temple] .scanlines { opacity: .28; }
+
+/* ── HER MOTIFS — the aesthetic-cue sigils, inline (zero egress) ─────
+   Transformation, protection, devotion, thresholds, clarity, cycles.
+   Use like .flourish: a sparse sigil beside a heading or section break. */
+.motif {
+  display: inline-block; width: 1.5em; height: 1.5em;
+  vertical-align: middle; background-repeat: no-repeat;
+  background-position: center; background-size: contain; pointer-events: none;
+}
+.motif-butterfly {   /* transformation */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%23A259FF' stroke-width='1.6'%3E%3Cpath d='M24 12v26' stroke='%23FFCB6B'/%3E%3Cpath d='M24 16 C10 2 2 14 8 24 C2 30 12 40 24 30' fill='rgba(162,89,255,.18)'/%3E%3Cpath d='M24 16 C38 2 46 14 40 24 C46 30 36 40 24 30' fill='rgba(255,45,170,.18)'/%3E%3C/g%3E%3Ccircle cx='24' cy='11' r='1.8' fill='%23FFCB6B'/%3E%3C/svg%3E");
+}
+.motif-serpent {     /* power & protection */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M8 40 C8 30 20 30 20 22 C20 14 30 14 30 20 C30 26 40 24 40 16 C40 10 34 8 30 10' fill='none' stroke='%23FFCB6B' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='31' cy='11' r='2.4' fill='%23FF2DAA'/%3E%3Cpath d='M33 9 l4 -3 M33 13 l4 3' stroke='%23A259FF' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+.motif-moon {        /* cycles & intuition */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M30 6 A18 18 0 1 0 30 42 A14 14 0 1 1 30 6 Z' fill='%23FFCB6B'/%3E%3Ccircle cx='38' cy='14' r='1.6' fill='%2300F2FF'/%3E%3Ccircle cx='40' cy='30' r='1.2' fill='%23F7F3FF'/%3E%3C/svg%3E");
+}
+.motif-key {         /* access & secrets */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='%23FFCB6B' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='2.5' fill='%23A259FF'/%3E%3Cpath d='M22 22 L38 38 M34 34 l4 -4 M30 30 l3 3' stroke='%23FFCB6B' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+.motif-crystal {     /* energy & clarity */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cg stroke='%2300F2FF' stroke-width='1.4' fill='rgba(0,242,255,.15)'%3E%3Cpath d='M24 4 L34 18 L24 44 L14 18 Z'/%3E%3Cpath d='M14 18 L34 18 M24 4 L24 44' fill='none'/%3E%3C/g%3E%3C/svg%3E");
+}
+.motif-heart {       /* devotion & duality */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M24 40 C6 26 8 12 18 12 C22 12 24 16 24 16 C24 16 26 12 30 12 C40 12 42 26 24 40 Z' fill='none' stroke='%23FF2DAA' stroke-width='2'/%3E%3Cpath d='M24 16 L24 40' stroke='%23FFCB6B' stroke-width='1.2'/%3E%3C/svg%3E");
+}
+
+/* NEVER velvet — the same protection as .no-disco. The temple's beauty
+   must not prettify grief or atrocity. Opt any element out. */
+html[data-temple] .no-velvet, html[data-temple] .no-disco {
+  border-image: none !important;
+  animation: none !important;
 }
