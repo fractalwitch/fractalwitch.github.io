@@ -237,7 +237,8 @@
 
   const SCENES = {
     threshold: 0.16, hub: 0.45, ancestors: 0.25, thecode: 0.42,
-    theriot: 0.0, thefloor: 1.0, deck: 0.7, ongoing: 0.5
+    theriot: 0.0, thefloor: 1.0, whatisgender: 0.28, deck: 0.7,
+    ongoing: 0.5, gynarchy: 0.9
   };
 
   function audioEnsure() {
@@ -544,6 +545,30 @@
         note(b * 2, 'sine', now + 0.08, 1.1, 0.03, 4200);
         note(b * 3, 'sine', now + 0.16, 0.9, 0.02, 5200);
         break;
+      case 'whatisgender': {            // bipotential morph: two voices bending toward one
+        const o1 = audio.ctx.createOscillator(), o2 = audio.ctx.createOscillator();
+        const g = audio.ctx.createGain(), f = audio.ctx.createBiquadFilter();
+        f.type = 'lowpass'; f.frequency.value = 1400;
+        o1.type = 'sine'; o2.type = 'sine';
+        o1.frequency.setValueAtTime(b, now);              // estrogen voice
+        o1.frequency.exponentialRampToValueAtTime(b * 1.5, now + 1.2);   // → the fifth
+        o2.frequency.setValueAtTime(b * 1.5, now);        // androgen voice
+        o2.frequency.exponentialRampToValueAtTime(b, now + 1.2);        // → the root
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.exponentialRampToValueAtTime(0.08, now + 0.1);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 1.4);
+        o1.connect(f); o2.connect(f); f.connect(g).connect(bus);
+        o1.start(now); o2.start(now); o1.stop(now + 1.5); o2.stop(now + 1.5);
+        break;
+      }
+      case 'gynarchy': {                // the finale: a bright rainbow arpeggio, ascending
+        const steps = [1, 1.25, 1.5, 2, 2.5];             // root, maj3, 5, oct, +maj3
+        steps.forEach(function (m, k) {
+          note(b * m, k % 2 ? 'triangle' : 'sine', now + k * 0.09, 0.5, 0.07, 4000);
+        });
+        hit(now + 0.02, 0.05, 0.1, 9000);                 // a glitter tick on the downbeat
+        break;
+      }
       default:
         preview(tone);
     }
@@ -568,8 +593,10 @@
     ancestors: 'you are reading a document about people who were told not to exist. hi.',
     thecode:   'you are not a container. you\u2019re a circulation pattern the universe is briefly doing.',
     thefloor:  'the boundary that matters isn\u2019t self and other. it\u2019s coherent flow vs. extractive collapse.',
+    whatisgender: 'the same matter wrote you and everyone you will ever want. there was never an opposite.',
     deck:      'knowe thyself. the flaps were always meant to be lifted.',
-    ongoing:   'nothing here is tracking you. sit as long as you like. the loop completes when you leave and do something.'
+    ongoing:   'nothing here is tracking you. sit as long as you like. the loop completes when you leave and do something.',
+    gynarchy:  'this part isn\u2019t history. it\u2019s the invitation. you were always already free.'
   };
 
   function fourthwallArm(room) {
