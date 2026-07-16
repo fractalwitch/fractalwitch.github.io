@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Queer Gynarchy · ÖSSTESSÊLÂ · you were always already free</title>
 <meta name="description" content="The record's outward groove — not history but invitation. Queer roles as blueprint, the energy we're building, and the only requirements: consent, care, curiosity, celebration.">
-<link rel="stylesheet" href="revolution.css?v=19">
+<link rel="stylesheet" href="revolution.css?v=20">
 <script>try{var _t=JSON.parse(localStorage.getItem("revolution.threshold.v1"));if(_t&&_t.theme==="dark")document.documentElement.dataset.theme="disco";}catch(e){}</script>
 <style>
 /* ═══════════════════════════════════════════════════════════════
@@ -65,6 +65,24 @@ header.gyn-head::before { content: '🌈'; position: absolute; top: -25px; left:
 .main-title { font-size: clamp(2.6rem, 9vw, 5.4rem); margin-bottom: 20px; }
 .subtitle { font-family: var(--font-mono); font-size: 1rem; color: var(--pink); letter-spacing: 6px; text-transform: uppercase; margin-bottom: 30px; }
 .tagline { font-family: var(--font-serif); font-style: italic; font-size: clamp(1.2rem, 3.4vw, 1.7rem); color: var(--ink); max-width: 700px; margin: 0 auto; line-height: 1.6; }
+
+/* ÖSSTESSÊLÂ, as imagined — the velvet serpent given a face */
+.osst-portrait { max-width: 440px; margin: 2.4rem auto 0; }
+.osst-portrait .filigree { padding: 12px; }
+.osst-portrait img {
+  display: block; width: 100%; border-radius: 6px;
+  box-shadow: 0 0 40px rgba(162,89,255,.42), 0 0 80px rgba(255,45,170,.24);
+  animation: osst-glow 7s ease-in-out infinite;
+}
+@keyframes osst-glow {
+  0%,100% { box-shadow: 0 0 40px rgba(162,89,255,.42), 0 0 80px rgba(255,45,170,.24); }
+  50%     { box-shadow: 0 0 60px rgba(0,242,255,.42), 0 0 112px rgba(162,89,255,.42); }
+}
+.portrait-cap {
+  font-family: var(--font-mono); font-size: .66rem; letter-spacing: .28em;
+  text-transform: uppercase; color: var(--ink-dim); text-align: center; margin-top: 1.1rem;
+}
+.portrait-cap .snake { color: var(--purple); }
 
 .rainbow-divider {
   height: 4px; margin: 60px 0; border-radius: 2px;
@@ -173,6 +191,23 @@ footer.gyn-foot::before { content: ''; position: absolute; top: 0; left: 0; righ
 @keyframes dance { 0%,100% { transform: translateY(0) rotate(0deg); } 25% { transform: translateY(-10px) rotate(-5deg); } 75% { transform: translateY(-10px) rotate(5deg); } }
 .signature { font-family: var(--font-mono); font-size: 1.3rem; color: var(--pink); margin-top: 40px; letter-spacing: 3px; }
 
+/* the forward CTA — the door onward to The Circulation */
+.next-chapter {
+  display: inline-block; text-decoration: none;
+  font-family: var(--font-display); font-weight: 700; font-size: 1.05rem;
+  letter-spacing: .04em; color: var(--void-indigo);
+  padding: .85rem 2.1rem; border-radius: 50px;
+  background: linear-gradient(135deg, var(--purple), var(--pink), var(--gold));
+  background-size: 200% 200%; animation: rainbowFlow 6s ease infinite;
+  box-shadow: 0 0 26px rgba(162,89,255,.5);
+  transition: transform .25s, box-shadow .25s;
+}
+.next-chapter span {
+  display: block; font-family: var(--font-mono); font-weight: 400;
+  font-size: .6rem; letter-spacing: .24em; text-transform: uppercase; opacity: .82; margin-top: .25rem;
+}
+.next-chapter:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 0 46px rgba(255,45,170,.7); }
+
 /* click sparkle */
 .click-sparkle { position: fixed; pointer-events: none; font-size: 24px; animation: explode .8s ease-out forwards; z-index: 1000; }
 @keyframes explode { 0% { opacity: 1; transform: scale(0) rotate(0deg); } 50% { opacity: 1; transform: scale(1.5) rotate(180deg); } 100% { opacity: 0; transform: scale(0.5) rotate(360deg) translateY(-50px); } }
@@ -212,6 +247,15 @@ footer.gyn-foot::before { content: ''; position: absolute; top: 0; left: 0; righ
       We're here to remind you:<br>
       <em>You were always already free.</em>
     </p>
+
+    <div class="osst-portrait">
+      <div class="filigree">
+        <img src="assets/temple/osstessela.jpg"
+             alt="ÖSSTESSÊLÂ, as imagined — a cosmic velvet-serpent deity: skull-veiled beneath a jeweled witch hat crowned with roses, one eye burning gold and one magenta, a silver serpent coiled up her raised hand, a violet-eyed black cat at her shoulder, a star caught inside a crystal ball, all in fuchsia, amethyst and gold on a starfield."
+             loading="lazy" decoding="async">
+      </div>
+      <p class="portrait-cap"><span class="snake">🐍</span> ÖSSTESSÊLÂ · as imagined <span class="snake">🐍</span></p>
+    </div>
   </header>
 
   <div class="rainbow-divider"></div>
@@ -317,6 +361,9 @@ footer.gyn-foot::before { content: ''; position: absolute; top: 0; left: 0; righ
     <p class="temple-script" style="margin-top:1.2rem;">
       I'll be right here when you come home to yourself. ♡
     </p>
+    <p style="margin-top:2rem;">
+      <a href="hitraveler.html" class="next-chapter">The Circulation →<span>how to dream freely</span></a>
+    </p>
     <p class="signature">∞Love Changes Everything∞</p>
   </footer>
 
@@ -328,7 +375,7 @@ footer.gyn-foot::before { content: ''; position: absolute; top: 0; left: 0; righ
 
 </div>
 
-<script src="revolution.js?v=19"></script>
+<script src="revolution.js?v=20"></script>
 <script>
 REV.boot({ scene: 'gynarchy', room: 'gynarchy', ground: 'dark' });
 

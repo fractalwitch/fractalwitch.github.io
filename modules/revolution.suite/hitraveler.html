@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Circulation · how to dream freely · ÖSSTESSÊLÂ</title>
 <meta name="description" content="The outward breath of the record: circulation vs. extraction, the torus, and five possible futures that aren't boring dystopias. Now what? Go build the loop.">
-<link rel="stylesheet" href="revolution.css?v=19">
+<link rel="stylesheet" href="revolution.css?v=20">
 <script>try{var _t=JSON.parse(localStorage.getItem("revolution.threshold.v1"));if(_t&&_t.theme==="dark")document.documentElement.dataset.theme="disco";}catch(e){}</script>
 <style>
 /* ═══════════════════════════════════════════════════════════════
@@ -155,6 +155,14 @@ canvas.sparkle-canvas{display:block;width:100%;height:100%}
 .callout-big em{font-style:italic}
 .callout-sm{font-family:var(--font-mono);font-size:.78rem;color:rgba(247,243,255,.4);margin-top:1rem;letter-spacing:.12em}
 
+/* ═══════ CARD SIMULATIONS — a tiny live illustration per idea ═══════ */
+.cviz{
+  display:block;width:100%;height:112px;margin-bottom:1.3rem;border-radius:12px;
+  background:radial-gradient(ellipse at center,rgba(162,89,255,.09),transparent 72%);
+  border:1px solid rgba(255,255,255,.05);
+}
+.cviz.tall{height:150px;margin:1.5rem auto 0;max-width:460px}
+
 /* ═══════ FUTURE CARDS ═══════ */
 .futures{display:grid;grid-template-columns:1fr;gap:1.6rem;margin:2rem 0}
 .fc{
@@ -288,6 +296,7 @@ canvas.sparkle-canvas{display:block;width:100%;height:100%}
   <div class="sec glass" data-i="1">
     <p class="tag">// the pattern nobody teaches you</p>
     <h2 class="sh">Every broken system has the same bug.</h2>
+    <canvas class="cviz tall" data-viz="torus" aria-hidden="true"></canvas>
     <div class="bt">
       <p>Picture a donut. <em>(Stay with me. This gets less stupid.)</em></p><br>
       <p>In a healthy system — a body, an ecosystem, an economy, a friendship — energy <strong>flows in a loop</strong>. Through the center, out the top, around the outside, back through again. Giving, receiving, circulating. Mathematicians call it a torus. You can call it a donut. The universe doesn't care about terminology.</p><br>
@@ -328,6 +337,7 @@ canvas.sparkle-canvas{display:block;width:100%;height:100%}
 
     <div class="futures">
       <div class="fc" onclick="togCard(this)">
+        <canvas class="cviz" data-viz="loop" aria-hidden="true"></canvas>
         <span class="fc-num">01</span>
         <h3>⚡ The Quiet Infrastructure Revolution</h3>
         <p>What if we rebuilt the boring stuff — energy grids, food systems, money itself — as <strong>circulation loops</strong> instead of extraction pipelines? Not communism. Not capitalism. Just... physics. Energy that flows in circles doesn't run out. Money that circulates doesn't concentrate. Food systems that return nutrients to the soil don't collapse.</p>
@@ -336,6 +346,7 @@ canvas.sparkle-canvas{display:block;width:100%;height:100%}
       </div>
 
       <div class="fc" onclick="togCard(this)">
+        <canvas class="cviz" data-viz="network" aria-hidden="true"></canvas>
         <span class="fc-num">02</span>
         <h3>🧠 The Intelligence Redefinition</h3>
         <p>What if intelligence wasn't processing speed but <strong>relational capacity</strong>? The person holding space for someone's breakdown runs more complex computations than any LLM. A community that resolves conflict without violence is solving a harder optimization problem than protein folding. What if we built AI whose metric was <em>"how well does this help people connect?"</em> instead of <em>"how fast can this replace them?"</em></p>
@@ -344,6 +355,7 @@ canvas.sparkle-canvas{display:block;width:100%;height:100%}
       </div>
 
       <div class="fc" onclick="togCard(this)">
+        <canvas class="cviz" data-viz="consent" aria-hidden="true"></canvas>
         <span class="fc-num">03</span>
         <h3>🫧 The Consent-Based Everything</h3>
         <p>What if consent wasn't just a sex-ed concept but the <strong>operating principle of every system on Earth</strong>? Governance by ongoing, withdrawable agreement. Economies where participation is voluntary, not coerced by the threat of starvation. Relationships — all of them, including with your employer, your government, your landlord — where <strong>"no" is always a live option</strong> and "yes" means something because it wasn't forced.</p>
@@ -352,6 +364,7 @@ canvas.sparkle-canvas{display:block;width:100%;height:100%}
       </div>
 
       <div class="fc" onclick="togCard(this)">
+        <canvas class="cviz" data-viz="compost" aria-hidden="true"></canvas>
         <span class="fc-num">04</span>
         <h3>🌊 The Metabolic Society</h3>
         <p>What if we let things <strong>die on time</strong>? Corporations that outlived their usefulness. Laws written for a world that no longer exists. Identities that stopped fitting years ago. The healthiest ecosystems have the fastest turnover. The most innovative cultures have the shortest institutional half-lives. <strong>What if composting was a civic skill?</strong></p>
@@ -360,6 +373,7 @@ canvas.sparkle-canvas{display:block;width:100%;height:100%}
       </div>
 
       <div class="fc" onclick="togCard(this)">
+        <canvas class="cviz" data-viz="inward" aria-hidden="true"></canvas>
         <span class="fc-num">05</span>
         <h3>✨ The Embodied Renaissance</h3>
         <p>What if the next leap isn't <strong>uploading</strong> consciousness into machines but <strong>downloading</strong> it deeper into bodies? Not transcending flesh — navigating it. Your nervous system is the most sophisticated technology on the planet. Your gut makes more serotonin than your brain. Your microbiome has more nodes than the internet. What if instead of building outward we built <strong>inward</strong>?</p>
@@ -368,6 +382,7 @@ canvas.sparkle-canvas{display:block;width:100%;height:100%}
       </div>
 
       <div class="fc" onclick="togCard(this)">
+        <canvas class="cviz" data-viz="pluriverse" aria-hidden="true"></canvas>
         <span class="fc-num">06</span>
         <h3>🌀 The Pluriverse (Not Universe)</h3>
         <p>What if the answer isn't <strong>one</strong> global system but <strong>thousands of local ones</strong> that talk to each other? Not "the right way to organize society" but a <em>biodiversity of governance</em> — where different communities experiment with different structures and share what works. Like open-source, but for civilization. Nobody has the blueprint. <strong>Everybody is the lab.</strong></p>
@@ -457,7 +472,7 @@ canvas.sparkle-canvas{display:block;width:100%;height:100%}
 </div><!-- /main -->
 </div><!-- /container -->
 
-<script src="revolution.js?v=19"></script>
+<script src="revolution.js?v=20"></script>
 <script>
 REV.boot({ scene: 'hitraveler', room: 'hitraveler', ground: 'dark' });
 
@@ -570,6 +585,90 @@ function shareIt(){
 
 /* ═══ TIMESTAMP ═══ */
 document.getElementById('ts').textContent='accessed: '+new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+/* ═══ CARD SIMULATIONS ═══════════════════════════════════════════════
+   One tiny live canvas per idea. Only the cards on screen animate
+   (IntersectionObserver); everything freezes to a single static frame
+   when motion is stilled. Nothing fetched — all drawn from math. */
+(function(){
+  var F='#FF2DAA',T='#00F2FF',G='#FFCB6B',U='#A259FF',S='#7CFDD9',O='#F7F3FF';
+  function R(a,b){return a+Math.random()*(b-a);}
+  function ha(hex,a){var n=parseInt(hex.slice(1),16);return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')';}
+  function dot(x,c,px,py,r,col,al){x.globalAlpha=al;x.fillStyle=col;x.shadowBlur=10;x.shadowColor=col;x.beginPath();x.arc(px,py,r,0,6.283);x.fill();x.shadowBlur=0;x.globalAlpha=1;}
+
+  var BUILD={
+    torus:function(w,h){var p=[];for(var i=0;i<20;i++)p.push({u:Math.random(),s:R(.05,.10)});return{p:p,lt:2,lk:[]};},
+    loop:function(w,h){var p=[];for(var i=0;i<10;i++)p.push({u:i/10,s:R(.05,.09),c:i%2?T:F});return{p:p};},
+    network:function(w,h){var n=[];for(var i=0;i<7;i++)n.push({x:R(.14,.86)*w,y:R(.2,.8)*h,vx:R(-9,9),vy:R(-9,9)});return{n:n,ps:[],pt:0};},
+    consent:function(w,h){return{};},
+    compost:function(w,h){var c=[];for(var i=0;i<15;i++)c.push({x:Math.random()*w,y:Math.random()*h,a:Math.random(),life:R(3,6),r:R(4,9)});return{c:c};},
+    inward:function(w,h){var r=[];for(var i=0;i<5;i++)r.push({p:i/5});return{r:r};},
+    pluriverse:function(w,h){var cl=[],cols=[F,T,G,U],m=Math.min(w,h);for(var k=0;k<4;k++){var d=[];for(var i=0;i<4;i++)d.push({a:Math.random()*6.28,rad:R(.06,.14)*m,s:R(.4,1.3)});cl.push({x:R(.2,.8)*w,y:R(.28,.72)*h,d:d,c:cols[k]});}return{cl:cl,tr:[],tt:1.4};}
+  };
+
+  var DRAW={
+    torus:function(x,w,h,t,d){
+      var cx=w/2,cy=h/2,rx=w*.32,ry=h*.34;
+      x.strokeStyle=ha(U,.32);x.lineWidth=1.4;x.beginPath();x.ellipse(cx,cy,rx,ry,0,0,6.283);x.stroke();
+      d.p.forEach(function(o){o.u=(o.u+o.s/60)%1;var a=o.u*6.283;dot(x,x,cx+Math.cos(a)*rx,cy+Math.sin(a)*ry,2.3,o.u<.5?T:F,.9);});
+      d.lt-=1/60;if(d.lt<=0){d.lt=R(3,5);var a=R(0,6.283);d.lk.push({x:cx+Math.cos(a)*rx,y:cy+Math.sin(a)*ry,life:1});}
+      d.lk=d.lk.filter(function(L){L.y+=45/60;L.life-=1/60*.7;if(L.life>0)dot(x,x,L.x,L.y,2,F,L.life*.8);return L.life>0;});
+    },
+    loop:function(x,w,h,t,d){
+      var cx=w/2,cy=h/2,rx=w*.30,ry=h*.32;
+      x.strokeStyle=ha(T,.20);x.lineWidth=1.2;x.beginPath();x.ellipse(cx,cy,rx,ry,0,0,6.283);x.stroke();
+      d.p.forEach(function(o){o.u=(o.u+o.s/60)%1;for(var k=0;k<5;k++){var a=(o.u-k*.014)*6.283;dot(x,x,cx+Math.cos(a)*rx,cy+Math.sin(a)*ry,2.4-k*.4,o.c,.72-k*.13);}});
+    },
+    network:function(x,w,h,t,d){
+      d.n.forEach(function(n){n.x+=n.vx/60;n.y+=n.vy/60;if(n.x<8||n.x>w-8)n.vx*=-1;if(n.y<8||n.y>h-8)n.vy*=-1;n.x=Math.max(8,Math.min(w-8,n.x));n.y=Math.max(8,Math.min(h-8,n.y));});
+      var mx=w*.36;
+      for(var i=0;i<d.n.length;i++)for(var j=i+1;j<d.n.length;j++){var a=d.n[i],b=d.n[j],ds=Math.hypot(a.x-b.x,a.y-b.y);if(ds<mx){x.strokeStyle=ha(U,(1-ds/mx)*.5);x.lineWidth=1;x.beginPath();x.moveTo(a.x,a.y);x.lineTo(b.x,b.y);x.stroke();}}
+      d.pt-=1/60;if(d.pt<=0){d.pt=R(.5,1.2);var i2=(Math.random()*d.n.length)|0,j2=(Math.random()*d.n.length)|0;if(i2!==j2)d.ps.push({a:d.n[i2],b:d.n[j2],p:0});}
+      d.ps=d.ps.filter(function(P){P.p+=1/60*1.3;if(P.p<1)dot(x,x,P.a.x+(P.b.x-P.a.x)*P.p,P.a.y+(P.b.y-P.a.y)*P.p,2.6,T,.9);return P.p<1;});
+      d.n.forEach(function(n){dot(x,x,n.x,n.y,3.4,F,.9);});
+    },
+    consent:function(x,w,h,t,d){
+      var lx=w*.26,rx=w*.74,cy=h/2,cyc=t%4,flow=cyc>.8&&cyc<3,wd=cyc>=3&&cyc<3.6;
+      var lL=.4+.55*Math.max(0,Math.sin(t*2)),rL=.4+.55*Math.max(0,Math.sin(t*2+.3));
+      if(flow){x.strokeStyle=ha(S,.5);x.lineWidth=1.4;x.beginPath();x.moveTo(lx,cy);x.lineTo(rx,cy);x.stroke();var fp=(t*.6)%1;dot(x,x,lx+(rx-lx)*fp,cy,2.6,S,.9);dot(x,x,lx+(rx-lx)*((fp+.5)%1),cy,2.6,S,.9);}
+      else if(wd){x.strokeStyle=ha(F,.4);x.setLineDash([4,6]);x.lineWidth=1.4;x.beginPath();x.moveTo(lx,cy);x.lineTo(rx,cy);x.stroke();x.setLineDash([]);}
+      dot(x,x,lx,cy,7,flow?T:U,lL);dot(x,x,rx,cy,7,flow?T:F,rL);
+      x.font='8px monospace';x.fillStyle=ha(O,.5);x.textAlign='center';x.fillText(wd?'no':'yes',w/2,cy-13);
+    },
+    compost:function(x,w,h,t,d){
+      d.c.forEach(function(o){o.a+=1/60/o.life;if(o.a>=1){o.a=0;o.x=Math.random()*w;o.y=Math.random()*h;o.r=R(4,9);o.life=R(3,6);}
+        var col=o.a<.5?S:(o.a<.8?G:F),sz=o.a<.15?o.r*(o.a/.15):(o.a>.8?o.r*(1-(o.a-.8)/.2):o.r),al=o.a<.1?o.a/.1:(o.a>.85?(1-o.a)/.15:.85);
+        dot(x,x,o.x,o.y,Math.max(.5,sz),col,Math.max(0,al));});
+    },
+    inward:function(x,w,h,t,d){
+      var cx=w/2,cy=h/2,mr=Math.min(w,h)*.42;
+      d.r.forEach(function(o){o.p-=1/60*.35;if(o.p<0)o.p+=1;x.strokeStyle=ha(o.p<.5?U:T,(1-o.p)*.6);x.lineWidth=1.4;x.beginPath();x.arc(cx,cy,o.p*mr,0,6.283);x.stroke();});
+      dot(x,x,cx,cy,4+2*Math.sin(t*3),G,.9);
+    },
+    pluriverse:function(x,w,h,t,d){
+      d.cl.forEach(function(C){C.d.forEach(function(o){o.a+=o.s/60;dot(x,x,C.x+Math.cos(o.a)*o.rad,C.y+Math.sin(o.a)*o.rad,2.2,C.c,.85);});dot(x,x,C.x,C.y,3,C.c,.5);});
+      d.tt-=1/60;if(d.tt<=0){d.tt=R(1,2.2);var i=(Math.random()*d.cl.length)|0,j=(Math.random()*d.cl.length)|0;if(i!==j)d.tr.push({a:d.cl[i],b:d.cl[j],p:0,c:d.cl[i].c});}
+      d.tr=d.tr.filter(function(P){P.p+=1/60*.6;if(P.p<1){var px=P.a.x+(P.b.x-P.a.x)*P.p,py=P.a.y+(P.b.y-P.a.y)*P.p;x.strokeStyle=ha(P.c,.14);x.lineWidth=.8;x.beginPath();x.moveTo(P.a.x,P.a.y);x.lineTo(px,py);x.stroke();dot(x,x,px,py,2.4,P.c,.9);}return P.p<1;});
+    }
+  };
+
+  var reg=new Map();
+  [].forEach.call(document.querySelectorAll('canvas[data-viz]'),function(c){
+    var ctx=c.getContext('2d'),kind=c.dataset.viz,st={t:0,raf:0,on:false,init:false,w:0,h:0,data:null};
+    reg.set(c,st);
+    st.size=function(){var dpr=Math.min(devicePixelRatio||1,2),r=c.getBoundingClientRect();st.w=Math.max(1,Math.round(r.width));st.h=Math.max(1,Math.round(r.height));c.width=st.w*dpr;c.height=st.h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);};
+    st.frame=function(){
+      if(!st.on){st.raf=0;return;}
+      if(!st.init){st.size();st.data=BUILD[kind]?BUILD[kind](st.w,st.h):{};st.init=true;}
+      st.t+=1/60;ctx.clearRect(0,0,st.w,st.h);
+      if(DRAW[kind])DRAW[kind](ctx,st.w,st.h,st.t,st.data);
+      st.raf=REV.stilled()?0:requestAnimationFrame(st.frame);
+    };
+  });
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){var st=reg.get(e.target);if(!st)return;if(e.isIntersecting){st.on=true;if(!st.raf)st.raf=requestAnimationFrame(st.frame);}else{st.on=false;if(st.raf){cancelAnimationFrame(st.raf);st.raf=0;}}});},{threshold:.08});
+  reg.forEach(function(st,c){io.observe(c);});
+  addEventListener('resize',function(){reg.forEach(function(st){st.init=false;});});
+})();
 </script>
 </body>
 </html>
