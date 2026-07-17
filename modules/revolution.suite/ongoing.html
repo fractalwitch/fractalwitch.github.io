@@ -357,6 +357,22 @@ REV.boot({ scene: 'ongoing', room: 'ongoing', track: 'assets/tracks/ongoing.mp3'
     }, { once: true });
   });
 })();
+
+/* Side B velvet-rope: this run-out exit is a Side B link, so keep it
+   locked until the word's been whispered at the hub's door. Once the
+   hub stores the unlock, this passes straight through to the triskelion. */
+(function () {
+  const link = document.querySelector('.exits a[href="triskelion.html"]');
+  if (!link) return;
+  let unlocked;
+  try { unlocked = localStorage.getItem('rev_sideb_unlocked') === '1'; } catch (e) { unlocked = false; }
+  if (unlocked) return;
+  link.textContent = 'side b · locked 🔒 →';
+  link.addEventListener('click', function (e) {
+    e.preventDefault();
+    location.href = 'revolution.html?sideb=1';
+  });
+})();
 </script>
 </body>
 </html>
