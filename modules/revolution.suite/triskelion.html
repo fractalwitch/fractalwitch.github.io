@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en" data-motion="full" data-ground="dark" data-temple>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>The Triskelion · ΣΩ deep flux · Side B opens</title>
+<meta name="description" content="A visual-candy buffer opening Side B: 3,500 particles swept into a three-armed vortex. Drag to stir the flux. Then onward — the deviance deck and the becoming.">
+<link rel="stylesheet" href="revolution.css?v=21">
+<script>try{var _t=JSON.parse(localStorage.getItem("revolution.threshold.v1"));if(_t&&_t.theme==="dark")document.documentElement.dataset.theme="disco";}catch(e){}</script>
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   THE TRISKELION — Side B's overture. Pure visual candy: a
+   three-armed particle vortex you can stir with a finger. It buffers
+   the turn from queer history (Side A) into the becoming (Side B).
+   Fullscreen and immersive; the shared shell rides on top as a thin
+   overlay (title + the way onward).
+   ═══════════════════════════════════════════════════════════════ */
+html, body { height: 100%; }
+body { margin: 0; overflow: hidden; background: #000; touch-action: none; }
+#tris { position: fixed; inset: 0; display: block; z-index: 0; }
+
+/* thin overlay — pointer-transparent except the links */
+.tris-overlay {
+  position: fixed; inset: 0; z-index: 5; pointer-events: none;
+  display: flex; flex-direction: column; justify-content: space-between;
+  padding: 6vh 6vw; text-align: center;
+}
+.tris-head { }
+.tris-eyebrow {
+  font-family: var(--font-geo); font-weight: 600; font-size: .72rem;
+  letter-spacing: .42em; text-transform: uppercase; color: var(--ultraviolet);
+  text-shadow: 0 0 14px rgba(162,89,255,.7);
+}
+.tris-title {
+  font-size: clamp(2.4rem, 9vw, 5rem); margin: .5rem 0 .3rem;
+}
+.tris-sub {
+  font-family: var(--font-serif); font-style: italic;
+  font-size: clamp(1rem, 2.6vw, 1.4rem); color: var(--opal);
+  text-shadow: 0 0 18px rgba(0,0,0,.8);
+}
+.tris-hint {
+  font-family: var(--font-mono); font-size: .7rem; letter-spacing: .18em;
+  color: var(--seafoam); opacity: .8; margin-top: .8rem;
+  text-shadow: 0 0 12px rgba(0,0,0,.9);
+}
+.tris-exits {
+  display: flex; justify-content: center; gap: 1.6rem; flex-wrap: wrap;
+  font-family: var(--font-mono); font-size: .8rem;
+}
+.tris-exits a {
+  pointer-events: auto; text-decoration: none;
+  color: var(--opal); background: rgba(11,2,32,.6);
+  border: 1px solid rgba(162,89,255,.4); border-radius: 50px;
+  padding: .7rem 1.4rem; backdrop-filter: blur(6px);
+  transition: border-color .25s, box-shadow .25s, transform .25s;
+  text-shadow: 0 0 10px rgba(0,0,0,.9);
+}
+.tris-exits a:hover { border-color: var(--fuchsia); box-shadow: 0 0 22px rgba(255,45,170,.4); transform: translateY(-2px); color: var(--opal); }
+.tris-exits a.go { background: linear-gradient(135deg, rgba(162,89,255,.5), rgba(255,45,170,.4)); }
+</style>
+</head>
+<body>
+
+<canvas id="tris"></canvas>
+
+<div class="tris-overlay" aria-hidden="false">
+  <div class="tris-head">
+    <p class="tris-eyebrow">side b · ΣΩ deep flux</p>
+    <h1 class="tris-title temple-title">The Triskelion</h1>
+    <p class="tris-sub">three arms, one turning — the buffer between the history and the becoming.</p>
+    <p class="tris-hint">drag anywhere to stir the vortex ✧</p>
+  </div>
+  <nav class="tris-exits" aria-label="Exits">
+    <a href="ongoing.html">← side a · ongoing</a>
+    <a href="revolution.html">⏏ lift the needle</a>
+    <a href="deck.html" class="go">the deviance deck → (asks the threshold first)</a>
+  </nav>
+</div>
+
+<script src="revolution.js?v=21"></script>
+<script>
+REV.boot({ scene: 'triskelion', room: 'triskelion', ground: 'dark', bare: true, noBall: true });
+
+/* ═══ THE TRISKELION VORTEX — 3,500 particles, three arms, finger-stirred ═══ */
+const c = document.getElementById('tris');
+const x = c.getContext('2d');
+let w, h;
+const P = [];
+const N = 3500;
+let t = 0, hueCycle = 0;
+const arms = 3;
+let touchX = null, touchY = null;
+
+function resize(){ w = c.width = innerWidth; h = c.height = innerHeight; }
+addEventListener('resize', resize); resize();
+
+class Part {
+  constructor(){ this.reset(); }
+  reset(){
+    this.x = Math.random()*w; this.y = Math.random()*h;
+    this.vx = 0; this.vy = 0;
+    this.life = Math.random()*0.6 + 0.4;
+    this.hueOffset = Math.random()*60;
+  }
+  update(){
+    let fx = 0, fy = 0;
+    const cx = w/2, cy = h/2, radius = Math.min(w,h)*0.3;
+    for(let i=0;i<arms;i++){
+      const a = (t*0.6) + (i*(Math.PI*2/arms));
+      const ax = cx + Math.cos(a)*radius, ay = cy + Math.sin(a)*radius;
+      const dx = ax-this.x, dy = ay-this.y, d = Math.sqrt(dx*dx+dy*dy);
+      if(d>5){
+        const f = 2500/(d*d+100);
+        fx += (dx/d)*f; fy += (dy/d)*f;
+        const sp = f*15; fx += (-dy/d)*sp; fy += (dx/d)*sp;
+      }
+    }
+    if(touchX!==null){
+      const dx = touchX-this.x, dy = touchY-this.y, d = Math.sqrt(dx*dx+dy*dy);
+      if(d<400 && d>10){
+        const f = 3000/(d*d+100);
+        fx += (dx/d)*f*8; fy += (dy/d)*f*8;
+        fx -= (-dy/d)*f*20; fy -= (dx/d)*f*20;
+      }
+    }
+    const dxC = this.x-cx, dyC = this.y-cy, dC = Math.sqrt(dxC*dxC+dyC*dyC);
+    if(dC<100){ fx += (dxC/dC)*4; fy += (dyC/dC)*4; }
+    this.vx = this.vx*0.92 + fx; this.vy = this.vy*0.92 + fy;
+    this.x += this.vx; this.y += this.vy; this.life -= 0.002;
+    if(this.life<=0 || this.x<0 || this.x>w || this.y<0 || this.y>h) this.reset();
+  }
+  draw(){
+    const speed = Math.abs(this.vx)+Math.abs(this.vy);
+    const hu = (hueCycle + this.hueOffset + speed*3) % 360;
+    const l = Math.min(70, 20 + speed*3);
+    x.fillStyle = 'hsla('+hu+',100%,'+l+'%,'+this.life+')';
+    const size = Math.min(4, 1.5 + speed/4);
+    x.beginPath(); x.arc(this.x, this.y, size/2, 0, Math.PI*2); x.fill();
+  }
+}
+for(let i=0;i<N;i++) P.push(new Part());
+
+function setTouch(e){
+  e.preventDefault();
+  const p = e.touches ? e.touches[0] : e;
+  touchX = p.clientX; touchY = p.clientY;
+}
+function clearTouch(){ touchX = null; touchY = null; }
+c.addEventListener('touchstart', setTouch, {passive:false});
+c.addEventListener('touchmove', setTouch, {passive:false});
+c.addEventListener('touchend', clearTouch);
+c.addEventListener('mousedown', setTouch);
+c.addEventListener('mousemove', function(e){ if(e.buttons===1) setTouch(e); });
+addEventListener('mouseup', clearTouch);
+
+function loop(){
+  // stilled: one calm static scatter, no motion
+  if (window.REV && REV.stilled()){
+    x.globalCompositeOperation='source-over'; x.fillStyle='#000'; x.fillRect(0,0,w,h);
+    x.globalCompositeOperation='lighter'; P.forEach(function(p){ p.draw(); });
+    return;
+  }
+  x.globalCompositeOperation='source-over';
+  x.fillStyle='rgba(0,0,0,0.1)'; x.fillRect(0,0,w,h);
+  x.globalCompositeOperation='lighter';
+  t += 0.02; hueCycle += 1;
+  P.forEach(function(p){ p.update(); p.draw(); });
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
