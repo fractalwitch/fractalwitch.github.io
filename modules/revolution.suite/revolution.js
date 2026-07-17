@@ -611,13 +611,8 @@
     if (audio.hasTrack) {
       audio.enabled = on;
       REV.set('audio', on);
-      if (on) {
-        synthUp();                                  // keep interactive foley (stems/thunk) audible over the track
-        const p = audio.trackEl && audio.trackEl.play(); if (p && p.catch) p.catch(function () {});
-      } else {
-        if (audio.trackEl) audio.trackEl.pause();
-        synthDown();
-      }
+      if (on) { startTrack(); synthUp(); }          // routed through Web Audio (iOS-safe)
+      else { if (audio.trackEl) audio.trackEl.pause(); synthDown(); }
       if (audio.onToggle) audio.onToggle(on);
       return;
     }
@@ -665,11 +660,34 @@
     if (audio.onToggle) audio.onToggle(true);
   }
 
+  // Start (or restart) the recording. iOS WebKit silences a bare <audio>
+  // element when the ringer switch is on mute — routing it through the
+  // AudioContext (createMediaElementSource) makes it play like a music app.
+  // The context is created/resumed here so, when this runs inside a user
+  // gesture, iOS unlocks audio for good.
+  function startTrack() {
+    const el = audio.trackEl; if (!el) return;
+    try {
+      audioEnsure();
+      if (audio.ctx.state === 'suspended') audio.ctx.resume();
+      if (!audio.trackSrc) {
+        try {
+          audio.trackSrc = audio.ctx.createMediaElementSource(el);
+          audio.trackGain = audio.ctx.createGain(); audio.trackGain.gain.value = 1;
+          audio.trackSrc.connect(audio.trackGain).connect(audio.ctx.destination);
+        } catch (e) { /* some engines forbid re-routing — fall back to the element's own output */ }
+      }
+    } catch (e) {}
+    const p = el.play(); if (p && p.catch) p.catch(function () {});
+  }
+
   function setTrack(url, title) {
     audio.hasTrack = true;
     audio.trackTitle = title || '';
     const el = audio.trackEl = new Audio();
     el.src = url; el.loop = true; el.preload = 'auto';
+    el.muted = false; el.volume = 1;
+    el.setAttribute('playsinline', '');            // iOS: never go fullscreen
     el.addEventListener('playing', function () { if (!audio.enabled) markPlaying(); });
     // be a good guest: pause when the tab is hidden, resume when it returns
     document.addEventListener('visibilitychange', function () {
@@ -677,16 +695,26 @@
       if (document.hidden) { audio.wasPlaying = !audio.trackEl.paused; audio.trackEl.pause(); }
       else if (audio.wasPlaying && audio.enabled) { audio.trackEl.play().catch(function () {}); }
     });
-    function armGesture() {
-      const go = function () {
-        el.play().then(markPlaying).catch(function () {});
-        removeEventListener('pointerdown', go); removeEventListener('keydown', go); removeEventListener('touchstart', go);
-      };
-      addEventListener('pointerdown', go); addEventListener('keydown', go); addEventListener('touchstart', go);
+
+    // THE UNLOCK — the first real user gesture starts everything. Capture
+    // phase + several event types so it fires no matter what a room's own
+    // handlers do (the turntable calls preventDefault on the canvas, etc.).
+    const EV = ['touchend', 'touchstart', 'pointerdown', 'mousedown', 'keydown', 'click'];
+    function done() { EV.forEach(function (ev) { document.removeEventListener(ev, unlock, true); }); }
+    function unlock(e) {
+      if (audio.enabled) { done(); return; }
+      // if the gesture landed on the ♪ button or the chip, let THEIR handler
+      // toggle it — don't double-fire (which would enable then pause).
+      const t = e && e.target;
+      if (t && t.closest && t.closest('.audio-toggle, .now-playing')) return;
+      startTrack(); markPlaying(); done();
     }
+    EV.forEach(function (ev) { document.addEventListener(ev, unlock, true); });
+
+    // still TRY straight autoplay for browsers that allow it (desktop);
+    // iOS/most mobile will reject and simply wait for the unlock gesture.
     const p = el.play();
-    if (p && p.then) p.then(markPlaying).catch(armGesture);
-    else armGesture();
+    if (p && p.then) p.then(function () { startTrack(); markPlaying(); }).catch(function () {});
   }
 
   /* ── THE HOLE — theriot's silence: projector idle + 60Hz mains ────── */
@@ -942,14 +970,19 @@
     if (opts.track) {
       const btn = document.querySelector('.audio-toggle');
       if (btn) btn.setAttribute('aria-label', 'Play or pause this room’s track.');
-      const np = document.createElement('div');
+      const np = document.createElement('button');
       np.className = 'now-playing';
+      np.type = 'button';
+      np.setAttribute('aria-label', 'Play or pause this room’s track');
       np.innerHTML = '<span class="np-eq" aria-hidden="true"><i></i><i></i><i></i></span><span class="np-title"></span>';
-      np.querySelector('.np-title').textContent = opts.trackTitle || 'now playing';
+      np.querySelector('.np-title').textContent = opts.trackTitle || 'tap for sound';
+      // tapping the chip is an explicit, obvious way to start audio on mobile
+      np.addEventListener('click', function () { REV.audio.enable(!REV.audio.enabled()); });
       document.body.appendChild(np);
       audio.onToggle = function (on) {
         if (btn) { btn.setAttribute('aria-pressed', String(on)); btn.textContent = on ? '♪' : '∅'; }
         np.classList.toggle('playing', on);
+        np.querySelector('.np-title').textContent = on ? (opts.trackTitle || 'now playing') : 'tap for sound';
       };
       REV.audio.track(opts.track, opts.trackTitle);
     }
