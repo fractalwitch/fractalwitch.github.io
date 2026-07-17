@@ -89,7 +89,7 @@
 /* ── RESET / BODY ───────────────────────────────────────────────── */
 * { margin:0; padding:0; box-sizing:border-box; }
 
-html { scroll-behavior:smooth; }
+html { scroll-behavior:smooth; overflow-x: clip; }   /* root clip: no stray element (e.g. a rotated shout-banner) can widen the page and force a mobile zoom */
 html[data-motion="stilled"] { scroll-behavior:auto; }
 
 body {
@@ -130,10 +130,16 @@ a:hover { color: var(--hotpink); }
   pointer-events: none;
   z-index: 40;
   opacity: .12;
+  /* drift the pattern by moving the background, NOT the layer — a transform
+     animation on a fixed overlay re-composites on every scroll frame and
+     "catches" / tears on mobile. background-position leaves the layer pinned. */
   animation: scan-drift 9s linear infinite;
+  transform: translateZ(0);        /* own compositor layer, promoted once */
+  backface-visibility: hidden;
+  will-change: background-position;
 }
 [data-ground="dark"] .scanlines, html[data-theme="disco"] .scanlines { opacity: .5; }
-@keyframes scan-drift { to { transform: translateY(6px); } }
+@keyframes scan-drift { to { background-position: 0 3px; } }
 
 /* film grain via feTurbulence — real texture, no image request */
 .grain {
@@ -143,6 +149,8 @@ a:hover { color: var(--hotpink); }
   pointer-events: none;
   z-index: 41;
   animation: grain-shift .9s steps(4) infinite;
+  backface-visibility: hidden;     /* pin to its own layer so scroll can't tear it */
+  will-change: transform;
 }
 @keyframes grain-shift {
   0%   { transform: translate(0,0); }
@@ -267,6 +275,7 @@ a:hover { color: var(--hotpink); }
   padding: .5em .9em;
   transform: rotate(-3deg);
   box-shadow: 0 10px 0 rgba(0,0,0,.35), 0 18px 40px rgba(255,61,0,.35);
+  max-width: 100%;   /* keep the rotated bounding box inside the viewport on narrow screens */
 }
 .shout-banner.pink { background: var(--hotpink); color: var(--void); }
 .shout-banner.green { background: var(--neon-green); color: var(--void); }
@@ -592,13 +601,13 @@ a:hover { color: var(--hotpink); }
   opacity: 0;
   pointer-events: none;
 }
-.fourthwall.torn { animation: fw-appear 7.5s var(--ease-needle) forwards; }
+.fourthwall.torn { animation: fw-appear 14s var(--ease-needle) forwards; }
 @keyframes fw-appear {
   0%   { opacity:0; clip-path: inset(48% 0 48% 0); }
-  6%   { opacity:1; clip-path: inset(0 0 0 0); transform: translateX(-50.4%) skewX(.6deg); }
-  8%   { transform: translateX(-49.7%) skewX(-.4deg); }
-  10%  { transform: translateX(-50%) skewX(0); }
-  86%  { opacity:1; }
+  4%   { opacity:1; clip-path: inset(0 0 0 0); transform: translateX(-50.4%) skewX(.6deg); }
+  5.5% { transform: translateX(-49.7%) skewX(-.4deg); }
+  7%   { transform: translateX(-50%) skewX(0); }
+  92%  { opacity:1; }
   100% { opacity:0; clip-path: inset(48% 0 48% 0); }
 }
 

@@ -864,7 +864,7 @@
     setTimeout(function () {
       el.classList.add('torn');
       scramble(el, line, 900);
-      setTimeout(function () { el.remove(); tear.remove(); }, 8000);
+      setTimeout(function () { el.remove(); tear.remove(); }, 14200);
     }, REV.stilled() ? 0 : 420);
   }
 
