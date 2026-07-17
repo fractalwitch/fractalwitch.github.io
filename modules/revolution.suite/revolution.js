@@ -593,6 +593,7 @@
      cross-fades needed. theriot mutes the score for its silence. ────── */
   function setScene(name) {
     audio.scene = name;
+    if (audio.hasTrack) return;          // this room plays a real recording, not the synth
     if (name === 'theriot') {
       audio.arr = null;
       if (audio.enabled && audio.ctx) { stopClock(); startRiotRoom(); }
@@ -606,6 +607,15 @@
   }
 
   function audioEnable(on) {
+    // rooms with a real recording: the ♪ toggle plays/pauses the MP3
+    if (audio.hasTrack) {
+      audio.enabled = on;
+      REV.set('audio', on);
+      if (on) { const p = audio.trackEl && audio.trackEl.play(); if (p && p.catch) p.catch(function () {}); }
+      else if (audio.trackEl) { audio.trackEl.pause(); }
+      if (audio.onToggle) audio.onToggle(on);
+      return;
+    }
     audioEnsure();
     audio.enabled = on;
     REV.set('audio', on);
@@ -621,6 +631,34 @@
       audio.master.gain.linearRampToValueAtTime(0.0001, now + 0.5);
       stopClock(); stopRiotRoom();
     }
+  }
+
+  /* ── REAL RECORDINGS — some rooms play a curated MP3 instead of the
+     synth. It autoplays on load where the browser allows, and otherwise
+     starts on the first gesture; the ♪ toggle then plays/pauses it. Zero
+     synthesis for these rooms — the track IS the room. ─────────────── */
+  function setTrack(url, title) {
+    audio.hasTrack = true;
+    audio.trackTitle = title || '';
+    const el = audio.trackEl = new Audio();
+    el.src = url; el.loop = true; el.preload = 'auto';
+    el.addEventListener('playing', function () { audio.enabled = true; if (audio.onToggle) audio.onToggle(true); });
+    // be a good guest: pause when the tab is hidden, resume when it returns
+    document.addEventListener('visibilitychange', function () {
+      if (!audio.trackEl) return;
+      if (document.hidden) { audio.wasPlaying = !audio.trackEl.paused; audio.trackEl.pause(); }
+      else if (audio.wasPlaying && audio.enabled) { audio.trackEl.play().catch(function () {}); }
+    });
+    function armGesture() {
+      const go = function () {
+        el.play().then(function () { audio.enabled = true; REV.set('audio', true); if (audio.onToggle) audio.onToggle(true); }).catch(function () {});
+        removeEventListener('pointerdown', go); removeEventListener('keydown', go); removeEventListener('touchstart', go);
+      };
+      addEventListener('pointerdown', go); addEventListener('keydown', go); addEventListener('touchstart', go);
+    }
+    const p = el.play();
+    if (p && p.then) p.then(function () { audio.enabled = true; REV.set('audio', true); if (audio.onToggle) audio.onToggle(true); }).catch(armGesture);
+    else armGesture();
   }
 
   /* ── THE HOLE — theriot's silence: projector idle + 60Hz mains ────── */
@@ -709,7 +747,8 @@
     crackle: crackle,
     thunk: thunk,
     preview: preview,
-    stem: stem
+    stem: stem,
+    track: setTrack
   };
 
   /* ─────────────────────────────────────────────────────────────────
@@ -869,6 +908,22 @@
         REV.audio.crackle(0.18);          // a soft physical "clack" if sound is on
       });
       document.body.appendChild(ls);
+    }
+
+    // real-recording rooms: a "now playing" chip + autoplay, wired to ♪
+    if (opts.track) {
+      const btn = document.querySelector('.audio-toggle');
+      if (btn) btn.setAttribute('aria-label', 'Play or pause this room’s track.');
+      const np = document.createElement('div');
+      np.className = 'now-playing';
+      np.innerHTML = '<span class="np-eq" aria-hidden="true"><i></i><i></i><i></i></span><span class="np-title"></span>';
+      np.querySelector('.np-title').textContent = opts.trackTitle || 'now playing';
+      document.body.appendChild(np);
+      audio.onToggle = function (on) {
+        if (btn) { btn.setAttribute('aria-pressed', String(on)); btn.textContent = on ? '♪' : '∅'; }
+        np.classList.toggle('playing', on);
+      };
+      REV.audio.track(opts.track, opts.trackTitle);
     }
 
     if (opts.scene) setScene(opts.scene);
