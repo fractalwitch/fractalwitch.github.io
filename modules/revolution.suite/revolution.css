@@ -601,14 +601,22 @@ a:hover { color: var(--hotpink); }
   opacity: 0;
   pointer-events: none;
 }
-.fourthwall.torn { animation: fw-appear 14s var(--ease-needle) forwards; }
+/* Three deliberate phases over 11s: (1) reveal + settle by ~0.6s,
+   (2) sit STILL and readable for ~7s, (3) fold + fade away over the
+   last 3s. The message must be static while it's being read — no
+   clip-path or transform motion between the reveal and the fold. */
+.fourthwall.torn { animation: fw-appear 11s var(--ease-needle) forwards; }
 @keyframes fw-appear {
-  0%   { opacity:0; clip-path: inset(48% 0 48% 0); }
-  4%   { opacity:1; clip-path: inset(0 0 0 0); transform: translateX(-50.4%) skewX(.6deg); }
-  5.5% { transform: translateX(-49.7%) skewX(-.4deg); }
-  7%   { transform: translateX(-50%) skewX(0); }
-  92%  { opacity:1; }
-  100% { opacity:0; clip-path: inset(48% 0 48% 0); }
+  /* reveal (0 → ~0.6s) */
+  0%   { opacity:0; clip-path: inset(48% 0 48% 0); transform: translateX(-50%); }
+  3%   { opacity:1; clip-path: inset(0 0 0 0); transform: translateX(-50.4%) skewX(.6deg); }
+  4.2% { transform: translateX(-49.7%) skewX(-.4deg); }
+  5%   { transform: translateX(-50%) skewX(0); }
+  /* hold — static & readable (~0.6s → ~7.9s) */
+  72%  { opacity:1; clip-path: inset(0 0 0 0); transform: translateX(-50%) skewX(0);
+         animation-timing-function: ease-in; }
+  /* fold + fade away (last 3s) */
+  100% { opacity:0; clip-path: inset(48% 0 48% 0); transform: translateX(-50%); }
 }
 
 /* scanline tear that precedes the line */
