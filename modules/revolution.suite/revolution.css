@@ -664,8 +664,10 @@ a:hover { color: var(--hotpink); }
   border: 1px solid rgba(255,46,136,.35);
   font-family: var(--font-mono); font-size: .72rem; letter-spacing: .04em;
   max-width: min(72vw, 340px); box-shadow: 0 6px 20px rgba(0,0,0,.4);
-  opacity: .55; transition: opacity .3s, border-color .3s;
+  opacity: .7; transition: opacity .3s, border-color .3s, box-shadow .3s;
+  -webkit-appearance: none; appearance: none; cursor: pointer; text-align: left;
 }
+.now-playing:hover { opacity: 1; box-shadow: 0 6px 26px rgba(255,46,136,.35); }
 .now-playing.playing { opacity: 1; border-color: var(--hotpink); }
 .now-playing .np-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .now-playing .np-eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
