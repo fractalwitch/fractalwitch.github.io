@@ -611,8 +611,13 @@
     if (audio.hasTrack) {
       audio.enabled = on;
       REV.set('audio', on);
-      if (on) { const p = audio.trackEl && audio.trackEl.play(); if (p && p.catch) p.catch(function () {}); }
-      else if (audio.trackEl) { audio.trackEl.pause(); }
+      if (on) {
+        synthUp();                                  // keep interactive foley (stems/thunk) audible over the track
+        const p = audio.trackEl && audio.trackEl.play(); if (p && p.catch) p.catch(function () {});
+      } else {
+        if (audio.trackEl) audio.trackEl.pause();
+        synthDown();
+      }
       if (audio.onToggle) audio.onToggle(on);
       return;
     }
@@ -637,12 +642,35 @@
      synth. It autoplays on load where the browser allows, and otherwise
      starts on the first gesture; the ♪ toggle then plays/pauses it. Zero
      synthesis for these rooms — the track IS the room. ─────────────── */
+  // bring the synth master up (silent by itself — no bed, since setScene
+  // no-ops on track rooms) so the turntable's hover-stems and needle-drop
+  // thunk stay audible over the recording.
+  function synthUp() {
+    try {
+      audioEnsure(); audio.ctx.resume();
+      const now = audio.ctx.currentTime, g = audio.master.gain;
+      g.cancelScheduledValues(now);
+      g.setValueAtTime(Math.max(0.0001, g.value || 0.0001), now);
+      g.linearRampToValueAtTime(0.9, now + 0.6);
+    } catch (e) {}
+  }
+  function synthDown() {
+    if (!audio.ctx) return;
+    const g = audio.master.gain, now = audio.ctx.currentTime;
+    g.cancelScheduledValues(now); g.linearRampToValueAtTime(0.0001, now + 0.4);
+  }
+  function markPlaying() {
+    audio.enabled = true; REV.set('audio', true);
+    synthUp();
+    if (audio.onToggle) audio.onToggle(true);
+  }
+
   function setTrack(url, title) {
     audio.hasTrack = true;
     audio.trackTitle = title || '';
     const el = audio.trackEl = new Audio();
     el.src = url; el.loop = true; el.preload = 'auto';
-    el.addEventListener('playing', function () { audio.enabled = true; if (audio.onToggle) audio.onToggle(true); });
+    el.addEventListener('playing', function () { if (!audio.enabled) markPlaying(); });
     // be a good guest: pause when the tab is hidden, resume when it returns
     document.addEventListener('visibilitychange', function () {
       if (!audio.trackEl) return;
@@ -651,13 +679,13 @@
     });
     function armGesture() {
       const go = function () {
-        el.play().then(function () { audio.enabled = true; REV.set('audio', true); if (audio.onToggle) audio.onToggle(true); }).catch(function () {});
+        el.play().then(markPlaying).catch(function () {});
         removeEventListener('pointerdown', go); removeEventListener('keydown', go); removeEventListener('touchstart', go);
       };
       addEventListener('pointerdown', go); addEventListener('keydown', go); addEventListener('touchstart', go);
     }
     const p = el.play();
-    if (p && p.then) p.then(function () { audio.enabled = true; REV.set('audio', true); if (audio.onToggle) audio.onToggle(true); }).catch(armGesture);
+    if (p && p.then) p.then(markPlaying).catch(armGesture);
     else armGesture();
   }
 
