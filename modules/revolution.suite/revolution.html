@@ -143,6 +143,58 @@ header.masthead .eyebrow { margin-bottom: .6rem; }
 @media (max-width: 700px) {
   .deck-stage { padding-top: 6vh; }
 }
+
+/* ── SIDE B GATE — a cheeky velvet-rope on "the becoming" ─────────── */
+.sbgate {
+  position: fixed; inset: 0; z-index: 120;
+  display: flex; align-items: center; justify-content: center;
+  padding: 1.5rem;
+  background: rgba(2,0,5,.86);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  opacity: 0; pointer-events: none;
+  transition: opacity .45s var(--ease-needle);
+}
+.sbgate.open { opacity: 1; pointer-events: auto; }
+.sbgate-card {
+  position: relative;
+  width: min(30rem, 100%);
+  background: linear-gradient(160deg, #17091f, #0a0410);
+  border: 1px solid rgba(255,46,136,.4);
+  border-radius: 14px;
+  box-shadow: 0 0 60px -12px rgba(255,46,136,.5);
+  padding: 2.2rem 1.8rem 2rem;
+  text-align: center;
+  transform: translateY(12px) scale(.98);
+  transition: transform .45s var(--ease-needle);
+}
+.sbgate.open .sbgate-card { transform: none; }
+.sbgate-eyebrow { font-family: var(--font-mono); font-size:.62rem; letter-spacing:.28em; text-transform:uppercase; color: var(--cyan); }
+.sbgate h3 { font-family: var(--font-display); font-size: clamp(1.6rem,7vw,2.4rem); color: var(--hotpink); margin:.4rem 0 .3rem; letter-spacing:.02em; }
+.sbgate p { font-family: var(--font-mono); font-size:.72rem; line-height:1.7; color: var(--ink-dim); margin:0 auto 1.2rem; max-width:26ch; }
+.sbgate form { display:flex; gap:.5rem; flex-wrap:wrap; justify-content:center; }
+.sbgate input {
+  flex: 1 1 12rem; min-width: 0;
+  font-family: var(--font-mono); font-size: 1rem; letter-spacing:.3em; text-align:center; text-transform:uppercase;
+  color: var(--ink); background: rgba(255,255,255,.04);
+  border: 1px solid rgba(201,160,255,.3); border-radius: 8px;
+  padding: .7rem .8rem;
+}
+.sbgate input:focus { outline:none; border-color: var(--hotpink); box-shadow: 0 0 16px -4px var(--hotpink); }
+.sbgate .sbgate-go {
+  font-family: var(--font-geo); font-weight:600; font-size:.72rem; letter-spacing:.18em; text-transform:uppercase;
+  color: var(--void); background: var(--hotpink); border:0; border-radius:8px;
+  padding: .7rem 1.3rem; cursor:pointer;
+}
+.sbgate .sbgate-go:hover { background: var(--rose); }
+.sbgate-deny { color: var(--shout-orange); font-size:.66rem; min-height:1.1em; margin:.8rem 0 0; letter-spacing:.06em; }
+.sbgate-close { position:absolute; top:.7rem; right:.9rem; background:none; border:0; color:var(--ink-dim); font-size:1.4rem; line-height:1; padding:.2rem .5rem; cursor:pointer; }
+.sbgate-close:hover { color: var(--hotpink); }
+
+/* locked Side B links in the liner-note tracklist */
+.tracklist li.locked { opacity:.72; }
+.tracklist li.locked a { color: var(--ink-dim); }
+.tracklist li.locked a::after { content:' 🔒'; font-size:.8em; opacity:.85; }
+.side-ind.locked::after { content:' 🔒'; font-size:.62em; margin-left:.15em; }
 </style>
 </head>
 <body>
@@ -248,6 +300,7 @@ const REST_SUB = COARSE ? 'touch a groove · hold to drop the needle'
     ol.appendChild(head);
     rooms.forEach(function (r, i) {
       const li = document.createElement('li');
+      li.dataset.side = letter;
       if (!r.built) li.className = 'unreleased';
       const n = document.createElement('span');
       n.className = 'tno';
@@ -256,7 +309,14 @@ const REST_SUB = COARSE ? 'touch a groove · hold to drop the needle'
       a.href = r.built ? r.href : '#';
       a.textContent = r.title;
       if (!r.built) a.setAttribute('aria-disabled', 'true');
-      a.addEventListener('click', function (e) { routeTo(r, e); });
+      a.addEventListener('click', function (e) {
+        if (letter === 'B' && !sideBUnlocked) {
+          e.preventDefault();
+          openSideBGate(function () { routeTo(r); });
+          return;
+        }
+        routeTo(r, e);
+      });
       const d = document.createElement('span');
       d.className = 'dur';
       // explicit note wins (kept short so it right-aligns like the dates);
@@ -290,6 +350,8 @@ function updateSideUI(){
 
 function flipTo(target){
   if (flipping || target === side) return;
+  // Side B is still being pressed — no flip without the word at the door
+  if (target === 'B' && !sideBUnlocked) { openSideBGate(function () { flipTo('B'); }); return; }
   flipping = true;
   side = target;
   REV.audio.thunk();
@@ -311,6 +373,91 @@ function flipTo(target){
 flipBtn.addEventListener('click', function () { flipTo(side === 'A' ? 'B' : 'A'); });
 document.getElementById('sideA').addEventListener('click', function () { flipTo('A'); });
 document.getElementById('sideB').addEventListener('click', function () { flipTo('B'); });
+
+/* ── THE VELVET ROPE — Side B is gated until it's fully pressed ─────
+   A cheeky soft-lock (client-side, not a vault): the word at the door
+   is "DISCO". Once given, the unlock is remembered so you're not asked
+   on every flip. Locks the Side B liner-note links AND the flip. ──── */
+const SIDEB_PASS = 'disco';                 // case-insensitive; cheeky, not security
+const SIDEB_KEY  = 'rev_sideb_unlocked';
+let sideBUnlocked = (function () {
+  try { return localStorage.getItem(SIDEB_KEY) === '1'; } catch (e) { return false; }
+})();
+
+const sbgate = document.createElement('div');
+sbgate.className = 'sbgate';
+sbgate.setAttribute('role', 'dialog');
+sbgate.setAttribute('aria-modal', 'true');
+sbgate.setAttribute('aria-label', 'Side B is password protected');
+sbgate.innerHTML =
+  '<div class="sbgate-card">' +
+    '<button class="sbgate-close" type="button" aria-label="Close">×</button>' +
+    '<p class="sbgate-eyebrow">side b · the becoming</p>' +
+    '<h3>velvet rope</h3>' +
+    '<p>side b is still being pressed. whisper the word at the door to slip past the rope.</p>' +
+    '<form>' +
+      '<input type="password" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="password" aria-label="Side B password">' +
+      '<button class="sbgate-go" type="submit">enter</button>' +
+    '</form>' +
+    '<p class="sbgate-deny" role="alert"></p>' +
+  '</div>';
+document.body.appendChild(sbgate);
+
+const sbInput = sbgate.querySelector('input');
+const sbDeny  = sbgate.querySelector('.sbgate-deny');
+let sbPending = null;                        // callback to run once unlocked
+
+function applySideBLockUI() {
+  const locked = !sideBUnlocked;
+  document.querySelectorAll('#tracklist li[data-side="B"]').forEach(function (li) {
+    li.classList.toggle('locked', locked);
+  });
+  document.getElementById('sideB').classList.toggle('locked', locked);
+}
+
+function openSideBGate(onSuccess) {
+  sbPending = onSuccess || null;
+  sbDeny.textContent = '';
+  sbInput.value = '';
+  sbgate.classList.add('open');
+  if (REV.audio) REV.audio.crackle(0.3);
+  setTimeout(function () { sbInput.focus(); }, 60);
+}
+function closeSideBGate() {
+  sbgate.classList.remove('open');
+  sbPending = null;
+}
+sbgate.querySelector('.sbgate-close').addEventListener('click', closeSideBGate);
+sbgate.addEventListener('click', function (e) { if (e.target === sbgate) closeSideBGate(); });
+sbgate.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSideBGate(); });
+sbgate.querySelector('form').addEventListener('submit', function (e) {
+  e.preventDefault();
+  if (sbInput.value.trim().toLowerCase() === SIDEB_PASS) {
+    sideBUnlocked = true;
+    try { localStorage.setItem(SIDEB_KEY, '1'); } catch (err) {}
+    applySideBLockUI();
+    if (REV.audio) REV.audio.crackle(0.6);
+    const cb = sbPending;
+    closeSideBGate();
+    if (cb) setTimeout(cb, 140);
+  } else {
+    sbDeny.textContent = 'not the word · try again';
+    sbInput.value = '';
+    sbInput.focus();
+    sbgate.querySelector('.sbgate-card').animate(
+      [{ transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(0)' }],
+      { duration: 220 }
+    );
+  }
+});
+
+applySideBLockUI();   // reflect stored state on load
+
+/* arriving from a locked Side B exit elsewhere (e.g. ongoing's run-out)
+   opens the velvet rope straight away, then flips on success */
+if (/[?&]sideb=1(&|$)/.test(location.search) && !sideBUnlocked) {
+  openSideBGate(function () { flipTo('B'); });
+}
 
 /* gate logic: the Deck asks the threshold, never a popup */
 function routeTo(room, e) {
