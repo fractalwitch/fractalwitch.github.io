@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en" data-motion="full" data-ground="dark" data-temple>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Queer Gynarchy · ÖSSTESSÊLÂ · you were always already free</title>
+<meta name="description" content="The record's outward groove — not history but invitation. Queer roles as blueprint, the energy we're building, and the only requirements: consent, care, curiosity, celebration.">
+<link rel="stylesheet" href="revolution.css?v=28">
+<script>try{var _t=JSON.parse(localStorage.getItem("revolution.threshold.v1"));if(_t&&_t.theme==="dark")document.documentElement.dataset.theme="disco";}catch(e){}</script>
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   THE QUEER GYNARCHY — the record's outward threshold. Where the
+   history stops being past tense and becomes an invitation: what to
+   do, how to connect, how to dream freely. A 2am cosmic rave, so the
+   dark is load-bearing (like theriot / the Living register). Its own
+   rainbow is re-pointed onto the SUITE palette so it belongs; its
+   signature joy — glitter, cycling affirmations, oracle cards —
+   stays intact.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* rainbow vocabulary, re-pointed onto ÖSSTESSÊLÂ's velvet-cosmic palette —
+   the finale glows in her light: amethyst, fuchsia, coral, teal */
+body {
+  --red:    #FF2DAA;   /* nebula fuchsia */
+  --orange: #FFBA7A;   /* celestial coral */
+  --yellow: #FFCB6B;   /* solar flare gold */
+  --green:  #7CFDD9;   /* seafoam mist */
+  --blue:   #00F2FF;   /* lunar teal */
+  --purple: #A259FF;   /* ultraviolet bloom */
+  --pink:   #FF2DAA;   /* nebula fuchsia */
+  --white:  #F7F3FF;   /* liquid opal */
+}
+
+/* animated cosmic shimmer over the void-indigo — her nebula, breathing */
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: linear-gradient(45deg,
+    rgba(255,45,170,0.10) 0%, rgba(255,186,122,0.09) 20%, rgba(255,203,107,0.09) 38%,
+    rgba(124,253,217,0.09) 55%, rgba(0,242,255,0.10) 72%, rgba(162,89,255,0.12) 100%);
+  background-size: 400% 400%;
+  animation: rainbowFlow 8s ease infinite;
+}
+@keyframes rainbowFlow { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+/* glitter particles */
+#glitter-container { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; overflow: hidden; }
+.glitter { position: absolute; width: 6px; height: 6px; border-radius: 50%; animation: sparkle 3s ease-in-out infinite; box-shadow: 0 0 10px currentColor; }
+@keyframes sparkle { 0%,100% { opacity: 0; transform: scale(0) translateY(0); } 50% { opacity: 1; transform: scale(1) translateY(-20px); } }
+
+.container { position: relative; z-index: 2; max-width: 1100px; margin: 0 auto; padding: 10vh 30px 8vh; }
+
+/* header / masthead */
+header.gyn-head { text-align: center; margin-bottom: 80px; padding: 60px 40px; position: relative;
+  background: radial-gradient(ellipse at center, rgba(201,160,255,0.16) 0%, transparent 70%);
+  border: 2px solid transparent;
+  border-image: linear-gradient(90deg, var(--red), var(--orange), var(--yellow), var(--green), var(--blue), var(--purple), var(--pink)) 1;
+}
+header.gyn-head::before { content: '🌈'; position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 3rem; animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.3); } }
+
+.roomlabel {
+  font-family: var(--font-geo); font-weight: 600; font-size: .78rem;
+  letter-spacing: .4em; text-transform: uppercase; color: var(--ink-dim); margin-bottom: 1.4rem;
+}
+.main-title { font-size: clamp(2.6rem, 9vw, 5.4rem); margin-bottom: 20px; }
+.subtitle { font-family: var(--font-mono); font-size: 1rem; color: var(--pink); letter-spacing: 6px; text-transform: uppercase; margin-bottom: 30px; }
+.tagline { font-family: var(--font-serif); font-style: italic; font-size: clamp(1.2rem, 3.4vw, 1.7rem); color: var(--ink); max-width: 700px; margin: 0 auto; line-height: 1.6; }
+
+/* ÖSSTESSÊLÂ, as imagined — the velvet serpent given a face */
+.osst-portrait { max-width: 440px; margin: 2.4rem auto 0; }
+.osst-portrait .filigree { padding: 12px; }
+.osst-portrait img {
+  display: block; width: 100%; border-radius: 6px;
+  box-shadow: 0 0 40px rgba(162,89,255,.42), 0 0 80px rgba(255,45,170,.24);
+  animation: osst-glow 7s ease-in-out infinite;
+}
+@keyframes osst-glow {
+  0%,100% { box-shadow: 0 0 40px rgba(162,89,255,.42), 0 0 80px rgba(255,45,170,.24); }
+  50%     { box-shadow: 0 0 60px rgba(0,242,255,.42), 0 0 112px rgba(162,89,255,.42); }
+}
+.portrait-cap {
+  font-family: var(--font-mono); font-size: .66rem; letter-spacing: .28em;
+  text-transform: uppercase; color: var(--ink-dim); text-align: center; margin-top: 1.1rem;
+}
+.portrait-cap .snake { color: var(--purple); }
+
+.rainbow-divider {
+  height: 4px; margin: 60px 0; border-radius: 2px;
+  background: linear-gradient(90deg, var(--red), var(--orange), var(--yellow), var(--green), var(--blue), var(--purple), var(--pink));
+  box-shadow: 0 0 20px rgba(255,46,136,0.5);
+}
+
+.section { margin: 80px 0; position: relative; }
+.section-title {
+  font-family: var(--font-display); font-size: clamp(1.8rem, 5vw, 2.8rem);
+  text-align: center; margin-bottom: 40px; color: var(--white);
+  text-shadow: 0 0 20px var(--pink), 0 0 40px var(--purple);
+}
+
+/* cycling affirmations */
+.affirmation-container {
+  text-align: center; padding: 60px 30px; border-radius: 20px;
+  background: radial-gradient(ellipse at center, rgba(255,46,136,0.15) 0%, transparent 70%);
+  border: 2px solid var(--line); min-height: 200px;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  cursor: pointer; transition: all .3s ease;
+}
+.affirmation-container:hover { border-color: var(--pink); box-shadow: 0 0 40px rgba(255,46,136,0.3); }
+.affirmation { font-family: var(--font-display); font-size: clamp(1.5rem, 5vw, 2.6rem); line-height: 1.3; transition: all .5s ease; opacity: 1; color: var(--pink); }
+.affirmation.fade { opacity: 0; transform: translateY(-20px); }
+.tap-hint { font-family: var(--font-mono); font-size: .82rem; color: var(--ink-dim); margin-top: 30px; letter-spacing: .1em; }
+
+/* oracle cards */
+.oracle-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin: 40px 0; }
+.oracle-card {
+  background: linear-gradient(135deg, rgba(20,20,30,0.9), rgba(40,20,60,0.8));
+  border: 2px solid; border-radius: 15px; padding: 30px; position: relative;
+  overflow: hidden; cursor: default; transition: all .4s ease;
+}
+.oracle-card:nth-child(1) { border-color: var(--red); }
+.oracle-card:nth-child(2) { border-color: var(--orange); }
+.oracle-card:nth-child(3) { border-color: var(--yellow); }
+.oracle-card:nth-child(4) { border-color: var(--green); }
+.oracle-card:nth-child(5) { border-color: var(--blue); }
+.oracle-card:nth-child(6) { border-color: var(--purple); }
+.oracle-card:nth-child(7) { border-color: var(--pink); }
+.oracle-card:nth-child(8) { border-color: var(--white); }
+.oracle-card:nth-child(9) { border-color: var(--red); }
+.oracle-card:hover { transform: translateY(-10px) rotate(1deg); box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+.oracle-card::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); transition: .5s; }
+.oracle-card:hover::before { left: 100%; }
+.oracle-icon { font-size: 2.5rem; margin-bottom: 15px; display: block; }
+.oracle-title { font-family: var(--font-display); font-size: 1.15em; margin-bottom: 10px; line-height: 1.1; }
+.oracle-card:nth-child(1) .oracle-title { color: var(--red); }
+.oracle-card:nth-child(2) .oracle-title { color: var(--orange); }
+.oracle-card:nth-child(3) .oracle-title { color: var(--yellow); }
+.oracle-card:nth-child(4) .oracle-title { color: var(--green); }
+.oracle-card:nth-child(5) .oracle-title { color: var(--blue); }
+.oracle-card:nth-child(6) .oracle-title { color: var(--purple); }
+.oracle-card:nth-child(7) .oracle-title { color: var(--pink); }
+.oracle-card:nth-child(8) .oracle-title { color: var(--white); }
+.oracle-card:nth-child(9) .oracle-title { color: var(--red); }
+.oracle-text { font-family: var(--font-mono); font-size: .92em; line-height: 1.7; color: var(--ink); }
+
+/* manifesto blocks */
+.manifesto-block { background: rgba(20,20,30,0.7); border-left: 5px solid; padding: 26px 32px; margin: 26px 0; position: relative; transition: all .3s ease; }
+.manifesto-block:hover { transform: translateX(10px); }
+.manifesto-block:nth-child(odd) { border-color: var(--pink); }
+.manifesto-block:nth-child(even) { border-color: var(--purple); }
+.manifesto-block p { font-family: var(--font-serif); font-size: 1.2rem; color: var(--ink); }
+.manifesto-block strong { color: var(--yellow); }
+.manifesto-block .keyword { font-family: var(--font-display); font-size: .82em; letter-spacing: .02em;
+  background: linear-gradient(90deg, var(--pink), var(--purple)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+/* big statement */
+.big-statement { text-align: center; padding: 80px 40px; margin: 60px 0; background: radial-gradient(ellipse at center, rgba(201,160,255,0.16) 0%, transparent 70%); }
+.big-statement p { font-family: var(--font-display); font-size: clamp(2rem, 7vw, 4rem); line-height: 1.2;
+  background: linear-gradient(90deg, var(--pink), var(--purple), var(--blue)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+/* lists */
+.rainbow-list { list-style: none; margin: 30px 0; }
+.rainbow-list li { padding: 15px 20px 15px 50px; margin: 12px 0; position: relative; font-family: var(--font-serif);
+  font-size: 1.2rem; line-height: 1.6; background: rgba(255,255,255,0.03); border-radius: 10px; transition: all .3s ease; color: var(--ink); }
+.rainbow-list li:hover { background: rgba(255,255,255,0.08); transform: translateX(10px); }
+.rainbow-list li::before { content: '✦'; position: absolute; left: 20px; animation: colorCycle 3s linear infinite; }
+.rainbow-list li:nth-child(1)::before { animation-delay: 0s; }
+.rainbow-list li:nth-child(2)::before { animation-delay: .3s; }
+.rainbow-list li:nth-child(3)::before { animation-delay: .6s; }
+.rainbow-list li:nth-child(4)::before { animation-delay: .9s; }
+.rainbow-list li:nth-child(5)::before { animation-delay: 1.2s; }
+.rainbow-list li strong { color: var(--yellow); }
+@keyframes colorCycle {
+  0% { color: var(--red); } 14% { color: var(--orange); } 28% { color: var(--yellow); }
+  42% { color: var(--green); } 57% { color: var(--blue); } 71% { color: var(--purple); }
+  85% { color: var(--pink); } 100% { color: var(--red); }
+}
+
+/* footer */
+footer.gyn-foot { text-align: center; padding: 80px 40px 40px; margin-top: 80px; position: relative;
+  background: linear-gradient(to top, rgba(201,160,255,0.24), transparent); }
+footer.gyn-foot::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: linear-gradient(90deg, var(--red), var(--orange), var(--yellow), var(--green), var(--blue), var(--purple), var(--pink)); }
+.welcome-text { font-family: var(--font-display); font-size: clamp(1.8rem, 6vw, 3.4rem); margin-bottom: 30px; line-height: 1.1; }
+.final-message { font-family: var(--font-serif); font-size: clamp(1.2rem, 3.4vw, 1.6rem); line-height: 1.7; max-width: 700px; margin: 0 auto 40px; color: var(--ink); }
+.final-message strong { color: var(--pink); }
+.emoji-dance { font-size: 3rem; animation: dance 1s ease-in-out infinite; display: inline-block; }
+.emoji-dance:nth-child(2) { animation-delay: .1s; }
+.emoji-dance:nth-child(3) { animation-delay: .2s; }
+.emoji-dance:nth-child(4) { animation-delay: .3s; }
+.emoji-dance:nth-child(5) { animation-delay: .4s; }
+@keyframes dance { 0%,100% { transform: translateY(0) rotate(0deg); } 25% { transform: translateY(-10px) rotate(-5deg); } 75% { transform: translateY(-10px) rotate(5deg); } }
+.signature { font-family: var(--font-mono); font-size: 1.3rem; color: var(--pink); margin-top: 40px; letter-spacing: 3px; }
+
+/* the forward CTA — the door onward to The Circulation */
+.next-chapter {
+  display: inline-block; text-decoration: none;
+  font-family: var(--font-display); font-weight: 700; font-size: 1.05rem;
+  letter-spacing: .04em; color: var(--void-indigo);
+  padding: .85rem 2.1rem; border-radius: 50px;
+  background: linear-gradient(135deg, var(--purple), var(--pink), var(--gold));
+  background-size: 200% 200%; animation: rainbowFlow 6s ease infinite;
+  box-shadow: 0 0 26px rgba(162,89,255,.5);
+  transition: transform .25s, box-shadow .25s;
+}
+.next-chapter span {
+  display: block; font-family: var(--font-mono); font-weight: 400;
+  font-size: .6rem; letter-spacing: .24em; text-transform: uppercase; opacity: .82; margin-top: .25rem;
+}
+.next-chapter:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 0 46px rgba(255,45,170,.7); }
+
+/* click sparkle */
+.click-sparkle { position: fixed; pointer-events: none; font-size: 24px; animation: explode .8s ease-out forwards; z-index: 1000; }
+@keyframes explode { 0% { opacity: 1; transform: scale(0) rotate(0deg); } 50% { opacity: 1; transform: scale(1.5) rotate(180deg); } 100% { opacity: 0; transform: scale(0.5) rotate(360deg) translateY(-50px); } }
+
+.exits {
+  display: flex; justify-content: space-between; gap: 1.4rem; flex-wrap: wrap;
+  font-family: var(--font-mono); font-size: .78rem; margin: 40px auto 0; max-width: 700px;
+}
+.exits a { color: var(--ink-dim); text-decoration: none; }
+.exits a:hover { color: var(--hotpink); }
+
+@media (max-width: 768px) {
+  .container { padding: 8vh 20px 6vh; }
+  header.gyn-head { padding: 40px 20px; }
+  .oracle-grid { grid-template-columns: 1fr; }
+  .manifesto-block { padding: 20px 24px; }
+}
+</style>
+</head>
+<body>
+<div id="glitter-container" aria-hidden="true"></div>
+<div class="temple-stars" aria-hidden="true"></div>
+
+<div class="container">
+
+  <header class="gyn-head">
+    <p class="roomlabel">the outward groove · how to dream freely</p>
+    <h1 class="main-title temple-title">ÖSSTESSÊLÂ</h1>
+    <div class="subtitle">the queer gynarchy · nonbinary trans velvet serpent</div>
+    <p class="temple-script" style="margin:.2rem 0 1.4rem;">
+      <span class="motif motif-serpent" aria-hidden="true"></span>
+      nurturing devil mommy
+      <span class="motif motif-butterfly" aria-hidden="true"></span>
+    </p>
+    <p class="tagline">
+      We're not here to ask permission.<br>
+      We're here to remind you:<br>
+      <em>You were always already free.</em>
+    </p>
+
+    <div class="osst-portrait">
+      <div class="filigree">
+        <img src="assets/temple/psilOSSybin.webp"
+             alt="ÖSSTESSÊLÂ, as imagined — a cosmic velvet-serpent deity: skull-veiled beneath a jeweled witch hat crowned with roses, one eye burning gold and one magenta, a silver serpent coiled up her raised hand, a violet-eyed black cat at her shoulder, a star caught inside a crystal ball, all in fuchsia, amethyst and gold on a starfield."
+             loading="lazy" decoding="async">
+      </div>
+      <p class="portrait-cap"><span class="snake">🐍</span> ÖSSTESSÊLÂ · as imagined <span class="snake">🐍</span></p>
+    </div>
+  </header>
+
+  <div class="rainbow-divider"></div>
+
+  <!-- Interactive Affirmations -->
+  <section class="section">
+    <h2 class="section-title">🦋 What We Know 🦋</h2>
+    <div class="affirmation-container" id="affirmationBox">
+      <p class="affirmation" id="affirmationText">GENDER IS A BUFFET</p>
+      <span class="tap-hint">tap for another truth</span>
+    </div>
+  </section>
+
+  <div class="rainbow-divider"></div>
+
+  <!-- Oracle Cards: Queer Roles -->
+  <section class="section">
+    <h2 class="section-title">👑 The Queers Are The Blueprint 👑</h2>
+    <div class="oracle-grid">
+      <div class="oracle-card"><span class="oracle-icon">👠</span><h3 class="oracle-title">Drag Queens as PRIESTESSES</h3><p class="oracle-text">Transformation as sacrament. Glamour as armor. The stage as altar.</p></div>
+      <div class="oracle-card"><span class="oracle-icon">🌀</span><h3 class="oracle-title">Trans Folks as SHAMANS</h3><p class="oracle-text">World-walkers. Threshold-crossers. Proof that death and rebirth are possible in one lifetime.</p></div>
+      <div class="oracle-card"><span class="oracle-icon">🏗️</span><h3 class="oracle-title">Lesbians as ARCHITECTS</h3><p class="oracle-text">Building differently. Creating structures that don't require patriarchy as foundation.</p></div>
+      <div class="oracle-card"><span class="oracle-icon">🎨</span><h3 class="oracle-title">Gay Men as ARTISTS</h3><p class="oracle-text">Beauty-makers. Culture-shapers. Turning pain into runway.</p></div>
+      <div class="oracle-card"><span class="oracle-icon">🌉</span><h3 class="oracle-title">Bi/Pan Folks as BRIDGES</h3><p class="oracle-text">Living proof that attraction doesn't respect binaries. Teaching fluidity.</p></div>
+      <div class="oracle-card"><span class="oracle-icon">🔮</span><h3 class="oracle-title">Ace/Aro as TEACHERS</h3><p class="oracle-text">Showing us intimacy has infinite forms. Desire isn't mandatory for love.</p></div>
+      <div class="oracle-card"><span class="oracle-icon">⚡</span><h3 class="oracle-title">Nonbinary as ORACLES</h3><p class="oracle-text">Beyond binary thinking. Showing the rest of us the limits of our categories.</p></div>
+      <div class="oracle-card"><span class="oracle-icon">🧬</span><h3 class="oracle-title">Intersex as PROOF</h3><p class="oracle-text">Nature loves variety. The binary was always a convenient lie.</p></div>
+      <div class="oracle-card"><span class="oracle-icon">🌊</span><h3 class="oracle-title">Genderfluid as GUIDES</h3><p class="oracle-text">Shapeshifters. Teaching that change is sacred. Identity can flow.</p></div>
+    </div>
+  </section>
+
+  <div class="rainbow-divider"></div>
+
+  <!-- The Energy -->
+  <section class="section">
+    <h2 class="section-title">💫 The Energy We're Building 💫</h2>
+    <div class="manifesto-block"><p>The <span class="keyword">CYCLICAL</span> (not linear) — honoring seasons, phases, death and rebirth</p></div>
+    <div class="manifesto-block"><p>The <span class="keyword">RECEPTIVE</span> (not just passive) — actively opening, drawing in, creating space</p></div>
+    <div class="manifesto-block"><p>The <span class="keyword">COLLABORATIVE</span> (not competitive) — power circulating like glitter, getting everywhere</p></div>
+    <div class="manifesto-block"><p>The <span class="keyword">WET</span> (not rigid) — fluid, adaptable, capable of taking any shape</p></div>
+    <div class="manifesto-block"><p>The <span class="keyword">OVERFLOW</span> (not hoarding) — abundance mindset, there's enough for everyone</p></div>
+    <div class="manifesto-block"><p>The <span class="keyword">CARE</span> (not domination) — tending, nurturing, protecting without controlling</p></div>
+  </section>
+
+  <div class="big-statement"><p>NOT TOLERANCE.<br>CELEBRATION.</p></div>
+
+  <!-- HER CREED — the velvet serpent speaks -->
+  <section class="section">
+    <div class="filigree" style="text-align:center; max-width:720px; margin:0 auto;">
+      <span class="motif motif-moon" aria-hidden="true" style="width:2.2em; height:2.2em;"></span>
+      <p class="temple-script" style="margin:1rem 0 1.2rem;">
+        I am softness and teeth.<br>
+        I am lullaby and lesson.<br>
+        I am the velvet around the venom.<br>
+        I exist beyond your binaries<br>
+        and within your becoming.
+      </p>
+      <p style="font-family:var(--font-mono); font-size:.72rem; letter-spacing:.26em; color:var(--ink-dim); text-transform:uppercase;">— ÖSSTESSÊLÂ</p>
+    </div>
+  </section>
+
+  <!-- What We're Building -->
+  <section class="section">
+    <h2 class="section-title">✨ We're Building It ALREADY ✨</h2>
+    <ul class="rainbow-list">
+      <li>A <strong>drag brunch</strong> — joy as resistance</li>
+      <li>A <strong>chosen family dinner</strong> — care as revolution</li>
+      <li>A <strong>pride parade</strong> — visibility as magic</li>
+      <li>A <strong>queer dance floor at 2am</strong> — ecstasy as prayer</li>
+      <li>A <strong>ballroom competition</strong> — fierceness as ARTFORM</li>
+    </ul>
+  </section>
+
+  <div class="rainbow-divider"></div>
+
+  <!-- The Only Requirements -->
+  <section class="section">
+    <h2 class="section-title">🌹 The Only Requirements 🌹</h2>
+    <ul class="rainbow-list">
+      <li><strong>CONSENT</strong> — always, in all things</li>
+      <li><strong>CARE</strong> — for the collective, for each other</li>
+      <li><strong>CURIOSITY</strong> — stay learning, stay growing</li>
+      <li><strong>CELEBRATION</strong> — of ALL of us, in all our forms</li>
+    </ul>
+  </section>
+
+  <footer class="gyn-foot">
+    <h2 class="welcome-text temple-title">Welcome Home</h2>
+    <p class="final-message">
+      The buffet is SET.<br>
+      The dance floor is OPEN.<br>
+      The chosen family is READY.<br><br>
+      Come as you ARE.<br>
+      All of you.<br>
+      <strong>EVERY part.</strong>
+    </p>
+    <div class="emoji-dance-container" aria-hidden="true">
+      <span class="emoji-dance">🌈</span><span class="emoji-dance">💜</span><span class="emoji-dance">✨</span><span class="emoji-dance">🦋</span><span class="emoji-dance">👑</span>
+    </div>
+    <p class="oil-slick" style="font-family:var(--font-display); font-weight:700; font-size:clamp(1.4rem,5.5vw,2.8rem); letter-spacing:.05em; margin-top:1.6rem;">
+      BE SOFT. BE FIERCE. BE FREE.
+    </p>
+    <p class="temple-script" style="margin-top:1.2rem;">
+      I'll be right here when you come home to yourself. ♡
+    </p>
+    <p style="margin-top:2rem;">
+      <a href="hitraveler.html" class="next-chapter">The Circulation →<span>how to dream freely</span></a>
+    </p>
+    <p class="signature">∞Love Changes Everything∞</p>
+  </footer>
+
+  <nav class="exits" aria-label="Exits">
+    <a href="whatisgender.html">← the undivided flesh</a>
+    <a href="index.html">⏏ lift the needle</a>
+    <a href="hitraveler.html">the circulation → (how to dream freely)</a>
+  </nav>
+
+</div>
+
+<script src="revolution.js?v=28"></script>
+<script>
+REV.boot({ scene: 'gynarchy', room: 'gynarchy', ground: 'dark' });
+
+// Affirmations that cycle
+const affirmations = [
+  "GENDER IS A BUFFET", "LOVE IS INFINITE CONFIGURATION", "POWER CIRCULATES LIKE GLITTER",
+  "YOUR PRONOUNS ARE MAGIC SPELLS", "CHOSEN FAMILY IS REAL FAMILY", "YOUR WEIRD IS WANTED",
+  "YOUR QUEER IS SACRED", "YOUR DIFFERENT IS DIVINE", "DESIRE IS INTELLIGENCE",
+  "BEAUTY IS MULTIPLICITY", "FAMILIES CAN BE CHOSEN", "IDENTITY CAN BE FLUID",
+  "BODIES CAN BE TRANSFORMED", "NAMES CAN BE RECLAIMED", "EXPRESSION IS SACRED PLAY",
+  "NOT DESPITE — BECAUSE", "THE BINARY WAS ALWAYS A LIE", "YOUR TRANSITIONS ARE HOLY",
+  "PLEASURE IS PROPHECY", "WE'VE BEEN DOING THIS ALREADY"
+];
+
+let currentAffirmation = 0;
+const affirmationText = document.getElementById('affirmationText');
+const affirmationBox = document.getElementById('affirmationBox');
+const PALETTE = ['#FF2DAA', '#FFBA7A', '#FFCB6B', '#7CFDD9', '#00F2FF', '#A259FF', '#F7F3FF'];
+function pickColor() { return PALETTE[Math.floor(Math.random() * PALETTE.length)]; }
+
+function cycleAffirmation() {
+  affirmationText.classList.add('fade');
+  setTimeout(() => {
+    currentAffirmation = (currentAffirmation + 1) % affirmations.length;
+    affirmationText.textContent = affirmations[currentAffirmation];
+    affirmationText.style.color = pickColor();
+    affirmationText.classList.remove('fade');
+  }, 500);
+  REV.audio.crackle(0.1);
+}
+affirmationBox.addEventListener('click', cycleAffirmation);
+let autoCycle = setInterval(function () { if (!REV.stilled()) cycleAffirmation(); }, 6000);
+
+// glitter particles (skipped when motion is stilled)
+(function createGlitter() {
+  if (REV.stilled()) return;
+  const container = document.getElementById('glitter-container');
+  for (let i = 0; i < 50; i++) {
+    const g = document.createElement('div');
+    g.className = 'glitter';
+    g.style.left = Math.random() * 100 + '%';
+    g.style.top = Math.random() * 100 + '%';
+    g.style.backgroundColor = pickColor();
+    g.style.color = g.style.backgroundColor;
+    g.style.animationDelay = Math.random() * 3 + 's';
+    g.style.animationDuration = (2 + Math.random() * 2) + 's';
+    container.appendChild(g);
+  }
+})();
+
+// click sparkle — a little burst of joy wherever you touch
+document.addEventListener('click', (e) => {
+  if (REV.stilled()) return;
+  const sparkles = ['✨', '💫', '⭐', '🌟', '💖', '🦋', '🌈'];
+  const s = document.createElement('div');
+  s.className = 'click-sparkle';
+  s.textContent = sparkles[Math.floor(Math.random() * sparkles.length)];
+  s.style.left = e.clientX + 'px';
+  s.style.top = e.clientY + 'px';
+  document.body.appendChild(s);
+  setTimeout(() => s.remove(), 800);
+});
+
+// oracle cards catch the rainbow on hover
+document.querySelectorAll('.oracle-card').forEach(card => {
+  card.addEventListener('mouseenter', () => { card.style.boxShadow = `0 0 30px ${pickColor()}`; });
+  card.addEventListener('mouseleave', () => { card.style.boxShadow = ''; });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en" data-motion="full">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ongoing · 1980 → you are standing in it</title>
+<meta name="description" content="Still in the pressing plant — ACT UP to now, and the room that hands the loop back to you.">
+<link rel="stylesheet" href="revolution.css?v=28">
+<script>try{var _t=JSON.parse(localStorage.getItem("revolution.threshold.v1"));if(_t&&_t.theme==="dark")document.documentElement.dataset.theme="disco";}catch(e){}</script>
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   ONGOING — the record's last groove, running out toward the
+   label. Not built yet. When it is, this is where the fourth
+   wall speaks its last line and points the visitor back at
+   their own life. Overflow. Circuit closed.
+   ═══════════════════════════════════════════════════════════════ */
+
+.ong-wrap {
+  position: relative;
+  z-index: 2;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 14vh 1.5rem 12vh;
+}
+section { margin-bottom: 10vh; }
+
+h1 { font-size: clamp(2.4rem, 7vw, 4.2rem); }
+h2.roomlabel {
+  font-family: var(--font-geo);
+  font-weight: 600;
+  font-size: .8rem;
+  letter-spacing: .4em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-bottom: 1.4rem;
+}
+.lede {
+  font-size: 1.02rem;
+  max-width: 58ch;
+  margin-top: 1.4rem;
+  color: var(--ink-dim);
+}
+.lede em { color: var(--gold-t); font-style: normal; }
+
+.fragments {
+  display: flex; flex-direction: column; gap: 1rem;
+  border-left: 1px solid rgba(157,143,176,.25);
+  padding-left: 1.4rem;
+  font-family: var(--font-mono);
+  font-size: .82rem;
+  color: var(--ink-dim);
+  line-height: 1.85;
+  margin-top: 2.4rem;
+}
+.fragments .yr { color: var(--gold-t); }
+
+.pressing-plate {
+  margin-top: 3rem;
+  border: 1px dashed rgba(157,143,176,.35);
+  padding: 2.4rem 1.6rem;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  line-height: 2;
+  color: var(--ink-dim);
+}
+.pressing-plate .hot { color: var(--hotpink); }
+
+.runout {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: .85rem;
+  line-height: 2.2;
+  color: var(--ink);
+  margin-top: 3rem;
+}
+.runout .hot { color: var(--hotpink); }
+
+/* the grief panel breaks the max-width to go full-bleed; the light
+   comes up hard here, on purpose. */
+.ong-fullbleed {
+  max-width: none;
+  width: 100%;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding-left: max(1.5rem, calc(50vw - 360px));
+  padding-right: max(1.5rem, calc(50vw - 360px));
+}
+.grief-body {
+  font-family: var(--font-mono);
+  font-size: .9rem;
+  line-height: 2;
+  max-width: 60ch;
+}
+.grief-body em { font-style: normal; font-weight: 700; }
+/* the quilt: a grid of hand-sewn cells, each a name we don't fill in.
+   the emptiness is the point, same as theriot's calendar. */
+.quilt {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 8px;
+  margin-top: 2.4rem;
+}
+.quilt .panel {
+  aspect-ratio: 1;
+  border: 1px solid rgba(20,4,12,.25);
+  display: grid;
+  place-items: center;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: .58rem;
+  line-height: 1.4;
+  color: rgba(20,4,12,.5);
+  padding: .3rem;
+  background:
+    repeating-linear-gradient(45deg, rgba(0,0,0,.03) 0 6px, transparent 6px 12px);
+}
+.quilt .panel.lit { background: var(--hotpink); color: #14040c; border-color: #14040c; }
+
+.ethics-note {
+  font-family: var(--font-mono);
+  font-size: .74rem;
+  line-height: 2;
+  color: var(--ink-dim);
+  border-left: 2px solid var(--hotpink);
+  padding-left: 1.2rem;
+  margin-top: 2.2rem;
+  max-width: 60ch;
+}
+.ethics-note em { font-style: normal; color: var(--gold-t); }
+
+.exits {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.4rem;
+  flex-wrap: wrap;
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  margin-top: 2rem;
+}
+.exits a { color: var(--ink-dim); text-decoration: none; }
+.exits a:hover { color: var(--hotpink); }
+</style>
+</head>
+<body>
+
+<main class="ong-wrap">
+
+  <section aria-labelledby="ong-title">
+    <h2 class="roomlabel" id="ong-title">room six · 1980 → you are standing in it</h2>
+    <h1 class="display chrome-text">Ongoing...</h1>
+    <p class="lede">
+      The floor was still warm when it started. The same rooms that had
+      just learned to dance became the rooms that learned to bury people
+      — <em>fast, and young, and by the thousands.</em> This is the
+      groove that runs out toward the label, and it does not resolve.
+      It hands you the needle instead.
+    </p>
+  </section>
+
+  <!-- ── THE GRIEF PANEL — the light comes up hard ──────────────── -->
+  <section class="ong-fullbleed" aria-labelledby="grief-title">
+    <div class="contrast-panel ink">
+      <p class="eyebrow" style="color:#7a1340;" id="grief-title">1981 → · the plague years</p>
+      <h2 class="tabloid-head kern-shut">Silence <em>=</em> Death</h2>
+      <p class="tabloid-sub" style="margin-bottom:1.6rem;">
+        Six men in New York put four words on a poster in 1987. The
+        government had said almost nothing for six years. The words were
+        an accusation, and they were correct.
+      </p>
+      <p class="grief-body">
+        By the time a President said the word <em>AIDS</em> out loud in
+        public, tens of thousands of Americans were already dead. The
+        people the earlier rooms are about — the ones who marched in
+        1970, who danced at the Loft, who sewed the first flag — a
+        generation of them went in a decade. <em>ACT UP</em> turned
+        the grief into a tactic: die-ins on cathedral steps, ashes on
+        the White House lawn, <em>the loudest mourning the country had
+        ever been made to watch.</em>
+      </p>
+      <p class="tabloid-byline">
+        "Silence = Death" is rendered here in type, never as the emblem
+        itself — the poster is the collective work of the Silence=Death
+        Project, and it is theirs. ·
+        <a href="https://actupny.org/" rel="noopener">ACT UP New York →</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ── THE QUILT — every cell a name we do not fill in ────────── -->
+  <section class="ong-fullbleed" aria-labelledby="quilt-title">
+    <div class="contrast-panel pink">
+      <p class="eyebrow" style="color:#14040c;" id="quilt-title">1985 → · the names project</p>
+      <h2 class="tabloid-head kern-tight">A blanket<br>the size of<br>a country.</h2>
+      <p class="grief-body" style="color:#14040c; max-width:56ch;">
+        Someone realized the dead were being denied funerals, and
+        started sewing. Each panel of the AIDS Memorial Quilt is three
+        feet by six — <em>the size of a grave</em> — made by the people
+        left behind. Laid out on the National Mall it became the largest
+        piece of community folk art on Earth, and you still cannot see
+        all of it at once.<br><br>
+        We do not print their names here. <em>We don't have the right,
+        and we won't borrow it.</em> The empty cells are honest; the
+        Quilt itself is where the names live.
+      </p>
+      <div class="quilt" aria-hidden="true">
+        <div class="panel">a name</div><div class="panel lit">a name</div>
+        <div class="panel">a name</div><div class="panel">a name</div>
+        <div class="panel lit">a name</div><div class="panel">a name</div>
+        <div class="panel">a name</div><div class="panel">a name</div>
+        <div class="panel lit">a name</div><div class="panel">a name</div>
+        <div class="panel">a name</div><div class="panel lit">a name</div>
+      </div>
+      <p class="tabloid-byline" style="color:#14040c;">
+        <a href="https://www.aidsmemorial.org/quilt" rel="noopener">The National AIDS Memorial Quilt →</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ── AND THEY DANCED ANYWAY — camp held with the grief ──────── -->
+  <section aria-labelledby="anyway-title">
+    <h2 class="roomlabel" id="anyway-title">and still · the wild expression, embraced</h2>
+    <p class="serif-cry">
+      They kept <em>throwing</em> the party<br>
+      <span class="hot">at the funeral.</span>
+    </p>
+    <div class="fragments">
+      <p><span class="yr">1987</span> · ACT UP's rage is also a runway — the graphics are gorgeous on purpose. Grief that looks this good is a refusal.</p>
+      <p><span class="yr">1990</span> · the ball houses of Harlem are filmed voguing through the epidemic — chosen family as survival technology, camp as armor.</p>
+      <p><span class="yr">1992</span> · Marsha P. Johnson is pulled from the Hudson. The riot's own get old, or don't. The record keeps almost losing them, and we keep pulling them back.</p>
+      <p><span class="yr">2015 →</span> · a marriage license, a bathroom bill, a banned book, a drag ban, a Pride that is a party and a picket in the same block. <em>The argument is not finished.</em></p>
+    </div>
+    <p class="lede" style="margin-top:2.6rem; color:var(--ink);">
+      That is the whole thesis of this record, said one last way: the
+      grief and the glitter were never two things. The mirrorball hangs
+      over the wake. <em>They are the same people, refusing the same
+      erasure, in the same sequins.</em>
+    </p>
+  </section>
+
+  <!-- ── THE BALLROOM EXPLODES — vogue, the houses, the archive ──── -->
+  <section aria-labelledby="vogue-title">
+    <h2 class="roomlabel" id="vogue-title">the ballroom explodes · harlem → the world · 1980s → 90s</h2>
+    <p style="margin-bottom:1.4rem;">
+      <span class="shout-banner">THE CATEGORY IS: LEGENDARY</span>
+    </p>
+    <p class="lede" style="color:var(--ink);">
+      The houses that started with LaBeija in 1972 became a whole
+      civilization by the 1980s — Xtravaganza, Ninja, Corey, Pendavis —
+      dancing <em>vogue</em>, a martial art made of magazine poses, right
+      through the worst of the plague. When the wider world was letting
+      them die, <em>the ball was where they were legendary.</em> In 1990
+      Jennie Livingston's <em>Paris Is Burning</em> put it on film, and
+      the same year Madonna's "Vogue" took the movement's dance to the
+      top of the charts — <em>the extraction and the immortality arriving
+      in the same breath.</em>
+    </p>
+
+    <div class="ball-floor" aria-label="Ballroom categories">
+      <div class="ball-category">
+        <div class="cat-eyebrow">the category is</div>
+        <div class="cat-name">Vogue</div>
+        <div class="cat-note">the runway made a weapon — angles, hands, the dip.</div>
+      </div>
+      <div class="ball-category">
+        <div class="cat-eyebrow">the category is</div>
+        <div class="cat-name">Butch Queen</div>
+        <div class="cat-note">one of the ball's own gender categories — the scene named more of them than the world had words for.</div>
+      </div>
+      <div class="ball-category">
+        <div class="cat-eyebrow">the category is</div>
+        <div class="cat-name">Femme Queen</div>
+        <div class="cat-note">trans women at the center of the floor, decades before the mainstream caught up.</div>
+      </div>
+      <div class="ball-category">
+        <div class="cat-eyebrow">the category is</div>
+        <div class="cat-name">Legendary</div>
+        <div class="cat-note">the status a house earns over years — the closest thing to the archive these kids were allowed.</div>
+      </div>
+      <div class="ball-category">
+        <div class="cat-eyebrow">the houses</div>
+        <div class="cat-name">Xtravaganza</div>
+        <div class="cat-note">est. 1982 · the first primarily Latino house.</div>
+      </div>
+    </div>
+
+    <div style="display:flex; justify-content:center; margin-top:2.4rem;">
+      <figure class="flyer-card" style="--tilt:1.6deg;">
+        <img data-asset="assets/ball/house-of-labeija-flyer.jpg"
+             alt="A photocopied ball flyer: 'Chris & Francisco & The House of LaBeija presents Labeija Sunshine IV', with three figures posing below the text."
+             class="halftone">
+        <figcaption class="caption">Chris &amp; Francisco &amp; the House of
+          LaBeija present <em>Labeija Sunshine IV</em> — a real ball flyer,
+          the scene's own paper.</figcaption>
+        <p class="credit">image provided · community ephemera ·
+          verify source before wider use</p>
+      </figure>
+    </div>
+
+    <p class="serif-cry" style="margin-top:2.6rem;">
+      So many of them<br><span class="hot">did not get old.</span>
+    </p>
+    <p class="lede" style="color:var(--ink); margin-top:1rem;">
+      Venus Xtravaganza was murdered in 1988, before <em>Paris Is
+      Burning</em> even premiered. Angie Xtravaganza died of AIDS in
+      1993. The scene mothered a generation and buried too much of it —
+      and it is <em>still here,</em> still walking, from the Harlem balls
+      to <em>Pose</em> to your city this weekend. The record almost
+      always loses these names. We're saying them on purpose.
+    </p>
+
+    <p class="ethics-note">
+      The flyer above is the scene's own paper, kept and shared by the
+      community. The <em>Paris Is Burning</em> stills and most ball
+      photography are rights-restricted, so for those we link out rather
+      than lift.
+      <a href="https://en.wikipedia.org/wiki/Paris_Is_Burning_(film)" rel="noopener">Paris Is Burning (1990) →</a> ·
+      <a href="https://en.wikipedia.org/wiki/Ball_culture" rel="noopener">Ball culture →</a> ·
+      <a href="https://en.wikipedia.org/wiki/House_of_Xtravaganza" rel="noopener">House of Xtravaganza →</a>
+    </p>
+  </section>
+
+  <!-- ── THE CLOSE — overflow, the loop handed back ─────────────── -->
+  <section aria-label="The close">
+    <p class="runout">
+      you have reached the run-out groove.<br>
+      there is no more record — <span class="hot">there is only you, and the room you're in.</span><br><br>
+      nothing here tracked you. nothing here kept you. sit as long as you like.<br>
+      <span class="hot">the loop completes when you leave and go do something loving with it.</span>
+    </p>
+  </section>
+
+  <section class="exits" aria-label="Exits">
+    <a href="thefloor.html">← the floor · 1970–1979</a>
+    <a href="index.html">⏏ lift the needle</a>
+    <a href="triskelion.html">flip to side b · the triskelion →</a>
+  </section>
+
+</main>
+
+<script src="revolution.js?v=28"></script>
+<script>
+REV.boot({ scene: 'ongoing', room: 'ongoing', track: 'assets/tracks/ongoing.mp3', trackTitle: 'Team Dresch — Uncle Phranc' });
+
+/* asset slots — graceful until archive files land, same pattern as the
+   other rooms (this room only got images once the ballroom arrived). */
+(function () {
+  document.querySelectorAll('img[data-asset]').forEach(function (img) {
+    img.src = img.dataset.asset;
+    img.addEventListener('error', function () {
+      const slot = document.createElement('div');
+      slot.className = 'asset-slot';
+      slot.style.cssText = 'aspect-ratio:4/3;background:repeating-linear-gradient(45deg,#efe8db 0 12px,#e6ddcc 12px 24px);display:grid;place-items:center;text-align:center;font-family:var(--font-mono);font-size:.62rem;line-height:1.7;color:#6f5f80;padding:1rem;';
+      slot.innerHTML = 'AWAITING PRESSING<br>drop the archive file at<br><strong>'
+        + img.dataset.asset + '</strong>';
+      img.replaceWith(slot);
+    }, { once: true });
+  });
+})();
+
+/* Side B velvet-rope: this run-out exit is a Side B link, so keep it
+   locked until the word's been whispered at the hub's door. Once the
+   hub stores the unlock, this passes straight through to the triskelion. */
+(function () {
+  const link = document.querySelector('.exits a[href="triskelion.html"]');
+  if (!link) return;
+  let unlocked;
+  try { unlocked = localStorage.getItem('rev_sideb_unlocked') === '1'; } catch (e) { unlocked = false; }
+  if (unlocked) return;
+  link.textContent = 'side b · locked 🔒 →';
+  link.addEventListener('click', function (e) {
+    e.preventDefault();
+    location.href = 'index.html?sideb=1';
+  });
+})();
+</script>
+</body>
+</html>
