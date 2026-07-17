@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Human Sexual Revolution (Ongoing) · Side A</title>
 <meta name="description" content="An interactive history of the sexual revolution, navigated like a record. Drop the needle on a room.">
-<link rel="stylesheet" href="revolution.css?v=27">
+<link rel="stylesheet" href="revolution.css?v=28">
 <script>try{var _t=JSON.parse(localStorage.getItem("revolution.threshold.v1"));if(_t&&_t.theme==="dark")document.documentElement.dataset.theme="disco";}catch(e){}</script>
 <style>
 /* ═══════════════════════════════════════════════════════════════
@@ -27,14 +27,62 @@ body { overflow-y: auto; }
 }
 
 header.masthead { text-align: center; }
-header.masthead h1 {
-  font-size: clamp(1.7rem, 4.6vw, 3.1rem);
-  line-height: 1.1;
-}
 header.masthead .eyebrow { margin-bottom: .6rem; }
+
+/* ── THE HERO — a classical backdrop that dissolves into the record ──
+   Vigée Le Brun's "Venus Binding the Wings of Cupid" (1781) sits behind
+   an oversized editorial title, then fades to nothing where the platter
+   begins, so the painting and the turntable read as one column. ────── */
+.hero { position: relative; z-index: 1; padding-top: 3.2rem; }
+.hero-art {
+  position: absolute; z-index: 0; pointer-events: none;
+  left: 50%; top: -3vh; transform: translateX(-50%);
+  width: min(1120px, 108vw); height: 74vh; max-height: 760px;
+  background: url('assets/temple/venus-cupid.jpg') no-repeat center 26% / cover;
+  /* keep the top of the painting, dissolve the bottom into the platter */
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 42%, rgba(0,0,0,.55) 66%, transparent 88%);
+          mask-image: linear-gradient(to bottom, #000 0%, #000 42%, rgba(0,0,0,.55) 66%, transparent 88%);
+  opacity: .96;
+}
+.hero-art::after {                       /* a soft veil so the title always reads */
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(125% 78% at 50% 34%,
+              rgba(8,2,14,.12) 0%, rgba(8,2,14,.5) 62%, rgba(8,2,14,.72) 100%);
+}
+.hero .eyebrow, .hero-title, .hero-sub { position: relative; z-index: 2; }
+.hero .eyebrow { color: #e9dcff; text-shadow: 0 1px 10px rgba(0,0,0,.6); }
+.hero-title {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  line-height: .9;
+  letter-spacing: -.005em;
+  color: #fbf4ff;
+  text-shadow: 0 2px 34px rgba(0,0,0,.6), 0 1px 3px rgba(0,0,0,.55);
+  margin: 5vh 0 0;
+}
+.hero-title .hl { display: block; }
+.hero-title .hl-1 { font-size: clamp(2rem, 8.4vw, 4.6rem); }
+.hero-title .hl-2 {
+  font-size: clamp(3.4rem, 18vw, 10.5rem);
+  font-style: italic;
+  color: var(--gold);
+  text-shadow: 0 2px 40px rgba(0,0,0,.55), 0 0 60px rgba(245,197,24,.28);
+  margin: -.06em 0;
+}
+.hero-title .hl-3 { font-size: clamp(2.6rem, 12.5vw, 7.6rem); }
+.hero-sub {
+  font-family: var(--font-mono); letter-spacing: .3em; text-transform: uppercase;
+  font-size: .78rem; color: #cbb8e8; margin-top: 1.1rem;
+  text-shadow: 0 1px 8px rgba(0,0,0,.6);
+}
+@media (max-width: 640px) {
+  .hero-art { height: 58vh; top: -1vh; }
+  .hero-title { margin-top: 3vh; }
+}
 
 .table-wrap {
   position: relative;
+  z-index: 2;                       /* the platter rides above the hero painting */
   display: grid;
   place-items: center;
   perspective: 1600px;              /* depth for the record flip */
@@ -200,10 +248,15 @@ header.masthead .eyebrow { margin-bottom: .6rem; }
 <body>
 
 <div class="deck-stage">
-  <header class="masthead">
+  <header class="masthead hero">
+    <div class="hero-art" aria-hidden="true"></div>
     <p class="eyebrow" id="eyebrow">side a · 33⅓ rpm · stereo</p>
-    <h1 class="display chrome-text">The Human Sexual Revolution</h1>
-    <p class="archive-voice" style="color:var(--ink-dim); font-size:.8rem;">(ongoing)</p>
+    <h1 class="hero-title">
+      <span class="hl hl-1">The Human</span>
+      <span class="hl hl-2">Sexual</span>
+      <span class="hl hl-3">Revolution</span>
+    </h1>
+    <p class="hero-sub">(ongoing)</p>
   </header>
 
   <div class="table-wrap">
@@ -235,7 +288,7 @@ header.masthead .eyebrow { margin-bottom: .6rem; }
   </p>
 </nav>
 
-<script src="revolution.js?v=27"></script>
+<script src="revolution.js?v=28"></script>
 <script>
 REV.boot({ scene: 'hub', room: null, track: 'assets/tracks/hub.mp3', trackTitle: 'Strobotone — San Fran (Interlude Edit)' });
 
