@@ -145,11 +145,14 @@ h2.roomlabel {
 /* ── THE LIT FLOOR — the decade as a dancefloor you walk ────────── */
 .dancefloor {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* minmax(0,1fr) — not the default minmax(auto,1fr) — so a tile's longest
+     word can't force its track wider than its share and spill off the right
+     edge (which the root overflow-x:clip would then crop). */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
   perspective: 900px;
 }
-@media (max-width: 760px) { .dancefloor { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 760px) { .dancefloor { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 .tile {
   --glow: var(--hotpink);
