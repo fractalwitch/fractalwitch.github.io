@@ -653,6 +653,44 @@ a:hover { color: var(--hotpink); }
 .tracklist li.unreleased .dur::after { content:' · pressing soon'; }
 
 /* ── AUDIO TOGGLE (opt-in, always visible, never nags) ──────────── */
+/* ── PERSISTENT TOP BAR — THSR wordmark + current track code ───────
+   Injected by REV.boot on every page. The bar itself is click-through
+   (a scrim), only its two corner items take clicks — so nothing below
+   the top edge is ever blocked. ──────────────────────────────────── */
+.rev-topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 72;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem;
+  padding: .5rem clamp(.8rem, 3vw, 1.4rem);
+  font-family: var(--font-geo);
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(247,244,239,.94) 30%, rgba(247,244,239,0));
+}
+.rev-topbar > * { pointer-events: auto; }
+.rev-topbar .tb-mark {
+  font-weight: 700; font-size: .84rem; letter-spacing: .3em;
+  color: var(--ink); text-decoration: none; padding: .2rem 0;
+  transition: color .3s, text-shadow .3s;
+}
+.rev-topbar .tb-mark:hover { color: var(--link); }
+.rev-topbar .tb-track {
+  display: inline-flex; align-items: baseline; gap: .5rem;
+  font-size: .68rem; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.rev-topbar .tb-code {
+  font-family: var(--font-display); font-size: .8rem; letter-spacing: .03em;
+  color: var(--hotpink);
+}
+.rev-topbar .tb-name { opacity: .82; }
+@media (max-width: 540px) { .rev-topbar .tb-name { display: none; } }
+/* dark grounds: flip the scrim so the light wordmark stays legible */
+[data-ground="dark"] .rev-topbar,
+html[data-theme="disco"] .rev-topbar,
+html[data-temple] .rev-topbar {
+  background: linear-gradient(to bottom, rgba(6,1,10,.9) 30%, rgba(6,1,10,0));
+}
+
 .audio-toggle {
   position: fixed;
   right: 1.1rem; bottom: 1.1rem;
@@ -700,7 +738,7 @@ a:hover { color: var(--hotpink); }
    like every other dial. ─────────────────────────────────────────── */
 .light-switch {
   position: fixed;
-  top: 1.1rem; right: 1.1rem;
+  top: 3.4rem; right: 1.1rem;      /* tucked just under the persistent top bar */
   z-index: 71;
   width: 44px; height: 72px;
   padding: 6px;

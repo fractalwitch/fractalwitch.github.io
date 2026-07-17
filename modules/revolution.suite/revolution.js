@@ -987,6 +987,39 @@
       REV.audio.track(opts.track, opts.trackTitle);
     }
 
+    // ── persistent top bar: THSR wordmark (home) + current track code ──
+    // Injected here so every page that boots gets it, no per-page markup.
+    if (!opts.noTopbar) {
+      const TRACK_CODE = {
+        ancestors:'A1', thecode:'A2', theriot:'A3', thefloor:'A4', ongoing:'A5',
+        triskelion:'B1', deck:'B2', whatisgender:'B3', gynarchy:'B4', hitraveler:'B5'
+      };
+      const TRACK_NAME = {
+        ancestors:'The Ancestors', thecode:'The Code', theriot:'The Riot',
+        thefloor:'The Floor', ongoing:'Ongoing', triskelion:'The Triskelion',
+        deck:'The Deviance Deck', whatisgender:'The Undivided Flesh',
+        gynarchy:'The Queer Gynarchy', hitraveler:'The Circulation'
+      };
+      const sc = opts.scene || '';
+      const code = TRACK_CODE[sc];
+      let right;
+      if (sc === 'hub') {
+        right = '<span class="tb-code">⏏</span><span class="tb-name">the record</span>';
+      } else if (code) {
+        right = '<span class="tb-code">' + code + '</span><span class="tb-name">' + TRACK_NAME[sc] + '</span>';
+      } else {
+        right = '<span class="tb-name">' + sc + '</span>';
+      }
+      const bar = document.createElement('nav');
+      bar.className = 'rev-topbar';
+      bar.setAttribute('aria-label', 'The Human Sexual Revolution — navigation');
+      bar.innerHTML =
+        '<a class="tb-mark" href="revolution.html" aria-label="The Human Sexual Revolution — home">THSR</a>' +
+        '<span class="tb-track" aria-label="Now on">' + right + '</span>';
+      if (sc === 'hub') bar.querySelector('.tb-mark').setAttribute('aria-current', 'page');
+      document.body.appendChild(bar);
+    }
+
     if (opts.scene) setScene(opts.scene);
     if (opts.room) fourthwallArm(opts.room);
   };
