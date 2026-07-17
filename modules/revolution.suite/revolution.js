@@ -238,7 +238,7 @@
   const SCENES = {
     threshold: 0.16, hub: 0.45, ancestors: 0.25, thecode: 0.42,
     theriot: 0.0, thefloor: 1.0, whatisgender: 0.28, deck: 0.7,
-    ongoing: 0.5, gynarchy: 0.9, hitraveler: 0.55
+    ongoing: 0.5, gynarchy: 0.9, hitraveler: 0.55, triskelion: 0.5
   };
 
   function audioEnsure() {
@@ -577,6 +577,13 @@
         note(b / 2, 'sine', now, 1.1, 0.05, 500);         // a warm circulating pad underneath
         break;
       }
+      case 'triskelion': {              // the turn: three shimmering voices spiralling up
+        [1, 1.335, 1.5].forEach(function (m, k) {          // a bright, open, spinning chord
+          note(b * m, 'sine', now + k * 0.05, 1.3, 0.05, 5000);
+        });
+        note(b * 2, 'sine', now + 0.2, 1.0, 0.02, 6000);
+        break;
+      }
       default:
         preview(tone);
     }
@@ -605,7 +612,8 @@
     deck:      'knowe thyself. the flaps were always meant to be lifted.',
     ongoing:   'nothing here is tracking you. sit as long as you like. the loop completes when you leave and do something.',
     gynarchy:  'this part isn\u2019t history. it\u2019s the invitation. you were always already free.',
-    hitraveler:'the world\u2019s operating system is crashing. you are already running the update. hi, traveler.'
+    hitraveler:'the world\u2019s operating system is crashing. you are already running the update. hi, traveler.',
+    triskelion:'breathe. this is the turn. side b is where we stop explaining and start dreaming.'
   };
 
   function fourthwallArm(room) {

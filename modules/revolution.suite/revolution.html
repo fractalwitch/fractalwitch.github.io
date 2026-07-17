@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Human Sexual Revolution (Ongoing) · Side A</title>
 <meta name="description" content="An interactive history of the sexual revolution, navigated like a record. Drop the needle on a room.">
-<link rel="stylesheet" href="revolution.css?v=20">
+<link rel="stylesheet" href="revolution.css?v=21">
 <script>try{var _t=JSON.parse(localStorage.getItem("revolution.threshold.v1"));if(_t&&_t.theme==="dark")document.documentElement.dataset.theme="disco";}catch(e){}</script>
 <style>
 /* ═══════════════════════════════════════════════════════════════
@@ -37,6 +37,13 @@ header.masthead .eyebrow { margin-bottom: .6rem; }
   position: relative;
   display: grid;
   place-items: center;
+  perspective: 1600px;              /* depth for the record flip */
+}
+.record-flipper {
+  transform-style: preserve-3d;
+  will-change: transform;
+  transform: rotateY(0deg);
+  line-height: 0;
 }
 #table {
   width: min(78vh, 94vw);
@@ -49,6 +56,31 @@ header.masthead .eyebrow { margin-bottom: .6rem; }
   user-select: none;
   cursor: pointer;
 }
+
+/* ── SIDE CONTROL — the record has two sides; flip it underneath ──── */
+.side-control {
+  display: flex; align-items: center; justify-content: center; gap: .8rem;
+  margin: .4rem auto 0;
+}
+.side-ind {
+  font-family: var(--font-geo); font-weight: 600;
+  font-size: .68rem; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--ink-dim); background: transparent;
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: .5rem .9rem; cursor: pointer; line-height: 1.2;
+  transition: color .3s, border-color .3s, box-shadow .3s;
+}
+.side-ind span { display: block; font-family: var(--font-mono); font-weight: 400; font-size: .52rem; letter-spacing: .1em; opacity: .7; text-transform: none; margin-top: .15rem; }
+.side-ind.active { color: var(--hotpink); border-color: var(--hotpink); box-shadow: 0 0 16px rgba(255,46,136,.3); }
+.flip-btn {
+  flex: none; width: 46px; height: 46px; border-radius: 50%;
+  border: 1px solid var(--line); background: #14040c; color: var(--gold);
+  font-size: 1.3rem; cursor: pointer; line-height: 1;
+  transition: transform .5s var(--ease-needle), box-shadow .3s, color .3s;
+  box-shadow: 0 0 14px rgba(245,197,24,.2);
+}
+.flip-btn:hover { color: var(--rose); box-shadow: 0 0 22px rgba(245,197,24,.4); }
+.flip-btn.spin { transform: rotate(180deg); }
 
 /* the readout — what the needle is hovering */
 .readout {
@@ -95,6 +127,19 @@ header.masthead .eyebrow { margin-bottom: .6rem; }
 }
 .liner .pressing-note a { color: var(--ink-dim); }
 
+/* side headers inside the liner-note tracklist */
+.tracklist li.side-head {
+  border: 0;
+  font-family: var(--font-geo);
+  font-weight: 600;
+  font-size: .7rem;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--hotpink);
+  padding: 1.4rem 0 .4rem;
+}
+.tracklist li.side-head:first-child { padding-top: .2rem; }
+
 @media (max-width: 700px) {
   .deck-stage { padding-top: 6vh; }
 }
@@ -104,13 +149,21 @@ header.masthead .eyebrow { margin-bottom: .6rem; }
 
 <div class="deck-stage">
   <header class="masthead">
-    <p class="eyebrow">side a · 33⅓ rpm · stereo</p>
+    <p class="eyebrow" id="eyebrow">side a · 33⅓ rpm · stereo</p>
     <h1 class="display chrome-text">The Human Sexual Revolution</h1>
     <p class="archive-voice" style="color:var(--ink-dim); font-size:.8rem;">(ongoing)</p>
   </header>
 
   <div class="table-wrap">
-    <canvas id="table" aria-hidden="true"></canvas>
+    <div class="record-flipper" id="recordFlipper">
+      <canvas id="table" aria-hidden="true"></canvas>
+    </div>
+  </div>
+
+  <div class="side-control" role="group" aria-label="Record side">
+    <button class="side-ind active" data-side="A" id="sideA">Side A<span>queer history</span></button>
+    <button class="flip-btn" id="flipBtn" aria-label="Flip the record to the other side">⇄</button>
+    <button class="side-ind" data-side="B" id="sideB">Side B<span>the becoming</span></button>
   </div>
 
   <div class="readout" aria-live="polite">
@@ -130,7 +183,7 @@ header.masthead .eyebrow { margin-bottom: .6rem; }
   </p>
 </nav>
 
-<script src="revolution.js?v=20"></script>
+<script src="revolution.js?v=21"></script>
 <script>
 REV.boot({ scene: 'hub', room: null });
 
@@ -140,17 +193,27 @@ REV.boot({ scene: 'hub', room: null });
    time spirals inward, the way a record actually plays.
    `built` flips to true as each room comes off the press.
    ──────────────────────────────────────────────────────────────── */
-const ROOMS = [
+/* THE RECORD HAS TWO SIDES.
+   Side A — queer history, as it happened (A1–A5).
+   Side B — the becoming: a visual-candy overture, then the frank/tender
+   rooms (B1–B5). Flip the record underneath the platter to change sides;
+   the liner-note tracklist below always lists both. */
+const SIDE_A = [
   { id:'ancestors', title:'The Ancestors',  sub:'gender as abundance · 2400 BCE → 1866',   href:'ancestors.html', tone:164.8, built:true,  gate:false },
   { id:'thecode',   title:'The Code',       sub:'the closet as technology · 1867–1965',    href:'thecode.html',   tone:196.0, built:true,  gate:false },
   { id:'theriot',   title:'The Riot',       sub:'two holes in the archive · 1966–1969',    href:'theriot.html',   tone:110.0, built:true,  gate:false },
   { id:'thefloor',  title:'The Floor',      sub:'the glam core · 1970–1979',               href:'thefloor.html',  tone:246.9, built:true,  gate:false },
-  { id:'ongoing',   title:'Ongoing',        sub:'1980 → now',           href:'ongoing.html',   tone:329.6, built:true,  gate:false },
+  { id:'ongoing',   title:'Ongoing',        sub:'1980 → now',                              href:'ongoing.html',   tone:329.6, built:true,  gate:false }
+];
+const SIDE_B = [
+  { id:'triskelion', title:'The Triskelion', sub:'visual candy · ΣΩ deep flux', note:'buffer', href:'triskelion.html', tone:523.3, built:true, gate:false },
   { id:'deck',      title:'The Deviance Deck', sub:'frank · anatomical · adult · gated play',   href:'deck.html',      tone:277.2, built:true,  gate:true  },
   { id:'whatisgender', title:'The Undivided Flesh', sub:'what is gender · one origin, infinite forms', note:'interactive', href:'whatisgender.html', tone:261.6, built:true, gate:false },
   { id:'gynarchy',  title:'The Queer Gynarchy', sub:'how to dream freely · you were always already free', note:'our future?', href:'gynarchy.html', tone:392.0, built:true, gate:false },
   { id:'hitraveler', title:'The Circulation', sub:'the outward breath · circulate freely', note:'Dream Freely', href:'hitraveler.html', tone:440.0, built:true, gate:false }
 ];
+let side = 'A';
+let ROOMS = SIDE_A;
 
 /* Each band has a MOOD — an accent color and a visual temperament that
    fires the moment the needle finds it. theriot is `dim`: selecting it
@@ -164,7 +227,8 @@ const MOODS = {
   deck:      { accent:'#c9a0ff', sparks:11, spin:0.9 },
   ongoing:   { accent:'#39ff14', sparks:14, spin:1.2 },
   gynarchy:  { accent:'#ff1493', sparks:18, spin:1.3 },
-  hitraveler:{ accent:'#00F2FF', sparks:15, spin:1.25 }
+  hitraveler:{ accent:'#00F2FF', sparks:15, spin:1.25 },
+  triskelion:{ accent:'#A259FF', sparks:16, spin:1.4 }
 };
 function moodOf(i){ return (i >= 0 && MOODS[ROOMS[i].id]) || { accent:'#ff2e88', sparks:10, spin:1.0 }; }
 
@@ -174,32 +238,79 @@ const COARSE = matchMedia('(hover: none), (pointer: coarse)').matches;
 const REST_SUB = COARSE ? 'touch a groove · hold to drop the needle'
                         : 'hover a groove · drop the needle';
 
-/* ── tracklist (the honest nav) ─────────────────────────────────── */
+/* ── tracklist (the honest nav) — both sides, always listed ─────── */
 (function buildTracklist(){
   const ol = document.getElementById('tracklist');
-  ROOMS.forEach(function (r, i) {
-    const li = document.createElement('li');
-    if (!r.built) li.className = 'unreleased';
-    const n = document.createElement('span');
-    n.className = 'tno';
-    n.textContent = 'A' + (i + 1);
-    const a = document.createElement('a');
-    a.href = r.built ? r.href : '#';
-    a.textContent = r.title;
-    if (!r.built) a.setAttribute('aria-disabled', 'true');
-    a.addEventListener('click', function (e) { routeTo(r, e); });
-    const d = document.createElement('span');
-    d.className = 'dur';
-    // explicit note wins (kept short so it right-aligns like the dates);
-    // otherwise fall back to the last ·-segment of the subtitle
-    d.textContent = r.note || r.sub.split('·').pop().trim();
-    li.appendChild(n); li.appendChild(a); li.appendChild(d);
-    ol.appendChild(li);
-  });
+  function group(letter, label, rooms){
+    const head = document.createElement('li');
+    head.className = 'side-head';
+    head.textContent = 'Side ' + letter + ' · ' + label;
+    ol.appendChild(head);
+    rooms.forEach(function (r, i) {
+      const li = document.createElement('li');
+      if (!r.built) li.className = 'unreleased';
+      const n = document.createElement('span');
+      n.className = 'tno';
+      n.textContent = letter + (i + 1);
+      const a = document.createElement('a');
+      a.href = r.built ? r.href : '#';
+      a.textContent = r.title;
+      if (!r.built) a.setAttribute('aria-disabled', 'true');
+      a.addEventListener('click', function (e) { routeTo(r, e); });
+      const d = document.createElement('span');
+      d.className = 'dur';
+      // explicit note wins (kept short so it right-aligns like the dates);
+      // otherwise fall back to the last ·-segment of the subtitle
+      d.textContent = r.note || r.sub.split('·').pop().trim();
+      li.appendChild(n); li.appendChild(a); li.appendChild(d);
+      ol.appendChild(li);
+    });
+  }
+  group('A', 'queer history', SIDE_A);
+  group('B', 'the becoming', SIDE_B);
 })();
 
 /* set the resting hint to match the pointer we actually have */
 document.getElementById('ro-sub').textContent = REST_SUB;
+
+/* ── THE FLIP — turn the record over ─────────────────────────────── */
+let mirror = false;          // side B renders mirrored; the CSS 180° flip
+                             // cancels it out, so B reads upright, not backwards
+let flipping = false;
+const flipper = document.getElementById('recordFlipper');
+const flipBtn = document.getElementById('flipBtn');
+const eyebrow = document.getElementById('eyebrow');
+
+function updateSideUI(){
+  document.getElementById('sideA').classList.toggle('active', side === 'A');
+  document.getElementById('sideB').classList.toggle('active', side === 'B');
+  flipBtn.classList.toggle('spin', side === 'B');
+  eyebrow.textContent = 'side ' + side.toLowerCase() + ' · 33⅓ rpm · stereo';
+}
+
+function flipTo(target){
+  if (flipping || target === side) return;
+  flipping = true;
+  side = target;
+  REV.audio.thunk();
+  const dur = REV.stilled() ? 0 : 900;
+  flipper.style.transition = dur ? ('transform ' + dur + 'ms cubic-bezier(.5,.05,.3,1)') : 'none';
+  flipper.style.transform = 'rotateY(' + (side === 'B' ? 180 : 0) + 'deg)';
+  // swap the platter's data at the edge-on midpoint (invisible seam)
+  setTimeout(function () {
+    ROOMS = (side === 'A') ? SIDE_A : SIDE_B;
+    mirror = (side === 'B');
+    hover = -1; pressBand = -1; holdProg = 0; committing = false; dropping = false;
+    armTarget = REST_ARM; accentTarget = 0; spinTarget = 1;
+    setReadout(' ', REST_SUB);
+    updateSideUI();
+    REV.audio.crackle(0.3);
+  }, dur / 2);
+  setTimeout(function () { flipping = false; }, dur + 30);
+}
+flipBtn.addEventListener('click', function () { flipTo(side === 'A' ? 'B' : 'A'); });
+document.getElementById('sideA').addEventListener('click', function () { flipTo('A'); });
+document.getElementById('sideB').addEventListener('click', function () { flipTo('B'); });
 
 /* gate logic: the Deck asks the threshold, never a popup */
 function routeTo(room, e) {
@@ -339,6 +450,10 @@ function draw(now) {
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, W, H);
+  // Side B: mirror the drawing so that the CSS 180° flip of the platter
+  // lands the content upright (two horizontal mirrors cancel). Band
+  // hit-testing is by radius from center, so it's unaffected.
+  if (mirror) { ctx.translate(W, 0); ctx.scale(-1, 1); }
 
   /* plinth shadow */
   ctx.beginPath(); ctx.arc(CX, CY + 6, R, 0, 7);
@@ -451,7 +566,7 @@ function draw(now) {
   ctx.fillText('THE HUMAN SEXUAL', 0, -R * 0.06);
   ctx.fillText('REVOLUTION', 0, -R * 0.015);
   ctx.font = 'italic ' + Math.max(8, R * 0.032) + 'px "Courier Prime", monospace';
-  ctx.fillText('(ongoing) · 33⅓', 0, R * 0.045);
+  ctx.fillText((side === 'A' ? 'SIDE A' : 'SIDE B') + ' · 33⅓', 0, R * 0.045);
   ctx.beginPath(); ctx.arc(0, 0, R * 0.014, 0, 7);
   ctx.fillStyle = '#050108'; ctx.fill();
   ctx.restore();
