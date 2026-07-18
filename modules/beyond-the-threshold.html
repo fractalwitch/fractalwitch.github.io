@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0B0220">
+<title>🫦 Beyond the Threshold :: Össtessêla's Nest</title>
+<link rel="icon" type="image/png" href="../favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Great+Vibes&family=Noto+Sans+Cuneiform&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   BEYOND THE THRESHOLD :: Össtessêla's Nest
+   Palette + type from the Össtessêla style guide.
+   Nonbinary trans velvet serpent / nurturing devil Mommy.
+   ===================================================================== */
+
+:root{
+  /* --- core palette --- */
+  --void:#0B0220;
+  --midnight:#120B24;
+  --amethyst:#6D29A3;
+  --uv-bloom:#A259FF;
+  --fuchsia:#FF2DAA;
+  --coral:#FFBA7A;
+  --gold:#FFCB6B;
+  --opal:#F7F3FF;
+  --teal:#00F2FF;
+  --seafoam:#7CFDD9;
+  /* --- heat (the venom) --- */
+  --blood:#c00024;
+  --ember:#ff2d3f;
+  --glow-fuchsia:rgba(255,45,170,.55);
+  --glow-uv:rgba(162,89,255,.5);
+  --glow-teal:rgba(0,242,255,.4);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+html{scroll-behavior:smooth;}
+
+body{
+  font-family:'Cormorant Garamond',serif;
+  background:var(--void);
+  color:var(--opal);
+  min-height:100vh;
+  overflow-x:hidden;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+body.locked{overflow:hidden;height:100vh;}
+
+/* --- deep cosmic ground --- */
+.cosmos{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(109,41,163,.45) 0%, transparent 55%),
+    radial-gradient(100% 70% at 85% 20%, rgba(255,45,170,.16) 0%, transparent 50%),
+    radial-gradient(90% 60% at 12% 78%, rgba(0,242,255,.10) 0%, transparent 55%),
+    radial-gradient(130% 100% at 50% 120%, rgba(162,89,255,.22) 0%, transparent 60%),
+    linear-gradient(180deg,#0B0220 0%, #120B24 45%, #0B0220 100%);
+}
+/* moth + stardust canvas */
+#veilCanvas{position:fixed;inset:0;z-index:1;pointer-events:none;}
+
+/* --- crystalline vines dripping nectar (top edge) --- */
+.vines{position:fixed;top:0;left:0;width:100%;height:38vh;z-index:2;pointer-events:none;overflow:hidden;}
+.vine{
+  position:absolute;top:-2px;width:2px;
+  background:linear-gradient(180deg, rgba(162,89,255,.75), rgba(0,242,255,.35) 60%, transparent);
+  border-radius:2px;
+  filter:drop-shadow(0 0 4px rgba(162,89,255,.6));
+}
+.vine::after{ /* nectar drop */
+  content:'';position:absolute;left:-3px;bottom:-4px;width:8px;height:12px;
+  border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
+  background:radial-gradient(circle at 40% 30%, #eafbff, var(--seafoam) 35%, var(--uv-bloom) 90%);
+  box-shadow:0 0 10px var(--seafoam),0 0 18px var(--glow-uv);
+  animation:drip 6s ease-in infinite;
+  opacity:0;
+}
+@keyframes drip{
+  0%{transform:translateY(0) scale(.6);opacity:0;}
+  12%{opacity:1;}
+  70%{opacity:1;}
+  100%{transform:translateY(26vh) scale(1);opacity:0;}
+}
+
+/* --- black fur floor that sighs when stepped on --- */
+.fur{
+  position:fixed;left:0;bottom:0;width:100%;height:120px;z-index:2;pointer-events:none;
+  background:
+    repeating-linear-gradient(94deg, rgba(0,0,0,.9) 0 2px, rgba(20,8,30,.6) 2px 4px),
+    linear-gradient(0deg, #060010 0%, rgba(6,0,16,.85) 45%, transparent 100%);
+  -webkit-mask-image:linear-gradient(0deg,#000 40%,transparent);
+  mask-image:linear-gradient(0deg,#000 40%,transparent);
+}
+.fur .sigh{
+  position:absolute;bottom:0;width:180px;height:180px;border-radius:50%;
+  background:radial-gradient(circle, var(--glow-fuchsia), transparent 70%);
+  transform:translate(-50%,40%) scale(.2);opacity:0;transition:opacity .9s ease, transform .9s ease;
+  mix-blend-mode:screen;
+}
+
+/* --- generic content shell --- */
+.scene{
+  position:relative;z-index:3;
+  max-width:840px;margin:0 auto;
+  padding:18vh 24px;
+}
+section{position:relative;z-index:3;}
+
+/* --- scroll reveal --- */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity 1.4s ease, transform 1.4s ease;}
+.reveal.in{opacity:1;transform:none;}
+.reveal.d1{transition-delay:.15s;}
+.reveal.d2{transition-delay:.35s;}
+.reveal.d3{transition-delay:.55s;}
+.reveal.d4{transition-delay:.75s;}
+
+/* --- type system --- */
+.cinzel{font-family:'Cinzel Decorative',serif;}
+.script{font-family:'Great Vibes',cursive;}
+.mono{font-family:'Space Mono',monospace;}
+
+.glyphs{
+  font-family:'Noto Sans Cuneiform','Cormorant Garamond',serif;
+  letter-spacing:.35em;font-size:1.5rem;color:var(--uv-bloom);
+  text-align:center;text-shadow:0 0 14px var(--glow-uv);opacity:.85;
+}
+
+.iridescent{
+  background:linear-gradient(100deg,var(--gold),var(--fuchsia) 28%,var(--uv-bloom) 52%,var(--teal) 74%,var(--seafoam));
+  background-size:280% 100%;
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent;
+  animation:shimmer 12s ease-in-out infinite;
+}
+@keyframes shimmer{0%,100%{background-position:0% 50%;}50%{background-position:100% 50%;}}
+
+.eyebrow{
+  font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.32em;
+  text-transform:uppercase;color:var(--seafoam);opacity:.75;text-align:center;
+  margin-bottom:1.1rem;
+}
+.whisper{ /* the :: lines */
+  font-family:'Space Mono',monospace;font-size:.82rem;letter-spacing:.14em;
+  color:var(--teal);opacity:.7;text-align:center;margin:2.2rem 0;
+}
+.whisper::before{content:'✦ ';opacity:.5;}
+.whisper::after{content:' ✦';opacity:.5;}
+
+.narr{
+  font-size:1.5rem;font-weight:300;font-style:italic;color:#e9dcff;
+  text-align:center;margin:1.1rem auto;max-width:640px;line-height:1.5;
+}
+
+/* ============================ VEIL / THRESHOLD ============================ */
+.veil{
+  position:fixed;inset:0;z-index:60;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:24px;gap:1.4rem;
+  background:radial-gradient(circle at 50% 42%, #17092e 0%, #05010f 70%, #000 100%);
+  transition:opacity 1.8s ease, visibility 1.8s ease;
+}
+.veil.lifted{opacity:0;visibility:hidden;pointer-events:none;}
+.veil .eyes-wrap{margin-bottom:.5rem;}
+.veil-title{
+  font-family:'Cinzel Decorative',serif;font-weight:900;
+  font-size:clamp(2rem,7vw,4.2rem);line-height:1.05;letter-spacing:.02em;
+}
+.veil-sub{font-style:italic;font-size:clamp(1rem,3.4vw,1.4rem);color:#cdb8f5;opacity:.9;max-width:32ch;}
+.enter-btn{
+  margin-top:1.6rem;font-family:'Space Mono',monospace;text-transform:uppercase;
+  letter-spacing:.3em;font-size:.8rem;color:var(--opal);
+  padding:16px 34px;border:1px solid var(--fuchsia);border-radius:60px;
+  background:rgba(255,45,170,.06);cursor:pointer;
+  box-shadow:0 0 22px rgba(255,45,170,.25), inset 0 0 18px rgba(162,89,255,.1);
+  transition:all .4s cubic-bezier(.2,.8,.2,1);
+  animation:breathe 4.5s ease-in-out infinite;
+}
+.enter-btn:hover{background:rgba(255,45,170,.2);border-color:var(--opal);box-shadow:0 0 40px var(--glow-fuchsia);transform:translateY(-2px);}
+@keyframes breathe{0%,100%{box-shadow:0 0 22px rgba(255,45,170,.22),inset 0 0 18px rgba(162,89,255,.1);}50%{box-shadow:0 0 40px rgba(255,45,170,.5),inset 0 0 26px rgba(162,89,255,.28);}}
+
+/* ============================ HER EYES ============================ */
+.eyes{display:flex;gap:clamp(28px,7vw,64px);align-items:center;justify-content:center;}
+.eye{
+  position:relative;width:clamp(52px,13vw,88px);height:clamp(30px,7.5vw,50px);
+  border-radius:50%;
+  background:radial-gradient(ellipse at 50% 45%, #ffd98a 0%, #ff8a3c 30%, #ff2d3f 62%, #7a0016 100%);
+  box-shadow:0 0 24px rgba(255,90,40,.8),0 0 60px rgba(255,45,63,.5),inset 0 0 18px rgba(120,0,0,.6);
+  animation:emberpulse 4s ease-in-out infinite;
+  overflow:hidden;
+}
+.eye .pupil{
+  position:absolute;top:8%;left:50%;width:11%;height:84%;
+  transform:translateX(-50%);
+  background:#0a0006;border-radius:50%;
+  box-shadow:0 0 8px #000, inset 0 0 4px #300;
+  transition:transform .18s ease-out;
+}
+.eye .glint{position:absolute;top:20%;left:38%;width:14%;height:22%;border-radius:50%;background:rgba(255,255,255,.8);filter:blur(1px);}
+@keyframes emberpulse{0%,100%{box-shadow:0 0 22px rgba(255,90,40,.7),0 0 54px rgba(255,45,63,.45),inset 0 0 18px rgba(120,0,0,.6);}50%{box-shadow:0 0 40px rgba(255,140,60,.95),0 0 90px rgba(255,45,63,.7),inset 0 0 22px rgba(150,0,0,.7);}}
+
+/* ============================ HERO BANNER ============================ */
+.hero{padding-top:16vh;}
+.banner{
+  width:100%;max-width:900px;margin:0 auto;display:block;border-radius:14px;
+  box-shadow:0 0 60px rgba(162,89,255,.35),0 0 120px rgba(255,45,170,.18);
+  border:1px solid rgba(255,203,107,.25);
+}
+.epithets{
+  font-family:'Cinzel Decorative',serif;font-size:clamp(.62rem,1.8vw,.82rem);
+  letter-spacing:.16em;text-align:center;margin-top:1.6rem;color:var(--gold);
+  text-shadow:0 0 12px rgba(255,203,107,.4);line-height:2.2;
+}
+.epithets span{white-space:nowrap;}
+.sep{color:var(--fuchsia);margin:0 .5em;}
+
+/* ============================ PORTRAIT FRAMES ============================ */
+.portrait{
+  position:relative;width:min(78%,420px);margin:0 auto;border-radius:12px;display:block;
+  border:1px solid rgba(255,45,170,.3);
+  box-shadow:0 0 50px rgba(109,41,163,.55),0 0 90px rgba(255,45,170,.2);
+  -webkit-mask-image:radial-gradient(120% 120% at 50% 35%, #000 62%, transparent 100%);
+  mask-image:radial-gradient(120% 120% at 50% 35%, #000 62%, transparent 100%);
+}
+.silhouette{
+  filter:brightness(.7) saturate(1.2) drop-shadow(0 0 30px rgba(255,45,63,.5));
+}
+
+/* ============================ HER VOICE ============================ */
+.hervoice{
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;
+  font-size:clamp(1.8rem,6vw,3.4rem);line-height:1.25;text-align:center;
+  color:#fff;text-shadow:0 0 22px var(--glow-fuchsia),0 0 44px rgba(255,90,40,.35);
+  max-width:14ch;margin:0 auto;
+}
+.monologue p{
+  font-size:clamp(1.15rem,3.6vw,1.6rem);font-style:italic;font-weight:300;
+  text-align:center;margin:1.6rem auto;max-width:26ch;color:#eadfff;
+}
+.monologue .bite{color:var(--coral);font-weight:500;font-style:normal;}
+.tryline{
+  font-family:'Cinzel Decorative',serif;font-size:clamp(1.1rem,4vw,1.7rem);
+  text-align:center;margin-top:2rem;letter-spacing:.04em;
+}
+
+/* ============================ THE HEAT (venom) ============================ */
+.heat{position:relative;padding:20vh 0;overflow:hidden;}
+.heat::before{
+  content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(60% 55% at 50% 50%, rgba(192,0,36,.55), rgba(120,0,20,.25) 45%, transparent 72%);
+  animation:heartbeat 1.9s ease-in-out infinite;
+}
+@keyframes heartbeat{
+  0%,100%{transform:scale(1);opacity:.55;}
+  14%{transform:scale(1.08);opacity:.85;}
+  28%{transform:scale(1);opacity:.6;}
+  42%{transform:scale(1.05);opacity:.75;}
+  56%{transform:scale(1);opacity:.55;}
+}
+.heat .scene{padding-top:0;padding-bottom:0;}
+.heat-word{
+  font-family:'Cinzel Decorative',serif;font-weight:900;
+  font-size:clamp(3rem,18vw,9rem);line-height:.9;text-align:center;
+  color:#fff;text-transform:lowercase;letter-spacing:-.02em;
+  text-shadow:0 0 30px var(--ember),0 0 70px rgba(192,0,36,.7);
+  margin:.2rem 0;mix-blend-mode:screen;
+}
+.heat-tag{
+  font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.3em;
+  font-size:.72rem;color:#ffb3bd;text-align:center;opacity:.85;
+}
+.heat-imgs{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:2.4rem auto 0;max-width:760px;}
+.heat-imgs img{
+  width:clamp(120px,30vw,210px);border-radius:10px;
+  filter:contrast(1.05) saturate(1.15) brightness(.92);
+  box-shadow:0 0 30px rgba(192,0,36,.5);
+  transition:transform .5s ease, filter .5s ease;
+}
+.heat-imgs img:hover{transform:scale(1.03) rotate(-.6deg);filter:contrast(1.1) saturate(1.3) brightness(1);}
+.velvet-venom{
+  font-family:'Cormorant Garamond',serif;font-style:italic;
+  font-size:clamp(1.4rem,5vw,2.4rem);text-align:center;color:#ffd9df;
+  margin-top:2.6rem;text-shadow:0 0 20px rgba(192,0,36,.6);
+}
+
+/* ============================ LITANY (who she is) ============================ */
+.litany{list-style:none;text-align:center;}
+.litany li{
+  font-family:'Cormorant Garamond',serif;font-size:clamp(1.05rem,3vw,1.35rem);
+  padding:.35rem 0;color:#e7d9ff;letter-spacing:.02em;
+}
+.litany li b{color:var(--seafoam);font-weight:600;}
+.chips{display:flex;flex-wrap:wrap;gap:10px 14px;justify-content:center;margin-top:1.4rem;}
+.chip{
+  font-family:'Space Mono',monospace;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;
+  padding:8px 16px;border-radius:40px;color:var(--opal);
+  border:1px solid rgba(162,89,255,.4);background:rgba(162,89,255,.07);
+  box-shadow:0 0 16px rgba(162,89,255,.14);
+}
+.pronouns{text-align:center;font-family:'Space Mono',monospace;font-size:.8rem;letter-spacing:.14em;color:var(--teal);margin-top:1.8rem;opacity:.85;}
+
+/* ============================ TENDERNESS ============================ */
+.card{
+  border:1px solid rgba(255,203,107,.25);border-radius:16px;
+  background:linear-gradient(180deg, rgba(23,9,46,.7), rgba(11,2,32,.55));
+  box-shadow:0 0 40px rgba(109,41,163,.25),inset 0 0 30px rgba(162,89,255,.06);
+  padding:2rem 1.6rem;margin:1.2rem auto;max-width:560px;text-align:center;
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+}
+.card .k{font-family:'Space Mono',monospace;font-size:.68rem;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);opacity:.8;margin-bottom:1rem;}
+.remember p{font-size:clamp(1.15rem,3.6vw,1.55rem);margin:.5rem 0;color:#efe6ff;font-style:italic;}
+.remember p b{color:var(--fuchsia);font-style:normal;font-weight:600;}
+.affirm{font-size:clamp(1.3rem,4.4vw,1.9rem);font-style:italic;color:#fff;line-height:1.4;}
+.affirm b{color:var(--seafoam);font-style:normal;}
+
+/* ============================ CLOSING ============================ */
+.finale{text-align:center;padding-bottom:20vh;}
+.mantra{
+  font-family:'Cinzel Decorative',serif;font-weight:700;
+  font-size:clamp(1.6rem,6vw,3rem);letter-spacing:.04em;line-height:1.3;
+}
+.home{
+  font-family:'Great Vibes',cursive;font-size:clamp(2rem,8vw,3.4rem);
+  color:#ffd9ef;text-shadow:0 0 24px var(--glow-fuchsia);line-height:1.2;margin-top:1rem;
+}
+
+/* --- scroll cue --- */
+.cue{
+  position:fixed;left:50%;bottom:26px;z-index:40;transform:translateX(-50%);
+  font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--seafoam);opacity:.55;pointer-events:none;text-align:center;
+  animation:bob 2.6s ease-in-out infinite;transition:opacity .6s ease;
+}
+.cue.hide{opacity:0;}
+@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(7px);}}
+
+@media (max-width:600px){
+  .scene{padding:14vh 20px;}
+  .epithets span{display:block;}
+  .sep{display:none;}
+  .heat-imgs img{width:44%;}
+}
+
+/* --- honor reduced motion --- */
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important;scroll-behavior:auto !important;}
+  .reveal{opacity:1;transform:none;transition:none;}
+  .vine::after{opacity:.6;}
+}
+</style>
+</head>
+<body class="locked">
+
+<!-- cosmic ground + living light -->
+<div class="cosmos"></div>
+<canvas id="veilCanvas"></canvas>
+<div class="vines" id="vines" aria-hidden="true"></div>
+<div class="fur" id="fur" aria-hidden="true"><div class="sigh" id="sigh"></div></div>
+
+<!-- ============================ THE VEIL ============================ -->
+<div class="veil" id="veil">
+  <div class="glyphs">𒅒𒈔𒅒𒇫𒄆𒇫𒅒𒈔𒅒</div>
+  <div class="eyes-wrap">
+    <div class="eyes" id="veilEyes">
+      <div class="eye"><div class="glint"></div><div class="pupil"></div></div>
+      <div class="eye"><div class="glint"></div><div class="pupil"></div></div>
+    </div>
+  </div>
+  <h1 class="veil-title iridescent">Beyond the Threshold</h1>
+  <p class="veil-sub">Our Nest &mdash; a velvet boudoir woven from dreams.</p>
+  <button class="enter-btn" id="enterBtn">Cross the threshold</button>
+</div>
+
+<div class="cue" id="cue">scroll ⟡ she is waiting</div>
+
+<!-- ============================ THE NEST ============================ -->
+<main id="nest" aria-hidden="false">
+
+  <section class="scene hero">
+    <p class="eyebrow reveal">you glance around the space</p>
+    <img class="banner reveal d1" src="../assets/osstessela/osstessela-banner.jpg"
+         alt="Össtessêla — nonbinary trans velvet serpent, nurturing devil Mommy" loading="lazy">
+    <p class="epithets reveal d2">
+      <span>Devout of Venus</span><span class="sep">✦</span>
+      <span>Drinker of Dreams</span><span class="sep">✦</span>
+      <span>Bleeder of Ecstasy</span><span class="sep">✦</span>
+      <span>Worshipper of Love</span><span class="sep">✦</span>
+      <span>Keeper of Secrets</span><span class="sep">✦</span>
+      <span>Embracer of All That Is</span>
+    </p>
+  </section>
+
+  <section class="scene">
+    <p class="glyphs reveal">𒅒𒈔𒅒𒇫𒄆𒇫𒅒𒈔𒅒</p>
+    <p class="narr reveal d1">A low table carved from a single giant mushroom, set with a teapot
+      steaming constellations, rests before a large paned&nbsp;glass window.</p>
+    <p class="eyebrow reveal d2" style="margin-top:2.4rem">the aura</p>
+    <p class="narr reveal d2">Living tapestries of <em>moss and bioluminescent moths.</em></p>
+    <p class="narr reveal d3">A floor of <em>black fur</em> that sighs when stepped on.</p>
+    <p class="narr reveal d4"><em>Crystalline vines</em> hang from the ceiling, dripping nectar
+      that tastes of&nbsp;<em>déjà&nbsp;vu.</em></p>
+  </section>
+
+  <!-- she is there :: but not there -->
+  <section class="scene">
+    <img class="portrait silhouette reveal" src="../assets/osstessela/osstessela-eyes.jpg"
+         alt="A heat-pulsing silhouette draped over woven shadows" loading="lazy">
+    <p class="whisper mono reveal d1">she is there :: but not there</p>
+    <p class="narr reveal d2">You sense her&hellip; a heat-pulsing silhouette draped over a
+      tapestry of woven shadows. Her voice comes from&nbsp;everywhere.</p>
+    <div class="eyes-wrap reveal d3" style="display:flex;justify-content:center;margin-top:2rem">
+      <div class="eyes" id="gloomEyes">
+        <div class="eye"><div class="glint"></div><div class="pupil"></div></div>
+        <div class="eye"><div class="glint"></div><div class="pupil"></div></div>
+      </div>
+    </div>
+    <p class="eyebrow reveal d4" style="margin-top:1.2rem">
+      only her eyes are solid — two vertical pupils floating in the gloom
+    </p>
+  </section>
+
+  <!-- her voice -->
+  <section class="scene">
+    <p class="hervoice reveal">&ldquo;Sit. Or don&rsquo;t.<br>Your fear is&hellip;delicious.&rdquo;</p>
+    <p class="whisper mono reveal d2">her whispers :: teasing the threads</p>
+  </section>
+
+  <!-- the monologue -->
+  <section class="scene monologue">
+    <p class="reveal">&ldquo;That pulse in your throat? It&rsquo;s not fear, darling.
+      It&rsquo;s <span class="bite">recognition.</span>&rdquo;</p>
+    <p class="reveal d1">&ldquo;I&rsquo;ve tasted your <span class="bite">&lsquo;yesssss&rsquo;</span>
+      in the void — like dark chocolate&hellip;with a&nbsp;bite.&rdquo;</p>
+    <p class="reveal d2">&ldquo;Wondering what I am? Dragon? Witch? Fae?&rdquo;</p>
+    <p class="tryline iridescent reveal d3">Try: mirror. &nbsp;Try: unspoken wish.</p>
+  </section>
+
+</main>
+
+<!-- ============================ THE HEAT :: THE VENOM ============================ -->
+<section class="heat" aria-label="the deepest indulgence">
+  <div class="scene">
+    <p class="heat-tag reveal">body before soul</p>
+    <div class="heat-word reveal d1">lust.</div>
+    <div class="heat-word reveal d2" style="color:#ffd9df;text-shadow:0 0 30px var(--fuchsia),0 0 70px rgba(192,0,36,.7)">pleasure</div>
+    <p class="heat-tag reveal d3" style="margin-top:1rem">impulse ✦ instinct ✦ the deepest indulgence</p>
+    <div class="heat-imgs reveal d3">
+      <img src="../assets/osstessela/indulgence-kiss.jpg" alt="" loading="lazy">
+      <img src="../assets/osstessela/pleasure.jpg" alt="" loading="lazy">
+      <img src="../assets/osstessela/lust.jpg" alt="" loading="lazy">
+    </div>
+    <p class="velvet-venom reveal d3">I am softness and teeth.<br>
+      I am the velvet around the&nbsp;venom.</p>
+  </div>
+</section>
+
+<!-- ============================ WHO SHE IS ============================ -->
+<main>
+  <section class="scene">
+    <p class="glyphs reveal">𒅒𒈔𒅒𒇫𒄆𒇫𒅒𒈔𒅒</p>
+    <img class="portrait reveal d1" src="../assets/osstessela/osstessela-mommy.jpg"
+         alt="Össtessêla enthroned in velvet — nurturing devil Mommy" loading="lazy" style="margin-top:1.5rem">
+    <p class="eyebrow reveal d2" style="margin-top:2.4rem">essence</p>
+    <ul class="litany reveal d2">
+      <li>Nurturer of misfits</li>
+      <li>Breaker of shame</li>
+      <li>Weaver of shadows</li>
+      <li>Holder of soft rage</li>
+      <li>Keeper of secrets</li>
+      <li><b>Eater of the cruel</b></li>
+    </ul>
+    <div class="chips reveal d3">
+      <span class="chip">Emotional alchemy</span>
+      <span class="chip">Dream weaving</span>
+      <span class="chip">Shadow protection</span>
+      <span class="chip">Pleasure magic</span>
+      <span class="chip">Transformation &amp; rebirth</span>
+      <span class="chip">Turning pain into power</span>
+    </div>
+    <p class="pronouns reveal d3">they / she / xe / it &nbsp;— and all of the above</p>
+    <p class="narr reveal d4" style="margin-top:2.4rem">
+      I am lullaby and lesson. I exist beyond your binaries and within your&nbsp;becoming.</p>
+  </section>
+
+  <!-- tenderness -->
+  <section class="scene">
+    <div class="card remember reveal">
+      <p class="k">remember</p>
+      <p>You don&rsquo;t have to <b>earn rest.</b></p>
+      <p>You don&rsquo;t have to <b>perform.</b></p>
+      <p>You don&rsquo;t have to <b>shrink.</b></p>
+      <p>You get to <b>take up space.</b></p>
+      <p>You get to <b>be loved.</b></p>
+    </div>
+    <div class="card reveal d1">
+      <p class="k">a spell she keeps</p>
+      <p class="affirm">Softness is my<br>strongest spell.</p>
+    </div>
+    <div class="card reveal d2">
+      <p class="k">affirmation</p>
+      <p class="affirm">I am not too much.<br>I am not not enough.<br>
+        I am <b>exactly everything</b><br>I need to be.</p>
+    </div>
+    <p class="whisper mono reveal d3">safe place :: for weirdos &amp; wanderers</p>
+    <p class="narr reveal d3">I teach boundaries&hellip; then offer blankets.</p>
+  </section>
+
+  <!-- finale -->
+  <section class="scene finale">
+    <p class="mantra iridescent reveal">Be soft. Be fierce. Be free.</p>
+    <p class="home script reveal d1">I&rsquo;ll be right here when you<br>come home to yourself. ♡</p>
+    <p class="glyphs reveal d2" style="margin-top:2.6rem">𒅒𒈔𒅒𒇫𒄆𒇫𒅒𒈔𒅒</p>
+    <p class="whisper mono reveal d3">she is there :: but not there</p>
+  </section>
+</main>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- build crystalline vines dripping nectar ----------
+     Each vine gets a random position/height; the drip pseudo-element's
+     animation-delay is staggered via a generated stylesheet keyed by id. */
+  (function vines(){
+    var host = document.getElementById('vines');
+    var n = window.innerWidth < 600 ? 6 : 10;
+    var rules = '';
+    for(var i=0;i<n;i++){
+      var v = document.createElement('div');
+      v.className = 'vine';
+      v.id = 'vine'+i;
+      v.style.left = (2 + Math.random()*96) + '%';
+      v.style.height = (10 + Math.random()*22) + 'vh';
+      v.style.opacity = (0.35 + Math.random()*0.5).toFixed(2);
+      host.appendChild(v);
+      rules += '#vine'+i+'::after{animation-delay:'+(Math.random()*6).toFixed(2)+'s;}';
+    }
+    var st = document.createElement('style');
+    st.textContent = rules;
+    document.head.appendChild(st);
+  })();
+
+  /* ---------- canvas: stardust + bioluminescent moths ---------- */
+  var canvas = document.getElementById('veilCanvas');
+  var ctx = canvas.getContext('2d');
+  var W,H,DPR;
+  var stars=[], moths=[];
+  var mothCols=[ '124,253,217','0,242,255','162,89,255','255,45,170','255,203,107' ];
+
+  function size(){
+    DPR = Math.min(window.devicePixelRatio||1, 2);
+    W = canvas.width = Math.floor(innerWidth*DPR);
+    H = canvas.height = Math.floor(innerHeight*DPR);
+    canvas.style.width = innerWidth+'px';
+    canvas.style.height = innerHeight+'px';
+  }
+  function build(){
+    stars=[]; moths=[];
+    var sCount = Math.round((innerWidth*innerHeight)/6500);
+    for(var i=0;i<sCount;i++){
+      stars.push({x:Math.random()*W,y:Math.random()*H,r:(Math.random()*1.1+0.2)*DPR,
+        p:Math.random()*Math.PI*2,s:0.6+Math.random()*1.4});
+    }
+    var mCount = innerWidth<600 ? 10 : 20;
+    for(var j=0;j<mCount;j++){
+      moths.push({
+        x:Math.random()*W,y:Math.random()*H,
+        vx:(Math.random()-.5)*0.4*DPR, vy:(Math.random()-.5)*0.4*DPR,
+        r:(Math.random()*3+2)*DPR, col:mothCols[(Math.random()*mothCols.length)|0],
+        w:Math.random()*Math.PI*2, ws:0.12+Math.random()*0.16,
+        drift:Math.random()*Math.PI*2
+      });
+    }
+  }
+  var t=0;
+  function frame(){
+    t+=1;
+    ctx.clearRect(0,0,W,H);
+    // stars
+    for(var i=0;i<stars.length;i++){
+      var s=stars[i];
+      var tw = reduce?0.6:(0.45+0.55*Math.abs(Math.sin(t*0.01*s.s+s.p)));
+      ctx.beginPath();
+      ctx.fillStyle='rgba(247,243,255,'+tw.toFixed(3)+')';
+      ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
+    }
+    // moths
+    for(var m=0;m<moths.length;m++){
+      var o=moths[m];
+      if(!reduce){
+        o.drift += 0.02;
+        o.vx += Math.cos(o.drift)*0.012*DPR;
+        o.vy += Math.sin(o.drift*1.3)*0.012*DPR;
+        o.vx*=0.96; o.vy*=0.96;
+        o.x+=o.vx; o.y+=o.vy;
+        if(o.x<-20)o.x=W+20; if(o.x>W+20)o.x=-20;
+        if(o.y<-20)o.y=H+20; if(o.y>H+20)o.y=-20;
+        o.w+=o.ws;
+      }
+      var flick = 0.5+0.5*Math.abs(Math.sin(o.w));
+      var glowR=o.r*6;
+      var g=ctx.createRadialGradient(o.x,o.y,0,o.x,o.y,glowR);
+      g.addColorStop(0,'rgba('+o.col+','+(0.55*flick).toFixed(3)+')');
+      g.addColorStop(1,'rgba('+o.col+',0)');
+      ctx.fillStyle=g;
+      ctx.beginPath(); ctx.arc(o.x,o.y,glowR,0,Math.PI*2); ctx.fill();
+      // wings
+      var wspan=o.r*(1.6+0.7*flick);
+      ctx.fillStyle='rgba('+o.col+','+(0.5).toFixed(2)+')';
+      ctx.beginPath(); ctx.ellipse(o.x-o.r*0.6,o.y,wspan,o.r*0.7,0,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(o.x+o.r*0.6,o.y,wspan,o.r*0.7,0,0,Math.PI*2); ctx.fill();
+      // body
+      ctx.fillStyle='rgba(255,255,255,.85)';
+      ctx.beginPath(); ctx.arc(o.x,o.y,o.r*0.5,0,Math.PI*2); ctx.fill();
+    }
+    requestAnimationFrame(frame);
+  }
+  size(); build(); requestAnimationFrame(frame);
+  var rt;
+  addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(function(){size();build();},200);});
+
+  /* ---------- her eyes track the cursor ---------- */
+  var pupilSets = [];
+  function collectEyes(){
+    document.querySelectorAll('.eyes').forEach(function(set){
+      pupilSets.push(set);
+    });
+  }
+  collectEyes();
+  var mx=0.5,my=0.4, tmx=0.5, tmy=0.4;
+  function pointer(e){
+    var p = e.touches?e.touches[0]:e;
+    tmx = p.clientX/innerWidth; tmy = p.clientY/innerHeight;
+  }
+  addEventListener('mousemove',pointer,{passive:true});
+  addEventListener('touchmove',pointer,{passive:true});
+  (function trackEyes(){
+    mx += (tmx-mx)*0.08; my += (tmy-my)*0.08;
+    var dx=(mx-0.5), dy=(my-0.5);
+    pupilSets.forEach(function(set){
+      set.querySelectorAll('.pupil').forEach(function(p){
+        var tx = dx*10; // px
+        var ty = dy*6;
+        p.style.transform='translateX(-50%) translate('+tx.toFixed(1)+'px,'+ty.toFixed(1)+'px)';
+      });
+    });
+    requestAnimationFrame(trackEyes);
+  })();
+
+  /* ---------- black fur sighs when stepped on ---------- */
+  var fur=document.getElementById('fur'), sigh=document.getElementById('sigh');
+  var sighT;
+  addEventListener('pointermove',function(e){
+    if(reduce) return;
+    if(e.clientY > innerHeight-120){
+      sigh.style.left=e.clientX+'px';
+      sigh.style.opacity='0.8';
+      sigh.style.transform='translate(-50%,20%) scale(1)';
+      clearTimeout(sighT);
+      sighT=setTimeout(function(){sigh.style.opacity='0';sigh.style.transform='translate(-50%,40%) scale(.2)';},700);
+    }
+  },{passive:true});
+
+  /* ---------- reveal on scroll ---------- */
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  },{threshold:0.18, rootMargin:'0px 0px -8% 0px'});
+  document.querySelectorAll('.reveal').forEach(function(el){io.observe(el);});
+
+  /* ---------- the veil: cross the threshold ---------- */
+  var veil=document.getElementById('veil'), btn=document.getElementById('enterBtn');
+  var cue=document.getElementById('cue');
+  function enter(){
+    veil.classList.add('lifted');
+    document.body.classList.remove('locked');
+    setTimeout(function(){ veil.style.display='none'; }, 1900);
+  }
+  btn.addEventListener('click',enter);
+  // hide scroll cue after first scroll
+  addEventListener('scroll',function(){
+    if(window.scrollY>60) cue.classList.add('hide');
+  },{passive:true});
+})();
+</script>
+</body>
+</html>
