@@ -1005,7 +1005,10 @@
   }
   REV.navigate = function (href) {
     if (!href) return;
-    if (REV.stilled()) { location.href = href; return; }
+    // Destinations with their own arrival intro (theriot's CRT power-on) must
+    // NOT be preceded by the record iris — go straight there so only their
+    // intro plays.
+    if (REV.stilled() || /(^|\/)theriot\.html(\?|#|$)/.test(href)) { location.href = href; return; }
     try { sessionStorage.setItem('rev_transit', '1'); } catch (e) {}
     if (REV.audio && REV.audio.enabled && REV.audio.enabled()) REV.audio.thunk();  // the needle-lift clunk
     const w = ensureWipe();
