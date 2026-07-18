@@ -1140,6 +1140,22 @@
       document.body.appendChild(bar);
     }
 
+    // ── scroll reveal — sections settle in as they enter view. Safe by
+    //    construction: only enables the hide-until-seen CSS when IO exists
+    //    and motion is allowed; in-view elements reveal immediately. ──────
+    if ('IntersectionObserver' in window && !REV.stilled()) {
+      const revealables = document.querySelectorAll('[data-reveal]');
+      if (revealables.length) {
+        document.documentElement.classList.add('rev-reveal');
+        const io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (en) {
+            if (en.isIntersecting) { en.target.classList.add('rev-in'); io.unobserve(en.target); }
+          });
+        }, { rootMargin: '0px 0px -10% 0px', threshold: 0.06 });
+        revealables.forEach(function (el) { io.observe(el); });
+      }
+    }
+
     // ── audio-reactive CSS vars — one tick drives the atmosphere everywhere
     //    (scanline breath, hero-title throb). Values rest at 0 until sound
     //    plays, and are pinned to 0 in stilled/reduced-motion. ─────────────

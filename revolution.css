@@ -722,6 +722,18 @@ html[data-temple] .rev-topbar {
 @keyframes rev-wipe-close { from { clip-path: circle(0% at 50% 50%); }   to { clip-path: circle(150% at 50% 50%); } }
 @keyframes rev-wipe-open  { from { clip-path: circle(150% at 50% 50%); } to { clip-path: circle(0% at 50% 50%); } }
 
+/* ── SCROLL REVEAL — sections rise/settle as they enter the viewport.
+   Progressive enhancement: the hiding only applies once JS has added
+   html.rev-reveal (i.e. IntersectionObserver present AND motion allowed),
+   so with no JS / reduced-motion the content is simply always visible. ─ */
+html.rev-reveal [data-reveal] {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity .7s var(--ease-needle), transform .7s var(--ease-needle);
+  will-change: opacity, transform;
+}
+html.rev-reveal [data-reveal].rev-in { opacity: 1; transform: none; }
+
 .audio-toggle {
   position: fixed;
   right: 1.1rem; bottom: 1.1rem;
