@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Human Sexual Revolution (Ongoing) · Side A</title>
 <meta name="description" content="An interactive history of the sexual revolution, navigated like a record. Drop the needle on a room.">
-<link rel="stylesheet" href="revolution.css?v=31">
+<link rel="stylesheet" href="revolution.css?v=32">
 <script>try{var _t=JSON.parse(localStorage.getItem("revolution.threshold.v1"));if(_t&&_t.theme==="dark")document.documentElement.dataset.theme="disco";}catch(e){}</script>
 <style>
 /* ═══════════════════════════════════════════════════════════════
@@ -33,7 +33,7 @@ header.masthead .eyebrow { margin-bottom: .6rem; }
    Vigée Le Brun's "Venus Binding the Wings of Cupid" (1781) sits behind
    an oversized editorial title, then fades to nothing where the platter
    begins, so the painting and the turntable read as one column. ────── */
-.hero { position: relative; z-index: 1; padding-top: 3.2rem; }
+.hero { position: relative; z-index: 1; padding-top: 3.2rem; perspective: 1200px; }
 .hero-art {
   position: absolute; z-index: 0; pointer-events: none;
   left: 50%; top: -3vh; transform: translateX(-50%);
@@ -291,7 +291,7 @@ header.masthead .eyebrow { margin-bottom: .6rem; }
   </p>
 </nav>
 
-<script src="revolution.js?v=31"></script>
+<script src="revolution.js?v=32"></script>
 <script>
 REV.boot({ scene: 'hub', room: null, track: 'assets/tracks/hub.mp3', trackTitle: 'Strobotone — San Fran (Interlude Edit)' });
 
@@ -970,6 +970,51 @@ function touchEnd(e) {
 }
 canvas.addEventListener('pointerup', touchEnd);
 canvas.addEventListener('pointercancel', touchEnd);
+
+/* ═══ HERO PARALLAX — the painting is a window: it tilts to the pointer
+   (and device tilt where offered without a prompt), drifts slowly on its
+   own, and lags the scroll so it recedes as you enter the record. Frozen
+   flat under reduced motion. ═══════════════════════════════════════════ */
+(function heroParallax() {
+  const art = document.querySelector('.hero-art');
+  const title = document.querySelector('.hero-title');
+  if (!art) return;
+  let px = 0, py = 0, tpx = 0, tpy = 0, running = false;
+  function onMove(e) {
+    if (REV.stilled()) return;
+    const cx = innerWidth / 2, cy = Math.min(innerHeight, 620) / 2;
+    tpx = Math.max(-1, Math.min(1, (e.clientX - cx) / cx));
+    tpy = Math.max(-1, Math.min(1, (e.clientY - cy) / cy));
+    ensure();
+  }
+  function onOrient(e) {
+    if (REV.stilled() || e.gamma == null) return;
+    tpx = Math.max(-1, Math.min(1, e.gamma / 28));
+    tpy = Math.max(-1, Math.min(1, ((e.beta || 45) - 45) / 28));
+    ensure();
+  }
+  function loop(t) {
+    if (REV.stilled()) { art.style.transform = 'translateX(-50%)'; art.style.opacity = ''; if (title) title.style.transform = ''; running = false; return; }
+    px += (tpx - px) * 0.07; py += (tpy - py) * 0.07;
+    const idle = Math.sin(t * 0.0004);
+    const sc = window.scrollY || 0;
+    const tx = px * 16 + idle * 5;
+    const ty = py * 12 - sc * 0.16;
+    const rx = -py * 2.2 - idle * 0.3;
+    const ry = px * 2.6 + idle * 0.4;
+    const vis = Math.max(0, 1 - sc / 560);
+    art.style.transform = 'translateX(-50%) translate3d(' + tx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px,0) scale(1.08) rotateX(' + rx.toFixed(2) + 'deg) rotateY(' + ry.toFixed(2) + 'deg)';
+    art.style.opacity = (0.96 * vis).toFixed(3);
+    if (title) title.style.transform = 'translate3d(' + (px * -6).toFixed(1) + 'px,' + ((py * -4) - sc * 0.05).toFixed(1) + 'px,0)';
+    if (sc < 760 || Math.abs(tpx - px) > 0.002 || Math.abs(tpy - py) > 0.002) requestAnimationFrame(loop);
+    else running = false;
+  }
+  function ensure() { if (!running && !REV.stilled()) { running = true; requestAnimationFrame(loop); } }
+  addEventListener('pointermove', onMove, { passive: true });
+  addEventListener('scroll', ensure, { passive: true });
+  addEventListener('deviceorientation', onOrient, { passive: true });
+  ensure();
+})();
 </script>
 </body>
 </html>
