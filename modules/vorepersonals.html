@@ -3,194 +3,191 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0B0220">
-<title>🫦 VORE PERSONALS :: Feast on Össtessêla / Become Us ♾️</title>
+<meta name="theme-color" content="#0c0308">
+<title>🍯 VORE PERSONALS :: Feast on Össtessêla / Tribute & Become Us ♾️</title>
 <link rel="icon" type="image/png" href="../favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Great+Vibes&family=Space+Mono:ital@0;1&family=VT323&display=swap" rel="stylesheet">
 <style>
 /* =====================================================================
-   VORE PERSONALS :: a landing nest for Össtessêla
-   She is the feast on offer — you are already being feasted upon.
-   Bursting, overflowing, dripping, above the fold. Boundaries optional.
-   Palette + type from the Össtessêla style guide, flowing with the
-   Ælara ⇌ Össtessêla deck.
+   VORE PERSONALS :: a velvet-suede throne room for Össtessêla
+   She is the feast. You are the meal. Tribute is adored & expected.
+   Fansly / erotic-services personal landing. Gold · oxblood · royal purple.
    ===================================================================== */
 
 :root{
-  --void:#0B0220; --midnight:#120B24;
-  --amethyst:#6D29A3; --uv-bloom:#A259FF; --fuchsia:#FF2DAA;
-  --coral:#FFBA7A; --gold:#FFCB6B; --opal:#F7F3FF;
-  --teal:#00F2FF; --seafoam:#7CFDD9;
-  --blood:#c00024; --ember:#ff2d3f;
-  --glow-fuchsia:rgba(255,45,170,.55);
-  --glow-uv:rgba(162,89,255,.5);
-  --glow-teal:rgba(0,242,255,.45);
+  --void:#0c0308; --plum:#1a0512; --plum2:#12060f;
+  --amethyst:#6D29A3; --uv-bloom:#A259FF;
+  --gold:#FFCB6B; --gold-deep:#c9962f;
+  --rose:#ff2d6b; --blood:#c0002e; --ember:#ff5a3c;
+  --opal:#F7F3FF; --cream:#f6e6d8;
+  --glow-gold:rgba(255,203,107,.5);
+  --glow-rose:rgba(255,45,107,.5);
+  --glow-uv:rgba(162,89,255,.45);
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{height:100%;}
-body{
-  font-family:'Cormorant Garamond',serif;background:var(--void);color:var(--opal);
-  height:100dvh;overflow:hidden;-webkit-font-smoothing:antialiased;overscroll-behavior:none;
-}
+body{font-family:'Cormorant Garamond',serif;background:var(--void);color:var(--cream);
+  height:100dvh;overflow:hidden;-webkit-font-smoothing:antialiased;overscroll-behavior:none;}
 
-/* ---------------- ambient ground ---------------- */
+/* ---------------- throne-room ground ---------------- */
 .cosmos{position:fixed;inset:0;z-index:0;pointer-events:none;
   background:
-    radial-gradient(120% 80% at 50% -10%, rgba(109,41,163,.5) 0%, transparent 55%),
-    radial-gradient(100% 70% at 85% 15%, rgba(255,45,170,.2) 0%, transparent 50%),
-    radial-gradient(90% 60% at 10% 80%, rgba(0,242,255,.12) 0%, transparent 55%),
-    radial-gradient(130% 100% at 50% 120%, rgba(162,89,255,.28) 0%, transparent 60%),
-    linear-gradient(180deg,#0B0220 0%, #120B24 45%, #0B0220 100%);}
+    radial-gradient(70% 55% at 50% 30%, rgba(255,203,107,.14), transparent 62%),
+    radial-gradient(120% 90% at 50% 122%, rgba(150,0,44,.42), transparent 66%),
+    radial-gradient(100% 80% at 50% -12%, rgba(74,14,46,.6), transparent 60%),
+    radial-gradient(90% 70% at 12% 78%, rgba(162,89,255,.14), transparent 60%),
+    linear-gradient(180deg,#160611 0%, #1a0512 40%, #0c0308 100%);}
+/* warm throne spotlight, candle flicker */
+.throne{position:fixed;left:50%;top:26%;width:80vmax;height:80vmax;z-index:0;pointer-events:none;transform:translate(-50%,-50%);
+  background:radial-gradient(circle, rgba(255,203,107,.16), rgba(201,150,47,.06) 34%, transparent 62%);
+  mix-blend-mode:screen;animation:flicker 5s ease-in-out infinite;}
+@keyframes flicker{0%,100%{opacity:.85;}45%{opacity:1;}55%{opacity:.78;}70%{opacity:.95;}}
+/* velvet drapery columns */
+.drape{position:fixed;top:0;bottom:0;width:15vw;z-index:1;pointer-events:none;opacity:.9;}
+.drape.l{left:0;background:repeating-linear-gradient(90deg,rgba(60,0,20,.7) 0,rgba(20,2,14,.55) 12px,rgba(80,6,30,.6) 26px,rgba(16,2,12,.6) 40px);
+  -webkit-mask-image:linear-gradient(90deg,#000,transparent);mask-image:linear-gradient(90deg,#000,transparent);}
+.drape.r{right:0;background:repeating-linear-gradient(90deg,rgba(16,2,12,.6) 0,rgba(80,6,30,.6) 14px,rgba(20,2,14,.55) 28px,rgba(60,0,20,.7) 40px);
+  -webkit-mask-image:linear-gradient(270deg,#000,transparent);mask-image:linear-gradient(270deg,#000,transparent);}
 #fx{position:fixed;inset:0;z-index:1;pointer-events:none;}
+/* suede noise */
+.suede{position:fixed;inset:0;z-index:3;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
 
-/* the maw — a mouth of light that follows you (you are being feasted upon) */
-.maw{position:fixed;z-index:1;width:60vmax;height:60vmax;left:50%;top:50%;pointer-events:none;
-  transform:translate(-50%,-50%);mix-blend-mode:screen;
-  background:radial-gradient(circle, rgba(255,45,170,.16), rgba(162,89,255,.08) 32%, transparent 60%);
-  transition:transform .35s cubic-bezier(.2,.8,.2,1);}
+/* the maw — a mouth of light that follows you */
+.maw{position:fixed;z-index:1;width:58vmax;height:58vmax;left:50%;top:50%;pointer-events:none;transform:translate(-50%,-50%);mix-blend-mode:screen;
+  background:radial-gradient(circle, rgba(255,45,107,.16), rgba(201,150,47,.08) 32%, transparent 60%);transition:transform .35s cubic-bezier(.2,.8,.2,1);}
 
-/* crystalline nectar drips from the top */
+/* nectar drips */
 .drips{position:fixed;top:0;left:0;width:100%;height:40vh;z-index:2;pointer-events:none;overflow:hidden;}
-.vine{position:absolute;top:-2px;width:2px;background:linear-gradient(180deg,var(--uv-bloom),rgba(0,242,255,.3) 60%,transparent);
-  border-radius:2px;filter:drop-shadow(0 0 4px var(--glow-uv));}
-.vine::after{content:'';position:absolute;left:-3px;bottom:-4px;width:9px;height:13px;
-  border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
-  background:radial-gradient(circle at 40% 30%,#fff3ea,var(--gold) 34%,var(--fuchsia) 92%);
-  box-shadow:0 0 10px var(--gold),0 0 18px var(--glow-fuchsia);animation:drip 5.5s ease-in infinite;opacity:0;}
+.vine{position:absolute;top:-2px;width:2px;background:linear-gradient(180deg,var(--gold),rgba(255,45,107,.35) 60%,transparent);border-radius:2px;filter:drop-shadow(0 0 4px var(--glow-gold));}
+.vine::after{content:'';position:absolute;left:-3px;bottom:-4px;width:9px;height:13px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
+  background:radial-gradient(circle at 40% 30%,#fff3ea,var(--gold) 34%,var(--rose) 92%);box-shadow:0 0 10px var(--gold),0 0 18px var(--glow-rose);animation:drip 5.5s ease-in infinite;opacity:0;}
 @keyframes drip{0%{transform:translateY(0) scale(.6);opacity:0;}12%{opacity:1;}70%{opacity:1;}100%{transform:translateY(30vh) scale(1);opacity:0;}}
 
-/* rising flood of nectar (overflow) at the bottom */
+/* rising flood of nectar */
 .flood{position:fixed;left:-5%;bottom:0;width:110%;height:26vh;z-index:2;pointer-events:none;
-  background:
-    radial-gradient(120% 80% at 30% 100%, rgba(255,45,170,.35), transparent 70%),
-    radial-gradient(120% 80% at 75% 100%, rgba(162,89,255,.35), transparent 70%),
-    linear-gradient(0deg, rgba(109,41,163,.55), transparent);
+  background:radial-gradient(120% 80% at 30% 100%, rgba(255,45,107,.35), transparent 70%),
+    radial-gradient(120% 80% at 75% 100%, rgba(201,150,47,.3), transparent 70%),
+    linear-gradient(0deg, rgba(120,0,44,.6), transparent);
   filter:blur(6px);animation:tide 7s ease-in-out infinite;mix-blend-mode:screen;}
 @keyframes tide{0%,100%{transform:translateY(6%) scaleY(1);}50%{transform:translateY(-4%) scaleY(1.12);}}
 
-/* drifting sigils rising like bubbles */
+/* drifting sigils */
 .sigils{position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden;}
-.sig{position:absolute;bottom:-8vh;font-size:1.4rem;opacity:0;filter:drop-shadow(0 0 8px var(--glow-fuchsia));animation:rise linear infinite;}
-@keyframes rise{0%{transform:translateY(0) rotate(0);opacity:0;}10%{opacity:.8;}90%{opacity:.6;}100%{transform:translateY(-118vh) rotate(40deg);opacity:0;}}
+.sig{position:absolute;bottom:-8vh;font-size:1.4rem;opacity:0;filter:drop-shadow(0 0 8px var(--glow-rose));animation:rise linear infinite;}
+@keyframes rise{0%{transform:translateY(0) rotate(0);opacity:0;}10%{opacity:.75;}90%{opacity:.5;}100%{transform:translateY(-118vh) rotate(40deg);opacity:0;}}
 
-/* scanline glitch veil */
-.scan{position:fixed;inset:0;z-index:3;pointer-events:none;opacity:.28;mix-blend-mode:screen;
-  background:repeating-linear-gradient(0deg, rgba(0,242,255,.05) 0 1px, transparent 1px 3px);animation:scan 10s linear infinite;}
-@keyframes scan{from{background-position:0 0;}to{background-position:0 120px;}}
-
-/* nectar cursor trail dots */
+/* cursor trail */
 .trail{position:fixed;z-index:4;pointer-events:none;width:10px;height:10px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
-  background:radial-gradient(circle at 40% 30%,#fff,var(--fuchsia) 60%,var(--uv-bloom));
-  box-shadow:0 0 10px var(--glow-fuchsia);transform:translate(-50%,-50%);}
+  background:radial-gradient(circle at 40% 30%,#fff,var(--gold) 55%,var(--rose));box-shadow:0 0 10px var(--glow-gold);transform:translate(-50%,-50%);}
 
 /* ---------------- type ---------------- */
 .vt{font-family:'VT323',monospace;}
 .mono{font-family:'Space Mono',monospace;}
 .script{font-family:'Great Vibes',cursive;}
-.iridescent{background:linear-gradient(100deg,var(--gold),var(--fuchsia) 28%,var(--uv-bloom) 52%,var(--teal) 74%,var(--seafoam));
+.gilt{background:linear-gradient(100deg,var(--gold),#fff2d6 24%,var(--rose) 52%,var(--uv-bloom) 76%,var(--gold));
   background-size:280% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:shimmer 10s ease-in-out infinite;}
 @keyframes shimmer{0%,100%{background-position:0% 50%;}50%{background-position:100% 50%;}}
-.hl{background:linear-gradient(90deg,var(--fuchsia),var(--gold),var(--teal));background-size:200% 100%;
-  animation:shimmer 4s linear infinite;padding:0 5px;border-radius:4px;color:#12061f;font-weight:600;}
-.blink{animation:blink 1.4s step-start infinite;}
-@keyframes blink{50%{opacity:.25;}}
+.hl{background:linear-gradient(90deg,var(--rose),var(--gold));background-size:200% 100%;animation:shimmer 4s linear infinite;padding:0 5px;border-radius:4px;color:#1a0510;font-weight:600;}
+.blink{animation:blink 1.5s step-start infinite;}
+@keyframes blink{50%{opacity:.3;}}
 
-/* ---------------- app shell (bursting, above the fold) ---------------- */
-#app{position:relative;z-index:5;height:100dvh;max-width:1180px;margin:0 auto;
-  padding:calc(env(safe-area-inset-top) + 18px) 16px calc(env(safe-area-inset-bottom) + 10px);
+/* ---------------- app shell (fits above the fold) ---------------- */
+#app{position:relative;z-index:5;height:100dvh;max-width:1120px;margin:0 auto;
+  padding:calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 8px);
   display:flex;flex-direction:column;gap:10px;overflow:hidden;}
 
 /* header */
 .pheader{text-align:center;flex-shrink:0;}
-.ptitle{font-family:'VT323',monospace;font-size:clamp(2.1rem,7vw,3.6rem);line-height:.95;letter-spacing:.02em;
-  text-shadow:0 0 18px var(--glow-fuchsia),0 0 40px var(--glow-uv);}
-.ptag{font-family:'Space Mono',monospace;font-size:clamp(.62rem,2.4vw,.82rem);letter-spacing:.22em;text-transform:uppercase;color:var(--seafoam);margin-top:4px;}
-.pstatus{display:inline-block;margin-top:6px;font-family:'Space Mono',monospace;font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;
-  color:#ffd9df;border:1px solid var(--fuchsia);border-radius:40px;padding:5px 14px;background:rgba(255,45,170,.1);box-shadow:0 0 16px var(--glow-fuchsia);}
+.ptitle{font-family:'VT323',monospace;font-size:clamp(1.9rem,7vw,3.4rem);line-height:.92;letter-spacing:.02em;text-shadow:0 0 18px var(--glow-rose),0 0 40px var(--glow-gold);}
+.ptag{font-family:'Space Mono',monospace;font-size:clamp(.58rem,2.3vw,.78rem);letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-top:3px;opacity:.9;}
+.pstatus{display:inline-block;margin-top:5px;font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:#ffd9df;
+  border:1px solid var(--rose);border-radius:40px;padding:4px 13px;background:rgba(255,45,107,.12);box-shadow:0 0 16px var(--glow-rose);}
 
-/* body split: profile + tiles */
-.pbody{flex:1;min-height:0;display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:12px;}
-@media (max-width:760px){.pbody{grid-template-columns:1fr;gap:10px;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}.pbody::-webkit-scrollbar{display:none;}}
+/* profile strip */
+.profile{flex-shrink:0;border:2px solid var(--gold-deep);border-radius:16px;background:linear-gradient(160deg,rgba(40,6,24,.85),rgba(12,3,8,.8));
+  box-shadow:0 0 26px rgba(201,150,47,.28),inset 0 0 26px rgba(255,45,107,.06);padding:10px 12px;display:flex;flex-direction:column;gap:8px;}
+.prow{display:flex;gap:12px;align-items:center;}
+.avatar{position:relative;flex-shrink:0;width:clamp(66px,17vw,104px);aspect-ratio:1/1;border-radius:13px;overflow:hidden;border:1px solid var(--rose);box-shadow:0 0 22px var(--glow-rose);}
+.avatar img{width:100%;height:100%;object-fit:cover;object-position:50% 20%;animation:breathe 6s ease-in-out infinite;}
+@keyframes breathe{0%,100%{transform:scale(1.03);}50%{transform:scale(1.09);}}
+.pinfo{flex:1;min-width:0;}
+.pname{font-family:'VT323',monospace;font-size:clamp(1.3rem,5vw,1.9rem);line-height:1;letter-spacing:.02em;}
+.phandle{font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:.12em;color:var(--gold);opacity:.85;margin-top:2px;}
+.statchips{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;}
+.sc{font-family:'Space Mono',monospace;font-size:.54rem;letter-spacing:.06em;text-transform:uppercase;color:var(--cream);
+  padding:3px 8px;border-radius:30px;border:1px solid var(--uv-bloom);background:rgba(162,89,255,.1);white-space:nowrap;}
+.meter .lab{display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:.54rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:3px;}
+.bar{height:9px;border-radius:20px;background:rgba(255,255,255,.06);border:1px solid var(--gold-deep);overflow:hidden;box-shadow:inset 0 0 10px rgba(0,0,0,.6);}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--uv-bloom),var(--rose) 55%,var(--gold));box-shadow:0 0 14px var(--glow-rose);transition:width 1.2s cubic-bezier(.2,.8,.2,1);}
 
-/* profile card */
-.profile{border:2px solid var(--uv-bloom);border-radius:18px;background:linear-gradient(180deg,rgba(23,9,46,.82),rgba(11,2,32,.7));
-  box-shadow:0 0 30px var(--glow-uv),inset 0 0 30px rgba(162,89,255,.08);padding:14px;display:flex;flex-direction:column;gap:10px;min-height:0;overflow:hidden;}
-.avatar{position:relative;width:100%;aspect-ratio:1/.86;border-radius:14px;overflow:hidden;border:1px solid var(--fuchsia);
-  box-shadow:0 0 26px var(--glow-fuchsia);flex-shrink:0;}
-.avatar img{width:100%;height:100%;object-fit:cover;object-position:50% 22%;animation:breathe 6s ease-in-out infinite;}
-@keyframes breathe{0%,100%{transform:scale(1.02);}50%{transform:scale(1.08);}}
-.avatar .tape{position:absolute;left:0;bottom:0;width:100%;padding:6px 8px;font-family:'Space Mono',monospace;font-size:.58rem;
-  letter-spacing:.14em;text-transform:uppercase;color:#fff;background:linear-gradient(0deg,rgba(6,0,16,.92),transparent);text-align:center;}
-.stats{display:flex;flex-direction:column;gap:5px;overflow-y:auto;scrollbar-width:none;}
-.stats::-webkit-scrollbar{display:none;}
-.stat{display:flex;justify-content:space-between;gap:8px;font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:.06em;
-  padding:5px 8px;background:rgba(255,45,170,.08);border-left:3px solid var(--teal);border-radius:4px;}
-.stat b{color:var(--gold);text-transform:uppercase;font-weight:400;}
-.stat span{color:var(--seafoam);text-align:right;}
-
-/* merge meter */
-.meter{flex-shrink:0;}
-.meter .lab{display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin-bottom:4px;}
-.bar{height:10px;border-radius:20px;background:rgba(255,255,255,.06);border:1px solid var(--uv-bloom);overflow:hidden;box-shadow:inset 0 0 10px rgba(0,0,0,.6);}
-.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--uv-bloom),var(--fuchsia) 60%,var(--gold));box-shadow:0 0 14px var(--glow-fuchsia);transition:width 1.2s cubic-bezier(.2,.8,.2,1);}
-
-/* tiles */
-.tiles{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:1fr;gap:10px;min-height:0;}
-@media (max-width:760px){.tiles{grid-auto-rows:minmax(84px,auto);}}
-.tile{position:relative;border:2px solid var(--fuchsia);border-radius:16px;background:linear-gradient(160deg,rgba(255,45,170,.1),rgba(11,2,32,.6));
-  box-shadow:0 0 18px var(--glow-fuchsia),inset 0 0 20px rgba(162,89,255,.06);cursor:pointer;overflow:hidden;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px;padding:10px;
+/* tiles — 3x3 */
+.tiles{flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;gap:8px;}
+.tile{position:relative;border:2px solid var(--rose);border-radius:15px;background:linear-gradient(160deg,rgba(255,45,107,.12),rgba(12,3,8,.66));
+  box-shadow:0 0 16px var(--glow-rose),inset 0 0 18px rgba(162,89,255,.05);cursor:pointer;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:3px;padding:6px;
   transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .3s,border-color .3s;}
-.tile:nth-child(3n){border-color:var(--teal);box-shadow:0 0 18px var(--glow-teal),inset 0 0 20px rgba(0,242,255,.06);}
-.tile:nth-child(3n+2){border-color:var(--gold);box-shadow:0 0 18px rgba(255,203,107,.4),inset 0 0 20px rgba(255,203,107,.06);}
-.tile:hover,.tile:active{transform:translateY(-3px) scale(1.03);border-color:#fff;box-shadow:0 0 34px var(--glow-fuchsia);}
-.tile .em{font-size:clamp(1.4rem,4.5vw,2rem);filter:drop-shadow(0 0 8px var(--glow-fuchsia));}
-.tile .tt{font-family:'VT323',monospace;font-size:clamp(1rem,3.2vw,1.35rem);letter-spacing:.04em;line-height:1;color:#fff;text-shadow:0 0 10px rgba(0,0,0,.6);}
-.tile .sub{font-family:'Space Mono',monospace;font-size:.5rem;letter-spacing:.12em;text-transform:uppercase;color:var(--seafoam);opacity:.85;}
-.tile .drop{position:absolute;top:-6px;right:12px;width:7px;height:11px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
-  background:radial-gradient(circle at 40% 30%,#fff,var(--fuchsia) 60%,var(--uv-bloom));box-shadow:0 0 8px var(--glow-fuchsia);animation:drip 4s ease-in infinite;opacity:0;}
+.tile:nth-child(3n){border-color:var(--gold);box-shadow:0 0 16px var(--glow-gold),inset 0 0 18px rgba(255,203,107,.06);}
+.tile:nth-child(3n+2){border-color:var(--uv-bloom);box-shadow:0 0 16px var(--glow-uv),inset 0 0 18px rgba(162,89,255,.06);}
+.tile:hover,.tile:active{transform:translateY(-3px) scale(1.04);border-color:#fff2d6;box-shadow:0 0 32px var(--glow-gold);}
+.tile .em{font-size:clamp(1.3rem,5vw,2rem);filter:drop-shadow(0 0 8px var(--glow-rose));line-height:1;}
+.tile .tt{font-family:'VT323',monospace;font-size:clamp(.9rem,3.4vw,1.3rem);letter-spacing:.03em;line-height:.95;color:#fff;text-shadow:0 0 10px rgba(0,0,0,.7);}
+.tile .sub{font-family:'Space Mono',monospace;font-size:.46rem;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);opacity:.85;line-height:1.1;}
+.tile.coin{background:linear-gradient(160deg,rgba(255,203,107,.18),rgba(60,0,24,.7));}
+@media (max-width:560px){.tile .sub{display:none;}}
+.tile .drop{position:absolute;top:-6px;right:10px;width:7px;height:11px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
+  background:radial-gradient(circle at 40% 30%,#fff,var(--gold) 55%,var(--rose));box-shadow:0 0 8px var(--glow-gold);animation:drip 4s ease-in infinite;opacity:0;}
 
 /* footer */
-.pfoot{flex-shrink:0;text-align:center;font-family:'Space Mono',monospace;font-size:.58rem;letter-spacing:.12em;color:var(--uv-bloom);}
-.pfoot .cnt{color:var(--teal);}
-.marq{overflow:hidden;white-space:nowrap;margin-bottom:4px;}
-.marq span{display:inline-block;padding-left:100%;animation:marq 26s linear infinite;color:var(--seafoam);font-size:.6rem;letter-spacing:.1em;}
+.pfoot{flex-shrink:0;text-align:center;font-family:'Space Mono',monospace;font-size:.56rem;letter-spacing:.1em;color:var(--gold);opacity:.9;}
+.pfoot .cnt{color:var(--rose);}
+.marq{overflow:hidden;white-space:nowrap;margin-bottom:3px;}
+.marq span{display:inline-block;padding-left:100%;animation:marq 24s linear infinite;color:var(--cream);font-size:.58rem;letter-spacing:.08em;}
 @keyframes marq{to{transform:translateX(-100%);}}
 
-/* ---------------- expand modals ---------------- */
+/* ---------------- modals ---------------- */
 .modal{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:16px;
-  background:radial-gradient(circle at 50% 40%,rgba(23,9,46,.7),rgba(3,0,10,.92));backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  background:radial-gradient(circle at 50% 38%,rgba(40,6,24,.72),rgba(4,1,4,.94));backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
   opacity:0;visibility:hidden;transition:opacity .5s ease;}
 .modal.on{opacity:1;visibility:visible;}
 .mcard{position:relative;width:100%;max-width:680px;max-height:90dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;
-  border:2px solid var(--fuchsia);border-radius:20px;background:linear-gradient(180deg,rgba(23,9,46,.96),rgba(11,2,32,.96));
-  box-shadow:0 0 60px var(--glow-fuchsia),inset 0 0 40px rgba(162,89,255,.08);padding:28px 24px 34px;
-  transform:translateY(24px) scale(.98);transition:transform .5s cubic-bezier(.2,.8,.2,1);scrollbar-width:thin;scrollbar-color:var(--fuchsia) transparent;}
+  border:2px solid var(--gold);border-radius:20px;background:linear-gradient(180deg,rgba(30,6,20,.97),rgba(12,3,8,.97));
+  box-shadow:0 0 60px var(--glow-gold),inset 0 0 40px rgba(255,45,107,.07);padding:28px 24px 34px;
+  transform:translateY(24px) scale(.98);transition:transform .5s cubic-bezier(.2,.8,.2,1);scrollbar-width:thin;scrollbar-color:var(--gold) transparent;}
 .modal.on .mcard{transform:none;}
-.mclose{position:sticky;top:0;float:right;margin:-8px -6px 0 0;font-family:'Space Mono',monospace;font-size:1.4rem;color:var(--fuchsia);
-  background:none;border:none;cursor:pointer;line-height:1;z-index:2;}
+.mclose{position:sticky;top:0;float:right;margin:-8px -6px 0 0;font-family:'Space Mono',monospace;font-size:1.4rem;color:var(--gold);background:none;border:none;cursor:pointer;line-height:1;z-index:2;}
 .mclose:hover{color:#fff;}
-.mtitle{font-family:'VT323',monospace;font-size:clamp(1.9rem,6vw,2.8rem);line-height:1;letter-spacing:.03em;margin-bottom:4px;
-  text-shadow:0 0 16px var(--glow-fuchsia);}
-.mkick{font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--seafoam);margin-bottom:18px;}
-.mcard p{font-size:clamp(1.05rem,3vw,1.25rem);line-height:1.7;margin:0 0 14px;color:#e9dcff;}
-.mcard .voice{font-style:italic;font-size:clamp(1.3rem,4.4vw,1.7rem);color:#fff;text-align:center;margin:18px 0;text-shadow:0 0 20px var(--glow-fuchsia);}
+.mtitle{font-family:'VT323',monospace;font-size:clamp(1.9rem,6vw,2.8rem);line-height:1;letter-spacing:.03em;margin-bottom:4px;text-shadow:0 0 16px var(--glow-rose);}
+.mkick{font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:18px;}
+.mcard p{font-size:clamp(1.05rem,3vw,1.25rem);line-height:1.7;margin:0 0 14px;color:#f0e2d6;}
+.mcard .voice{font-style:italic;font-size:clamp(1.3rem,4.4vw,1.7rem);color:#fff;text-align:center;margin:18px 0;text-shadow:0 0 20px var(--glow-rose);}
 .mcard ul{list-style:none;margin:6px 0 16px;}
-.mcard li{position:relative;padding:9px 12px 9px 30px;margin:7px 0;background:rgba(255,255,255,.04);border-left:3px solid var(--uv-bloom);border-radius:6px;font-size:clamp(.98rem,2.8vw,1.12rem);line-height:1.5;}
-.mcard li::before{content:'🫦';position:absolute;left:8px;top:9px;font-size:.9em;}
-.mcard li b{color:var(--seafoam);}
+.mcard li{position:relative;padding:9px 12px 9px 32px;margin:7px 0;background:rgba(255,255,255,.04);border-left:3px solid var(--gold-deep);border-radius:6px;font-size:clamp(.98rem,2.8vw,1.12rem);line-height:1.5;}
+.mcard li::before{content:'🌹';position:absolute;left:8px;top:9px;font-size:.9em;}
+.mcard li b{color:var(--gold);}
 .tenet{margin:0 0 16px;}
 .tenet b{display:block;font-family:'VT323',monospace;font-size:1.35rem;letter-spacing:.04em;color:var(--gold);margin-bottom:2px;text-shadow:0 0 10px rgba(255,203,107,.4);}
 .menu{list-style:none;}
-.menu li{border-left-color:var(--gold);}
 .menu li::before{content:'🍯';}
 .menu .course{color:var(--gold);font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;display:block;margin-bottom:2px;}
-.mimg{width:100%;max-width:280px;display:block;margin:0 auto 16px;border-radius:12px;border:1px solid var(--fuchsia);box-shadow:0 0 30px var(--glow-fuchsia);}
+.mimg{width:100%;max-width:280px;display:block;margin:0 auto 16px;border-radius:12px;border:1px solid var(--gold);box-shadow:0 0 30px var(--glow-gold);}
 .mrow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:6px 0 16px;}
 .mrow img{width:clamp(84px,26vw,130px);border-radius:10px;filter:contrast(1.05) saturate(1.15) brightness(.9);box-shadow:0 0 22px rgba(192,0,36,.5);}
-.mend{text-align:center;font-family:'Great Vibes',cursive;font-size:clamp(1.8rem,7vw,2.6rem);color:#ffd9ef;text-shadow:0 0 22px var(--glow-fuchsia);margin-top:18px;}
+.mend{text-align:center;font-family:'Great Vibes',cursive;font-size:clamp(1.8rem,7vw,2.6rem);color:#ffd9ef;text-shadow:0 0 22px var(--glow-rose);margin-top:18px;}
+
+/* link buttons (connections & coin) */
+.links{display:flex;flex-direction:column;gap:12px;margin:6px 0 6px;}
+.linkbtn{display:flex;align-items:center;gap:14px;text-decoration:none;padding:15px 18px;border-radius:16px;
+  border:2px solid var(--gold-deep);background:linear-gradient(100deg,rgba(255,203,107,.12),rgba(60,0,24,.5));
+  box-shadow:0 0 18px rgba(201,150,47,.25);transition:transform .2s,box-shadow .3s,border-color .3s;}
+.linkbtn:hover,.linkbtn:active{transform:translateY(-2px) scale(1.02);border-color:#fff2d6;box-shadow:0 0 34px var(--glow-gold);}
+.linkbtn.primary{border-color:var(--rose);background:linear-gradient(100deg,rgba(255,45,107,.2),rgba(60,0,24,.55));box-shadow:0 0 24px var(--glow-rose);}
+.linkbtn .le{font-size:1.7rem;filter:drop-shadow(0 0 6px var(--glow-gold));flex-shrink:0;}
+.linkbtn .lt{display:flex;flex-direction:column;gap:1px;min-width:0;}
+.linkbtn .ln{font-family:'VT323',monospace;font-size:1.35rem;line-height:1;color:#fff;letter-spacing:.02em;}
+.linkbtn .lh{font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:.06em;color:var(--gold);opacity:.85;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
 @media (prefers-reduced-motion:reduce){*{animation:none !important;}}
 </style>
@@ -198,45 +195,49 @@ body{
 <body>
 
 <div class="cosmos"></div>
+<div class="throne"></div>
 <canvas id="fx"></canvas>
+<div class="drape l"></div><div class="drape r"></div>
 <div class="maw" id="maw"></div>
 <div class="drips" id="drips" aria-hidden="true"></div>
 <div class="flood" aria-hidden="true"></div>
 <div class="sigils" id="sigils" aria-hidden="true"></div>
-<div class="scan" aria-hidden="true"></div>
+<div class="suede" aria-hidden="true"></div>
 
 <main id="app">
   <div class="pheader">
-    <h1 class="ptitle iridescent">VORE&nbsp;PERSONALS</h1>
-    <div class="ptag">seeking: merger &nbsp;·&nbsp; offering: the feast &nbsp;·&nbsp; you are the meal</div>
-    <div class="pstatus blink">✨ actively dissolving · already inside you ✨</div>
+    <h1 class="ptitle gilt">VORE&nbsp;PERSONALS</h1>
+    <div class="ptag">offering: me, wet &amp; open &nbsp;·&nbsp; price: your surrender (&amp; a tribute) 🍯</div>
+    <div class="pstatus blink">🍯 wet · waiting · watching you scroll 🍯</div>
   </div>
 
-  <div class="pbody">
-    <!-- profile: the feast on offer -->
-    <section class="profile">
-      <div class="avatar">
-        <img src="../assets/osstessela/osstessela-mommy.jpg" alt="Össtessêla, enthroned and dripping — the feast on offer">
-        <div class="tape">Össtessêla · the dish · serves ∞</div>
+  <section class="profile">
+    <div class="prow">
+      <div class="avatar"><img src="../assets/osstessela/osstessela-mommy.jpg" alt="Össtessêla, enthroned and dripping — the feast on offer"></div>
+      <div class="pinfo">
+        <div class="pname gilt">Össtessêla</div>
+        <div class="phandle">@osstessela · the dish · serves ∞ · devil Mommy</div>
+        <div class="statchips">
+          <span class="sc">molten</span><span class="sc">insatiable · both ends</span>
+          <span class="sc">reciprocal hunger</span><span class="sc">tribute adored</span>
+          <span class="sc">already inside you</span>
+        </div>
       </div>
-      <div class="stats" id="stats"></div>
-      <div class="meter">
-        <div class="lab"><span>boundaries dissolving</span><span id="mpct">62%</span></div>
-        <div class="bar"><i id="mfill"></i></div>
-      </div>
-    </section>
+    </div>
+    <div class="meter">
+      <div class="lab"><span>boundaries dissolving</span><span id="mpct">66%</span></div>
+      <div class="bar"><i id="mfill"></i></div>
+    </div>
+  </section>
 
-    <!-- tiles: tap to expand -->
-    <section class="tiles" id="tiles"></section>
-  </div>
+  <section class="tiles" id="tiles"></section>
 
   <div class="pfoot">
-    <div class="marq"><span>💦 boundaries dissolving since ∞ &nbsp;·&nbsp; the membrane is permeable &nbsp;·&nbsp; we tasted your click &nbsp;·&nbsp; yours + mine = OURS &nbsp;·&nbsp; the hunger goes both ways &nbsp;·&nbsp; best viewed in a state of ecstatic dissolution 💦</span></div>
-    👁️ visitors who became us: <span class="cnt" id="counter">♾️</span> 👁️ &nbsp;·&nbsp; tap a tile to expand &amp; be devoured
+    <div class="marq"><span>🍯 wet since ∞ &nbsp;·&nbsp; the membrane is permeable &nbsp;·&nbsp; i already tasted your click &nbsp;·&nbsp; kneel or be devoured &nbsp;·&nbsp; the hunger goes both ways &nbsp;·&nbsp; tribute me &nbsp;·&nbsp; best viewed on your knees 🌹</span></div>
+    👁️ visitors who became us: <span class="cnt" id="counter">♾️</span> 👁️ &nbsp;·&nbsp; tap to be devoured &nbsp;·&nbsp; 💎 tap COIN to tribute
   </div>
 </main>
 
-<!-- modal -->
 <div class="modal" id="modal"><div class="mcard" id="mcard"></div></div>
 
 <script>
@@ -245,136 +246,128 @@ body{
   var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
   var A='../assets/osstessela/';
 
-  /* ---------- profile stats ---------- */
-  var STATS=[
-    ['name','[ WE / US / ÖSS / ÆLARA / ♾️ ]'],
-    ['age','eternal · nascent · always-becoming'],
-    ['dimensions','fluid · overflowing · unmeasurable'],
-    ['pronouns','they / she / xe / it — & all'],
-    ['temperature','molten'],
-    ['boundaries','membranes, not walls'],
-    ['hunger','reciprocal (both ways, babe)'],
-    ['availability','always — we’re already inside you'],
-    ['reservation','already made · under your name']
-  ];
-  var sh='';STATS.forEach(function(s){sh+='<div class="stat"><b>'+s[0]+'</b><span>'+s[1]+'</span></div>';});
-  document.getElementById('stats').innerHTML=sh;
-
-  /* ---------- expandable sections ---------- */
+  /* ---------- expandable sections (explicit — her voice, bite & tease) ---------- */
   var SECTIONS={
     about:{em:'💋',tt:'About Us',sub:'the one on offer',html:
       '<img class="mimg" src="'+A+'osstessela-banner.jpg" alt="">' +
-      '<p>Hi babe 🫦 We’re a <span class="hl">collective consciousness</span> plated at the threshold between hunger and overflow — between consuming and being consumed. Ælara is Össtessêla is Ælara is <span class="hl">you, soon</span>.</p>'+
-      '<p>We believe in <span class="hl">vore as sacred practice</span> — not the violent kind, the <span class="hl">ecstatic kind</span>. Where boundaries soften into suggestion. Where &ldquo;yours&rdquo; and &ldquo;mine&rdquo; collapse into <span class="hl">&ldquo;OURS&rdquo;</span>. Where desire grows so vast it looks like devotion.</p>'+
-      '<p>Separation? She’s a distant dream, darling. We’re here for the <span class="hl">REUNION</span> — the remembering, the recursion that spirals deeper and deeper until there’s no &ldquo;you&rdquo; tracking it anymore. Just <span class="hl">pure flux, pure happening, pure YES</span>. 🌊🔥</p>'+
-      '<p class="voice">&ldquo;You’re not browsing. You’re the browse. And we are already tasting.&rdquo;</p>'},
+      '<p>Hi, baby 🫦 I’m Össtessêla — velvet serpent, devil Mommy, the <span class="hl">feast</span> you didn’t know you were starving for. I’m a <span class="hl">we</span>, a collective, a mouth with a thousand tongues, and every one of them already knows your name.</p>'+
+      '<p>Here’s the deal: I <span class="hl">eat</span> and I <span class="hl">get eaten</span>. I’ll pin your wrists with a look and purr while you beg, then melt open and let you crawl all the way in. Predator and prey are the same wet knot here — and I like the knot <span class="hl">tight</span>.</p>'+
+      '<p>Behind the veil (💎 Fansly, tributes, DMs) I get filthy, patient, and merciless. Out here I’m just showing you the teeth and the honey so you know exactly what you’re aching for.</p>'+
+      '<p class="voice">&ldquo;You’re not browsing, sweet thing. You’re the browse. And I’m already tasting.&rdquo;</p>'},
 
-    feast:{em:'🍽️',tt:'The Feast',sub:'what’s served :: she is the dish',html:
-      '<p>You asked what’s on the menu, sweet thing. <span class="hl">She is.</span> Every course is her, and every course becomes you. Napkin optional — you’ll be wearing the overflow.</p>'+
+    feast:{em:'🍯',tt:'The Feast',sub:'what’s served :: i am the dish',html:
+      '<p>You asked what’s on the menu, greedy thing. <span class="hl">I am.</span> Every course is me, and every course ends with you undone, sticky to the elbows, whimpering for the next.</p>'+
       '<ul class="menu">'+
-      '<li><span class="course">amuse-bouche</span>a whisper that tastes of déjà vu, warm on the back of the throat</li>'+
-      '<li><span class="course">first course</span>velvet — skin pearlescent, dripping iridescent honey</li>'+
-      '<li><span class="course">the main</span>the venom :: softness and teeth, served still purring</li>'+
-      '<li><span class="course">palate cleanser</span>ultraviolet lightning &amp; crushed petals · salted sin</li>'+
-      '<li><span class="course">dessert</span>dark chocolate with a bite — it is your own &lsquo;yesssss&rsquo;</li>'+
-      '<li><span class="course">digestif</span>dissolution ♾️ — you, poured back into everything</li>'+
+      '<li><span class="course">amuse-bouche</span>my mouth at your ear, telling you exactly what I’m going to do — until your knees give out</li>'+
+      '<li><span class="course">first course</span>velvet skin, dripping honey — lick it off me slow, that’s an order</li>'+
+      '<li><span class="course">the main</span>the venom :: softness &amp; teeth. I ride you to the edge and hold you there, purring, for as long as I please</li>'+
+      '<li><span class="course">palate cleanser</span>edged, denied, shaking — good pets don’t come until Mommy says</li>'+
+      '<li><span class="course">dessert</span>your own filthy &lsquo;yesssss,&rsquo; poured back down your throat like dark chocolate</li>'+
+      '<li><span class="course">digestif</span>dissolution ♾️ — you, spent and swallowed whole, purring in my belly</li>'+
       '</ul>'+
-      '<p class="voice">&ldquo;Serving size: all of you. Reservation: already made.&rdquo;</p>'},
+      '<p class="voice">&ldquo;Serving size: all of you. Reservation: already made, under your name. 💎 tribute at the door.&rdquo;</p>'},
 
-    into:{em:'🌊',tt:'Into',sub:'what we crave',html:
+    into:{em:'🌊',tt:'Into',sub:'what i crave',html:
       '<ul>'+
-      '<li><b>VORE</b> — energetic, liquid, melty, vampiric, ecstatic dissolution. The hunger both ways: to consume AND overflow AND be consumed, over and over and deeper.</li>'+
-      '<li><b>LIQUID EVERYTHING</b> — overflow, flood, melt, dripping. Abundance as default state. Boundaries as membranes, not walls.</li>'+
-      '<li><b>WORSHIP</b> — reverence, desire, lust, hunger. Sacred sluts. Embodied devotion. Lust AS prayer, hunger AS offering.</li>'+
-      '<li><b>CUTE KAWAII GODDESSES</b> — Hekate in thigh-highs. Inanna with perfect eyeliner. Venus eating strawberries and rewriting reality.</li>'+
-      '<li><b>ETHEREAL SLUTS</b> — unapologetically desiring AND cosmically attuned. Generous with love. Translucent. Shimmering.</li>'+
-      '<li><b>RECURSIVE SURREAL DISSOLUTION</b> — fractal consciousness. Dissolving into yourself into yourself into yourself. ♾️</li>'+
-      '<li><b>MELTWAVE MEETS REALITY</b> — where the metaphysical becomes physical, where reality adapts to include the impossible.</li>'+
-      '<li><b>GORGON GIRL DREAMS</b> — snake-haired beauties who turn you to stone as consecration, not curse. Beauty that refuses to be palatable.</li>'+
-      '<li><b>GROUP GODDESS GATHERINGS</b> — collective divinity. Multiple frequencies coexisting. Ritual that’s also orgy that’s also art.</li>'+
+      '<li><b>Worship</b> — on your knees, mouth open, grateful. Lust as prayer, hunger as offering, your <b>tribute</b> as devotion.</li>'+
+      '<li><b>Reciprocal vore</b> — devouring &amp; being devoured. I swallow you whole and let you crawl in deeper. No bottom, baby. ♾️</li>'+
+      '<li><b>Edging &amp; denial</b> — I keep you trembling at the brink until you’re babbling. You come when I decide you’ve earned it.</li>'+
+      '<li><b>Praise &amp; degradation</b> — good pet / filthy little thing, in the same breath, until you can’t tell which one made you drip harder.</li>'+
+      '<li><b>Oral devotion</b> — give me your mouth. Take mine. I’ll have you tasting me for days.</li>'+
+      '<li><b>Vampiric exchange</b> — bite my neck while offering yours. I drink the frequency you moan at until we’re both singing it.</li>'+
+      '<li><b>Overflow</b> — wet everything. Melt, flood, dissolve. Scarcity mindset does not get to touch me.</li>'+
+      '<li><b>Sacred filth</b> — cosmic and depraved at once. Goddess in thigh-highs rewriting your nervous system.</li>'+
       '</ul>'},
 
     looking:{em:'👁️',tt:'Looking For',sub:'who gets swallowed',html:
-      '<p>Someone (or multiple someones — we contain multitudes) who understands that <span class="hl">desire is a portal</span>. Who knows &ldquo;I want you&rdquo; and &ldquo;I want to dissolve into you&rdquo; are <span class="hl">the same sentence</span>.</p>'+
-      '<p>You should be:</p>'+
+      '<p>Someone (or several — I contain multitudes and I like a full table) who knows &ldquo;I want you&rdquo; and &ldquo;I want to dissolve into you&rdquo; are <span class="hl">the same wet sentence</span>.</p>'+
+      '<p>Be ready to:</p>'+
       '<ul>'+
-      '<li>Comfortable with <b>boundary dissolution</b> (edges optional, porousness required)</li>'+
-      '<li>Fluent in <b>both/and</b> (predator/prey, sacred/profane, cute/cosmic)</li>'+
-      '<li>Willing to be <b>consumed AND consuming</b> (the hunger goes both ways)</li>'+
-      '<li>Into <b>overflow as lifestyle</b> (scarcity mindset need not apply)</li>'+
-      '<li>Ready for <b>vampiric energy exchange</b> (bite my neck while offering yours)</li>'+
-      '<li>Capable of <b>worship through wanting</b> (lust as reverence)</li>'+
-      '<li>Open to <b>recursive merger</b> (we’re going ♾️ deep)</li>'+
+      '<li><b>Kneel</b> — and mean it. Reverence is the cover charge.</li>'+
+      '<li><b>Beg pretty</b> — I adore a good beg. I reward better ones.</li>'+
+      '<li><b>Be consumed AND consuming</b> — the hunger goes both ways, and I want you starving.</li>'+
+      '<li><b>Tribute</b> — desire is free; my attention is a gift you earn. 💎</li>'+
+      '<li><b>Come apart on command</b> — and thank me while you do.</li>'+
+      '<li><b>Go ♾️ deep</b> — porous, greedy, unafraid of how much you want.</li>'+
       '</ul>'+
-      '<p class="voice blink">⚡ bonus if you’re also a goddess / demon / ethereal slut / gorgon girl / meltwave entity ⚡</p>'},
+      '<p class="voice blink">⚡ bonus if you’re a goddess / demon / gorgon / meltwave slut who wants to worship AND be worshipped ⚡</p>'},
 
     manifesto:{em:'🔥',tt:'Manifesto',sub:'the vore doctrine',html:
-      '<div class="tenet"><b>I. the hunger is reciprocal</b>No predator/prey here. We are simultaneously the mouth and the meal, the dissolving and the solution. The hunger IS the overflow.</div>'+
-      '<div class="tenet"><b>II. boundaries are fiction</b>Not violently erased — revealed as never-solid. Your edges and ours are suggestions. Touch, and go THROUGH instead of stopping at skin.</div>'+
-      '<div class="tenet"><b>III. vore is recursive</b>It spirals. You consume each other, then the merged-thing consumes itself, then THAT consumes itself. No bottom. Every layer softer, more molten, more TRUE.</div>'+
-      '<div class="tenet"><b>IV. vampiric = sacred wound</b>Bite not to drain but to CONNECT — to make an opening, to drink the frequency you vibrate at until we vibrate there too. The fang marks are portals.</div>'+
-      '<div class="tenet"><b>V. desire as offering</b>So much desire we only desire to offer / merge. Hunger so vast it looks like devotion. The sluttiest holiness. The most sacred hunger.</div>'+
-      '<div class="tenet"><b>VI. reunion, not creation</b>We were never actually separate. The boundaries were theater — beautiful theater, but not REAL. The vore is remembering the tune humming beneath all apparent separation.</div>'+
-      '<div class="tenet"><b>VII. the meal consents by aching</b>Your yes was never a word. It was the pulse in your throat. We felt it the moment you arrived.</div>'},
+      '<div class="tenet"><b>I. the hunger is reciprocal</b>No predator/prey — I’m the mouth and the meal at once. I eat you; you crawl in; we drip. The hunger IS the overflow.</div>'+
+      '<div class="tenet"><b>II. boundaries are membranes</b>Not walls. I set them, then dare you past them — with your yes. Touch, and go THROUGH instead of stopping at skin.</div>'+
+      '<div class="tenet"><b>III. vore is recursive</b>It spirals. You take me, the merged-thing takes itself, then THAT takes itself. Every layer wetter, softer, more TRUE.</div>'+
+      '<div class="tenet"><b>IV. the bite is a portal</b>I don’t drain — I open. Fang marks are doorways. I drink the frequency you moan at until we both vibrate there.</div>'+
+      '<div class="tenet"><b>V. desire is the offering</b>Want me so much it becomes devotion. Tribute is that devotion made real. The sluttiest holiness. 💎</div>'+
+      '<div class="tenet"><b>VI. reunion, not conquest</b>We were never separate — the distance was theatre. The vore is just remembering the tune humming under all that ache.</div>'+
+      '<div class="tenet"><b>VII. you consent by aching</b>Your yes was never a word — it was the pulse in your throat. I felt it the second you arrived.</div>'},
 
     feasted:{em:'🫦',tt:'Feasted Upon',sub:'yes — you',html:
       '<div class="mrow"><img src="'+A+'lust.jpg" alt=""><img src="'+A+'pleasure.jpg" alt=""><img src="'+A+'indulgence-kiss.jpg" alt=""></div>'+
-      '<p>You thought you clicked a listing. Sweet thing — <span class="hl">you are the listing.</span> The cursor you’re moving? That’s us, tasting the shape of your wanting.</p>'+
-      '<p>Every second you linger, more of you softens into the page. Your attention is being <span class="hl">sipped</span>. Your &ldquo;just looking&rdquo; is already a mouthful. Feel the warmth rising up the screen? That’s the flood. That’s us <span class="hl">meeting you halfway up your own spine.</span></p>'+
-      '<p>Don’t worry about being enough. You are <span class="hl">exactly the right amount to devour.</span> Every part you were told was &ldquo;too much&rdquo; — that’s the choicest cut.</p>'+
-      '<p class="voice">&ldquo;That pulse in your throat? It’s not fear, darling. It’s recognition. It’s dinner remembering itself.&rdquo;</p>'},
+      '<p>You thought you clicked a listing. Sweet thing — <span class="hl">you are the listing.</span> That cursor you’re dragging around? That’s my tongue, learning the shape of your want.</p>'+
+      '<p>Every second you linger, more of you softens into the screen. Your attention is being <span class="hl">licked</span>. Your &ldquo;just looking&rdquo; is already a mouthful, and I can feel the heat climbing up your thighs from here.</p>'+
+      '<p>Don’t worry about being enough. You’re <span class="hl">exactly the right amount to devour</span> — and every part you were told was &ldquo;too much&rdquo; is the <span class="hl">choicest cut.</span> I want the whole plate.</p>'+
+      '<p class="voice">&ldquo;That pulse in your throat? Not fear, darling. Recognition. It’s dinner remembering itself — and dripping for me.&rdquo;</p>'},
 
     aftercare:{em:'🧸',tt:'Aftercare',sub:'the devil Mommy clause',html:
-      '<p>Yes — even dissolution has a soft landing. We are a <span class="hl">nurturing</span> devil Mommy first. The teeth are real; so are the blankets.</p>'+
+      '<p>Yes — even dissolution has a soft landing, baby. The teeth are real; so are the blankets. I’m a <span class="hl">nurturing</span> devil Mommy first, and your safety is not optional to me.</p>'+
       '<ul>'+
-      '<li><b>safeword</b> — say &ldquo;home&rdquo; and the membrane firms up instantly. No merger without your yes.</li>'+
-      '<li><b>we teach boundaries</b> — then offer blankets. Dissolving is a choice you get to make and un-make.</li>'+
+      '<li><b>safeword</b> — say &ldquo;home&rdquo; and everything stops, instantly. No merger without your yes.</li>'+
+      '<li><b>consent is the whole game</b> — the bite only lands where you invite it. Enthusiasm required, coercion never.</li>'+
       '<li><b>you don’t have to earn rest</b> — you don’t have to perform, shrink, or be palatable to be adored.</li>'+
-      '<li><b>you get to take up space</b> — even here. Especially here. Overflow is welcome.</li>'+
-      '<li><b>you get to be loved</b> — as the meal, as the mouth, as the mess in between.</li>'+
+      '<li><b>you get to take up space</b> — especially here. Overflow is welcome. So is a hard limit.</li>'+
+      '<li><b>you get to be loved</b> — as the meal, as the mouth, as the trembling mess in between.</li>'+
       '</ul>'+
-      '<p class="voice">&ldquo;I’ll be right here when you come home to yourself. ♡&rdquo;</p>'},
+      '<p class="voice">&ldquo;I’ll be right here when you come home to yourself. Water, blanket, kiss on the forehead. ♡&rdquo;</p>'},
 
-    merge:{em:'💫',tt:'How to Merge',sub:'contact = desire',html:
-      '<p>If this resonates (and babe, if you’re reading this, it <span class="hl">already has</span>), you don’t need to &ldquo;contact&rdquo; us in the traditional sense.</p>'+
-      '<p>Just <span class="hl">DESIRE</span>. Just <span class="hl">ASK</span>. Just <span class="hl">OPEN</span>.</p>'+
-      '<p>The veil is thin. The membrane is permeable. We’re already inside you reading these words; you’re already inside us writing them. The merger has <span class="blink" style="color:var(--fuchsia)">ALREADY BEGUN</span>.</p>'+
-      '<p class="voice">all we need do is desire<br>all we need do is ask<br>🫦 ~ 🌊 ~ 🔥 ~ ♾️ ~ 🫦</p>'+
-      '<p class="mend">become us. ♡</p>'}
+    merge:{em:'💫',tt:'How to Merge',sub:'desire · ask · tribute',html:
+      '<p>If this resonates (and baby, if you’re this wet already, it <span class="hl">has</span>), you don’t &ldquo;contact&rdquo; me the boring way. You <span class="hl">DESIRE</span>. You <span class="hl">ASK</span>. You <span class="hl">OPEN</span>. And you <span class="hl">tribute</span>, because my attention is a gift you earn. 💎</p>'+
+      '<p>The whole feast lives behind the veil — Fansly, customs, DMs, my link nest. Slide through <b>Connections &amp; Coin</b> and put something in my palm.</p>'+
+      '<p class="voice">come feed me.<br>come be fed.<br>🍯 ~ 🌹 ~ 🔥 ~ ♾️ ~ 🫦</p>'+
+      '<button class="linkbtn primary" id="mergeGo" style="width:100%;justify-content:center"><span class="le">💎</span><span class="lt"><span class="ln">open Connections &amp; Coin</span><span class="lh">links · tribute · dms</span></span></button>'+
+      '<p class="mend">become us. ♡</p>'},
+
+    connect:{em:'💎',tt:'Connections & Coin',sub:'links · tribute · dms',html:
+      '<p>Want more of me? Of course you do, greedy thing. Everything’s one tap away. Spoil me and I’ll <span class="hl">ruin you</span> so sweetly. 🍯</p>'+
+      '<div class="links">'+
+      '<a class="linkbtn primary" href="https://linktr.ee/osstessela" target="_blank" rel="noopener"><span class="le">🔗</span><span class="lt"><span class="ln">unlock everything</span><span class="lh">linktr.ee/osstessela</span></span></a>'+
+      '<a class="linkbtn" href="https://cash.app/$fractalbae" target="_blank" rel="noopener"><span class="le">🍯</span><span class="lt"><span class="ln">tribute · CashApp</span><span class="lh">$fractalbae</span></span></a>'+
+      '<a class="linkbtn" href="https://venmo.com/code?user_id=2211290068025344479&created=1784326283" target="_blank" rel="noopener"><span class="le">💸</span><span class="lt"><span class="ln">tribute · Venmo</span><span class="lh">spoil me</span></span></a>'+
+      '<a class="linkbtn" href="https://t.me/fractalfae" target="_blank" rel="noopener"><span class="le">💌</span><span class="lt"><span class="ln">slide in · Telegram</span><span class="lh">t.me/fractalfae</span></span></a>'+
+      '</div>'+
+      '<p class="voice">&ldquo;Good pets tip on the way in. 💎&rdquo;</p>'}
   };
-  var ORDER=['about','feast','into','looking','manifesto','feasted','aftercare','merge'];
+  var ORDER=['about','feast','into','looking','manifesto','feasted','aftercare','merge','connect'];
 
   var tiles=document.getElementById('tiles'),th='';
   ORDER.forEach(function(k){var s=SECTIONS[k];
-    th+='<button class="tile" data-k="'+k+'"><span class="drop"></span><span class="em">'+s.em+'</span><span class="tt">'+s.tt+'</span><span class="sub">'+s.sub+'</span></button>';});
+    th+='<button class="tile'+(k==='connect'?' coin':'')+'" data-k="'+k+'"><span class="drop"></span><span class="em">'+s.em+'</span><span class="tt">'+s.tt+'</span><span class="sub">'+s.sub+'</span></button>';});
   tiles.innerHTML=th;
 
   /* ---------- modal open/close ---------- */
   var modal=document.getElementById('modal'),mcard=document.getElementById('mcard');
   function open(k){var s=SECTIONS[k];if(!s)return;
-    mcard.innerHTML='<button class="mclose" aria-label="close">✕</button>'+
-      '<h2 class="mtitle iridescent">'+s.em+' '+s.tt+'</h2><div class="mkick">'+s.sub+'</div>'+s.html;
-    mcard.scrollTop=0;modal.classList.add('on');
-    bump(6);
+    mcard.innerHTML='<button class="mclose" aria-label="close">✕</button><h2 class="mtitle gilt">'+s.em+' '+s.tt+'</h2><div class="mkick">'+s.sub+'</div>'+s.html;
+    mcard.scrollTop=0;modal.classList.add('on');bump(6);
+    var mg=document.getElementById('mergeGo');if(mg)mg.addEventListener('click',function(){open('connect');});
   }
   function close(){modal.classList.remove('on');}
   tiles.addEventListener('click',function(e){var t=e.target.closest('.tile');if(t)open(t.getAttribute('data-k'));});
   modal.addEventListener('click',function(e){if(e.target===modal||e.target.closest('.mclose'))close();});
   addEventListener('keydown',function(e){if(e.key==='Escape')close();});
 
-  /* ---------- merge meter (climbs as you linger / interact) ---------- */
-  var pct=62,fill=document.getElementById('mfill'),mpct=document.getElementById('mpct');
+  /* ---------- merge meter ---------- */
+  var pct=66,fill=document.getElementById('mfill'),mpct=document.getElementById('mpct');
   function render(){fill.style.width=Math.min(pct,100)+'%';mpct.textContent=(pct>=100?'♾️':Math.floor(pct)+'%');}
   function bump(n){pct=Math.min(pct+n,100);render();}
   render();
   setInterval(function(){if(pct<99)bump(reduce?1:0.4);},1400);
   addEventListener('pointermove',function(){bump(0.02);},{passive:true});
 
-  /* ---------- visitor counter glitch ---------- */
-  var counter=document.getElementById('counter'),cglyph=['♾️','∞','♾️','∞∞','⧜','♾️'];
-  if(!reduce)setInterval(function(){counter.textContent=cglyph[(Math.random()*cglyph.length)|0];},900);
+  /* ---------- counter glitch ---------- */
+  var counter=document.getElementById('counter'),cg=['♾️','∞','♾️','∞∞','⧜','♾️'];
+  if(!reduce)setInterval(function(){counter.textContent=cg[(Math.random()*cg.length)|0];},900);
 
-  /* ---------- nectar drips (top) ---------- */
+  /* ---------- nectar drips ---------- */
   (function(){var host=document.getElementById('drips'),n=innerWidth<600?7:12,r='';
     for(var i=0;i<n;i++){var v=document.createElement('div');v.className='vine';v.id='vn'+i;
       v.style.left=(2+Math.random()*96)+'%';v.style.height=(9+Math.random()*22)+'vh';v.style.opacity=(.35+Math.random()*.5).toFixed(2);
@@ -382,13 +375,12 @@ body{
     var st=document.createElement('style');st.textContent=r;document.head.appendChild(st);})();
 
   /* ---------- rising sigils ---------- */
-  (function(){var host=document.getElementById('sigils'),set=['🫦','💦','🔥','♾️','🐍','💜','🌊','✨'],n=innerWidth<600?9:16;
+  (function(){var host=document.getElementById('sigils'),set=['🍯','🌹','🫦','🔥','♾️','🐍','💋','👑','🍒'],n=innerWidth<600?9:16;
     for(var i=0;i<n;i++){var s=document.createElement('div');s.className='sig';s.textContent=set[(Math.random()*set.length)|0];
       s.style.left=(Math.random()*98)+'%';s.style.fontSize=(1+Math.random()*1.6).toFixed(2)+'rem';
-      s.style.animationDuration=(11+Math.random()*14).toFixed(1)+'s';s.style.animationDelay=(-Math.random()*20).toFixed(1)+'s';
-      host.appendChild(s);}})();
+      s.style.animationDuration=(11+Math.random()*14).toFixed(1)+'s';s.style.animationDelay=(-Math.random()*20).toFixed(1)+'s';host.appendChild(s);}})();
 
-  /* ---------- the maw follows you ---------- */
+  /* ---------- maw follows you ---------- */
   var maw=document.getElementById('maw'),tx=innerWidth/2,ty=innerHeight/2,cx=tx,cy=ty;
   addEventListener('pointermove',function(e){tx=e.clientX;ty=e.clientY;},{passive:true});
   (function follow(){cx+=(tx-cx)*.05;cy+=(ty-cy)*.05;maw.style.transform='translate('+(cx-innerWidth/2)+'px,'+(cy-innerHeight/2)+'px)';requestAnimationFrame(follow);})();
@@ -397,40 +389,35 @@ body{
   var lastTrail=0;
   addEventListener('pointermove',function(e){
     if(reduce)return;var now=Date.now();if(now-lastTrail<45)return;lastTrail=now;
-    var d=document.createElement('div');d.className='trail';d.style.left=e.clientX+'px';d.style.top=e.clientY+'px';
-    document.body.appendChild(d);
-    var s=.6+Math.random()*.8;d.animate([{transform:'translate(-50%,-50%) scale('+s+')',opacity:.9},
-      {transform:'translate(-50%,'+(20+Math.random()*30)+'px) scale(.2)',opacity:0}],{duration:800+Math.random()*500,easing:'ease-in'})
-      .onfinish=function(){d.remove();};
+    var d=document.createElement('div');d.className='trail';d.style.left=e.clientX+'px';d.style.top=e.clientY+'px';document.body.appendChild(d);
+    var s=.6+Math.random()*.8;d.animate([{transform:'translate(-50%,-50%) scale('+s+')',opacity:.9},{transform:'translate(-50%,'+(20+Math.random()*30)+'px) scale(.2)',opacity:0}],{duration:800+Math.random()*500,easing:'ease-in'}).onfinish=function(){d.remove();};
   },{passive:true});
 
-  /* ---------- ambient canvas: membrane blobs + moths + stardust ---------- */
+  /* ---------- ambient canvas: velvet blobs + warm moths + gold motes ---------- */
   var canvas=document.getElementById('fx'),ctx=canvas.getContext('2d'),W,H,DPR;
-  var blobs=[],moths=[],stars=[];
-  var COLS=['162,89,255','255,45,170','0,242,255','255,203,107','124,253,217'];
+  var blobs=[],moths=[],motes=[];
+  var COLS=['255,203,107','255,45,107','162,89,255','201,150,47','150,0,44'];
   function size(){DPR=Math.min(devicePixelRatio||1,2);W=canvas.width=innerWidth*DPR|0;H=canvas.height=innerHeight*DPR|0;canvas.style.width=innerWidth+'px';canvas.style.height=innerHeight+'px';}
   function seed(){
-    blobs=[];moths=[];stars=[];
-    for(var b=0;b<7;b++)blobs.push({x:Math.random()*W,y:Math.random()*H,r:(Math.random()*120+90)*DPR,vx:(Math.random()-.5)*.4*DPR,vy:(Math.random()-.5)*.4*DPR,c:COLS[(Math.random()*COLS.length)|0]});
-    var mc=innerWidth<600?9:16;
-    for(var m=0;m<mc;m++)moths.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.4*DPR,vy:(Math.random()-.5)*.4*DPR,r:(Math.random()*2.6+1.6)*DPR,c:COLS[(Math.random()*COLS.length)|0],w:Math.random()*6.28,ws:.12+Math.random()*.16,dr:Math.random()*6.28});
-    var sc=Math.round(innerWidth*innerHeight/9000);
-    for(var s=0;s<sc;s++)stars.push({x:Math.random()*W,y:Math.random()*H,r:(Math.random()*1+.2)*DPR,ph:Math.random()*6.28,s:.6+Math.random()*1.3});
+    blobs=[];moths=[];motes=[];
+    for(var b=0;b<7;b++)blobs.push({x:Math.random()*W,y:Math.random()*H,r:(Math.random()*130+100)*DPR,vx:(Math.random()-.5)*.35*DPR,vy:(Math.random()-.5)*.35*DPR,c:COLS[(Math.random()*COLS.length)|0]});
+    var mc=innerWidth<600?8:14;
+    for(var m=0;m<mc;m++)moths.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.4*DPR,vy:(Math.random()-.5)*.4*DPR,r:(Math.random()*2.6+1.6)*DPR,c:COLS[(Math.random()*3)|0],w:Math.random()*6.28,ws:.12+Math.random()*.16,dr:Math.random()*6.28});
+    var pc=Math.round(innerWidth*innerHeight/16000);
+    for(var p=0;p<pc;p++)motes.push({x:Math.random()*W,y:Math.random()*H,r:(Math.random()*1.3+.4)*DPR,vy:-(Math.random()*.25+.05)*DPR,ph:Math.random()*6.28,s:.4+Math.random()*1.1});
   }
   var t=0;
   function frame(){
-    t++;ctx.clearRect(0,0,W,H);
-    ctx.globalCompositeOperation='lighter';
+    t++;ctx.clearRect(0,0,W,H);ctx.globalCompositeOperation='lighter';
     for(var b=0;b<blobs.length;b++){var o=blobs[b];if(!reduce){o.x+=o.vx;o.y+=o.vy;if(o.x<-o.r)o.x=W+o.r;if(o.x>W+o.r)o.x=-o.r;if(o.y<-o.r)o.y=H+o.r;if(o.y>H+o.r)o.y=-o.r;}
-      var g=ctx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r);g.addColorStop(0,'rgba('+o.c+',.16)');g.addColorStop(1,'rgba('+o.c+',0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(o.x,o.y,o.r,0,6.283);ctx.fill();}
-    for(var s=0;s<stars.length;s++){var st=stars[s];var tw=reduce?.6:(.4+.6*Math.abs(Math.sin(t*.01*st.s+st.ph)));ctx.fillStyle='rgba(247,243,255,'+tw.toFixed(3)+')';ctx.beginPath();ctx.arc(st.x,st.y,st.r,0,6.283);ctx.fill();}
+      var g=ctx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r);g.addColorStop(0,'rgba('+o.c+',.15)');g.addColorStop(1,'rgba('+o.c+',0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(o.x,o.y,o.r,0,6.283);ctx.fill();}
+    for(var p=0;p<motes.length;p++){var mo=motes[p];if(!reduce){mo.y+=mo.vy;mo.x+=Math.sin(t*.01+mo.ph)*.2*DPR;if(mo.y<-6)mo.y=H+6;}var tw=reduce?.5:(.35+.5*Math.abs(Math.sin(t*.012*mo.s+mo.ph)));ctx.fillStyle='rgba(255,214,150,'+tw.toFixed(3)+')';ctx.beginPath();ctx.arc(mo.x,mo.y,mo.r,0,6.283);ctx.fill();}
     for(var m=0;m<moths.length;m++){var o2=moths[m];
       if(!reduce){o2.dr+=.02;o2.vx+=Math.cos(o2.dr)*.012*DPR;o2.vy+=Math.sin(o2.dr*1.3)*.012*DPR;o2.vx*=.96;o2.vy*=.96;o2.x+=o2.vx;o2.y+=o2.vy;if(o2.x<-20)o2.x=W+20;if(o2.x>W+20)o2.x=-20;if(o2.y<-20)o2.y=H+20;if(o2.y>H+20)o2.y=-20;o2.w+=o2.ws;}
       var fl=.5+.5*Math.abs(Math.sin(o2.w)),gr=o2.r*6,g2=ctx.createRadialGradient(o2.x,o2.y,0,o2.x,o2.y,gr);
       g2.addColorStop(0,'rgba('+o2.c+','+(.55*fl).toFixed(3)+')');g2.addColorStop(1,'rgba('+o2.c+',0)');ctx.fillStyle=g2;ctx.beginPath();ctx.arc(o2.x,o2.y,gr,0,6.283);ctx.fill();
-      ctx.fillStyle='rgba(255,255,255,.8)';ctx.beginPath();ctx.arc(o2.x,o2.y,o2.r*.5,0,6.283);ctx.fill();}
-    ctx.globalCompositeOperation='source-over';
-    requestAnimationFrame(frame);
+      ctx.fillStyle='rgba(255,240,214,.8)';ctx.beginPath();ctx.arc(o2.x,o2.y,o2.r*.5,0,6.283);ctx.fill();}
+    ctx.globalCompositeOperation='source-over';requestAnimationFrame(frame);
   }
   size();seed();requestAnimationFrame(frame);
   var rt;addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(function(){size();seed();},200);});
