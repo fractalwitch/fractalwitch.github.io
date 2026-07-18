@@ -129,7 +129,9 @@ a:hover { color: var(--hotpink); }
   );
   pointer-events: none;
   z-index: 40;
-  opacity: .12;
+  /* base .12, gently breathing up with the room's amplitude (rests at .12
+     when silent or in reduced-motion, since --rx-level defaults/pins to 0) */
+  opacity: calc(.12 + var(--rx-level, 0) * .09);
   /* drift the pattern by moving the background, NOT the layer — a transform
      animation on a fixed overlay re-composites on every scroll frame and
      "catches" / tears on mobile. background-position leaves the layer pinned. */
@@ -138,7 +140,7 @@ a:hover { color: var(--hotpink); }
   backface-visibility: hidden;
   will-change: background-position;
 }
-[data-ground="dark"] .scanlines, html[data-theme="disco"] .scanlines { opacity: .5; }
+[data-ground="dark"] .scanlines, html[data-theme="disco"] .scanlines { opacity: calc(.5 + var(--rx-level, 0) * .16); }
 @keyframes scan-drift { to { background-position: 0 3px; } }
 
 /* film grain via feTurbulence — real texture, no image request */
