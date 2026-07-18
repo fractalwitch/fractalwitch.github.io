@@ -34,18 +34,6 @@ body { overflow-y: auto; }
 header.masthead { text-align: center; }
 header.masthead .eyebrow { margin-bottom: .6rem; }
 
-/* The top bar floats over the DARK hero painting at the top of the hub, then
-   over the LIGHT tracklist once you scroll down. So it's dark + light-text
-   while the painting is behind it, and reverts to the normal light scrim
-   (like every other page) once you've scrolled onto the content. heroScroll
-   toggles html.topbar-dark; cross-faded so the switch is soft. */
-.rev-topbar { transition: background .35s ease; }
-html.topbar-dark .rev-topbar {
-  background: linear-gradient(to bottom, rgba(6,1,10,.97) 0%, rgba(6,1,10,.9) 58%, rgba(6,1,10,.5) 84%, rgba(6,1,10,0) 100%);
-}
-html.topbar-dark .rev-topbar .tb-mark { color: #f4ecff; }
-html.topbar-dark .rev-topbar .tb-track { color: #c3b2d6; }
-
 /* ── THE HERO — a classical backdrop that dissolves into the record ──
    Vigée Le Brun's "Venus Binding the Wings of Cupid" (1781) sits behind
    an oversized editorial title, then fades to nothing where the platter
@@ -1020,11 +1008,8 @@ canvas.addEventListener('pointercancel', touchEnd);
   let ticking = false;
   function apply() {
     ticking = false;
-    const sc = window.scrollY || 0;
-    // dark bar while the painting is still behind it (top ~half-viewport of scroll),
-    // light bar once you're onto the tracklist below
-    document.documentElement.classList.toggle('topbar-dark', sc < innerHeight * 0.5);
     if (REV.stilled()) { art.style.transform = 'translateX(-50%)'; art.style.opacity = ''; if (title) title.style.transform = ''; return; }
+    const sc = window.scrollY || 0;
     const vis = Math.max(0, 1 - sc / 560);
     art.style.transform = 'translateX(-50%) translateY(' + (-sc * 0.16).toFixed(1) + 'px)';
     art.style.opacity = (0.96 * vis).toFixed(3);
