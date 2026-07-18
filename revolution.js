@@ -1119,6 +1119,24 @@
         '<a class="tb-mark" href="index.html" aria-label="The Human Sexual Revolution — home">THSR</a>' +
         '<span class="tb-track" aria-label="Now on">' + right + '</span>';
       if (sc === 'hub') bar.querySelector('.tb-mark').setAttribute('aria-current', 'page');
+
+      // transport: a thin now-playing progress line under the bar, tracking
+      // this room's recording (only on rooms that carry one)
+      if (opts.track && audio.trackEl) {
+        const prog = document.createElement('span');
+        prog.className = 'tb-progress'; prog.setAttribute('aria-hidden', 'true');
+        prog.innerHTML = '<i></i>';
+        bar.appendChild(prog);
+        const fill = prog.querySelector('i');
+        const upd = function () {
+          const el = audio.trackEl;
+          if (!el || !el.duration || !isFinite(el.duration)) return;
+          fill.style.width = (Math.max(0, Math.min(1, el.currentTime / el.duration)) * 100) + '%';
+        };
+        audio.trackEl.addEventListener('timeupdate', upd);
+        audio.trackEl.addEventListener('loadedmetadata', upd);
+      }
+
       document.body.appendChild(bar);
     }
 
