@@ -595,6 +595,9 @@ a:hover { color: var(--hotpink); }
   font-family: var(--font-mono);
   font-size: clamp(.85rem, 1.6vw, 1.05rem);
   color: #f4ecff;                 /* stays light: this overlay is always dark */
+  /* chromatic aberration — an RGB split that makes the page's voice read as
+     a glitch pushing through the surface */
+  text-shadow: -1.4px 0 rgba(255,46,136,.55), 1.4px 0 rgba(38,224,224,.55);
   text-align: center;
   padding: 1rem 1.4rem;
   background: rgba(2,0,5,.92);
@@ -645,6 +648,9 @@ a:hover { color: var(--hotpink); }
   border-bottom: 1px dotted var(--line);
 }
 .tracklist .tno { color: var(--ink-dim); font-size: .8rem; flex:none; width: 2.2em; }
+/* the needle remembers — a small record pip on grooves you've already played */
+.tracklist li.played .tno { color: var(--gold-t); }
+.tracklist li.played a::after { content: ' ⏺'; color: var(--gold-t); font-size: .7em; opacity: .8; vertical-align: middle; }
 .tracklist a {
   color: var(--ink); text-decoration: none;
   letter-spacing: .04em;
@@ -674,7 +680,15 @@ a:hover { color: var(--hotpink); }
   color: var(--ink); text-decoration: none; padding: .2rem 0;
   transition: color .3s, text-shadow .3s;
 }
-.rev-topbar .tb-mark:hover { color: var(--link); }
+.rev-topbar .tb-mark:hover {
+  color: transparent; -webkit-text-fill-color: transparent;
+  background: linear-gradient(90deg, var(--hotpink), var(--gold), var(--cyan), var(--lavender), var(--hotpink));
+  background-size: 300% 100%;
+  -webkit-background-clip: text; background-clip: text;
+  animation: tb-holo 2.2s linear infinite;
+}
+@keyframes tb-holo { to { background-position: 300% 0; } }
+html[data-motion="stilled"] .rev-topbar .tb-mark:hover { animation: none; }
 .rev-topbar .tb-track {
   display: inline-flex; align-items: baseline; gap: .5rem;
   font-size: .68rem; letter-spacing: .18em; text-transform: uppercase;

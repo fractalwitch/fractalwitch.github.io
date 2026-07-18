@@ -94,6 +94,7 @@
     dark: 0,               // 0 lit → 1 extinguished (eased)
     darkTarget: 0,
     rx: 0,                 // audio-reactive shimmer (0..1, from the highs)
+    trail: [],             // recent ball positions → a fading comet trail
     specks: [],
     running: false
   };
@@ -157,7 +158,7 @@
 
     if (REV.stilled()) {
       // Stilled: a faint static scatter remains as texture. No movement.
-      mirror.rx = 0;
+      mirror.rx = 0; mirror.trail.length = 0;
       drawSpecks(ctx, dpr, 0);
       requestAnimationFrame(mirrorFrame);
       return;
@@ -166,6 +167,8 @@
     // ball glides after the pointer (a real ball has mass)
     mirror.x += (mirror.tx - mirror.x) * Math.min(1, dt * 7);
     mirror.y += (mirror.ty - mirror.y) * Math.min(1, dt * 7);
+    mirror.trail.push({ x: mirror.x, y: mirror.y });
+    if (mirror.trail.length > 10) mirror.trail.shift();
 
     mirror.omegaBoost *= Math.pow(0.2, dt);           // excitement decays
     const omega = mirror.omega + mirror.omegaBoost;
@@ -205,6 +208,20 @@
       ctx.fillStyle = s.hue;
       ctx.beginPath();
       ctx.arc(px * dpr, py * dpr, s.size * dpr * (1 + mirror.rx * 0.6), 0, 6.2832);
+      ctx.fill();
+    }
+
+    // the comet trail — recent positions as fading chrome blooms behind the ball
+    const tr = mirror.trail, tn = tr.length;
+    for (let k = 0; k < tn - 1; k++) {
+      const f = (k + 1) / tn;                 // 0 (oldest) → ~1 (newest)
+      ctx.globalAlpha = f * f * 0.5 * lit;
+      const tg = ctx.createRadialGradient(tr[k].x * dpr, tr[k].y * dpr, 1, tr[k].x * dpr, tr[k].y * dpr, (2 + f * 6) * dpr);
+      tg.addColorStop(0, '#eaf0ff');
+      tg.addColorStop(1, 'rgba(150,170,210,0)');
+      ctx.fillStyle = tg;
+      ctx.beginPath();
+      ctx.arc(tr[k].x * dpr, tr[k].y * dpr, (2 + f * 6) * dpr, 0, 6.2832);
       ctx.fill();
     }
 
@@ -997,10 +1014,24 @@
     REV.navigate(url.href);
   });
 
+  // THE NEEDLE REMEMBERS — which rooms this device has already dropped into
+  REV.played = function () {
+    try { return JSON.parse(localStorage.getItem('rev_played') || '[]'); } catch (e) { return []; }
+  };
+
   REV.boot = function (opts) {
     opts = opts || {};
     applyState();
     playEnterReveal();
+
+    // record this visit so the hub can mark the grooves you've already played
+    if (opts.room) {
+      try {
+        const k = 'rev_played';
+        const s = JSON.parse(localStorage.getItem(k) || '[]');
+        if (s.indexOf(opts.room) < 0) { s.push(opts.room); localStorage.setItem(k, JSON.stringify(s)); }
+      } catch (e) {}
+    }
 
     // ground: rooms whose darkness is load-bearing pass ground:'dark'.
     // Set before mirrorInit so the cursor picks the right blend mode.
