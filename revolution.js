@@ -941,9 +941,66 @@
   /* ─────────────────────────────────────────────────────────────────
      BOOT — atmosphere layers + audio toggle, shared by every room.
      ──────────────────────────────────────────────────────────────── */
+  /* ─────────────────────────────────────────────────────────────────
+     PAGE TRANSITIONS — the needle lifts, the vinyl irises across, and
+     drops on the next room. The exit is flash-free (cover fully, THEN
+     navigate). The enter reveal only plays when we arrived via an in-site
+     click (a sessionStorage breadcrumb), so a typed/bookmarked hit just
+     appears — no flash. Instant under reduced motion. ─────────────────── */
+  let wipeEl = null;
+  function ensureWipe() {
+    if (wipeEl && wipeEl.parentNode) return wipeEl;
+    wipeEl = document.createElement('div');
+    wipeEl.className = 'rev-wipe';
+    wipeEl.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(wipeEl);
+    return wipeEl;
+  }
+  REV.navigate = function (href) {
+    if (!href) return;
+    if (REV.stilled()) { location.href = href; return; }
+    try { sessionStorage.setItem('rev_transit', '1'); } catch (e) {}
+    if (REV.audio && REV.audio.enabled && REV.audio.enabled()) REV.audio.thunk();  // the needle-lift clunk
+    const w = ensureWipe();
+    w.className = 'rev-wipe wipe-exit';
+    let done = false;
+    const go = function () { if (done) return; done = true; location.href = href; };
+    w.addEventListener('animationend', go, { once: true });
+    setTimeout(go, 650);                              // safety net if animationend is missed
+  };
+  function playEnterReveal() {
+    let transit = false;
+    try { transit = sessionStorage.getItem('rev_transit') === '1'; sessionStorage.removeItem('rev_transit'); } catch (e) {}
+    if (!transit || REV.stilled()) return;
+    if (document.querySelector('.cut-flash')) return;   // a room with its own bespoke entrance (thefloor's hard cut) keeps it
+    const w = ensureWipe();
+    w.className = 'rev-wipe wipe-enter';
+    const clean = function () { if (w.parentNode) w.parentNode.removeChild(w); wipeEl = null; };
+    w.addEventListener('animationend', clean, { once: true });
+    setTimeout(clean, 950);
+  }
+  // delegated: route plain in-site link clicks through the transition. Anything
+  // already handled (defaultPrevented — e.g. the Side B gate, the hub tracklist)
+  // is left alone, as are new-tab/modified clicks and external links.
+  document.addEventListener('click', function (e) {
+    if (e.defaultPrevented || REV.stilled()) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    const a = e.target.closest && e.target.closest('a[href]');
+    if (!a || a.target === '_blank' || a.hasAttribute('download') || a.hasAttribute('data-cut') || a.getAttribute('aria-current') === 'page') return;
+    const href = a.getAttribute('href');
+    if (!href || href.charAt(0) === '#') return;
+    let url; try { url = new URL(href, location.href); } catch (er) { return; }
+    if (url.origin !== location.origin) return;                          // external — leave it
+    if (url.href === location.href) return;                              // exact self
+    if (url.pathname === location.pathname && url.hash) return;          // in-page anchor
+    e.preventDefault();
+    REV.navigate(url.href);
+  });
+
   REV.boot = function (opts) {
     opts = opts || {};
     applyState();
+    playEnterReveal();
 
     // ground: rooms whose darkness is load-bearing pass ground:'dark'.
     // Set before mirrorInit so the cursor picks the right blend mode.

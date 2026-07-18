@@ -693,6 +693,24 @@ html[data-temple] .rev-topbar {
   background: linear-gradient(to bottom, rgba(6,1,10,.9) 30%, rgba(6,1,10,0));
 }
 
+/* ── PAGE TRANSITION — the needle lifts, the vinyl irises across, and
+   drops again on the next room. One shared overlay; a groove-textured
+   black disc grows from the spindle to cover, then shrinks to reveal.
+   Driven by REV.navigate(); never shown under reduced-motion. ──────── */
+.rev-wipe {
+  position: fixed; inset: 0; z-index: 200; pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(247,211,63,.18) 0 5%, rgba(245,197,24,.06) 11%, transparent 32%),
+    repeating-radial-gradient(circle at 50% 50%, rgba(255,255,255,.04) 0 2px, transparent 2px 6px),
+    #070109;
+  clip-path: circle(0% at 50% 50%);
+  will-change: clip-path;
+}
+.rev-wipe.wipe-exit  { animation: rev-wipe-close .5s var(--ease-needle) forwards; }
+.rev-wipe.wipe-enter { animation: rev-wipe-open  .62s var(--ease-needle) forwards; }
+@keyframes rev-wipe-close { from { clip-path: circle(0% at 50% 50%); }   to { clip-path: circle(150% at 50% 50%); } }
+@keyframes rev-wipe-open  { from { clip-path: circle(150% at 50% 50%); } to { clip-path: circle(0% at 50% 50%); } }
+
 .audio-toggle {
   position: fixed;
   right: 1.1rem; bottom: 1.1rem;
