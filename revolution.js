@@ -751,7 +751,17 @@
       const t = Date.now();
       if (t - lastSave > 1000) { lastSave = t; savePos(); }
     });
+    el.addEventListener('pause', savePos);
     addEventListener('pagehide', savePos);       // navigating away (incl. the page transition)
+    // bfcache restore (the back button — how the hub is most often re-reached)
+    // doesn't re-fire loadedmetadata, so re-seek to the saved spot here too.
+    addEventListener('pageshow', function (ev) {
+      if (!ev.persisted) return;
+      try {
+        const p = parseFloat(sessionStorage.getItem(POS_KEY) || '0');
+        if (p > 0.5 && el.duration && isFinite(el.duration) && p < el.duration - 1 && Math.abs((el.currentTime || 0) - p) > 2) el.currentTime = p;
+      } catch (e) {}
+    });
 
     // THE UNLOCK — the first real user gesture starts everything. Capture
     // phase + several event types so it fires no matter what a room's own
@@ -1009,7 +1019,7 @@
     let transit = false;
     try { transit = sessionStorage.getItem('rev_transit') === '1'; sessionStorage.removeItem('rev_transit'); } catch (e) {}
     if (!transit || REV.stilled()) return;
-    if (document.querySelector('.cut-flash')) return;   // a room with its own bespoke entrance (thefloor's hard cut) keeps it
+    if (document.querySelector('.cut-flash, .tv-on')) return;   // rooms with their own bespoke entrance (theriot's TV power-on) keep it
     const w = ensureWipe();
     w.className = 'rev-wipe wipe-enter';
     const clean = function () { if (w.parentNode) w.parentNode.removeChild(w); wipeEl = null; };
@@ -1032,6 +1042,18 @@
     if (url.pathname === location.pathname && url.hash) return;          // in-page anchor
     e.preventDefault();
     REV.navigate(url.href);
+  });
+
+  // Returning via the browser back/forward button restores the page from the
+  // bfcache frozen exactly as it left — which can leave the exit-wipe (or a
+  // half-shown loader) stuck covering the screen. Clear any transition overlay
+  // on a persisted restore, and drop the stale transit breadcrumb.
+  addEventListener('pageshow', function (e) {
+    if (!e.persisted) return;
+    const stuck = document.querySelectorAll('.rev-wipe, #rev-loader');
+    for (let i = 0; i < stuck.length; i++) if (stuck[i].parentNode) stuck[i].parentNode.removeChild(stuck[i]);
+    wipeEl = null;
+    try { sessionStorage.removeItem('rev_transit'); } catch (er) {}
   });
 
   // THE NEEDLE REMEMBERS — which rooms this device has already dropped into
@@ -1204,6 +1226,31 @@
           });
         }, { rootMargin: '0px 0px -10% 0px', threshold: 0.06 });
         revealables.forEach(function (el) { io.observe(el); });
+      }
+    }
+
+    // ── PHOTO TILT — every photo tips with the scroll: as it rides up past
+    //    the viewport's middle it tilts one way, below it the other, on a
+    //    self-perspective (no wrapper changes). Skipped under reduced motion;
+    //    opt an image out with data-no-tilt. ─────────────────────────────────
+    if (!REV.stilled()) {
+      const photos = [].slice.call(document.querySelectorAll('img')).filter(function (im) { return !im.hasAttribute('data-no-tilt'); });
+      if (photos.length) {
+        let ticking = false;
+        const tiltPass = function () {
+          ticking = false;
+          const vh = innerHeight || 1, mid = vh / 2;
+          for (let i = 0; i < photos.length; i++) {
+            const im = photos[i], r = im.getBoundingClientRect();
+            if (!r.height || r.bottom < -60 || r.top > vh + 60) continue;   // off-screen: leave it
+            const off = Math.max(-1, Math.min(1, (mid - (r.top + r.height / 2)) / vh));
+            im.style.transform = 'perspective(900px) rotateX(' + (off * 5).toFixed(2) + 'deg)';
+          }
+        };
+        const onScroll = function () { if (!ticking) { ticking = true; requestAnimationFrame(tiltPass); } };
+        addEventListener('scroll', onScroll, { passive: true });
+        addEventListener('resize', onScroll, { passive: true });
+        tiltPass();
       }
     }
 

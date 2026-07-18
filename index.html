@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Human Sexual Revolution (Ongoing) · Side A</title>
 <meta name="description" content="An interactive history of the sexual revolution, navigated like a record. Drop the needle on a room.">
-<link rel="stylesheet" href="revolution.css?v=34">
+<link rel="stylesheet" href="revolution.css?v=35">
 <script>try{var _t=JSON.parse(localStorage.getItem("revolution.threshold.v1"));if(_t&&_t.theme==="dark")document.documentElement.dataset.theme="disco";}catch(e){}</script>
 <style>
 /* ═══════════════════════════════════════════════════════════════
@@ -16,31 +16,10 @@
 
 body { overflow-y: auto; }
 
-/* ── VINYL SPIN-UP LOADER — a record coming up to speed, masking the
-   landing's first heavy loads. Skipped on in-site arrivals (the iris
-   handles those) and under reduced motion. ─────────────────────────── */
-#rev-loader {
-  position: fixed; inset: 0; z-index: 300;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.4rem;
-  background: radial-gradient(circle at 50% 42%, #17081f, #050108 72%);
-  transition: opacity .7s ease;
-}
-#rev-loader.done { opacity: 0; pointer-events: none; }
-#rev-loader .rl-disc {
-  width: 46vmin; height: 46vmin; max-width: 320px; max-height: 320px; border-radius: 50%;
-  background:
-    radial-gradient(circle at 50% 50%, #f7d33f 0 14%, #b98f0e 14% 19%, #0a0410 19% 20.5%, transparent 20.5%),
-    repeating-radial-gradient(circle at 50% 50%, rgba(255,255,255,.05) 0 2px, transparent 2px 5px),
-    radial-gradient(circle at 50% 50%, #1a0a22, #050108);
-  box-shadow: 0 0 70px rgba(245,197,24,.22), inset 0 0 46px rgba(0,0,0,.6);
-  animation: rl-spin 1.3s cubic-bezier(.3,.5,.3,1) infinite;
-}
-@keyframes rl-spin { to { transform: rotate(360deg); } }
-#rev-loader .rl-cap {
-  font-family: var(--font-mono); font-size: .74rem; letter-spacing: .34em;
-  text-transform: uppercase; color: #cbb8e8;
-}
-@media (prefers-reduced-motion: reduce) { #rev-loader .rl-disc { animation: none; } }
+/* first-load intro reuses the shared page-transition overlay (.rev-wipe):
+   it starts covering, holds a beat, then irises open — same record wipe
+   shown between pages. z-index bumped above the wipe so it's never masked. */
+#rev-loader { z-index: 300; }
 
 .deck-stage {
   position: relative;
@@ -54,6 +33,16 @@ body { overflow-y: auto; }
 
 header.masthead { text-align: center; }
 header.masthead .eyebrow { margin-bottom: .6rem; }
+
+/* the top bar floats over the dark hero painting here, so the shared fading
+   scrim (invisible over the dark rooms) shows the painting through. Give it a
+   fuller, solid dark cover on the hub — in every theme, since the hero is
+   always dark imagery. */
+.rev-topbar,
+[data-ground="dark"] .rev-topbar,
+html[data-theme="disco"] .rev-topbar {
+  background: linear-gradient(to bottom, rgba(6,1,10,.97) 0%, rgba(6,1,10,.9) 58%, rgba(6,1,10,.5) 84%, rgba(6,1,10,0) 100%);
+}
 
 /* ── THE HERO — a classical backdrop that dissolves into the record ──
    Vigée Le Brun's "Venus Binding the Wings of Cupid" (1781) sits behind
@@ -276,20 +265,22 @@ header.masthead .eyebrow { margin-bottom: .6rem; }
 </head>
 <body>
 
-<div id="rev-loader" aria-hidden="true">
-  <div class="rl-disc"></div>
-  <div class="rl-cap">dropping the needle…</div>
-</div>
+<div id="rev-loader" class="rev-wipe" aria-hidden="true" style="clip-path: circle(150% at 50% 50%)"></div>
 <script>
 (function () {
   var l = document.getElementById('rev-loader'); if (!l) return;
   var stilled = matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var transit = false; try { transit = sessionStorage.getItem('rev_transit') === '1'; } catch (e) {}
+  // in-site arrivals already play the iris (the transition); reduced-motion shows nothing
   if (stilled || transit) { if (l.parentNode) l.parentNode.removeChild(l); return; }
   var gone = false;
-  function done() { if (gone) return; gone = true; l.classList.add('done'); setTimeout(function () { if (l.parentNode) l.parentNode.removeChild(l); }, 750); }
-  setTimeout(done, 1600);                       // max ceremony even if the load drags
-  addEventListener('load', function () { setTimeout(done, 300); });
+  function open() {
+    if (gone) return; gone = true;
+    l.classList.add('wipe-enter');              // the same record iris used between pages
+    setTimeout(function () { if (l.parentNode) l.parentNode.removeChild(l); }, 750);
+  }
+  setTimeout(open, 900);                         // brief hold, then iris open…
+  addEventListener('load', function () { setTimeout(open, 200); });   // …or as soon as it's ready
 })();
 </script>
 
@@ -334,7 +325,7 @@ header.masthead .eyebrow { margin-bottom: .6rem; }
   </p>
 </nav>
 
-<script src="revolution.js?v=34"></script>
+<script src="revolution.js?v=35"></script>
 <script>
 REV.boot({ scene: 'hub', room: null, track: 'assets/tracks/hub.mp3', trackTitle: 'Strobotone — San Fran (Interlude Edit)' });
 
@@ -600,7 +591,7 @@ let W, H, CX, CY, R, dpr;
 const BAND_OUT = 0.96, BAND_IN = 0.42;     // annulus of playable vinyl
 const LABEL_R = 0.34;
 
-const REST_ARM = -0.62;
+const REST_ARM = 1.72;   // parked just outside the outermost groove (pivot is upper-right, so this points the arm down onto the record's right edge)
 let phase = 0;                              // platter rotation
 let spinScale = 1;                          // eased per-room speed multiplier
 let spinTarget = 1;
@@ -1034,12 +1025,6 @@ canvas.addEventListener('pointercancel', touchEnd);
     tpy = Math.max(-1, Math.min(1, (e.clientY - cy) / cy));
     ensure();
   }
-  function onOrient(e) {
-    if (REV.stilled() || e.gamma == null) return;
-    tpx = Math.max(-1, Math.min(1, e.gamma / 28));
-    tpy = Math.max(-1, Math.min(1, ((e.beta || 45) - 45) / 28));
-    ensure();
-  }
   function loop(t) {
     if (REV.stilled()) { art.style.transform = 'translateX(-50%)'; art.style.opacity = ''; if (title) title.style.transform = ''; running = false; return; }
     px += (tpx - px) * 0.07; py += (tpy - py) * 0.07;
@@ -1059,7 +1044,6 @@ canvas.addEventListener('pointercancel', touchEnd);
   function ensure() { if (!running && !REV.stilled()) { running = true; requestAnimationFrame(loop); } }
   addEventListener('pointermove', onMove, { passive: true });
   addEventListener('scroll', ensure, { passive: true });
-  addEventListener('deviceorientation', onOrient, { passive: true });
   ensure();
 })();
 </script>
