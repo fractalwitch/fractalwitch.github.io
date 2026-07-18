@@ -686,6 +686,17 @@ a:hover { color: var(--hotpink); }
 }
 .rev-topbar .tb-name { opacity: .82; }
 @media (max-width: 540px) { .rev-topbar .tb-name { display: none; } }
+/* transport: the now-playing progress line hugging the bottom of the bar */
+.rev-topbar .tb-progress {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+  background: rgba(120,90,120,.14);
+}
+.rev-topbar .tb-progress i {
+  display: block; height: 100%; width: 0;
+  background: linear-gradient(90deg, var(--gold), var(--hotpink));
+  box-shadow: 0 0 8px rgba(255,46,136,.6);
+  transition: width .3s linear;
+}
 /* dark grounds: flip the scrim so the light wordmark stays legible */
 [data-ground="dark"] .rev-topbar,
 html[data-theme="disco"] .rev-topbar,

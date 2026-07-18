@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Human Sexual Revolution (Ongoing) · Side A</title>
 <meta name="description" content="An interactive history of the sexual revolution, navigated like a record. Drop the needle on a room.">
-<link rel="stylesheet" href="revolution.css?v=30">
+<link rel="stylesheet" href="revolution.css?v=31">
 <script>try{var _t=JSON.parse(localStorage.getItem("revolution.threshold.v1"));if(_t&&_t.theme==="dark")document.documentElement.dataset.theme="disco";}catch(e){}</script>
 <style>
 /* ═══════════════════════════════════════════════════════════════
@@ -291,7 +291,7 @@ header.masthead .eyebrow { margin-bottom: .6rem; }
   </p>
 </nav>
 
-<script src="revolution.js?v=30"></script>
+<script src="revolution.js?v=31"></script>
 <script>
 REV.boot({ scene: 'hub', room: null, track: 'assets/tracks/hub.mp3', trackTitle: 'Strobotone — San Fran (Interlude Edit)' });
 
@@ -571,6 +571,17 @@ let accentTarget = 0;
 /* sparks thrown off a groove when the needle finds it */
 let sparks = [];                            // {ang, r, life, hue, size}
 
+/* dust motes drifting in the platter light — a living, breathing deck */
+let armBreath = 0;                          // subtle tonearm sway at rest
+const motes = [];
+for (let i = 0; i < 16; i++) motes.push({
+  ang: Math.random() * 6.2832,
+  rad: 0.16 + Math.random() * 0.78,         // fraction of R
+  drift: (Math.random() * 0.5 + 0.2) * (Math.random() < 0.5 ? -1 : 1),
+  bob: Math.random() * 6.2832,
+  sz: 0.6 + Math.random() * 1.5
+});
+
 /* HOLD-TO-DROP (touch): press a band, a ring fills, the needle drops */
 const HOLD_MS = 1400;
 let pressBand = -1;                          // band the finger is holding
@@ -639,6 +650,8 @@ function draw(now) {
   lastT = now;
   // audio-reactive bands (frozen in stilled/reduced-motion)
   const rx = (REV.stilled() || !REV.audio.bands) ? { bass:0, mid:0, high:0, level:0 } : REV.audio.bands(now);
+  // the tonearm breathes gently at rest, and bobs a touch with the mids
+  armBreath = REV.stilled() ? 0 : (Math.sin(now * 0.0009) * 0.012 + rx.mid * 0.018);
   spinScale += (spinTarget - spinScale) * Math.min(1, dt * 3);
   if (!REV.stilled()) phase += OMEGA * dt * spinScale;
   armAngle += (armTarget - armAngle) * Math.min(1, dt * 6);
@@ -672,13 +685,15 @@ function draw(now) {
   ctx.beginPath(); ctx.arc(CX, CY, R, 0, 7);
   ctx.fillStyle = vinyl; ctx.fill();
 
-  /* audio-reactive bloom — the whole platter glows to the low end */
+  /* audio-reactive bloom — the platter glows to the low end, in the selected
+     room's accent when one is chosen, otherwise the label's gold */
   if (rx.bass > 0.01) {
     const a = Math.min(0.5, rx.bass * 0.62);
+    const bloomC = (accentLevel > 0.25) ? accent : '#f5c518';
     const bl = ctx.createRadialGradient(CX, CY, R * 0.1, CX, CY, R);
-    bl.addColorStop(0, hexA('#f5c518', a));
-    bl.addColorStop(0.55, hexA('#f5c518', a * 0.28));
-    bl.addColorStop(1, hexA('#f5c518', 0));
+    bl.addColorStop(0, hexA(bloomC, a));
+    bl.addColorStop(0.55, hexA(bloomC, a * 0.28));
+    bl.addColorStop(1, hexA(bloomC, 0));
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
     ctx.beginPath(); ctx.arc(CX, CY, R, 0, 7); ctx.fillStyle = bl; ctx.fill();
     ctx.restore();
@@ -799,6 +814,28 @@ function draw(now) {
     ctx.restore();
   }
 
+  /* dust motes — fine particles adrift in the platter light, twinkling
+     brighter with the music; static (no drift) under reduced motion */
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < motes.length; i++) {
+    const m = motes[i];
+    if (!REV.stilled()) m.ang += m.drift * dt * 0.15;
+    const bob = REV.stilled() ? 0 : Math.sin(now * 0.0006 + m.bob) * 0.03;
+    const rr = (m.rad + bob) * R * 0.94;
+    const px = CX + Math.cos(m.ang) * rr;
+    const py = CY + Math.sin(m.ang) * rr;
+    const tw = REV.stilled() ? 0.12
+             : (0.10 + 0.10 * (0.5 + 0.5 * Math.sin(now * 0.0016 + m.bob)) + rx.level * 0.15);
+    ctx.globalAlpha = Math.min(0.4, tw);
+    ctx.fillStyle = '#f7e6b0';
+    ctx.beginPath();
+    ctx.arc(px, py, m.sz * (1 + rx.level * 0.5), 0, 7);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
   drawArm();
 
   requestAnimationFrame(draw);
@@ -807,8 +844,9 @@ function draw(now) {
 function drawArm() {
   const p = pivot();
   const len = R * 1.35;
-  const ex = p.x + Math.cos(armAngle) * len;
-  const ey = p.y + Math.sin(armAngle) * len;
+  const ang = armAngle + armBreath;          // Phase 3: the tonearm breathes at rest
+  const ex = p.x + Math.cos(ang) * len;
+  const ey = p.y + Math.sin(ang) * len;
 
   /* counterweight + pivot base */
   ctx.beginPath(); ctx.arc(p.x, p.y, R * 0.055, 0, 7);
@@ -817,7 +855,7 @@ function drawArm() {
   const back = R * 0.16;
   ctx.beginPath();
   ctx.moveTo(p.x, p.y);
-  ctx.lineTo(p.x - Math.cos(armAngle) * back, p.y - Math.sin(armAngle) * back);
+  ctx.lineTo(p.x - Math.cos(ang) * back, p.y - Math.sin(ang) * back);
   ctx.lineWidth = R * 0.028;
   ctx.strokeStyle = '#8fa3b8'; ctx.stroke();
 
@@ -836,7 +874,7 @@ function drawArm() {
   /* headshell + stylus */
   ctx.save();
   ctx.translate(ex, ey);
-  ctx.rotate(armAngle + 0.5);
+  ctx.rotate(ang + 0.5);
   ctx.fillStyle = dropping ? '#ff2e88' : '#f5c518';
   ctx.fillRect(-R * 0.035, -R * 0.014, R * 0.07, R * 0.028);
   ctx.restore();
