@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Human Sexual Revolution (Ongoing) · Side A</title>
 <meta name="description" content="An interactive history of the sexual revolution, navigated like a record. Drop the needle on a room.">
-<link rel="stylesheet" href="revolution.css?v=32">
+<link rel="stylesheet" href="revolution.css?v=33">
 <script>try{var _t=JSON.parse(localStorage.getItem("revolution.threshold.v1"));if(_t&&_t.theme==="dark")document.documentElement.dataset.theme="disco";}catch(e){}</script>
 <style>
 /* ═══════════════════════════════════════════════════════════════
@@ -15,6 +15,32 @@
    ═══════════════════════════════════════════════════════════════ */
 
 body { overflow-y: auto; }
+
+/* ── VINYL SPIN-UP LOADER — a record coming up to speed, masking the
+   landing's first heavy loads. Skipped on in-site arrivals (the iris
+   handles those) and under reduced motion. ─────────────────────────── */
+#rev-loader {
+  position: fixed; inset: 0; z-index: 300;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.4rem;
+  background: radial-gradient(circle at 50% 42%, #17081f, #050108 72%);
+  transition: opacity .7s ease;
+}
+#rev-loader.done { opacity: 0; pointer-events: none; }
+#rev-loader .rl-disc {
+  width: 46vmin; height: 46vmin; max-width: 320px; max-height: 320px; border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, #f7d33f 0 14%, #b98f0e 14% 19%, #0a0410 19% 20.5%, transparent 20.5%),
+    repeating-radial-gradient(circle at 50% 50%, rgba(255,255,255,.05) 0 2px, transparent 2px 5px),
+    radial-gradient(circle at 50% 50%, #1a0a22, #050108);
+  box-shadow: 0 0 70px rgba(245,197,24,.22), inset 0 0 46px rgba(0,0,0,.6);
+  animation: rl-spin 1.3s cubic-bezier(.3,.5,.3,1) infinite;
+}
+@keyframes rl-spin { to { transform: rotate(360deg); } }
+#rev-loader .rl-cap {
+  font-family: var(--font-mono); font-size: .74rem; letter-spacing: .34em;
+  text-transform: uppercase; color: #cbb8e8;
+}
+@media (prefers-reduced-motion: reduce) { #rev-loader .rl-disc { animation: none; } }
 
 .deck-stage {
   position: relative;
@@ -250,6 +276,23 @@ header.masthead .eyebrow { margin-bottom: .6rem; }
 </head>
 <body>
 
+<div id="rev-loader" aria-hidden="true">
+  <div class="rl-disc"></div>
+  <div class="rl-cap">dropping the needle…</div>
+</div>
+<script>
+(function () {
+  var l = document.getElementById('rev-loader'); if (!l) return;
+  var stilled = matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var transit = false; try { transit = sessionStorage.getItem('rev_transit') === '1'; } catch (e) {}
+  if (stilled || transit) { if (l.parentNode) l.parentNode.removeChild(l); return; }
+  var gone = false;
+  function done() { if (gone) return; gone = true; l.classList.add('done'); setTimeout(function () { if (l.parentNode) l.parentNode.removeChild(l); }, 750); }
+  setTimeout(done, 1600);                       // max ceremony even if the load drags
+  addEventListener('load', function () { setTimeout(done, 300); });
+})();
+</script>
+
 <div class="deck-stage">
   <header class="masthead hero">
     <div class="hero-art" aria-hidden="true"></div>
@@ -291,7 +334,7 @@ header.masthead .eyebrow { margin-bottom: .6rem; }
   </p>
 </nav>
 
-<script src="revolution.js?v=32"></script>
+<script src="revolution.js?v=33"></script>
 <script>
 REV.boot({ scene: 'hub', room: null, track: 'assets/tracks/hub.mp3', trackTitle: 'Strobotone — San Fran (Interlude Edit)' });
 
@@ -349,6 +392,7 @@ const REST_SUB = COARSE ? 'touch a groove · hold to drop the needle'
 /* ── tracklist (the honest nav) — both sides, always listed ─────── */
 (function buildTracklist(){
   const ol = document.getElementById('tracklist');
+  const played = (window.REV && REV.played) ? REV.played() : [];   // rooms the needle has already touched
   function group(letter, label, rooms){
     const head = document.createElement('li');
     head.className = 'side-head';
@@ -357,7 +401,10 @@ const REST_SUB = COARSE ? 'touch a groove · hold to drop the needle'
     rooms.forEach(function (r, i) {
       const li = document.createElement('li');
       li.dataset.side = letter;
-      if (!r.built) li.className = 'unreleased';
+      const cls = [];
+      if (!r.built) cls.push('unreleased');
+      if (played.indexOf(r.id) >= 0) cls.push('played');
+      if (cls.length) li.className = cls.join(' ');
       const n = document.createElement('span');
       n.className = 'tno';
       n.textContent = letter + (i + 1);
