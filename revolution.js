@@ -729,9 +729,29 @@
     // be a good guest: pause when the tab is hidden, resume when it returns
     document.addEventListener('visibilitychange', function () {
       if (!audio.trackEl) return;
-      if (document.hidden) { audio.wasPlaying = !audio.trackEl.paused; audio.trackEl.pause(); }
+      if (document.hidden) { audio.wasPlaying = !audio.trackEl.paused; audio.trackEl.pause(); savePos(); }
       else if (audio.wasPlaying && audio.enabled) { audio.trackEl.play().catch(function () {}); }
     });
+
+    // ── RESUME — pick each track up where it left off within this tab-session,
+    //    so moving between rooms (and back) doesn't rewind the music. Position
+    //    is per-track and lives only in sessionStorage (this tab, this visit). ──
+    const POS_KEY = 'rev_pos:' + url;
+    let lastSave = 0;
+    function savePos() {
+      try { if (audio.trackEl) sessionStorage.setItem(POS_KEY, String(audio.trackEl.currentTime || 0)); } catch (e) {}
+    }
+    el.addEventListener('loadedmetadata', function () {
+      try {
+        const p = parseFloat(sessionStorage.getItem(POS_KEY) || '0');
+        if (p > 0.5 && isFinite(el.duration) && p < el.duration - 1) el.currentTime = p;
+      } catch (e) {}
+    }, { once: true });
+    el.addEventListener('timeupdate', function () {
+      const t = Date.now();
+      if (t - lastSave > 1000) { lastSave = t; savePos(); }
+    });
+    addEventListener('pagehide', savePos);       // navigating away (incl. the page transition)
 
     // THE UNLOCK — the first real user gesture starts everything. Capture
     // phase + several event types so it fires no matter what a room's own
