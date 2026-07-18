@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Human Sexual Revolution (Ongoing) · Side A</title>
 <meta name="description" content="An interactive history of the sexual revolution, navigated like a record. Drop the needle on a room.">
-<link rel="stylesheet" href="revolution.css?v=28">
+<link rel="stylesheet" href="revolution.css?v=29">
 <script>try{var _t=JSON.parse(localStorage.getItem("revolution.threshold.v1"));if(_t&&_t.theme==="dark")document.documentElement.dataset.theme="disco";}catch(e){}</script>
 <style>
 /* ═══════════════════════════════════════════════════════════════
@@ -57,7 +57,10 @@ header.masthead .eyebrow { margin-bottom: .6rem; }
   line-height: .9;
   letter-spacing: -.005em;
   color: #fbf4ff;
-  text-shadow: 0 2px 34px rgba(0,0,0,.6), 0 1px 3px rgba(0,0,0,.55);
+  /* last shadow is an audio-reactive gold bloom — invisible at rest
+     (--rx-bass 0), swelling on the low end while a track plays */
+  text-shadow: 0 2px 34px rgba(0,0,0,.6), 0 1px 3px rgba(0,0,0,.55),
+               0 0 calc(16px + var(--rx-bass, 0) * 46px) rgba(245,197,24, calc(var(--rx-bass, 0) * .55));
   margin: 5vh 0 0;
 }
 .hero-title .hl { display: block; }
@@ -288,7 +291,7 @@ header.masthead .eyebrow { margin-bottom: .6rem; }
   </p>
 </nav>
 
-<script src="revolution.js?v=28"></script>
+<script src="revolution.js?v=29"></script>
 <script>
 REV.boot({ scene: 'hub', room: null, track: 'assets/tracks/hub.mp3', trackTitle: 'Strobotone — San Fran (Interlude Edit)' });
 
@@ -634,6 +637,8 @@ function armAngleFor(radius) {
 function draw(now) {
   const dt = Math.min(0.05, (now - lastT) / 1000);
   lastT = now;
+  // audio-reactive bands (frozen in stilled/reduced-motion)
+  const rx = (REV.stilled() || !REV.audio.bands) ? { bass:0, mid:0, high:0, level:0 } : REV.audio.bands(now);
   spinScale += (spinTarget - spinScale) * Math.min(1, dt * 3);
   if (!REV.stilled()) phase += OMEGA * dt * spinScale;
   armAngle += (armTarget - armAngle) * Math.min(1, dt * 6);
@@ -666,6 +671,18 @@ function draw(now) {
   vinyl.addColorStop(1, '#050108');
   ctx.beginPath(); ctx.arc(CX, CY, R, 0, 7);
   ctx.fillStyle = vinyl; ctx.fill();
+
+  /* audio-reactive bloom — the whole platter glows to the low end */
+  if (rx.bass > 0.01) {
+    const a = Math.min(0.5, rx.bass * 0.62);
+    const bl = ctx.createRadialGradient(CX, CY, R * 0.1, CX, CY, R);
+    bl.addColorStop(0, hexA('#f5c518', a));
+    bl.addColorStop(0.55, hexA('#f5c518', a * 0.28));
+    bl.addColorStop(1, hexA('#f5c518', 0));
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    ctx.beginPath(); ctx.arc(CX, CY, R, 0, 7); ctx.fillStyle = bl; ctx.fill();
+    ctx.restore();
+  }
 
   /* rotating sheen — the light that tells your eye it's spinning */
   ctx.save();
@@ -770,6 +787,17 @@ function draw(now) {
   ctx.beginPath(); ctx.arc(0, 0, R * 0.014, 0, 7);
   ctx.fillStyle = '#050108'; ctx.fill();
   ctx.restore();
+
+  /* label heartbeat — a gold halo blooming out of the label on the kick */
+  if (rx.bass > 0.02) {
+    const r2 = LABEL_R * R;
+    const hg = ctx.createRadialGradient(CX, CY, r2 * 0.7, CX, CY, r2 * 1.6);
+    hg.addColorStop(0, hexA('#f7d33f', Math.min(0.55, rx.bass * 0.7)));
+    hg.addColorStop(1, hexA('#f7d33f', 0));
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    ctx.beginPath(); ctx.arc(CX, CY, r2 * 1.6, 0, 7); ctx.fillStyle = hg; ctx.fill();
+    ctx.restore();
+  }
 
   drawArm();
 

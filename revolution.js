@@ -93,6 +93,7 @@
     t: 0, last: 0,
     dark: 0,               // 0 lit → 1 extinguished (eased)
     darkTarget: 0,
+    rx: 0,                 // audio-reactive shimmer (0..1, from the highs)
     specks: [],
     running: false
   };
@@ -156,6 +157,7 @@
 
     if (REV.stilled()) {
       // Stilled: a faint static scatter remains as texture. No movement.
+      mirror.rx = 0;
       drawSpecks(ctx, dpr, 0);
       requestAnimationFrame(mirrorFrame);
       return;
@@ -170,6 +172,12 @@
     mirror.t += dt * omega;
 
     mirror.dark += (mirror.darkTarget - mirror.dark) * Math.min(1, dt * 4);
+
+    // the music lifts the scatter: brighter/larger on the highs, and the loud
+    // parts excite the ball so the whole spray sweeps faster with the track
+    const rb = bands(now);
+    mirror.rx += (rb.high - mirror.rx) * Math.min(1, dt * 8);
+    mirror.omegaBoost += rb.level * dt * 3.2;
 
     drawSpecks(ctx, dpr, mirror.t);
     requestAnimationFrame(mirrorFrame);
@@ -193,10 +201,10 @@
 
       // real optics: farther spots are dimmer (spread), not smaller
       const fade = (1 - s.dBase * 0.72) * lit;
-      ctx.globalAlpha = 0.14 + fade * 0.5;
+      ctx.globalAlpha = 0.14 + fade * 0.5 + mirror.rx * 0.35;
       ctx.fillStyle = s.hue;
       ctx.beginPath();
-      ctx.arc(px * dpr, py * dpr, s.size * dpr, 0, 6.2832);
+      ctx.arc(px * dpr, py * dpr, s.size * dpr * (1 + mirror.rx * 0.6), 0, 6.2832);
       ctx.fill();
     }
 
@@ -244,7 +252,9 @@
     noiseBuf: null,
     arr: null, spb: 0.5, swing: 0,
     timer: null, clockStart: 0, gstep: 0,
-    hum: null
+    hum: null,
+    analyser: null, freqData: null,
+    rx: { bass: 0, mid: 0, high: 0, level: 0 }, rxLast: 0
   };
 
   const LOWFI = !!(window.matchMedia && matchMedia('(hover: none), (pointer: coarse)').matches);
@@ -271,6 +281,15 @@
     for (let i = 0; i < 1024; i++) { const x = i / 1023 * 2 - 1; curve[i] = Math.tanh(x * 1.6); }
     audio.limiter.curve = curve; audio.limiter.oversample = '2x';
     audio.master.connect(audio.glue).connect(audio.limiter).connect(ac.destination);
+
+    // audio-reactive tap — a PASSIVE analyser (output unconnected). Fed by the
+    // synth master here and, in startTrack(), by the MP3 trackGain too, so the
+    // reactive layer sees the whole room (the MP3 path bypasses master).
+    audio.analyser = ac.createAnalyser();
+    audio.analyser.fftSize = 1024;
+    audio.analyser.smoothingTimeConstant = 0.82;
+    audio.freqData = new Uint8Array(audio.analyser.frequencyBinCount);
+    audio.master.connect(audio.analyser);
 
     // instrument buses
     audio.bus.drums = ac.createGain(); audio.bus.drums.gain.value = 0.9;
@@ -675,6 +694,7 @@
           audio.trackSrc = audio.ctx.createMediaElementSource(el);
           audio.trackGain = audio.ctx.createGain(); audio.trackGain.gain.value = 1;
           audio.trackSrc.connect(audio.trackGain).connect(audio.ctx.destination);
+          if (audio.analyser) audio.trackGain.connect(audio.analyser);   // let bands() hear the track
         } catch (e) { /* some engines forbid re-routing — fall back to the element's own output */ }
       }
     } catch (e) {}
@@ -796,6 +816,30 @@
     }
   }
 
+  // ── audio-reactive bands: one FFT read per animation frame, enveloped to
+  //    0..1 with a fast attack / slow release so it reads musical, not jittery.
+  //    Callers within the same frame share one read (the rxLast guard); when
+  //    audio is off/silent the values decay smoothly back to rest. ──────────
+  function bands(now) {
+    now = now || performance.now();
+    const rx = audio.rx;
+    if (now - audio.rxLast < 10) return rx;        // already read this frame
+    audio.rxLast = now;
+    const a = audio.analyser;
+    if (!a || !audio.enabled) {
+      rx.bass *= 0.86; rx.mid *= 0.86; rx.high *= 0.86; rx.level *= 0.86;
+      return rx;
+    }
+    a.getByteFrequencyData(audio.freqData);
+    const d = audio.freqData;
+    const avg = function (lo, hi) { let s = 0; for (let i = lo; i < hi; i++) s += d[i]; return s / ((hi - lo) * 255); };
+    const bass = avg(1, 8), mid = avg(8, 60), high = avg(60, 180), level = avg(1, 180);
+    const sm = function (c, t) { return t > c ? c + (t - c) * 0.5 : c + (t - c) * 0.12; };
+    rx.bass = sm(rx.bass, bass); rx.mid = sm(rx.mid, mid);
+    rx.high = sm(rx.high, high); rx.level = sm(rx.level, level);
+    return rx;
+  }
+
   REV.audio = {
     enable: audioEnable,
     enabled: function () { return audio.enabled; },
@@ -804,7 +848,8 @@
     thunk: thunk,
     preview: preview,
     stem: stem,
-    track: setTrack
+    track: setTrack,
+    bands: bands
   };
 
   /* ─────────────────────────────────────────────────────────────────
@@ -1019,6 +1064,20 @@
       if (sc === 'hub') bar.querySelector('.tb-mark').setAttribute('aria-current', 'page');
       document.body.appendChild(bar);
     }
+
+    // ── audio-reactive CSS vars — one tick drives the atmosphere everywhere
+    //    (scanline breath, hero-title throb). Values rest at 0 until sound
+    //    plays, and are pinned to 0 in stilled/reduced-motion. ─────────────
+    (function rxTick(now) {
+      const b = bands(now);
+      const st = document.documentElement.style;
+      if (REV.stilled()) { st.setProperty('--rx-level', '0'); st.setProperty('--rx-bass', '0'); }
+      else {
+        st.setProperty('--rx-level', b.level.toFixed(3));
+        st.setProperty('--rx-bass', b.bass.toFixed(3));
+      }
+      requestAnimationFrame(rxTick);
+    })(performance.now());
 
     if (opts.scene) setScene(opts.scene);
     if (opts.room) fourthwallArm(opts.room);
