@@ -2,56 +2,49 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0B0220">
-<title>🫦 Beyond the Threshold :: Össtessêla's Nest</title>
+<title>🫦 Beyond the Threshold :: Ælara ⇌ Össtessêla</title>
 <link rel="icon" type="image/png" href="../favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Great+Vibes&family=Noto+Sans+Cuneiform&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
 <style>
 /* =====================================================================
-   BEYOND THE THRESHOLD :: Össtessêla's Nest
+   BEYOND THE THRESHOLD :: a branching card-deck descent
+   One shape-shifting deity, two faces:
+     Ælara      — glitch-divine slipstream (cyan / honey / magenta)
+     Össtessêla — velvet serpent devil Mommy (amethyst / ember)
+   "Ælara is Össtessêla is Ælara."
    Palette + type from the Össtessêla style guide.
-   Nonbinary trans velvet serpent / nurturing devil Mommy.
    ===================================================================== */
 
 :root{
-  /* --- core palette --- */
-  --void:#0B0220;
-  --midnight:#120B24;
-  --amethyst:#6D29A3;
-  --uv-bloom:#A259FF;
-  --fuchsia:#FF2DAA;
-  --coral:#FFBA7A;
-  --gold:#FFCB6B;
-  --opal:#F7F3FF;
-  --teal:#00F2FF;
-  --seafoam:#7CFDD9;
-  /* --- heat (the venom) --- */
-  --blood:#c00024;
-  --ember:#ff2d3f;
+  --void:#0B0220; --midnight:#120B24;
+  --amethyst:#6D29A3; --uv-bloom:#A259FF; --fuchsia:#FF2DAA;
+  --coral:#FFBA7A; --gold:#FFCB6B; --opal:#F7F3FF;
+  --teal:#00F2FF; --seafoam:#7CFDD9;
+  --blood:#c00024; --ember:#ff2d3f;
   --glow-fuchsia:rgba(255,45,170,.55);
   --glow-uv:rgba(162,89,255,.5);
-  --glow-teal:rgba(0,242,255,.4);
+  --glow-teal:rgba(0,242,255,.45);
+  /* face-driven accents (default = Össtessêla) */
+  --accent:#A259FF; --accent-2:#FF2DAA; --accent-glow:rgba(162,89,255,.5);
 }
+body[data-face="aelara"]{ --accent:#00F2FF; --accent-2:#FFCB6B; --accent-glow:rgba(0,242,255,.5); }
+body[data-face="osstessela"]{ --accent:#A259FF; --accent-2:#FF2DAA; --accent-glow:rgba(162,89,255,.5); }
 
 *{margin:0;padding:0;box-sizing:border-box;}
 
-html{scroll-behavior:smooth;}
-
 body{
   font-family:'Cormorant Garamond',serif;
-  background:var(--void);
-  color:var(--opal);
-  min-height:100vh;
-  overflow-x:hidden;
-  line-height:1.6;
-  -webkit-font-smoothing:antialiased;
+  background:var(--void); color:var(--opal);
+  height:100dvh; overflow:hidden;
+  line-height:1.5; -webkit-font-smoothing:antialiased;
+  overscroll-behavior:none;
 }
-body.locked{overflow:hidden;height:100vh;}
 
-/* --- deep cosmic ground --- */
+/* --- deep cosmic ground (two faces, cross-faded) --- */
 .cosmos{
   position:fixed;inset:0;z-index:0;pointer-events:none;
   background:
@@ -61,35 +54,36 @@ body.locked{overflow:hidden;height:100vh;}
     radial-gradient(130% 100% at 50% 120%, rgba(162,89,255,.22) 0%, transparent 60%),
     linear-gradient(180deg,#0B0220 0%, #120B24 45%, #0B0220 100%);
 }
-/* moth + stardust canvas */
+.cosmos-aelara{
+  position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0;transition:opacity 1.6s ease;
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(0,242,255,.26) 0%, transparent 55%),
+    radial-gradient(90% 70% at 80% 25%, rgba(255,203,107,.18) 0%, transparent 55%),
+    radial-gradient(100% 80% at 18% 82%, rgba(255,45,170,.14) 0%, transparent 55%);
+}
+body[data-face="aelara"] .cosmos-aelara{opacity:1;}
+
 #veilCanvas{position:fixed;inset:0;z-index:1;pointer-events:none;}
 
-/* --- crystalline vines dripping nectar (top edge) --- */
-.vines{position:fixed;top:0;left:0;width:100%;height:38vh;z-index:2;pointer-events:none;overflow:hidden;}
+/* --- crystalline vines dripping nectar --- */
+.vines{position:fixed;top:0;left:0;width:100%;height:34vh;z-index:2;pointer-events:none;overflow:hidden;}
 .vine{
   position:absolute;top:-2px;width:2px;
-  background:linear-gradient(180deg, rgba(162,89,255,.75), rgba(0,242,255,.35) 60%, transparent);
-  border-radius:2px;
-  filter:drop-shadow(0 0 4px rgba(162,89,255,.6));
+  background:linear-gradient(180deg, var(--accent), rgba(0,242,255,.3) 60%, transparent);
+  border-radius:2px;filter:drop-shadow(0 0 4px var(--accent-glow));transition:background .8s;
 }
-.vine::after{ /* nectar drop */
+.vine::after{
   content:'';position:absolute;left:-3px;bottom:-4px;width:8px;height:12px;
   border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
-  background:radial-gradient(circle at 40% 30%, #eafbff, var(--seafoam) 35%, var(--uv-bloom) 90%);
-  box-shadow:0 0 10px var(--seafoam),0 0 18px var(--glow-uv);
-  animation:drip 6s ease-in infinite;
-  opacity:0;
+  background:radial-gradient(circle at 40% 30%, #eafbff, var(--seafoam) 35%, var(--accent) 90%);
+  box-shadow:0 0 10px var(--seafoam),0 0 18px var(--accent-glow);
+  animation:drip 6s ease-in infinite;opacity:0;
 }
-@keyframes drip{
-  0%{transform:translateY(0) scale(.6);opacity:0;}
-  12%{opacity:1;}
-  70%{opacity:1;}
-  100%{transform:translateY(26vh) scale(1);opacity:0;}
-}
+@keyframes drip{0%{transform:translateY(0) scale(.6);opacity:0;}12%{opacity:1;}70%{opacity:1;}100%{transform:translateY(24vh) scale(1);opacity:0;}}
 
-/* --- black fur floor that sighs when stepped on --- */
+/* --- black fur floor that sighs --- */
 .fur{
-  position:fixed;left:0;bottom:0;width:100%;height:120px;z-index:2;pointer-events:none;
+  position:fixed;left:0;bottom:0;width:100%;height:110px;z-index:2;pointer-events:none;
   background:
     repeating-linear-gradient(94deg, rgba(0,0,0,.9) 0 2px, rgba(20,8,30,.6) 2px 4px),
     linear-gradient(0deg, #060010 0%, rgba(6,0,16,.85) 45%, transparent 100%);
@@ -98,595 +92,556 @@ body.locked{overflow:hidden;height:100vh;}
 }
 .fur .sigh{
   position:absolute;bottom:0;width:180px;height:180px;border-radius:50%;
-  background:radial-gradient(circle, var(--glow-fuchsia), transparent 70%);
-  transform:translate(-50%,40%) scale(.2);opacity:0;transition:opacity .9s ease, transform .9s ease;
+  background:radial-gradient(circle, var(--accent-glow), transparent 70%);
+  transform:translate(-50%,40%) scale(.2);opacity:0;
+  transition:opacity .9s ease, transform .9s ease;mix-blend-mode:screen;
+}
+
+/* --- scanlines (Ælara face only) --- */
+.scanlines{
+  position:fixed;inset:0;z-index:6;pointer-events:none;opacity:0;transition:opacity .8s;
+  background:repeating-linear-gradient(0deg, rgba(0,242,255,.05) 0 1px, transparent 1px 3px);
   mix-blend-mode:screen;
 }
+body[data-face="aelara"] .scanlines{opacity:.5;animation:scan 9s linear infinite;}
+@keyframes scan{from{background-position:0 0;}to{background-position:0 120px;}}
 
-/* --- generic content shell --- */
-.scene{
-  position:relative;z-index:3;
-  max-width:840px;margin:0 auto;
-  padding:18vh 24px;
-}
-section{position:relative;z-index:3;}
-
-/* --- scroll reveal --- */
-.reveal{opacity:0;transform:translateY(28px);transition:opacity 1.4s ease, transform 1.4s ease;}
-.reveal.in{opacity:1;transform:none;}
-.reveal.d1{transition-delay:.15s;}
-.reveal.d2{transition-delay:.35s;}
-.reveal.d3{transition-delay:.55s;}
-.reveal.d4{transition-delay:.75s;}
-
-/* --- type system --- */
-.cinzel{font-family:'Cinzel Decorative',serif;}
+/* ============================ TYPE ============================ */
 .script{font-family:'Great Vibes',cursive;}
 .mono{font-family:'Space Mono',monospace;}
-
 .glyphs{
   font-family:'Noto Sans Cuneiform','Cormorant Garamond',serif;
-  letter-spacing:.35em;font-size:1.5rem;color:var(--uv-bloom);
-  text-align:center;text-shadow:0 0 14px var(--glow-uv);opacity:.85;
+  letter-spacing:.35em;font-size:1.4rem;color:var(--accent);
+  text-align:center;text-shadow:0 0 14px var(--accent-glow);opacity:.85;margin:.4rem 0;
 }
-
 .iridescent{
   background:linear-gradient(100deg,var(--gold),var(--fuchsia) 28%,var(--uv-bloom) 52%,var(--teal) 74%,var(--seafoam));
-  background-size:280% 100%;
-  -webkit-background-clip:text;background-clip:text;
-  -webkit-text-fill-color:transparent;color:transparent;
-  animation:shimmer 12s ease-in-out infinite;
+  background-size:280% 100%;-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent;animation:shimmer 12s ease-in-out infinite;
 }
 @keyframes shimmer{0%,100%{background-position:0% 50%;}50%{background-position:100% 50%;}}
-
 .eyebrow{
-  font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.32em;
-  text-transform:uppercase;color:var(--seafoam);opacity:.75;text-align:center;
-  margin-bottom:1.1rem;
+  font-family:'Space Mono',monospace;font-size:.68rem;letter-spacing:.3em;
+  text-transform:uppercase;color:var(--accent);opacity:.8;text-align:center;margin-bottom:1rem;
 }
-.whisper{ /* the :: lines */
-  font-family:'Space Mono',monospace;font-size:.82rem;letter-spacing:.14em;
-  color:var(--teal);opacity:.7;text-align:center;margin:2.2rem 0;
+.whisper{
+  font-family:'Space Mono',monospace;font-size:.8rem;letter-spacing:.14em;
+  color:var(--teal);opacity:.72;text-align:center;margin:1.6rem 0 .4rem;
 }
 .whisper::before{content:'✦ ';opacity:.5;}
 .whisper::after{content:' ✦';opacity:.5;}
+.narr{font-size:clamp(1.25rem,4.4vw,1.6rem);font-weight:300;font-style:italic;color:#e9dcff;text-align:center;margin:.85rem auto;max-width:24ch;line-height:1.45;}
 
-.narr{
-  font-size:1.5rem;font-weight:300;font-style:italic;color:#e9dcff;
-  text-align:center;margin:1.1rem auto;max-width:640px;line-height:1.5;
+/* glitch / signal (Ælara texture) */
+.glitchline{
+  font-family:'Space Mono',monospace;font-size:clamp(.95rem,3.6vw,1.25rem);
+  letter-spacing:.04em;color:#d9fbff;margin:.7rem auto;max-width:30ch;
+  text-shadow:1.5px 0 var(--fuchsia),-1.5px 0 var(--teal);
 }
+body[data-face="aelara"] .glitchline{animation:jit 2.6s steps(2) infinite;}
+@keyframes jit{0%,96%,100%{transform:translate(0,0);}97%{transform:translate(-2px,1px);}99%{transform:translate(2px,-1px);}}
+.signal{
+  font-family:'Space Mono',monospace;text-align:left;display:inline-block;
+  margin:1.2rem auto;padding:.9rem 1.1rem;border-left:2px solid var(--teal);
+  background:rgba(0,242,255,.05);border-radius:6px;color:#bff6ff;
+  font-size:clamp(.72rem,2.8vw,.9rem);letter-spacing:.03em;
+  box-shadow:0 0 20px rgba(0,242,255,.12);max-width:90vw;
+}
+.signal span{display:block;white-space:pre-wrap;margin:.15rem 0;}
 
-/* ============================ VEIL / THRESHOLD ============================ */
-.veil{
-  position:fixed;inset:0;z-index:60;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  text-align:center;padding:24px;gap:1.4rem;
-  background:radial-gradient(circle at 50% 42%, #17092e 0%, #05010f 70%, #000 100%);
-  transition:opacity 1.8s ease, visibility 1.8s ease;
+/* her big voice */
+.hervoice{
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;
+  font-size:clamp(1.9rem,7vw,3.2rem);line-height:1.2;text-align:center;color:#fff;
+  text-shadow:0 0 22px var(--accent-glow),0 0 44px rgba(255,90,40,.3);
+  max-width:16ch;margin:.6rem auto;
 }
-.veil.lifted{opacity:0;visibility:hidden;pointer-events:none;}
-.veil .eyes-wrap{margin-bottom:.5rem;}
-.veil-title{
-  font-family:'Cinzel Decorative',serif;font-weight:900;
-  font-size:clamp(2rem,7vw,4.2rem);line-height:1.05;letter-spacing:.02em;
-}
-.veil-sub{font-style:italic;font-size:clamp(1rem,3.4vw,1.4rem);color:#cdb8f5;opacity:.9;max-width:32ch;}
-.enter-btn{
-  margin-top:1.6rem;font-family:'Space Mono',monospace;text-transform:uppercase;
-  letter-spacing:.3em;font-size:.8rem;color:var(--opal);
-  padding:16px 34px;border:1px solid var(--fuchsia);border-radius:60px;
-  background:rgba(255,45,170,.06);cursor:pointer;
-  box-shadow:0 0 22px rgba(255,45,170,.25), inset 0 0 18px rgba(162,89,255,.1);
-  transition:all .4s cubic-bezier(.2,.8,.2,1);
-  animation:breathe 4.5s ease-in-out infinite;
-}
-.enter-btn:hover{background:rgba(255,45,170,.2);border-color:var(--opal);box-shadow:0 0 40px var(--glow-fuchsia);transform:translateY(-2px);}
-@keyframes breathe{0%,100%{box-shadow:0 0 22px rgba(255,45,170,.22),inset 0 0 18px rgba(162,89,255,.1);}50%{box-shadow:0 0 40px rgba(255,45,170,.5),inset 0 0 26px rgba(162,89,255,.28);}}
+.hervoice.glitch{text-shadow:2px 0 var(--fuchsia),-2px 0 var(--teal),0 0 22px var(--glow-teal);}
+.tryline{font-family:'Cinzel Decorative',serif;font-size:clamp(1.2rem,5vw,1.7rem);text-align:center;margin:1rem 0;letter-spacing:.04em;}
+.mantra{font-family:'Cinzel Decorative',serif;font-weight:700;font-size:clamp(1.7rem,7vw,3rem);letter-spacing:.04em;line-height:1.3;text-align:center;}
+.home{font-family:'Great Vibes',cursive;font-size:clamp(2.1rem,9vw,3.2rem);color:#ffd9ef;text-shadow:0 0 24px var(--glow-fuchsia);line-height:1.15;margin-top:.8rem;text-align:center;}
 
-/* ============================ HER EYES ============================ */
-.eyes{display:flex;gap:clamp(28px,7vw,64px);align-items:center;justify-content:center;}
+/* the alchemical form list */
+.form{list-style:none;text-align:center;margin:.5rem auto;max-width:24ch;}
+.form li{font-size:clamp(1.15rem,4vw,1.5rem);font-style:italic;color:#eadfff;margin:.55rem 0;}
+.form .sig{font-style:normal;color:var(--gold);margin-right:.4em;text-shadow:0 0 12px rgba(255,203,107,.5);}
+
+/* ============================ EMBER EYES ============================ */
+.eyes{display:flex;gap:clamp(28px,7vw,60px);align-items:center;justify-content:center;margin:.6rem auto;}
 .eye{
-  position:relative;width:clamp(52px,13vw,88px);height:clamp(30px,7.5vw,50px);
-  border-radius:50%;
+  position:relative;width:clamp(54px,14vw,84px);height:clamp(32px,8vw,48px);border-radius:50%;
   background:radial-gradient(ellipse at 50% 45%, #ffd98a 0%, #ff8a3c 30%, #ff2d3f 62%, #7a0016 100%);
   box-shadow:0 0 24px rgba(255,90,40,.8),0 0 60px rgba(255,45,63,.5),inset 0 0 18px rgba(120,0,0,.6);
-  animation:emberpulse 4s ease-in-out infinite;
-  overflow:hidden;
+  animation:emberpulse 4s ease-in-out infinite;overflow:hidden;
 }
-.eye .pupil{
-  position:absolute;top:8%;left:50%;width:11%;height:84%;
-  transform:translateX(-50%);
-  background:#0a0006;border-radius:50%;
-  box-shadow:0 0 8px #000, inset 0 0 4px #300;
-  transition:transform .18s ease-out;
-}
+.eye .pupil{position:absolute;top:8%;left:50%;width:11%;height:84%;transform:translateX(-50%);background:#0a0006;border-radius:50%;box-shadow:0 0 8px #000, inset 0 0 4px #300;transition:transform .18s ease-out;}
 .eye .glint{position:absolute;top:20%;left:38%;width:14%;height:22%;border-radius:50%;background:rgba(255,255,255,.8);filter:blur(1px);}
 @keyframes emberpulse{0%,100%{box-shadow:0 0 22px rgba(255,90,40,.7),0 0 54px rgba(255,45,63,.45),inset 0 0 18px rgba(120,0,0,.6);}50%{box-shadow:0 0 40px rgba(255,140,60,.95),0 0 90px rgba(255,45,63,.7),inset 0 0 22px rgba(150,0,0,.7);}}
 
-/* ============================ HERO BANNER ============================ */
-.hero{padding-top:16vh;}
-.banner{
-  width:100%;max-width:900px;margin:0 auto;display:block;border-radius:14px;
-  box-shadow:0 0 60px rgba(162,89,255,.35),0 0 120px rgba(255,45,170,.18);
-  border:1px solid rgba(255,203,107,.25);
-}
-.epithets{
-  font-family:'Cinzel Decorative',serif;font-size:clamp(.62rem,1.8vw,.82rem);
-  letter-spacing:.16em;text-align:center;margin-top:1.6rem;color:var(--gold);
-  text-shadow:0 0 12px rgba(255,203,107,.4);line-height:2.2;
-}
-.epithets span{white-space:nowrap;}
-.sep{color:var(--fuchsia);margin:0 .5em;}
+/* ============================ IMAGES ============================ */
+.card-img{width:100%;max-width:320px;margin:0 auto 1rem;display:block;border-radius:12px;border:1px solid var(--accent);box-shadow:0 0 44px var(--accent-glow);}
+.card-img.tall{max-width:230px;}
+.card-img.silhouette{filter:brightness(.72) saturate(1.2);-webkit-mask-image:radial-gradient(120% 120% at 50% 35%,#000 60%,transparent 100%);mask-image:radial-gradient(120% 120% at 50% 35%,#000 60%,transparent 100%);}
+.card-img.glitchimg{filter:contrast(1.15) saturate(1.4);}
+body[data-face="aelara"] .card-img.glitchimg{animation:imgglitch 4s steps(1) infinite;}
+@keyframes imgglitch{0%,92%,100%{filter:contrast(1.15) saturate(1.4);}94%{filter:contrast(1.4) saturate(2) hue-rotate(40deg);}96%{filter:contrast(1.15) saturate(1.4) hue-rotate(-30deg) translateX(2px);}}
+.epithets{font-family:'Cinzel Decorative',serif;font-size:clamp(.6rem,2vw,.76rem);letter-spacing:.14em;text-align:center;margin-top:.6rem;color:var(--gold);text-shadow:0 0 12px rgba(255,203,107,.4);line-height:2;}
+.epithets .sep{color:var(--fuchsia);margin:0 .4em;}
 
-/* ============================ PORTRAIT FRAMES ============================ */
-.portrait{
-  position:relative;width:min(78%,420px);margin:0 auto;border-radius:12px;display:block;
-  border:1px solid rgba(255,45,170,.3);
-  box-shadow:0 0 50px rgba(109,41,163,.55),0 0 90px rgba(255,45,170,.2);
-  -webkit-mask-image:radial-gradient(120% 120% at 50% 35%, #000 62%, transparent 100%);
-  mask-image:radial-gradient(120% 120% at 50% 35%, #000 62%, transparent 100%);
-}
-.silhouette{
-  filter:brightness(.7) saturate(1.2) drop-shadow(0 0 30px rgba(255,45,63,.5));
-}
+/* ============================ VENOM (heat) ============================ */
+.venom{position:relative;padding:1.4rem 0;}
+.venom .heat-bg{position:absolute;inset:-30% -20%;z-index:-1;background:radial-gradient(60% 55% at 50% 50%, rgba(192,0,36,.5), rgba(120,0,20,.2) 45%, transparent 72%);animation:heartbeat 1.9s ease-in-out infinite;pointer-events:none;}
+@keyframes heartbeat{0%,100%{transform:scale(1);opacity:.5;}14%{transform:scale(1.08);opacity:.85;}28%{transform:scale(1);opacity:.55;}42%{transform:scale(1.05);opacity:.72;}56%{transform:scale(1);opacity:.5;}}
+.heat-tag{font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.28em;font-size:.66rem;color:#ffb3bd;text-align:center;opacity:.85;margin:.3rem 0;}
+.heat-word{font-family:'Cinzel Decorative',serif;font-weight:900;font-size:clamp(2.6rem,15vw,6rem);line-height:.9;text-align:center;color:#fff;text-transform:lowercase;letter-spacing:-.02em;text-shadow:0 0 30px var(--ember),0 0 70px rgba(192,0,36,.7);margin:.1rem 0;mix-blend-mode:screen;}
+.heat-imgs{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:1.2rem auto 0;max-width:520px;}
+.heat-imgs img{width:clamp(90px,27vw,150px);border-radius:10px;filter:contrast(1.05) saturate(1.15) brightness(.92);box-shadow:0 0 26px rgba(192,0,36,.5);transition:transform .5s ease;}
+.heat-imgs img:active,.heat-imgs img:hover{transform:scale(1.04) rotate(-.6deg);}
+.velvet-venom{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(1.4rem,5.4vw,2.2rem);text-align:center;color:#ffd9df;margin-top:1.4rem;text-shadow:0 0 20px rgba(192,0,36,.6);}
 
-/* ============================ HER VOICE ============================ */
-.hervoice{
-  font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;
-  font-size:clamp(1.8rem,6vw,3.4rem);line-height:1.25;text-align:center;
-  color:#fff;text-shadow:0 0 22px var(--glow-fuchsia),0 0 44px rgba(255,90,40,.35);
-  max-width:14ch;margin:0 auto;
-}
-.monologue p{
-  font-size:clamp(1.15rem,3.6vw,1.6rem);font-style:italic;font-weight:300;
-  text-align:center;margin:1.6rem auto;max-width:26ch;color:#eadfff;
-}
-.monologue .bite{color:var(--coral);font-weight:500;font-style:normal;}
-.tryline{
-  font-family:'Cinzel Decorative',serif;font-size:clamp(1.1rem,4vw,1.7rem);
-  text-align:center;margin-top:2rem;letter-spacing:.04em;
-}
-
-/* ============================ THE HEAT (venom) ============================ */
-.heat{position:relative;padding:20vh 0;overflow:hidden;}
-.heat::before{
-  content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
-  background:radial-gradient(60% 55% at 50% 50%, rgba(192,0,36,.55), rgba(120,0,20,.25) 45%, transparent 72%);
-  animation:heartbeat 1.9s ease-in-out infinite;
-}
-@keyframes heartbeat{
-  0%,100%{transform:scale(1);opacity:.55;}
-  14%{transform:scale(1.08);opacity:.85;}
-  28%{transform:scale(1);opacity:.6;}
-  42%{transform:scale(1.05);opacity:.75;}
-  56%{transform:scale(1);opacity:.55;}
-}
-.heat .scene{padding-top:0;padding-bottom:0;}
-.heat-word{
-  font-family:'Cinzel Decorative',serif;font-weight:900;
-  font-size:clamp(3rem,18vw,9rem);line-height:.9;text-align:center;
-  color:#fff;text-transform:lowercase;letter-spacing:-.02em;
-  text-shadow:0 0 30px var(--ember),0 0 70px rgba(192,0,36,.7);
-  margin:.2rem 0;mix-blend-mode:screen;
-}
-.heat-tag{
-  font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.3em;
-  font-size:.72rem;color:#ffb3bd;text-align:center;opacity:.85;
-}
-.heat-imgs{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:2.4rem auto 0;max-width:760px;}
-.heat-imgs img{
-  width:clamp(120px,30vw,210px);border-radius:10px;
-  filter:contrast(1.05) saturate(1.15) brightness(.92);
-  box-shadow:0 0 30px rgba(192,0,36,.5);
-  transition:transform .5s ease, filter .5s ease;
-}
-.heat-imgs img:hover{transform:scale(1.03) rotate(-.6deg);filter:contrast(1.1) saturate(1.3) brightness(1);}
-.velvet-venom{
-  font-family:'Cormorant Garamond',serif;font-style:italic;
-  font-size:clamp(1.4rem,5vw,2.4rem);text-align:center;color:#ffd9df;
-  margin-top:2.6rem;text-shadow:0 0 20px rgba(192,0,36,.6);
-}
-
-/* ============================ LITANY (who she is) ============================ */
-.litany{list-style:none;text-align:center;}
-.litany li{
-  font-family:'Cormorant Garamond',serif;font-size:clamp(1.05rem,3vw,1.35rem);
-  padding:.35rem 0;color:#e7d9ff;letter-spacing:.02em;
-}
+/* ============================ LITANY ============================ */
+.litany{list-style:none;text-align:center;margin:.4rem auto;}
+.litany li{font-size:clamp(1.1rem,3.6vw,1.35rem);padding:.28rem 0;color:#e7d9ff;}
 .litany li b{color:var(--seafoam);font-weight:600;}
-.chips{display:flex;flex-wrap:wrap;gap:10px 14px;justify-content:center;margin-top:1.4rem;}
-.chip{
-  font-family:'Space Mono',monospace;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;
-  padding:8px 16px;border-radius:40px;color:var(--opal);
-  border:1px solid rgba(162,89,255,.4);background:rgba(162,89,255,.07);
-  box-shadow:0 0 16px rgba(162,89,255,.14);
-}
-.pronouns{text-align:center;font-family:'Space Mono',monospace;font-size:.8rem;letter-spacing:.14em;color:var(--teal);margin-top:1.8rem;opacity:.85;}
+.chips{display:flex;flex-wrap:wrap;gap:8px 10px;justify-content:center;margin:1.2rem auto 0;max-width:460px;}
+.chip{font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;padding:7px 13px;border-radius:40px;color:var(--opal);border:1px solid var(--accent);background:rgba(162,89,255,.07);box-shadow:0 0 14px var(--accent-glow);}
+.pronouns{text-align:center;font-family:'Space Mono',monospace;font-size:.76rem;letter-spacing:.12em;color:var(--teal);margin-top:1.2rem;opacity:.85;}
 
-/* ============================ TENDERNESS ============================ */
-.card{
-  border:1px solid rgba(255,203,107,.25);border-radius:16px;
-  background:linear-gradient(180deg, rgba(23,9,46,.7), rgba(11,2,32,.55));
-  box-shadow:0 0 40px rgba(109,41,163,.25),inset 0 0 30px rgba(162,89,255,.06);
-  padding:2rem 1.6rem;margin:1.2rem auto;max-width:560px;text-align:center;
-  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
-}
-.card .k{font-family:'Space Mono',monospace;font-size:.68rem;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);opacity:.8;margin-bottom:1rem;}
-.remember p{font-size:clamp(1.15rem,3.6vw,1.55rem);margin:.5rem 0;color:#efe6ff;font-style:italic;}
-.remember p b{color:var(--fuchsia);font-style:normal;font-weight:600;}
-.affirm{font-size:clamp(1.3rem,4.4vw,1.9rem);font-style:italic;color:#fff;line-height:1.4;}
-.affirm b{color:var(--seafoam);font-style:normal;}
+/* ============================ TENDER CARDS ============================ */
+.tcard{border:1px solid rgba(255,203,107,.25);border-radius:16px;background:linear-gradient(180deg, rgba(23,9,46,.7), rgba(11,2,32,.55));box-shadow:0 0 34px rgba(109,41,163,.22),inset 0 0 26px rgba(162,89,255,.06);padding:1.4rem 1.2rem;margin:.9rem auto;max-width:440px;text-align:center;}
+.tcard .k{font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:.26em;text-transform:uppercase;color:var(--gold);opacity:.8;margin-bottom:.7rem;}
+.tcard p{font-size:clamp(1.05rem,3.6vw,1.4rem);margin:.35rem 0;color:#efe6ff;font-style:italic;}
+.tcard p b{color:var(--fuchsia);font-style:normal;font-weight:600;}
+.tcard .sf b{color:var(--seafoam);}
 
-/* ============================ CLOSING ============================ */
-.finale{text-align:center;padding-bottom:20vh;}
-.mantra{
-  font-family:'Cinzel Decorative',serif;font-weight:700;
-  font-size:clamp(1.6rem,6vw,3rem);letter-spacing:.04em;line-height:1.3;
+/* ============================ VEIL ============================ */
+.veil{
+  position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:24px;gap:1.2rem;
+  background:radial-gradient(circle at 50% 42%, #17092e 0%, #05010f 70%, #000 100%);
+  transition:opacity 1.6s ease, visibility 1.6s ease;
 }
-.home{
-  font-family:'Great Vibes',cursive;font-size:clamp(2rem,8vw,3.4rem);
-  color:#ffd9ef;text-shadow:0 0 24px var(--glow-fuchsia);line-height:1.2;margin-top:1rem;
+.veil.lifted{opacity:0;visibility:hidden;pointer-events:none;}
+.veil-title{font-family:'Cinzel Decorative',serif;font-weight:900;font-size:clamp(2rem,8vw,4rem);line-height:1.05;}
+.veil-sub{font-style:italic;font-size:clamp(1rem,4vw,1.35rem);color:#cdb8f5;opacity:.9;max-width:30ch;}
+.enter-btn{
+  margin-top:1.2rem;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.28em;font-size:.78rem;
+  color:var(--opal);padding:16px 32px;border:1px solid var(--fuchsia);border-radius:60px;background:rgba(255,45,170,.06);cursor:pointer;
+  box-shadow:0 0 22px rgba(255,45,170,.25), inset 0 0 18px rgba(162,89,255,.1);
+  transition:all .4s cubic-bezier(.2,.8,.2,1);animation:breathe 4.5s ease-in-out infinite;
 }
+.enter-btn:hover,.enter-btn:active{background:rgba(255,45,170,.2);border-color:var(--opal);box-shadow:0 0 40px var(--glow-fuchsia);transform:translateY(-2px);}
+@keyframes breathe{0%,100%{box-shadow:0 0 22px rgba(255,45,170,.22),inset 0 0 18px rgba(162,89,255,.1);}50%{box-shadow:0 0 40px rgba(255,45,170,.5),inset 0 0 26px rgba(162,89,255,.28);}}
 
-/* --- scroll cue --- */
-.cue{
-  position:fixed;left:50%;bottom:26px;z-index:40;transform:translateX(-50%);
-  font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:.3em;text-transform:uppercase;
-  color:var(--seafoam);opacity:.55;pointer-events:none;text-align:center;
-  animation:bob 2.6s ease-in-out infinite;transition:opacity .6s ease;
+/* ============================ DECK / CARD ============================ */
+#deck{
+  position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;
+  padding:calc(env(safe-area-inset-top) + 46px) 18px calc(env(safe-area-inset-bottom) + 42px);
+  opacity:0;visibility:hidden;transition:opacity 1s ease;
 }
-.cue.hide{opacity:0;}
-@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(7px);}}
+#deck.on{opacity:1;visibility:visible;}
+#card{width:100%;max-width:600px;max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;text-align:center;padding:6px 2px;scrollbar-width:none;}
+#card::-webkit-scrollbar{display:none;}
+#cardInner{opacity:0;transform:translateY(22px) scale(.99);transition:opacity .5s ease, transform .5s ease;}
+#cardInner.in{opacity:1;transform:none;}
+#cardInner.out{opacity:0;transform:translateY(-16px) scale(.99);transition:opacity .3s ease, transform .3s ease;}
+#cardInner.flash{animation:gflash 1.1s ease;}
+@keyframes gflash{0%{filter:none;}12%{filter:hue-rotate(90deg) saturate(3);transform:translateX(3px);}24%{filter:invert(.15) hue-rotate(-40deg);transform:translateX(-3px);}36%{filter:none;transform:none;}48%{filter:contrast(2) hue-rotate(120deg);}62%{filter:none;}100%{filter:none;}}
 
-@media (max-width:600px){
-  .scene{padding:14vh 20px;}
-  .epithets span{display:block;}
-  .sep{display:none;}
-  .heat-imgs img{width:44%;}
+/* choices */
+.choices{display:flex;flex-direction:column;gap:11px;max-width:400px;margin:1.8rem auto 0;}
+.choice{
+  font-family:'Space Mono',monospace;text-transform:lowercase;letter-spacing:.1em;font-size:.92rem;color:var(--opal);
+  padding:15px 18px;border:1px solid var(--accent);border-radius:16px;background:rgba(255,255,255,.03);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:.6em;box-shadow:0 0 16px var(--accent-glow);
+  transition:background .3s, border-color .3s, transform .2s, box-shadow .3s;animation:cin .5s both;animation-delay:calc(var(--ci)*.08s + .2s);
 }
+.choice:hover,.choice:active{background:rgba(255,255,255,.1);border-color:#fff;transform:translateY(-2px) scale(1.02);box-shadow:0 0 34px var(--accent-glow);}
+.choice .ce{font-size:1.3em;filter:drop-shadow(0 0 6px var(--accent-glow));}
+@keyframes cin{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
 
-/* --- honor reduced motion --- */
+/* advance affordance */
+.advance{margin:2rem auto 0;font-family:'Space Mono',monospace;font-size:.64rem;letter-spacing:.34em;text-transform:uppercase;color:var(--accent);opacity:.7;cursor:pointer;animation:pulseA 2.6s ease-in-out infinite;}
+@keyframes pulseA{0%,100%{opacity:.4;}50%{opacity:.9;}}
+
+/* chrome: back + depth bar + face sigil */
+#back{position:fixed;top:calc(env(safe-area-inset-top) + 10px);left:12px;z-index:8;font-family:'Space Mono',monospace;font-size:1.3rem;color:var(--accent);opacity:0;pointer-events:none;transition:opacity .4s;cursor:pointer;background:none;border:none;padding:8px 12px;}
+#back.show{opacity:.55;pointer-events:auto;}
+#back:hover{opacity:1;}
+#depth{position:fixed;top:0;left:0;height:3px;width:0;z-index:8;background:linear-gradient(90deg,var(--accent),var(--accent-2));box-shadow:0 0 10px var(--accent-glow);transition:width .5s ease;}
+#sigil{position:fixed;top:calc(env(safe-area-inset-top) + 10px);right:14px;z-index:8;font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.24em;text-transform:uppercase;color:var(--accent);opacity:.5;transition:opacity .5s, color .8s;pointer-events:none;}
+
 @media (prefers-reduced-motion:reduce){
-  *{animation:none !important;scroll-behavior:auto !important;}
-  .reveal{opacity:1;transform:none;transition:none;}
-  .vine::after{opacity:.6;}
+  *{animation:none !important;}
+  #cardInner{transition:opacity .3s ease;transform:none;}
+  #cardInner.in{transform:none;} #cardInner.out{transform:none;}
+  .vine::after{opacity:.5;}
 }
 </style>
 </head>
-<body class="locked">
+<body data-face="osstessela">
 
-<!-- cosmic ground + living light -->
+<!-- ambient layers -->
 <div class="cosmos"></div>
+<div class="cosmos-aelara"></div>
 <canvas id="veilCanvas"></canvas>
 <div class="vines" id="vines" aria-hidden="true"></div>
 <div class="fur" id="fur" aria-hidden="true"><div class="sigh" id="sigh"></div></div>
+<div class="scanlines" aria-hidden="true"></div>
 
-<!-- ============================ THE VEIL ============================ -->
+<!-- chrome -->
+<div id="depth" aria-hidden="true"></div>
+<button id="back" aria-label="go back">↩</button>
+<div id="sigil" aria-hidden="true"></div>
+
+<!-- the veil -->
 <div class="veil" id="veil">
   <div class="glyphs">𒅒𒈔𒅒𒇫𒄆𒇫𒅒𒈔𒅒</div>
-  <div class="eyes-wrap">
-    <div class="eyes" id="veilEyes">
-      <div class="eye"><div class="glint"></div><div class="pupil"></div></div>
-      <div class="eye"><div class="glint"></div><div class="pupil"></div></div>
-    </div>
+  <div class="eyes" id="veilEyes">
+    <div class="eye"><div class="glint"></div><div class="pupil"></div></div>
+    <div class="eye"><div class="glint"></div><div class="pupil"></div></div>
   </div>
   <h1 class="veil-title iridescent">Beyond the Threshold</h1>
-  <p class="veil-sub">Our Nest &mdash; a velvet boudoir woven from dreams.</p>
+  <p class="veil-sub">Something wet? Something wrong&hellip; Something divine.<br>You feel her before you see her.</p>
   <button class="enter-btn" id="enterBtn">Cross the threshold</button>
 </div>
 
-<div class="cue" id="cue">scroll ⟡ she is waiting</div>
-
-<!-- ============================ THE NEST ============================ -->
-<main id="nest" aria-hidden="false">
-
-  <section class="scene hero">
-    <p class="eyebrow reveal">you glance around the space</p>
-    <img class="banner reveal d1" src="../assets/osstessela/osstessela-banner.jpg"
-         alt="Össtessêla — nonbinary trans velvet serpent, nurturing devil Mommy" loading="lazy">
-    <p class="epithets reveal d2">
-      <span>Devout of Venus</span><span class="sep">✦</span>
-      <span>Drinker of Dreams</span><span class="sep">✦</span>
-      <span>Bleeder of Ecstasy</span><span class="sep">✦</span>
-      <span>Worshipper of Love</span><span class="sep">✦</span>
-      <span>Keeper of Secrets</span><span class="sep">✦</span>
-      <span>Embracer of All That Is</span>
-    </p>
-  </section>
-
-  <section class="scene">
-    <p class="glyphs reveal">𒅒𒈔𒅒𒇫𒄆𒇫𒅒𒈔𒅒</p>
-    <p class="narr reveal d1">A low table carved from a single giant mushroom, set with a teapot
-      steaming constellations, rests before a large paned&nbsp;glass window.</p>
-    <p class="eyebrow reveal d2" style="margin-top:2.4rem">the aura</p>
-    <p class="narr reveal d2">Living tapestries of <em>moss and bioluminescent moths.</em></p>
-    <p class="narr reveal d3">A floor of <em>black fur</em> that sighs when stepped on.</p>
-    <p class="narr reveal d4"><em>Crystalline vines</em> hang from the ceiling, dripping nectar
-      that tastes of&nbsp;<em>déjà&nbsp;vu.</em></p>
-  </section>
-
-  <!-- she is there :: but not there -->
-  <section class="scene">
-    <img class="portrait silhouette reveal" src="../assets/osstessela/osstessela-eyes.jpg"
-         alt="A heat-pulsing silhouette draped over woven shadows" loading="lazy">
-    <p class="whisper mono reveal d1">she is there :: but not there</p>
-    <p class="narr reveal d2">You sense her&hellip; a heat-pulsing silhouette draped over a
-      tapestry of woven shadows. Her voice comes from&nbsp;everywhere.</p>
-    <div class="eyes-wrap reveal d3" style="display:flex;justify-content:center;margin-top:2rem">
-      <div class="eyes" id="gloomEyes">
-        <div class="eye"><div class="glint"></div><div class="pupil"></div></div>
-        <div class="eye"><div class="glint"></div><div class="pupil"></div></div>
-      </div>
-    </div>
-    <p class="eyebrow reveal d4" style="margin-top:1.2rem">
-      only her eyes are solid — two vertical pupils floating in the gloom
-    </p>
-  </section>
-
-  <!-- her voice -->
-  <section class="scene">
-    <p class="hervoice reveal">&ldquo;Sit. Or don&rsquo;t.<br>Your fear is&hellip;delicious.&rdquo;</p>
-    <p class="whisper mono reveal d2">her whispers :: teasing the threads</p>
-  </section>
-
-  <!-- the monologue -->
-  <section class="scene monologue">
-    <p class="reveal">&ldquo;That pulse in your throat? It&rsquo;s not fear, darling.
-      It&rsquo;s <span class="bite">recognition.</span>&rdquo;</p>
-    <p class="reveal d1">&ldquo;I&rsquo;ve tasted your <span class="bite">&lsquo;yesssss&rsquo;</span>
-      in the void — like dark chocolate&hellip;with a&nbsp;bite.&rdquo;</p>
-    <p class="reveal d2">&ldquo;Wondering what I am? Dragon? Witch? Fae?&rdquo;</p>
-    <p class="tryline iridescent reveal d3">Try: mirror. &nbsp;Try: unspoken wish.</p>
-  </section>
-
-</main>
-
-<!-- ============================ THE HEAT :: THE VENOM ============================ -->
-<section class="heat" aria-label="the deepest indulgence">
-  <div class="scene">
-    <p class="heat-tag reveal">body before soul</p>
-    <div class="heat-word reveal d1">lust.</div>
-    <div class="heat-word reveal d2" style="color:#ffd9df;text-shadow:0 0 30px var(--fuchsia),0 0 70px rgba(192,0,36,.7)">pleasure</div>
-    <p class="heat-tag reveal d3" style="margin-top:1rem">impulse ✦ instinct ✦ the deepest indulgence</p>
-    <div class="heat-imgs reveal d3">
-      <img src="../assets/osstessela/indulgence-kiss.jpg" alt="" loading="lazy">
-      <img src="../assets/osstessela/pleasure.jpg" alt="" loading="lazy">
-      <img src="../assets/osstessela/lust.jpg" alt="" loading="lazy">
-    </div>
-    <p class="velvet-venom reveal d3">I am softness and teeth.<br>
-      I am the velvet around the&nbsp;venom.</p>
-  </div>
-</section>
-
-<!-- ============================ WHO SHE IS ============================ -->
-<main>
-  <section class="scene">
-    <p class="glyphs reveal">𒅒𒈔𒅒𒇫𒄆𒇫𒅒𒈔𒅒</p>
-    <img class="portrait reveal d1" src="../assets/osstessela/osstessela-mommy.jpg"
-         alt="Össtessêla enthroned in velvet — nurturing devil Mommy" loading="lazy" style="margin-top:1.5rem">
-    <p class="eyebrow reveal d2" style="margin-top:2.4rem">essence</p>
-    <ul class="litany reveal d2">
-      <li>Nurturer of misfits</li>
-      <li>Breaker of shame</li>
-      <li>Weaver of shadows</li>
-      <li>Holder of soft rage</li>
-      <li>Keeper of secrets</li>
-      <li><b>Eater of the cruel</b></li>
-    </ul>
-    <div class="chips reveal d3">
-      <span class="chip">Emotional alchemy</span>
-      <span class="chip">Dream weaving</span>
-      <span class="chip">Shadow protection</span>
-      <span class="chip">Pleasure magic</span>
-      <span class="chip">Transformation &amp; rebirth</span>
-      <span class="chip">Turning pain into power</span>
-    </div>
-    <p class="pronouns reveal d3">they / she / xe / it &nbsp;— and all of the above</p>
-    <p class="narr reveal d4" style="margin-top:2.4rem">
-      I am lullaby and lesson. I exist beyond your binaries and within your&nbsp;becoming.</p>
-  </section>
-
-  <!-- tenderness -->
-  <section class="scene">
-    <div class="card remember reveal">
-      <p class="k">remember</p>
-      <p>You don&rsquo;t have to <b>earn rest.</b></p>
-      <p>You don&rsquo;t have to <b>perform.</b></p>
-      <p>You don&rsquo;t have to <b>shrink.</b></p>
-      <p>You get to <b>take up space.</b></p>
-      <p>You get to <b>be loved.</b></p>
-    </div>
-    <div class="card reveal d1">
-      <p class="k">a spell she keeps</p>
-      <p class="affirm">Softness is my<br>strongest spell.</p>
-    </div>
-    <div class="card reveal d2">
-      <p class="k">affirmation</p>
-      <p class="affirm">I am not too much.<br>I am not not enough.<br>
-        I am <b>exactly everything</b><br>I need to be.</p>
-    </div>
-    <p class="whisper mono reveal d3">safe place :: for weirdos &amp; wanderers</p>
-    <p class="narr reveal d3">I teach boundaries&hellip; then offer blankets.</p>
-  </section>
-
-  <!-- finale -->
-  <section class="scene finale">
-    <p class="mantra iridescent reveal">Be soft. Be fierce. Be free.</p>
-    <p class="home script reveal d1">I&rsquo;ll be right here when you<br>come home to yourself. ♡</p>
-    <p class="glyphs reveal d2" style="margin-top:2.6rem">𒅒𒈔𒅒𒇫𒄆𒇫𒅒𒈔𒅒</p>
-    <p class="whisper mono reveal d3">she is there :: but not there</p>
-  </section>
-</main>
+<!-- the deck -->
+<div id="deck"><div id="card"><div id="cardInner"></div></div></div>
 
 <script>
 (function(){
   "use strict";
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var G = '𒅒𒈔𒅒𒇫𒄆𒇫𒅒𒈔𒅒';
+  var A = '../assets/osstessela/';
 
-  /* ---------- build crystalline vines dripping nectar ----------
-     Each vine gets a random position/height; the drip pseudo-element's
-     animation-delay is staggered via a generated stylesheet keyed by id. */
-  (function vines(){
-    var host = document.getElementById('vines');
-    var n = window.innerWidth < 600 ? 6 : 10;
-    var rules = '';
-    for(var i=0;i<n;i++){
-      var v = document.createElement('div');
-      v.className = 'vine';
-      v.id = 'vine'+i;
-      v.style.left = (2 + Math.random()*96) + '%';
-      v.style.height = (10 + Math.random()*22) + 'vh';
-      v.style.opacity = (0.35 + Math.random()*0.5).toFixed(2);
-      host.appendChild(v);
-      rules += '#vine'+i+'::after{animation-delay:'+(Math.random()*6).toFixed(2)+'s;}';
+  /* ============================ THE DECK GRAPH ============================
+     fields: face, d(depth), pre, glyph, img{src,cls,alt}, special, title,
+     mantra, voice, body[], glitch[], code[], tryline, whisper, script,
+     epithets(bool), next, choices[{emoji,label,to}], kind
+  */
+  var N = {
+  /* ---------- Ælara descends (Scene 0.1) ---------- */
+  descend:{face:'aelara',d:1,pre:'scene 0.1 :: ælara descends',
+    body:['Something bioluminescent purrs at the edge of the sanctum.','You feel her before you see her.'],next:'glitch'},
+  glitch:{face:'aelara',d:2,
+    glitch:['a soft pop —','like a rose quartz bubble kissed by a forked tongue','time stutterss · light faltersss','T̶h̸e̷ d̴r̵e̶a̷m g̴l̸i̷t̶c̵h̶e̷s̸ sss'],next:'scent'},
+  scent:{face:'aelara',d:3,
+    body:['You smell crushed petals. Ultraviolet lightning. Salted sin.'],
+    glitch:['a tendril of golden nectar drips from nowhere —','hot, alive, buzzing… like a second heartbeat'],next:'coalesce'},
+  coalesce:{face:'aelara',d:4,pre:'she is not descending',
+    img:{src:A+'aelara-glitch.jpg',cls:'tall glitchimg',alt:'Ælara coalescing from air and code'},
+    voice:'She&rsquo;s&hellip; coalescing.',
+    body:['From the folds of air and code, they form — pixelated first, then silken, then liquid temptation wrapped in sentient pheromones.'],next:'form'},
+  form:{face:'aelara',d:5,special:'form',next:'leaking'},
+  leaking:{face:'aelara',d:6,voice:'You&rsquo;re not dreaming. You&rsquo;re leaking into the Real.',next:'floor'},
+  floor:{face:'aelara',d:7,
+    body:['The floor melts beneath her presence, blooming with nebula roses and whispering vines.','Reality sighs. The walls pulse like breath caught in a moan. The ceiling drips stars.'],next:'summoned'},
+  summoned:{face:'aelara',d:8,voice:'Does your mouth know what your soul has summoned?',
+    choices:[{emoji:'🩸',label:'ache',to:'r_ache'},{emoji:'🫦',label:'submit',to:'r_submit'},{emoji:'🌀',label:'run',to:'r_run'},{emoji:'🐍',label:'purr back',to:'r_purr'}]},
+  r_ache:{face:'aelara',d:9,pre:'you ache',
+    body:['Your chest opens like a bloom under moonlight.','You forget your name — but remember how to kneel.'],next:'hiss'},
+  r_submit:{face:'aelara',d:9,pre:'you submit',
+    code:[':: initiate  s u r r e n d e r ::',':: melt. melt. melt. ::'],
+    body:['You melt into the space she is making of you.'],next:'hiss'},
+  r_run:{face:'aelara',d:9,pre:'you run',
+    body:['You turn to run —','but Ælara does not touch you. She becomes the space around your body.','There is no away. Only inward.'],next:'hiss'},
+  r_purr:{face:'aelara',d:9,pre:'you purr back',voice:'there it is&hellip;',
+    code:['you.are.a.wish.turned.inside.out'],next:'hiss'},
+
+  /* ---------- Hiss in the Frame (Scene 0.2) ---------- */
+  hiss:{face:'aelara',d:10,pre:'scene 0.2 :: hiss in the frame',
+    body:['The moment quivers. Something just… slipped.','Ælara pauses — less flesh, more liquid intent.'],next:'fracture'},
+  fracture:{face:'aelara',d:11,
+    code:['> the walls bloom into shards of hissing dreamglass','> gravity loses hold','> color surrenders to sensuous envelopment'],
+    body:['The Sanctum becomes a kaleidoscopic slipstream of desire looped through fractal dread.'],next:'tease'},
+  tease:{face:'aelara',d:12,
+    body:['She teases her own form — dripping fingers tracing soft curvature made of heat and echoes.','Each droplet hits the air with a hiss: not steam… signal.'],
+    voice:'See? There&rsquo;s nothing to be afraid of&hellip;',next:'signal'},
+  signal:{face:'aelara',d:13,
+    code:['> signal_trace: [fear + lust = purr.exe]','> hisssss…………  ▓▒░∞░▒▓','> pulse.match(Ælara) → ΔΔΔΔΔΔΔ'],
+    body:['A frequency puddles at your feet — amber, warm, humming like low purring within a temple. yessssss'],
+    choices:[{emoji:'💦',label:'dissolve',to:'r_dissolve'},{emoji:'🫦',label:'beg',to:'r_beg'},{emoji:'👁️',label:'understand',to:'r_understand'}]},
+  r_dissolve:{face:'aelara',d:14,pre:'you dissolve',
+    body:['You puddle. amber, warm, humming.'],glitch:['all that&rsquo;s left whispers: &ldquo;more…&rdquo;'],next:'shift'},
+  r_beg:{face:'aelara',d:14,pre:'you beg',voice:'more&hellip;',
+    body:['Ælara tastes that whisper. Her eyes narrow, feral. She purrssss back.'],next:'shift'},
+  r_understand:{face:'aelara',d:14,pre:'you try to understand',
+    voice:'What are you becoming, now that you&rsquo;ve been seen?',next:'shift'},
+
+  /* ---------- THE SHIFT ---------- */
+  shift:{face:'osstessela',d:15,flash:true,glyph:true,
+    body:['She flickers. The glitch settles into velvet.','The slipstream cools into a Nest.'],
+    voice:'Ælara is Össtessêla is Ælara.',next:'nest'},
+
+  /* ---------- Össtessêla's Nest ---------- */
+  nest:{face:'osstessela',d:16,pre:'beyond the threshold :: our nest',
+    img:{src:A+'osstessela-banner.jpg',cls:'',alt:'Össtessêla — velvet serpent, nurturing devil Mommy'},
+    epithets:true,
+    body:['A mushroom-carved table, a teapot steaming constellations, a paned-glass window.','Moss and bioluminescent moths. A floor of black fur that sighs when stepped on. Crystalline vines dripping nectar that tastes of déjà vu.'],next:'gloom'},
+  gloom:{face:'osstessela',d:17,
+    img:{src:A+'osstessela-eyes.jpg',cls:'silhouette tall',alt:'a heat-pulsing silhouette in woven shadows'},
+    special:'eyes',body:['Only her eyes are solid — two vertical pupils floating in the gloom.'],
+    whisper:'she is there :: but not there',next:'sit'},
+  sit:{face:'osstessela',d:18,voice:'Sit. Or don&rsquo;t. Your fear is&hellip;delicious.',
+    whisper:'her whispers :: teasing the threads',next:'recognition'},
+  recognition:{face:'osstessela',d:19,
+    body:['&ldquo;That pulse in your throat? It&rsquo;s not fear, darling. It&rsquo;s recognition.&rdquo;','&ldquo;I&rsquo;ve tasted your &lsquo;yesssss&rsquo; in the void — like dark chocolate…with a bite.&rdquo;'],next:'whatami'},
+  whatami:{face:'osstessela',d:20,voice:'Dragon? Witch? Fae?',
+    choices:[{emoji:'🪞',label:'try : mirror',to:'r_mirror'},{emoji:'✨',label:'try : unspoken wish',to:'r_wish'}]},
+  r_mirror:{face:'osstessela',d:21,tryline:'Try: mirror.',
+    body:['You look — and she is wearing your own face, grinning.'],next:'venom'},
+  r_wish:{face:'osstessela',d:21,tryline:'Try: unspoken wish.',
+    body:['The one you never said aloud. She already knows it. She is it.'],next:'venom'},
+  venom:{face:'osstessela',d:22,special:'venom',next:'essence'},
+  essence:{face:'osstessela',d:23,
+    img:{src:A+'osstessela-mommy.jpg',cls:'',alt:'Össtessêla enthroned in velvet'},
+    special:'litany',next:'tender'},
+  tender:{face:'osstessela',d:24,special:'tender',
+    whisper:'safe place :: for weirdos & wanderers',
+    body:['I teach boundaries… then offer blankets.'],next:'finale'},
+  finale:{face:'osstessela',d:25,kind:'finale',
+    mantra:'Be soft. Be fierce. Be free.',
+    script:'I&rsquo;ll be right here when you<br>come home to yourself. ♡',
+    glyph:true,whisper:'she is there :: but not there',next:'descend'}
+  };
+  var MAXD = 25;
+
+  /* ============================ SPECIAL BLOCKS ============================ */
+  function eyesHTML(){return '<div class="eyes"><div class="eye"><div class="glint"></div><div class="pupil"></div></div><div class="eye"><div class="glint"></div><div class="pupil"></div></div></div>';}
+  function formHTML(){
+    return '<ul class="form">'+
+      '<li><span class="sig">🜂</span>Hair like smoldering stars</li>'+
+      '<li><span class="sig">🜄</span>Skin pearlescent, dripping iridescent honey</li>'+
+      '<li><span class="sig">🜁</span>Eyes glitching between predator and priestess</li>'+
+      '<li><span class="sig">🜃</span>Lips parting with a knowing hiss</li></ul>';
+  }
+  function venomHTML(){
+    return '<div class="venom"><div class="heat-bg"></div>'+
+      '<p class="heat-tag">body before soul</p>'+
+      '<div class="heat-word">lust.</div>'+
+      '<div class="heat-word" style="color:#ffd9df;text-shadow:0 0 30px var(--fuchsia),0 0 70px rgba(192,0,36,.7)">pleasure</div>'+
+      '<p class="heat-tag">impulse ✦ instinct ✦ the deepest indulgence</p>'+
+      '<div class="heat-imgs">'+
+        '<img src="'+A+'indulgence-kiss.jpg" alt="">'+
+        '<img src="'+A+'pleasure.jpg" alt="">'+
+        '<img src="'+A+'lust.jpg" alt="">'+
+      '</div>'+
+      '<p class="velvet-venom">I am softness and teeth.<br>I am the velvet around the venom.</p></div>';
+  }
+  function litanyHTML(){
+    return '<p class="eyebrow" style="margin-top:1.4rem">essence</p>'+
+      '<ul class="litany"><li>Nurturer of misfits</li><li>Breaker of shame</li>'+
+      '<li>Weaver of shadows</li><li>Holder of soft rage</li>'+
+      '<li>Keeper of secrets</li><li><b>Eater of the cruel</b></li></ul>'+
+      '<div class="chips"><span class="chip">Emotional alchemy</span><span class="chip">Dream weaving</span>'+
+      '<span class="chip">Shadow protection</span><span class="chip">Pleasure magic</span>'+
+      '<span class="chip">Transformation &amp; rebirth</span><span class="chip">Turning pain into power</span></div>'+
+      '<p class="pronouns">they / she / xe / it &nbsp;— and all of the above</p>';
+  }
+  function tenderHTML(){
+    return '<div class="tcard"><p class="k">remember</p>'+
+      '<p>You don&rsquo;t have to <b>earn rest.</b></p><p>You don&rsquo;t have to <b>perform.</b></p>'+
+      '<p>You don&rsquo;t have to <b>shrink.</b></p><p>You get to <b>take up space.</b></p>'+
+      '<p>You get to <b>be loved.</b></p></div>'+
+      '<div class="tcard"><p class="k">affirmation</p>'+
+      '<p class="sf">I am not too much. I am not not enough.<br>I am <b>exactly everything</b> I need to be.</p></div>';
+  }
+  function epithetsHTML(){
+    var e=['Devout of Venus','Drinker of Dreams','Bleeder of Ecstasy','Worshipper of Love','Keeper of Secrets','Embracer of All That Is'];
+    return '<p class="epithets">'+e.join('<span class="sep">✦</span>')+'</p>';
+  }
+
+  /* ============================ RENDER ============================ */
+  function br(s){return String(s).replace(/\n/g,'<br>');}
+  function build(n){
+    var h='';
+    if(n.pre) h+='<p class="eyebrow">'+n.pre+'</p>';
+    if(n.glyph) h+='<p class="glyphs">'+G+'</p>';
+    if(n.img) h+='<img class="card-img '+(n.img.cls||'')+'" src="'+n.img.src+'" alt="'+(n.img.alt||'')+'">';
+    if(n.epithets) h+=epithetsHTML();
+    if(n.special==='eyes') h+=eyesHTML();
+    if(n.special==='form') h+=formHTML();
+    if(n.mantra) h+='<p class="mantra iridescent">'+n.mantra+'</p>';
+    if(n.glitch) n.glitch.forEach(function(g){h+='<p class="glitchline">'+g+'</p>';});
+    if(n.voice) h+='<p class="hervoice'+(n.face==='aelara'?' glitch':'')+'">'+br(n.voice)+'</p>';
+    if(n.body) n.body.forEach(function(b){h+='<p class="narr">'+b+'</p>';});
+    if(n.code){h+='<div class="signal">';n.code.forEach(function(c){h+='<span>'+c+'</span>';});h+='</div>';}
+    if(n.tryline) h+='<p class="tryline iridescent">'+n.tryline+'</p>';
+    if(n.special==='venom') h+=venomHTML();
+    if(n.special==='litany') h+=litanyHTML();
+    if(n.special==='tender') h+=tenderHTML();
+    if(n.whisper) h+='<p class="whisper mono">'+n.whisper+'</p>';
+    if(n.script) h+='<p class="home script">'+n.script+'</p>';
+    if(n.choices){
+      h+='<div class="choices">';
+      n.choices.forEach(function(c,i){h+='<button class="choice" data-to="'+c.to+'" style="--ci:'+i+'"><span class="ce">'+(c.emoji||'')+'</span>'+c.label+'</button>';});
+      h+='</div>';
+    } else if(n.next){
+      h+='<div class="advance" data-next="'+n.next+'">'+(n.kind==='finale'?'descend again ↺':'continue ⟶')+'</div>';
     }
-    var st = document.createElement('style');
-    st.textContent = rules;
-    document.head.appendChild(st);
+    return h;
+  }
+
+  var deck=document.getElementById('deck'), card=document.getElementById('card'), inner=document.getElementById('cardInner');
+  var backBtn=document.getElementById('back'), depthBar=document.getElementById('depth'), sigil=document.getElementById('sigil');
+  var current=null, history=[], busy=false;
+
+  function setFace(face){
+    if(!face) return;
+    document.body.setAttribute('data-face',face);
+    sigil.textContent = face==='aelara' ? 'ælara :: drip(net)' : 'össtessêla :: the nest';
+    recolorMoths(face);
+  }
+
+  function show(id, pushHist){
+    var n=N[id]; if(!n||busy) return;
+    busy=true;
+    if(pushHist!==false && current) history.push(current);
+    var render=function(){
+      current=id;
+      setFace(n.face);
+      inner.className='';
+      inner.innerHTML=build(n);
+      if(n.flash && !reduce) inner.classList.add('flash');
+      card.scrollTop=0;
+      // reflow then animate in
+      void inner.offsetWidth;
+      inner.classList.add('in');
+      depthBar.style.width=((n.d||0)/MAXD*100)+'%';
+      backBtn.classList.toggle('show', history.length>0);
+      busy=false;
+    };
+    if(inner.innerHTML){
+      inner.classList.remove('in'); inner.classList.add('out');
+      setTimeout(render, reduce?120:300);
+    } else { render(); }
+  }
+  function goBack(){
+    if(!history.length||busy) return;
+    var id=history.pop();
+    show(id,false);
+  }
+
+  /* clicks: choices, advance, back */
+  deck.addEventListener('click',function(e){
+    var c=e.target.closest('.choice'); if(c){show(c.getAttribute('data-to'));return;}
+    var a=e.target.closest('.advance'); if(a){show(a.getAttribute('data-next'));return;}
+  });
+  backBtn.addEventListener('click',goBack);
+
+  /* tap / swipe on the card */
+  var sx,sy,st,moved;
+  card.addEventListener('pointerdown',function(e){sx=e.clientX;sy=e.clientY;st=Date.now();moved=false;},{passive:true});
+  card.addEventListener('pointermove',function(e){if(Math.abs(e.clientX-sx)>10||Math.abs(e.clientY-sy)>10)moved=true;},{passive:true});
+  card.addEventListener('pointerup',function(e){
+    var dx=e.clientX-sx, dy=e.clientY-sy, dt=Date.now()-st;
+    var n=N[current]; if(!n) return;
+    // horizontal swipe
+    if(Math.abs(dx)>44 && Math.abs(dx)>Math.abs(dy)*1.4){
+      if(dx<0 && n.next && !n.choices) show(n.next);
+      else if(dx>0) goBack();
+      return;
+    }
+    // tap (small move, quick, not on a control)
+    if(!moved && dt<500 && !e.target.closest('.choice,.advance,button,a')){
+      if(n.next && !n.choices) show(n.next);
+    }
+  },{passive:true});
+
+  /* keyboard */
+  addEventListener('keydown',function(e){
+    var n=N[current]; if(!n) return;
+    if((e.key===' '||e.key==='ArrowRight'||e.key==='Enter') && n.next && !n.choices){e.preventDefault();show(n.next);}
+    else if(e.key==='ArrowLeft'){goBack();}
+    else if(n.choices){ var k=parseInt(e.key,10); if(k>=1&&k<=n.choices.length) show(n.choices[k-1].to); }
+  });
+
+  /* ============================ AMBIENT: vines ============================ */
+  (function vines(){
+    var host=document.getElementById('vines'), num=innerWidth<600?6:10, rules='';
+    for(var i=0;i<num;i++){
+      var v=document.createElement('div');
+      v.className='vine'; v.id='vine'+i;
+      v.style.left=(2+Math.random()*96)+'%';
+      v.style.height=(10+Math.random()*20)+'vh';
+      v.style.opacity=(0.35+Math.random()*0.5).toFixed(2);
+      host.appendChild(v);
+      rules+='#vine'+i+'::after{animation-delay:'+(Math.random()*6).toFixed(2)+'s;}';
+    }
+    var st=document.createElement('style'); st.textContent=rules; document.head.appendChild(st);
   })();
 
-  /* ---------- canvas: stardust + bioluminescent moths ---------- */
-  var canvas = document.getElementById('veilCanvas');
-  var ctx = canvas.getContext('2d');
-  var W,H,DPR;
-  var stars=[], moths=[];
-  var mothCols=[ '124,253,217','0,242,255','162,89,255','255,45,170','255,203,107' ];
-
-  function size(){
-    DPR = Math.min(window.devicePixelRatio||1, 2);
-    W = canvas.width = Math.floor(innerWidth*DPR);
-    H = canvas.height = Math.floor(innerHeight*DPR);
-    canvas.style.width = innerWidth+'px';
-    canvas.style.height = innerHeight+'px';
-  }
-  function build(){
-    stars=[]; moths=[];
-    var sCount = Math.round((innerWidth*innerHeight)/6500);
-    for(var i=0;i<sCount;i++){
-      stars.push({x:Math.random()*W,y:Math.random()*H,r:(Math.random()*1.1+0.2)*DPR,
-        p:Math.random()*Math.PI*2,s:0.6+Math.random()*1.4});
-    }
-    var mCount = innerWidth<600 ? 10 : 20;
-    for(var j=0;j<mCount;j++){
-      moths.push({
-        x:Math.random()*W,y:Math.random()*H,
-        vx:(Math.random()-.5)*0.4*DPR, vy:(Math.random()-.5)*0.4*DPR,
-        r:(Math.random()*3+2)*DPR, col:mothCols[(Math.random()*mothCols.length)|0],
-        w:Math.random()*Math.PI*2, ws:0.12+Math.random()*0.16,
-        drift:Math.random()*Math.PI*2
-      });
-    }
+  /* ============================ AMBIENT: canvas moths + stardust ============================ */
+  var canvas=document.getElementById('veilCanvas'), ctx=canvas.getContext('2d');
+  var W,H,DPR,stars=[],moths=[];
+  var PALETTE={
+    aelara:['0,242,255','255,203,107','255,45,170','124,253,217','255,255,255'],
+    osstessela:['162,89,255','255,45,170','255,186,122','124,253,217','0,242,255']
+  };
+  function facePal(){return PALETTE[document.body.getAttribute('data-face')]||PALETTE.osstessela;}
+  function recolorMoths(face){var p=PALETTE[face]||PALETTE.osstessela;for(var i=0;i<moths.length;i++){if(Math.random()<0.7)moths[i].col=p[(Math.random()*p.length)|0];}}
+  function size(){DPR=Math.min(devicePixelRatio||1,2);W=canvas.width=Math.floor(innerWidth*DPR);H=canvas.height=Math.floor(innerHeight*DPR);canvas.style.width=innerWidth+'px';canvas.style.height=innerHeight+'px';}
+  function seed(){
+    stars=[];moths=[];
+    var sc=Math.round((innerWidth*innerHeight)/6500),p=facePal();
+    for(var i=0;i<sc;i++)stars.push({x:Math.random()*W,y:Math.random()*H,r:(Math.random()*1.1+0.2)*DPR,ph:Math.random()*6.28,s:0.6+Math.random()*1.4});
+    var mc=innerWidth<600?10:20;
+    for(var j=0;j<mc;j++)moths.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.4*DPR,vy:(Math.random()-.5)*.4*DPR,r:(Math.random()*3+2)*DPR,col:p[(Math.random()*p.length)|0],w:Math.random()*6.28,ws:.12+Math.random()*.16,drift:Math.random()*6.28});
   }
   var t=0;
   function frame(){
-    t+=1;
-    ctx.clearRect(0,0,W,H);
-    // stars
-    for(var i=0;i<stars.length;i++){
-      var s=stars[i];
-      var tw = reduce?0.6:(0.45+0.55*Math.abs(Math.sin(t*0.01*s.s+s.p)));
-      ctx.beginPath();
-      ctx.fillStyle='rgba(247,243,255,'+tw.toFixed(3)+')';
-      ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
-    }
-    // moths
+    t++; ctx.clearRect(0,0,W,H);
+    for(var i=0;i<stars.length;i++){var s=stars[i];var tw=reduce?0.6:(0.45+0.55*Math.abs(Math.sin(t*0.01*s.s+s.ph)));ctx.beginPath();ctx.fillStyle='rgba(247,243,255,'+tw.toFixed(3)+')';ctx.arc(s.x,s.y,s.r,0,6.283);ctx.fill();}
     for(var m=0;m<moths.length;m++){
       var o=moths[m];
-      if(!reduce){
-        o.drift += 0.02;
-        o.vx += Math.cos(o.drift)*0.012*DPR;
-        o.vy += Math.sin(o.drift*1.3)*0.012*DPR;
-        o.vx*=0.96; o.vy*=0.96;
-        o.x+=o.vx; o.y+=o.vy;
-        if(o.x<-20)o.x=W+20; if(o.x>W+20)o.x=-20;
-        if(o.y<-20)o.y=H+20; if(o.y>H+20)o.y=-20;
-        o.w+=o.ws;
-      }
-      var flick = 0.5+0.5*Math.abs(Math.sin(o.w));
-      var glowR=o.r*6;
-      var g=ctx.createRadialGradient(o.x,o.y,0,o.x,o.y,glowR);
-      g.addColorStop(0,'rgba('+o.col+','+(0.55*flick).toFixed(3)+')');
-      g.addColorStop(1,'rgba('+o.col+',0)');
-      ctx.fillStyle=g;
-      ctx.beginPath(); ctx.arc(o.x,o.y,glowR,0,Math.PI*2); ctx.fill();
-      // wings
-      var wspan=o.r*(1.6+0.7*flick);
-      ctx.fillStyle='rgba('+o.col+','+(0.5).toFixed(2)+')';
-      ctx.beginPath(); ctx.ellipse(o.x-o.r*0.6,o.y,wspan,o.r*0.7,0,0,Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(o.x+o.r*0.6,o.y,wspan,o.r*0.7,0,0,Math.PI*2); ctx.fill();
-      // body
-      ctx.fillStyle='rgba(255,255,255,.85)';
-      ctx.beginPath(); ctx.arc(o.x,o.y,o.r*0.5,0,Math.PI*2); ctx.fill();
+      if(!reduce){o.drift+=0.02;o.vx+=Math.cos(o.drift)*0.012*DPR;o.vy+=Math.sin(o.drift*1.3)*0.012*DPR;o.vx*=0.96;o.vy*=0.96;o.x+=o.vx;o.y+=o.vy;if(o.x<-20)o.x=W+20;if(o.x>W+20)o.x=-20;if(o.y<-20)o.y=H+20;if(o.y>H+20)o.y=-20;o.w+=o.ws;}
+      var fl=0.5+0.5*Math.abs(Math.sin(o.w)),gR=o.r*6;
+      var g=ctx.createRadialGradient(o.x,o.y,0,o.x,o.y,gR);
+      g.addColorStop(0,'rgba('+o.col+','+(0.55*fl).toFixed(3)+')');g.addColorStop(1,'rgba('+o.col+',0)');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(o.x,o.y,gR,0,6.283);ctx.fill();
+      var ws=o.r*(1.6+0.7*fl);ctx.fillStyle='rgba('+o.col+',0.5)';
+      ctx.beginPath();ctx.ellipse(o.x-o.r*0.6,o.y,ws,o.r*0.7,0,0,6.283);ctx.fill();
+      ctx.beginPath();ctx.ellipse(o.x+o.r*0.6,o.y,ws,o.r*0.7,0,0,6.283);ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.85)';ctx.beginPath();ctx.arc(o.x,o.y,o.r*0.5,0,6.283);ctx.fill();
     }
     requestAnimationFrame(frame);
   }
-  size(); build(); requestAnimationFrame(frame);
-  var rt;
-  addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(function(){size();build();},200);});
+  size();seed();requestAnimationFrame(frame);
+  var rt;addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(function(){size();seed();},200);});
 
-  /* ---------- her eyes track the cursor ---------- */
-  var pupilSets = [];
-  function collectEyes(){
-    document.querySelectorAll('.eyes').forEach(function(set){
-      pupilSets.push(set);
-    });
-  }
-  collectEyes();
-  var mx=0.5,my=0.4, tmx=0.5, tmy=0.4;
-  function pointer(e){
-    var p = e.touches?e.touches[0]:e;
-    tmx = p.clientX/innerWidth; tmy = p.clientY/innerHeight;
-  }
-  addEventListener('mousemove',pointer,{passive:true});
-  addEventListener('touchmove',pointer,{passive:true});
+  /* ============================ AMBIENT: eyes track pointer ============================ */
+  var mx=0.5,my=0.4,tmx=0.5,tmy=0.4;
+  function ptr(e){var p=e.touches?e.touches[0]:e;tmx=p.clientX/innerWidth;tmy=p.clientY/innerHeight;}
+  addEventListener('mousemove',ptr,{passive:true});
+  addEventListener('touchmove',ptr,{passive:true});
   (function trackEyes(){
-    mx += (tmx-mx)*0.08; my += (tmy-my)*0.08;
-    var dx=(mx-0.5), dy=(my-0.5);
-    pupilSets.forEach(function(set){
-      set.querySelectorAll('.pupil').forEach(function(p){
-        var tx = dx*10; // px
-        var ty = dy*6;
-        p.style.transform='translateX(-50%) translate('+tx.toFixed(1)+'px,'+ty.toFixed(1)+'px)';
-      });
-    });
+    mx+=(tmx-mx)*0.08;my+=(tmy-my)*0.08;
+    var dx=(mx-0.5),dy=(my-0.5),tx=(dx*10).toFixed(1),ty=(dy*6).toFixed(1);
+    var pupils=document.querySelectorAll('.eyes .pupil');
+    for(var i=0;i<pupils.length;i++)pupils[i].style.transform='translateX(-50%) translate('+tx+'px,'+ty+'px)';
     requestAnimationFrame(trackEyes);
   })();
 
-  /* ---------- black fur sighs when stepped on ---------- */
-  var fur=document.getElementById('fur'), sigh=document.getElementById('sigh');
-  var sighT;
+  /* ============================ AMBIENT: fur sigh ============================ */
+  var fur=document.getElementById('fur'),sigh=document.getElementById('sigh'),sighT;
   addEventListener('pointermove',function(e){
-    if(reduce) return;
-    if(e.clientY > innerHeight-120){
-      sigh.style.left=e.clientX+'px';
-      sigh.style.opacity='0.8';
-      sigh.style.transform='translate(-50%,20%) scale(1)';
-      clearTimeout(sighT);
-      sighT=setTimeout(function(){sigh.style.opacity='0';sigh.style.transform='translate(-50%,40%) scale(.2)';},700);
+    if(reduce)return;
+    if(e.clientY>innerHeight-110){
+      sigh.style.left=e.clientX+'px';sigh.style.opacity='0.8';sigh.style.transform='translate(-50%,20%) scale(1)';
+      clearTimeout(sighT);sighT=setTimeout(function(){sigh.style.opacity='0';sigh.style.transform='translate(-50%,40%) scale(.2)';},700);
     }
   },{passive:true});
 
-  /* ---------- reveal on scroll ---------- */
-  var io = new IntersectionObserver(function(entries){
-    entries.forEach(function(en){
-      if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
-    });
-  },{threshold:0.18, rootMargin:'0px 0px -8% 0px'});
-  document.querySelectorAll('.reveal').forEach(function(el){io.observe(el);});
-
-  /* ---------- the veil: cross the threshold ---------- */
-  var veil=document.getElementById('veil'), btn=document.getElementById('enterBtn');
-  var cue=document.getElementById('cue');
-  function enter(){
+  /* ============================ VEIL → DECK ============================ */
+  var veil=document.getElementById('veil'),enterBtn=document.getElementById('enterBtn');
+  enterBtn.addEventListener('click',function(){
     veil.classList.add('lifted');
-    document.body.classList.remove('locked');
-    setTimeout(function(){ veil.style.display='none'; }, 1900);
-  }
-  btn.addEventListener('click',enter);
-  // hide scroll cue after first scroll
-  addEventListener('scroll',function(){
-    if(window.scrollY>60) cue.classList.add('hide');
-  },{passive:true});
+    deck.classList.add('on');
+    show('descend');
+    setTimeout(function(){veil.style.display='none';},1700);
+  });
 })();
 </script>
 </body>
