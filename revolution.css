@@ -756,6 +756,45 @@ html.rev-reveal [data-reveal] {
 }
 html.rev-reveal [data-reveal].rev-in { opacity: 1; transform: none; }
 
+/* ── SCROLL RAIL — a slim section-progress spine on the right edge, with a
+   dot per section (click to jump) and the current section's name while you
+   scroll. Sits clear of the top bar, light switch, and corner chips. ────── */
+.rev-rail {
+  position: fixed; right: .45rem; top: 16vh; bottom: 13vh; width: 24px;
+  z-index: 55; pointer-events: none;
+}
+.rev-rail::before {                 /* the unfilled track */
+  content: ''; position: absolute; right: 9px; top: 0; bottom: 0; width: 2px;
+  background: var(--line); border-radius: 2px;
+}
+.rev-rail .rr-fill {                 /* progress fill, top → current scroll */
+  position: absolute; right: 8.5px; top: 0; width: 3px; height: 0;
+  background: linear-gradient(var(--gold), var(--hotpink));
+  border-radius: 3px; box-shadow: 0 0 8px rgba(255,46,136,.5);
+}
+.rev-rail .rr-tick {
+  position: absolute; right: 5px; margin-top: -4.5px; width: 9px; height: 9px;
+  padding: 0; border: 0; border-radius: 50%; background: var(--line);
+  pointer-events: auto; cursor: pointer;
+  transition: background .3s, transform .3s, box-shadow .3s;
+}
+.rev-rail .rr-tick:hover { background: var(--ink-dim); }
+.rev-rail .rr-tick.on {
+  background: var(--hotpink); transform: scale(1.5);
+  box-shadow: 0 0 10px var(--hotpink);
+}
+.rev-rail .rr-label {               /* current section name — shown while scrolling */
+  position: absolute; right: 22px; margin-top: -.6em;
+  font-family: var(--font-mono); font-size: .58rem; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--ink-dim); white-space: nowrap;
+  max-width: 46vw; overflow: hidden; text-overflow: ellipsis; text-align: right;
+  background: var(--page); padding: .15rem .4rem; border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.15);
+  opacity: 0; transform: translateX(6px); transition: opacity .3s, transform .3s;
+}
+.rev-rail.live .rr-label { opacity: .95; transform: none; }
+@media (max-width: 460px) { .rev-rail { top: 12vh; bottom: 10vh; } }
+
 .audio-toggle {
   position: fixed;
   right: 1.1rem; bottom: 1.1rem;

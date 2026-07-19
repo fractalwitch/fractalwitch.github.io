@@ -104,7 +104,8 @@
     touches: {},           // active touch nodes (id → {x,y}) for the constellation
     charge: null,          // {x,y,t0} while a finger presses & holds
     wander: 0,             // ambient drift phase when idle on mobile
-    lastTouch: 0           // timestamp of last touch, to resume the wander
+    lastTouch: 0,          // timestamp of last touch, to resume the wander
+    scrolling: false       // hidden mid-scroll so the blend doesn't jank the page
   };
 
   function mirrorInit() {
@@ -210,6 +211,24 @@
       addEventListener('touchmove', onMove, { passive: true });
       addEventListener('touchend', onEnd, { passive: true });
       addEventListener('touchcancel', onEnd, { passive: true });
+
+      // SCROLL SMOOTHING — a fixed mix-blend-mode canvas re-composites with the
+      // whole scrolling page every frame (the jank). Hide it during active
+      // scroll and settle it back the instant scrolling stops.
+      let scrollHideT = 0;
+      addEventListener('scroll', function () {
+        if (!mirror.scrolling) { mirror.scrolling = true; mirror.canvas.style.visibility = 'hidden'; }
+        clearTimeout(scrollHideT);
+        scrollHideT = setTimeout(function () {
+          mirror.scrolling = false; mirror.canvas.style.visibility = ''; mirror.lastTouch = performance.now();
+        }, 170);
+      }, { passive: true });
+
+      // iOS ignores user-scalable=no — block its pinch gestures so two fingers
+      // drive the constellation instead of zooming/panning the page.
+      ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (g) {
+        addEventListener(g, function (e) { e.preventDefault(); }, { passive: false });
+      });
     }
 
     mirror.running = true;
@@ -241,6 +260,9 @@
       requestAnimationFrame(mirrorFrame);
       return;
     }
+
+    // hidden mid-scroll: skip all work until scrolling settles
+    if (mirror.scrolling) { requestAnimationFrame(mirrorFrame); return; }
 
     // MOBILE IDLE WANDER — with no cursor to follow, the ball drifts on its own
     // so the screen is never dead; any touch (which stamps lastTouch) reclaims it.
@@ -1205,6 +1227,67 @@
     try { return JSON.parse(localStorage.getItem('rev_played') || '[]'); } catch (e) { return []; }
   };
 
+  // ── SCROLL RAIL — a slim progress spine down the right edge, a dot per
+  //    section with the current section's name, click a dot to jump. Built on
+  //    native scroll (kept smooth by the mirror pause above), not a custom
+  //    scroll engine — so momentum, rubber-banding, and a11y all survive. ─────
+  function buildRail() {
+    if (document.querySelector('.rev-rail')) return;
+    const cand = document.querySelectorAll('section[aria-labelledby], section[aria-label], main [data-reveal]');
+    const seen = [], secs = [];
+    for (let i = 0; i < cand.length; i++) {
+      const el = cand[i]; if (seen.indexOf(el) !== -1) continue; seen.push(el);
+      let label = '';
+      const lb = el.getAttribute('aria-labelledby');
+      if (lb) { const tt = document.getElementById(lb); if (tt) label = tt.textContent; }
+      if (!label) label = el.getAttribute('aria-label') || '';
+      if (!label) { const h = el.querySelector('h1,h2,h3'); if (h) label = h.textContent; }
+      label = (label || '').replace(/\s+/g, ' ').trim();
+      if (label.length > 30) label = label.slice(0, 28) + '…';
+      secs.push({ el: el, label: label });
+    }
+    if (secs.length < 2) return;   // not worth a rail for a one-section page
+
+    const rail = document.createElement('nav');
+    rail.className = 'rev-rail'; rail.setAttribute('aria-label', 'Section progress');
+    const fill = document.createElement('i'); fill.className = 'rr-fill'; rail.appendChild(fill);
+    const tag = document.createElement('span'); tag.className = 'rr-label'; rail.appendChild(tag);
+    const ticks = secs.map(function (s) {
+      const d = document.createElement('button');
+      d.className = 'rr-tick'; d.type = 'button';
+      d.setAttribute('aria-label', s.label || 'section');
+      d.addEventListener('click', function () { s.el.scrollIntoView({ behavior: REV.stilled() ? 'auto' : 'smooth', block: 'start' }); });
+      rail.appendChild(d); return d;
+    });
+    document.body.appendChild(rail);
+
+    let ticking = false, hideT = 0;
+    function update() {
+      ticking = false;
+      const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
+      const y = window.scrollY || 0;
+      fill.style.height = (Math.min(1, y / max) * 100).toFixed(2) + '%';
+      let active = 0;
+      for (let i = 0; i < secs.length; i++) {
+        const r = secs[i].el.getBoundingClientRect();
+        ticks[i].style.top = (Math.min(1, Math.max(0, (r.top + y) / max)) * 100).toFixed(2) + '%';
+        if (r.top <= innerHeight * 0.42) active = i;
+        ticks[i].classList.remove('on');
+      }
+      ticks[active].classList.add('on');
+      tag.textContent = secs[active].label;
+      tag.style.top = ticks[active].style.top;
+    }
+    function onScroll() {
+      rail.classList.add('live'); clearTimeout(hideT);
+      hideT = setTimeout(function () { rail.classList.remove('live'); }, 1100);
+      if (!ticking) { ticking = true; requestAnimationFrame(update); }
+    }
+    addEventListener('scroll', onScroll, { passive: true });
+    addEventListener('resize', onScroll, { passive: true });
+    update();
+  }
+
   REV.boot = function (opts) {
     opts = opts || {};
     applyState();
@@ -1397,6 +1480,8 @@
         tiltPass();
       }
     }
+
+    buildRail();   // the side scroll-progress spine with section markers
 
     // ── audio-reactive CSS vars — one tick drives the atmosphere everywhere
     //    (scanline breath, hero-title throb). Values rest at 0 until sound
