@@ -96,7 +96,15 @@
     rx: 0,                 // audio-reactive shimmer (0..1, from the highs)
     trail: [],             // recent ball positions → a fading comet trail
     specks: [],
-    running: false
+    running: false,
+    // ── mobile touch language ──────────────────────────────────────
+    coarse: false,         // touch device (no hover/drag cursor)
+    touchI: 1,             // per-room intensity (louder in the dark rooms)
+    bursts: [],            // transient tap / hold-release light sparks
+    touches: {},           // active touch nodes (id → {x,y}) for the constellation
+    charge: null,          // {x,y,t0} while a finger presses & holds
+    wander: 0,             // ambient drift phase when idle on mobile
+    lastTouch: 0           // timestamp of last touch, to resume the wander
   };
 
   function mirrorInit() {
@@ -137,6 +145,66 @@
       mirror.darkTarget = el ? 1 : 0;
     }, { passive: true });
 
+    // ── MOBILE TOUCH LANGUAGE — the ball answers fingers instead of a cursor:
+    //    tap → light burst, hold → charge & release, idle → wander, and
+    //    multi-touch → a constellation. All passive (never blocks scroll/taps)
+    //    and quiet in lightless rooms + reduced motion. ──────────────────────
+    mirror.coarse = !!(window.matchMedia && matchMedia('(hover: none), (pointer: coarse)').matches);
+    mirror.touchI = darkGround ? 1.0 : 0.62;   // subtler over the light reading rooms
+    if (mirror.coarse) {
+      const setDark = function (target) {
+        const el = target && target.closest ? target.closest('[data-lightless]') : null;
+        mirror.darkTarget = el ? 1 : 0;
+      };
+      const burst = function (x, y, power) {
+        const n = Math.round((6 + power * 11) * mirror.touchI);
+        for (let i = 0; i < n; i++) {
+          const a = Math.random() * 6.2832, sp = (44 + Math.random() * 190) * (0.55 + power);
+          mirror.bursts.push({
+            x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+            life: 1, hue: PALETTE[(Math.random() * PALETTE.length) | 0],
+            size: (1.4 + Math.random() * 2.6) * (0.7 + power * 0.6)
+          });
+        }
+        if (mirror.bursts.length > 300) mirror.bursts.splice(0, mirror.bursts.length - 300);
+      };
+      const onStart = function (e) {
+        if (REV.stilled()) return;
+        const t = e.changedTouches[0];
+        mirror.tx = t.clientX; mirror.ty = t.clientY; mirror.lastTouch = performance.now();
+        setDark(t.target);
+        burst(t.clientX, t.clientY, 0.32 + bands().level * 0.5);
+        mirror.omegaBoost = Math.min(1.4, mirror.omegaBoost + 0.5);
+        // hold-charge, unless the finger landed on the platter or a control (they own their own press)
+        const own = t.target && t.target.closest ? t.target.closest('#table, a, button, input, select, textarea, [role="button"], .now-playing, .audio-toggle, .light-switch') : null;
+        if (!own) mirror.charge = { x: t.clientX, y: t.clientY, t0: performance.now() };
+        for (let i = 0; i < e.touches.length; i++) { const tt = e.touches[i]; mirror.touches[tt.identifier] = { x: tt.clientX, y: tt.clientY }; }
+      };
+      const onMove = function (e) {
+        if (REV.stilled()) return;
+        const t = e.touches[0];
+        mirror.tx = t.clientX; mirror.ty = t.clientY; mirror.lastTouch = performance.now();
+        setDark(t.target);
+        if (mirror.charge && Math.hypot(t.clientX - mirror.charge.x, t.clientY - mirror.charge.y) > 14) mirror.charge = null; // a drag/scroll cancels the charge
+        for (let i = 0; i < e.touches.length; i++) { const tt = e.touches[i]; mirror.touches[tt.identifier] = { x: tt.clientX, y: tt.clientY }; }
+      };
+      const onEnd = function (e) {
+        mirror.lastTouch = performance.now();
+        if (mirror.charge) {
+          const held = (performance.now() - mirror.charge.t0) / 1000;
+          if (held > 0.25 && !REV.stilled()) burst(mirror.charge.x, mirror.charge.y, Math.min(1.2, 0.45 + held * 0.7));
+          mirror.charge = null;
+        }
+        const active = {};
+        for (let i = 0; i < e.touches.length; i++) { const tt = e.touches[i]; active[tt.identifier] = { x: tt.clientX, y: tt.clientY }; }
+        mirror.touches = active;
+      };
+      addEventListener('touchstart', onStart, { passive: true });
+      addEventListener('touchmove', onMove, { passive: true });
+      addEventListener('touchend', onEnd, { passive: true });
+      addEventListener('touchcancel', onEnd, { passive: true });
+    }
+
     mirror.running = true;
     mirror.last = performance.now();
     requestAnimationFrame(mirrorFrame);
@@ -159,9 +227,19 @@
     if (REV.stilled()) {
       // Stilled: a faint static scatter remains as texture. No movement.
       mirror.rx = 0; mirror.trail.length = 0;
+      mirror.bursts.length = 0; mirror.charge = null; mirror.touches = {};
       drawSpecks(ctx, dpr, 0);
       requestAnimationFrame(mirrorFrame);
       return;
+    }
+
+    // MOBILE IDLE WANDER — with no cursor to follow, the ball drifts on its own
+    // so the screen is never dead; any touch (which stamps lastTouch) reclaims it.
+    if (mirror.coarse && !mirror.charge && (now - mirror.lastTouch) > 1600) {
+      mirror.wander += dt * 0.45;
+      const cx = innerWidth * 0.5, cy = innerHeight * 0.42, ax = innerWidth * 0.3, ay = innerHeight * 0.24;
+      mirror.tx = cx + Math.cos(mirror.wander) * ax + Math.cos(mirror.wander * 1.7) * ax * 0.25;
+      mirror.ty = cy + Math.sin(mirror.wander * 1.3) * ay + Math.sin(mirror.wander * 0.6) * ay * 0.35;
     }
 
     // ball glides after the pointer (a real ball has mass)
@@ -181,6 +259,19 @@
     const rb = bands(now);
     mirror.rx += (rb.high - mirror.rx) * Math.min(1, dt * 8);
     mirror.omegaBoost += rb.level * dt * 3.2;
+
+    // a held finger keeps the ball spinning up (the charge gathers energy)
+    if (mirror.charge) mirror.omegaBoost = Math.min(1.6, mirror.omegaBoost + dt * 1.3);
+
+    // advance the burst sparks — fly out, drag to a stop, settle, fade
+    for (let i = mirror.bursts.length - 1; i >= 0; i--) {
+      const b = mirror.bursts[i];
+      b.life -= dt * 1.7;
+      if (b.life <= 0) { mirror.bursts.splice(i, 1); continue; }
+      b.x += b.vx * dt; b.y += b.vy * dt;
+      const drag = Math.pow(0.12, dt); b.vx *= drag; b.vy *= drag;
+      b.vy += 26 * dt;
+    }
 
     drawSpecks(ctx, dpr, mirror.t);
     requestAnimationFrame(mirrorFrame);
@@ -237,6 +328,47 @@
     ctx.beginPath();
     ctx.arc(mirror.x * dpr, mirror.y * dpr, 9 * dpr, 0, 6.2832);
     ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // ── TOUCH VISUALS (mobile) ────────────────────────────────────────
+    // tap / hold-release bursts — sparks flung from the finger
+    for (let i = 0; i < mirror.bursts.length; i++) {
+      const b = mirror.bursts[i];
+      ctx.globalAlpha = b.life * b.life * 0.85 * lit;
+      ctx.fillStyle = b.hue;
+      ctx.beginPath();
+      ctx.arc(b.x * dpr, b.y * dpr, Math.max(0.3, b.size * b.life) * dpr, 0, 6.2832);
+      ctx.fill();
+    }
+    // charge bloom — a gold knot gathering under a held finger
+    if (mirror.charge) {
+      const held = Math.min(1.4, (performance.now() - mirror.charge.t0) / 1000);
+      const r = (9 + held * 30) * dpr, cx = mirror.charge.x * dpr, cy = mirror.charge.y * dpr;
+      const cg = ctx.createRadialGradient(cx, cy, 1, cx, cy, r);
+      cg.addColorStop(0, 'rgba(247,211,63,' + (0.28 + held * 0.4).toFixed(3) + ')');
+      cg.addColorStop(0.6, 'rgba(255,46,136,' + (0.14 + held * 0.2).toFixed(3) + ')');
+      cg.addColorStop(1, 'rgba(255,46,136,0)');
+      ctx.globalAlpha = lit;
+      ctx.fillStyle = cg;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, 6.2832); ctx.fill();
+    }
+    // constellation — a light node at each active touch, faint links between
+    const ids = Object.keys(mirror.touches);
+    if (ids.length > 1) {
+      ctx.lineWidth = 1 * dpr; ctx.strokeStyle = 'rgba(201,160,255,.28)';
+      for (let a = 0; a < ids.length; a++) {
+        const p = mirror.touches[ids[a]]; if (!p) continue;
+        const ng = ctx.createRadialGradient(p.x * dpr, p.y * dpr, 1, p.x * dpr, p.y * dpr, 22 * dpr);
+        ng.addColorStop(0, 'rgba(234,240,255,.5)'); ng.addColorStop(1, 'rgba(234,240,255,0)');
+        ctx.globalAlpha = lit; ctx.fillStyle = ng;
+        ctx.beginPath(); ctx.arc(p.x * dpr, p.y * dpr, 22 * dpr, 0, 6.2832); ctx.fill();
+        for (let c = a + 1; c < ids.length; c++) {
+          const q = mirror.touches[ids[c]]; if (!q) continue;
+          ctx.globalAlpha = lit * 0.5;
+          ctx.beginPath(); ctx.moveTo(p.x * dpr, p.y * dpr); ctx.lineTo(q.x * dpr, q.y * dpr); ctx.stroke();
+        }
+      }
+    }
     ctx.globalAlpha = 1;
   }
 
