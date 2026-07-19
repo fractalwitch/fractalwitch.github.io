@@ -1275,8 +1275,25 @@
     });
     document.body.appendChild(rail);
 
+    // ── REVEAL — the listing names are collapsed while you read. They surface
+    //    only when relevant: the active name flashes when you cross into a new
+    //    category (then fades after 3s), and the whole listing shows while you
+    //    touch/hover the rail (fades 3s after you let go). ─────────────────────
+    let activeT = 0, allT = 0;
+    function showActive() {
+      rail.classList.add('show-active'); clearTimeout(activeT);
+      activeT = setTimeout(function () { rail.classList.remove('show-active'); }, 3000);
+    }
+    function showAll() { rail.classList.add('show-all'); clearTimeout(allT); }
+    function hideAllSoon() {
+      clearTimeout(allT);
+      allT = setTimeout(function () { rail.classList.remove('show-all'); }, 3000);
+    }
+    rail.addEventListener('pointerover', showAll);
+    rail.addEventListener('pointerout', hideAllSoon);
+
     // ── SCRUB — press/drag anywhere on the spine to scroll the page ──────────
-    let dragging = false, moved = false;
+    let dragging = false;
     function railFrac(clientY) {
       const rc = rail.getBoundingClientRect();
       return Math.min(1, Math.max(0, (clientY - rc.top) / Math.max(1, rc.height)));
@@ -1286,25 +1303,25 @@
       window.scrollTo({ top: railFrac(clientY) * max, behavior: 'auto' });
     }
     hit.addEventListener('pointerdown', function (e) {
-      dragging = true; moved = false; rail.dataset.scrubbed = '0';
-      rail.classList.add('grab');
+      dragging = true; rail.dataset.scrubbed = '0';
+      rail.classList.add('grab'); showAll();
       try { hit.setPointerCapture(e.pointerId); } catch (x) {}
       scrubTo(e.clientY); e.preventDefault();
     });
     hit.addEventListener('pointermove', function (e) {
       if (!dragging) return;
-      moved = true; rail.dataset.scrubbed = '1'; scrubTo(e.clientY);
+      rail.dataset.scrubbed = '1'; scrubTo(e.clientY);
     });
     function endDrag() {
       if (!dragging) return;
-      dragging = false; rail.classList.remove('grab');
+      dragging = false; rail.classList.remove('grab'); hideAllSoon();
       // clear the scrub flag after the click would have fired, so a real tap jumps
       setTimeout(function () { rail.dataset.scrubbed = '0'; }, 0);
     }
     hit.addEventListener('pointerup', endDrag);
     hit.addEventListener('pointercancel', endDrag);
 
-    let ticking = false, hideT = 0;
+    let ticking = false, lastActive = -1;
     function update() {
       ticking = false;
       const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
@@ -1319,10 +1336,10 @@
       }
       for (let i = 0; i < active; i++) items[i].classList.add('past');
       items[active].classList.add('on');
+      // crossed into a new category → flash its name (then it fades)
+      if (active !== lastActive) { lastActive = active; showActive(); }
     }
     function onScroll() {
-      rail.classList.add('live'); clearTimeout(hideT);
-      hideT = setTimeout(function () { rail.classList.remove('live'); }, 1400);
       if (!ticking) { ticking = true; requestAnimationFrame(update); }
     }
     addEventListener('scroll', onScroll, { passive: true });
@@ -1403,6 +1420,7 @@
     // Skipped in rooms that hard-code their own dark ground (theriot):
     // a light switch there would be a lie, since the room stays dark.
     var forcedDark = document.documentElement.dataset.ground === 'dark';
+    let lightSwitchEl = null;             // built here, seated in the top bar below
     if (!opts.noLightSwitch && !forcedDark) {
       const ls = document.createElement('button');
       ls.className = 'light-switch';
@@ -1416,7 +1434,7 @@
         ls.setAttribute('aria-checked', String(dark));
         REV.audio.crackle(0.18);          // a soft physical "clack" if sound is on
       });
-      document.body.appendChild(ls);
+      lightSwitchEl = ls;
     }
 
     // real-recording rooms: a "now playing" chip + autoplay, wired to ♪
@@ -1427,7 +1445,10 @@
       np.className = 'now-playing';
       np.type = 'button';
       np.setAttribute('aria-label', 'Play or pause this room’s track');
-      np.innerHTML = '<span class="np-eq" aria-hidden="true"><i></i><i></i><i></i></span><span class="np-title"></span>';
+      // np-fill: the track progress, drawn as a fill that floods the pill shape
+      // behind the label (transport moved off the top bar and onto the chip)
+      np.innerHTML = '<span class="np-fill" aria-hidden="true"></span>' +
+        '<span class="np-eq" aria-hidden="true"><i></i><i></i><i></i></span><span class="np-title"></span>';
       np.querySelector('.np-title').textContent = opts.trackTitle || 'tap for sound';
       // tapping the chip is an explicit, obvious way to start audio on mobile
       np.addEventListener('click', function () { REV.audio.enable(!REV.audio.enabled()); });
@@ -1438,6 +1459,17 @@
         np.querySelector('.np-title').textContent = on ? (opts.trackTitle || 'now playing') : 'tap for sound';
       };
       REV.audio.track(opts.track, opts.trackTitle);
+      // fill the pill as the recording plays
+      if (audio.trackEl) {
+        const npFill = np.querySelector('.np-fill');
+        const npUpd = function () {
+          const el = audio.trackEl;
+          if (!el || !el.duration || !isFinite(el.duration)) return;
+          npFill.style.width = (Math.max(0, Math.min(1, el.currentTime / el.duration)) * 100) + '%';
+        };
+        audio.trackEl.addEventListener('timeupdate', npUpd);
+        audio.trackEl.addEventListener('loadedmetadata', npUpd);
+      }
     }
 
     // ── persistent top bar: THSR wordmark (home) + current track code ──
@@ -1468,27 +1500,18 @@
       bar.setAttribute('aria-label', 'The Human Sexual Revolution — navigation');
       bar.innerHTML =
         '<a class="tb-mark" href="index.html" aria-label="The Human Sexual Revolution — home">THSR</a>' +
-        '<span class="tb-track" aria-label="Now on">' + right + '</span>';
+        '<span class="tb-right">' +
+          '<span class="tb-track" aria-label="Now on">' + right + '</span>' +
+        '</span>';
       if (sc === 'hub') bar.querySelector('.tb-mark').setAttribute('aria-current', 'page');
 
-      // transport: a thin now-playing progress line under the bar, tracking
-      // this room's recording (only on rooms that carry one)
-      if (opts.track && audio.trackEl) {
-        const prog = document.createElement('span');
-        prog.className = 'tb-progress'; prog.setAttribute('aria-hidden', 'true');
-        prog.innerHTML = '<i></i>';
-        bar.appendChild(prog);
-        const fill = prog.querySelector('i');
-        const upd = function () {
-          const el = audio.trackEl;
-          if (!el || !el.duration || !isFinite(el.duration)) return;
-          fill.style.width = (Math.max(0, Math.min(1, el.currentTime / el.duration)) * 100) + '%';
-        };
-        audio.trackEl.addEventListener('timeupdate', upd);
-        audio.trackEl.addEventListener('loadedmetadata', upd);
-      }
+      // the light switch now lives in the bar, right beside the page display
+      if (lightSwitchEl) { bar.querySelector('.tb-right').appendChild(lightSwitchEl); }
 
       document.body.appendChild(bar);
+    } else if (lightSwitchEl) {
+      // no bar to seat it in — fall back to the standalone corner switch
+      document.body.appendChild(lightSwitchEl);
     }
 
     // ── scroll reveal — sections settle in as they enter view. Safe by
