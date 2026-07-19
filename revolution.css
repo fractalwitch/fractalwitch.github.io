@@ -703,6 +703,8 @@ html[data-motion="stilled"] .rev-topbar .tb-mark {
   animation: none; filter: none;
   color: var(--ink); -webkit-text-fill-color: var(--ink); background: none;
 }
+/* the page display + the light switch share the right side of the bar */
+.rev-topbar .tb-right { display: inline-flex; align-items: center; gap: .8rem; }
 .rev-topbar .tb-track {
   display: inline-flex; align-items: baseline; gap: .5rem;
   font-size: .68rem; letter-spacing: .18em; text-transform: uppercase;
@@ -714,17 +716,28 @@ html[data-motion="stilled"] .rev-topbar .tb-mark {
 }
 .rev-topbar .tb-name { opacity: .82; }
 @media (max-width: 540px) { .rev-topbar .tb-name { display: none; } }
-/* transport: the now-playing progress line hugging the bottom of the bar */
-.rev-topbar .tb-progress {
-  position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
-  background: rgba(120,90,120,.14);
+
+/* ── LIGHT SWITCH, seated in the bar — a compact horizontal toggle. Overrides
+   the standalone corner switch's vertical geometry (knob slides left↔right). */
+.rev-topbar .light-switch {
+  position: static; flex: none; width: 42px; height: 22px;
+  padding: 3px; border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.3), inset 0 0 0 1px rgba(0,0,0,.12);
 }
-.rev-topbar .tb-progress i {
-  display: block; height: 100%; width: 0;
-  background: linear-gradient(90deg, var(--gold), var(--hotpink));
-  box-shadow: 0 0 8px rgba(255,46,136,.6);
-  transition: width .3s linear;
+.rev-topbar .light-switch .ls-plate { border-radius: 4px; }
+.rev-topbar .light-switch .ls-knob {
+  top: 50%; left: 6%; width: 42%; height: 76%;
+  transform: translateY(-50%);
+  transition: left .26s var(--ease-needle), background .26s, box-shadow .26s;
 }
+.rev-topbar .light-switch .ls-knob::after {   /* grip line turns vertical */
+  left: 44%; right: auto; top: 26%; bottom: 26%; width: 2px; height: auto;
+}
+html[data-theme="disco"] .rev-topbar .light-switch .ls-knob {
+  top: 50%; left: 52%; transform: translateY(-50%);
+  background: linear-gradient(180deg, #2a1030, #14040c);
+}
+
 /* dark grounds: flip the scrim so the light wordmark stays legible */
 [data-ground="dark"] .rev-topbar,
 html[data-theme="disco"] .rev-topbar,
@@ -802,16 +815,18 @@ html[data-motion="stilled"] .rev-rail .rr-fill { animation: none; }
   background: var(--line); box-shadow: 0 0 0 2px var(--page);
   transition: background .3s, transform .3s, box-shadow .3s;
 }
+/* names are COLLAPSED while reading — revealed only when relevant (see below) */
 .rev-rail .rr-item .rr-name {
   font-family: var(--font-mono); font-size: .56rem; letter-spacing: .12em;
   text-transform: uppercase; color: var(--ink-dim); text-align: right;
   max-width: min(38vw, 180px); overflow: hidden; text-overflow: ellipsis;
-  opacity: .32; transform: translateX(4px);
+  opacity: 0; transform: translateX(4px);
   transition: opacity .35s, transform .35s, color .35s;
 }
-.rev-rail.live .rr-item .rr-name { opacity: .55; }
+/* touching / hovering the rail surfaces the whole listing */
+.rev-rail.show-all .rr-item .rr-name { opacity: .5; transform: none; }
+.rev-rail .rr-item:hover .rr-name { opacity: .85; color: var(--ink); }
 .rev-rail .rr-item.past .rr-dot { background: var(--hotpink); box-shadow: 0 0 6px rgba(255,46,136,.6), 0 0 0 2px var(--page); }
-.rev-rail .rr-item:hover .rr-name { opacity: .8; color: var(--ink); }
 /* the active listing — RGB highlight with glow, riding down as you scroll */
 .rev-rail .rr-item.on { z-index: 2; }
 .rev-rail .rr-item.on .rr-dot {
@@ -820,7 +835,7 @@ html[data-motion="stilled"] .rev-rail .rr-fill { animation: none; }
   box-shadow: 0 0 8px #ff2d95, 0 0 16px #00b3ff, 0 0 0 2px var(--page);
 }
 .rev-rail .rr-item.on .rr-name {
-  opacity: 1; transform: none; font-weight: 700;
+  opacity: 0; transform: none; font-weight: 700;
   color: transparent; -webkit-text-fill-color: transparent;
   background: linear-gradient(90deg,#ff004c,#ff9a00,#ffe600,#00d26a,#00b3ff,#7b2ff7);
   background-size: 300% 100%;
@@ -828,6 +843,9 @@ html[data-motion="stilled"] .rev-rail .rr-fill { animation: none; }
   animation: tb-holo 3.5s linear infinite;
   text-shadow: none; filter: drop-shadow(0 0 6px rgba(0,180,255,.45));
 }
+/* crossing into a category flashes its name; touching shows it too */
+.rev-rail.show-active .rr-item.on .rr-name,
+.rev-rail.show-all .rr-item.on .rr-name { opacity: 1; }
 html[data-motion="stilled"] .rev-rail .rr-item.on .rr-name { animation: none; }
 [data-ground="dark"] .rev-rail .rr-item .rr-dot,
 html[data-theme="disco"] .rev-rail .rr-item .rr-dot { box-shadow: 0 0 0 2px rgba(6,1,10,.9); }
@@ -868,9 +886,19 @@ html[data-theme="disco"] .rev-rail .rr-item.on .rr-dot { box-shadow: 0 0 8px #ff
   max-width: min(72vw, 340px); box-shadow: 0 6px 20px rgba(0,0,0,.4);
   opacity: .7; transition: opacity .3s, border-color .3s, box-shadow .3s;
   -webkit-appearance: none; appearance: none; cursor: pointer; text-align: left;
+  overflow: hidden;                        /* clip the progress flood to the pill */
 }
 .now-playing:hover { opacity: 1; box-shadow: 0 6px 26px rgba(255,46,136,.35); }
 .now-playing.playing { opacity: 1; border-color: var(--hotpink); }
+/* the track progress, drawn as a fill that floods the pill behind the label */
+.now-playing .np-fill {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 0; z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(245,197,24,.5), rgba(255,46,136,.55));
+  box-shadow: 0 0 14px rgba(255,46,136,.4);
+  transition: width .3s linear;
+}
+.now-playing .np-eq, .now-playing .np-title { position: relative; z-index: 1; }
 .now-playing .np-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .now-playing .np-eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
 .now-playing .np-eq i { width: 3px; height: 4px; background: var(--hotpink); border-radius: 1px; }
