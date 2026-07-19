@@ -116,7 +116,12 @@
     // identical either way — only the compositing flips.
     var ds = document.documentElement.dataset;
     var darkGround = ds.ground === 'dark' || ds.theme === 'disco';
-    c.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:38;mix-blend-mode:'
+    mirror.coarse = !!(window.matchMedia && matchMedia('(hover: none), (pointer: coarse)').matches);
+    // width/height:100% so the canvas fills the viewport in CSS pixels. Without
+    // it, a replaced element with only inset:0 renders at its BITMAP size
+    // (innerWidth×dpr) — which put everything at dpr× the real position AND
+    // doubled the fill/blend cost (the off-centre + the lag).
+    c.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:38;mix-blend-mode:'
       + (darkGround ? 'screen' : 'multiply') + ';';
     document.body.appendChild(c);
     mirror.canvas = c;
@@ -124,8 +129,10 @@
     mirrorResize();
     addEventListener('resize', mirrorResize);
 
-    // ~78 facets, distributed on the sphere like a real ball's tile rows
-    for (let i = 0; i < 78; i++) {
+    // facets distributed on the sphere like a real ball's tile rows — fewer on
+    // mobile to keep the per-frame draw budget (and the frame rate) sane
+    const NFACETS = mirror.coarse ? 46 : 78;
+    for (let i = 0; i < NFACETS; i++) {
       const az = Math.random() * Math.PI * 2;          // facet azimuth
       const el = (Math.random() * 2 - 1);              // facet "row" −1..1
       mirror.specks.push({
@@ -149,7 +156,6 @@
     //    tap → light burst, hold → charge & release, idle → wander, and
     //    multi-touch → a constellation. All passive (never blocks scroll/taps)
     //    and quiet in lightless rooms + reduced motion. ──────────────────────
-    mirror.coarse = !!(window.matchMedia && matchMedia('(hover: none), (pointer: coarse)').matches);
     mirror.touchI = darkGround ? 1.0 : 0.62;   // subtler over the light reading rooms
     if (mirror.coarse) {
       const setDark = function (target) {
@@ -166,7 +172,7 @@
             size: (1.4 + Math.random() * 2.6) * (0.7 + power * 0.6)
           });
         }
-        if (mirror.bursts.length > 300) mirror.bursts.splice(0, mirror.bursts.length - 300);
+        if (mirror.bursts.length > 150) mirror.bursts.splice(0, mirror.bursts.length - 150);
       };
       const onStart = function (e) {
         if (REV.stilled()) return;
@@ -212,7 +218,9 @@
   }
 
   function mirrorResize() {
-    mirror.dpr = Math.min(devicePixelRatio || 1, 2);
+    // cap the backing resolution hard on mobile — a full-screen blended canvas
+    // at 2× is the frame-rate killer; 1× still reads fine for soft light specks
+    mirror.dpr = Math.min(devicePixelRatio || 1, mirror.coarse ? 1 : 2);
     mirror.canvas.width = innerWidth * mirror.dpr;
     mirror.canvas.height = innerHeight * mirror.dpr;
   }
