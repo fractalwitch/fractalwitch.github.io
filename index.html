@@ -116,7 +116,7 @@ header.masthead .eyebrow { margin-bottom: .6rem; }
 /* ── SIDE CONTROL — the record has two sides; flip it underneath ──── */
 .side-control {
   display: flex; align-items: center; justify-content: center; gap: .8rem;
-  margin: .4rem auto 0;
+  margin: 1rem auto 0;              /* now sits beneath the readout */
 }
 .side-ind {
   font-family: var(--font-geo); font-weight: 600;
@@ -292,15 +292,15 @@ header.masthead .eyebrow { margin-bottom: .6rem; }
     </div>
   </div>
 
+  <div class="readout" aria-live="polite">
+    <div class="room-name" id="ro-name">&nbsp;</div>
+    <div class="room-sub" id="ro-sub">hover a groove · drop the needle</div>
+  </div>
+
   <div class="side-control" role="group" aria-label="Record side">
     <button class="side-ind active" data-side="A" id="sideA">Side A<span>queer history</span></button>
     <button class="flip-btn" id="flipBtn" aria-label="Flip the record to the other side">⇄</button>
     <button class="side-ind" data-side="B" id="sideB">Side B<span>the becoming</span></button>
-  </div>
-
-  <div class="readout" aria-live="polite">
-    <div class="room-name" id="ro-name">&nbsp;</div>
-    <div class="room-sub" id="ro-sub">hover a groove · drop the needle</div>
   </div>
 </div>
 
@@ -438,7 +438,6 @@ function flipTo(target){
   if (target === 'B' && !sideBUnlocked) { openSideBGate(function () { flipTo('B'); }); return; }
   flipping = true;
   side = target;
-  REV.audio.thunk();
   const dur = REV.stilled() ? 0 : 900;
   flipper.style.transition = dur ? ('transform ' + dur + 'ms cubic-bezier(.5,.05,.3,1)') : 'none';
   flipper.style.transform = 'rotateY(' + (side === 'B' ? 180 : 0) + 'deg)';
@@ -450,7 +449,6 @@ function flipTo(target){
     armTarget = REST_ARM; accentTarget = 0; spinTarget = 1;
     setReadout(' ', REST_SUB);
     updateSideUI();
-    REV.audio.crackle(0.3);
   }, dur / 2);
   setTimeout(function () { flipping = false; }, dur + 30);
 }
@@ -504,7 +502,6 @@ function openSideBGate(onSuccess) {
   sbDeny.textContent = '';
   sbInput.value = '';
   sbgate.classList.add('open');
-  if (REV.audio) REV.audio.crackle(0.3);
   setTimeout(function () { sbInput.focus(); }, 60);
 }
 function closeSideBGate() {
@@ -520,7 +517,6 @@ sbgate.querySelector('form').addEventListener('submit', function (e) {
     sideBUnlocked = true;
     try { localStorage.setItem(SIDEB_KEY, '1'); } catch (err) {}
     applySideBLockUI();
-    if (REV.audio) REV.audio.crackle(0.6);
     const cb = sbPending;
     closeSideBGate();
     if (cb) setTimeout(cb, 140);
@@ -548,7 +544,6 @@ function routeTo(room, e) {
   if (e) e.preventDefault();
   if (!room.built) {
     setReadout(room.title, 'still in the pressing plant — this groove is being cut');
-    REV.audio.crackle(0.4);
     return;
   }
   if (room.gate && !REV.state.adult) {
@@ -556,7 +551,6 @@ function routeTo(room, e) {
     setTimeout(function(){ REV.navigate('threshold.html'); }, REV.stilled() ? 60 : 700);
     return;
   }
-  REV.audio.crackle(0.65);
   document.title = '▶ ' + room.title;
   REV.navigate(room.href);
 }
@@ -611,13 +605,12 @@ for (let i = 0; i < 16; i++) motes.push({
 });
 
 /* HOLD-TO-DROP (touch): press a band, a ring fills, the needle drops */
-const HOLD_MS = 1400;
+const HOLD_MS = 6000;   // deliberate 6-second hold before the needle drops
 let pressBand = -1;                          // band the finger is holding
 let holdT0 = 0;
 let holdProg = 0;                            // 0 → 1
 let committing = false;
 let lastPT = 'mouse';                        // pointerType of last interaction
-let lastStemT = 0;                           // throttle stem retrigger
 
 function hexA(hex, a) {
   const n = parseInt(hex.slice(1), 16);
@@ -933,8 +926,6 @@ function selectBand(i) {
     armTarget = armAngleFor(bandRadii(i).mid);
     accent = m.accent; accentTarget = 1; spinTarget = m.spin;
     igniteSparks(i);
-    const t = performance.now();
-    if (t - lastStemT > 110) { REV.audio.stem(r.id, r.tone); lastStemT = t; }
   } else {
     setReadout(' ', REST_SUB);
     armTarget = REST_ARM;
@@ -950,7 +941,6 @@ function liftNeedle() {
 function commit(room) {
   if (committing || dropping) return;
   committing = true; dropping = true;
-  REV.audio.thunk();
   setTimeout(function () { routeTo(room, null); }, REV.stilled() ? 40 : 260);
 }
 
