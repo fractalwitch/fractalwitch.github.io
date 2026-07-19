@@ -110,6 +110,13 @@
 
   function mirrorInit() {
     if (mirror.canvas) return;
+    // MOBILE: the mirrorball is deactivated entirely on touch devices. A
+    // fixed mix-blend-mode canvas re-compositing over native scroll is the
+    // wrong cost on a phone, so we simply never instantiate it here. All the
+    // touch-language code below is kept intact but stays unreachable; the
+    // no-zoom pinch guard now lives in REV.boot so it still applies on mobile.
+    mirror.coarse = !!(window.matchMedia && matchMedia('(hover: none), (pointer: coarse)').matches);
+    if (mirror.coarse) return;
     const c = document.createElement('canvas');
     c.setAttribute('aria-hidden', 'true');
     // On the white ground the specks must DARKEN to be seen (multiply);
@@ -117,7 +124,6 @@
     // identical either way — only the compositing flips.
     var ds = document.documentElement.dataset;
     var darkGround = ds.ground === 'dark' || ds.theme === 'disco';
-    mirror.coarse = !!(window.matchMedia && matchMedia('(hover: none), (pointer: coarse)').matches);
     // width/height:100% so the canvas fills the viewport in CSS pixels. Without
     // it, a replaced element with only inset:0 renders at its BITMAP size
     // (innerWidth×dpr) — which put everything at dpr× the real position AND
@@ -1250,16 +1256,53 @@
 
     const rail = document.createElement('nav');
     rail.className = 'rev-rail'; rail.setAttribute('aria-label', 'Section progress');
+    const hit = document.createElement('i'); hit.className = 'rr-hit'; rail.appendChild(hit);
+    const track = document.createElement('i'); track.className = 'rr-track'; rail.appendChild(track);
     const fill = document.createElement('i'); fill.className = 'rr-fill'; rail.appendChild(fill);
-    const tag = document.createElement('span'); tag.className = 'rr-label'; rail.appendChild(tag);
-    const ticks = secs.map(function (s) {
-      const d = document.createElement('button');
-      d.className = 'rr-tick'; d.type = 'button';
-      d.setAttribute('aria-label', s.label || 'section');
-      d.addEventListener('click', function () { s.el.scrollIntoView({ behavior: REV.stilled() ? 'auto' : 'smooth', block: 'start' }); });
-      rail.appendChild(d); return d;
+    // one listing per section, positioned by its place in the scroll — a dot on
+    // the spine and its name beside it. The highlight rides down through them.
+    const items = secs.map(function (s) {
+      const it = document.createElement('button');
+      it.className = 'rr-item'; it.type = 'button';
+      it.setAttribute('aria-label', s.label || 'section');
+      const dot = document.createElement('i'); dot.className = 'rr-dot'; it.appendChild(dot);
+      const nm = document.createElement('span'); nm.className = 'rr-name'; nm.textContent = s.label; it.appendChild(nm);
+      it.addEventListener('click', function () {
+        if (rail.dataset.scrubbed === '1') return;   // a drag isn't a jump
+        s.el.scrollIntoView({ behavior: REV.stilled() ? 'auto' : 'smooth', block: 'start' });
+      });
+      rail.appendChild(it); return it;
     });
     document.body.appendChild(rail);
+
+    // ── SCRUB — press/drag anywhere on the spine to scroll the page ──────────
+    let dragging = false, moved = false;
+    function railFrac(clientY) {
+      const rc = rail.getBoundingClientRect();
+      return Math.min(1, Math.max(0, (clientY - rc.top) / Math.max(1, rc.height)));
+    }
+    function scrubTo(clientY) {
+      const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
+      window.scrollTo({ top: railFrac(clientY) * max, behavior: 'auto' });
+    }
+    hit.addEventListener('pointerdown', function (e) {
+      dragging = true; moved = false; rail.dataset.scrubbed = '0';
+      rail.classList.add('grab');
+      try { hit.setPointerCapture(e.pointerId); } catch (x) {}
+      scrubTo(e.clientY); e.preventDefault();
+    });
+    hit.addEventListener('pointermove', function (e) {
+      if (!dragging) return;
+      moved = true; rail.dataset.scrubbed = '1'; scrubTo(e.clientY);
+    });
+    function endDrag() {
+      if (!dragging) return;
+      dragging = false; rail.classList.remove('grab');
+      // clear the scrub flag after the click would have fired, so a real tap jumps
+      setTimeout(function () { rail.dataset.scrubbed = '0'; }, 0);
+    }
+    hit.addEventListener('pointerup', endDrag);
+    hit.addEventListener('pointercancel', endDrag);
 
     let ticking = false, hideT = 0;
     function update() {
@@ -1270,17 +1313,16 @@
       let active = 0;
       for (let i = 0; i < secs.length; i++) {
         const r = secs[i].el.getBoundingClientRect();
-        ticks[i].style.top = (Math.min(1, Math.max(0, (r.top + y) / max)) * 100).toFixed(2) + '%';
+        items[i].style.top = (Math.min(1, Math.max(0, (r.top + y) / max)) * 100).toFixed(2) + '%';
         if (r.top <= innerHeight * 0.42) active = i;
-        ticks[i].classList.remove('on');
+        items[i].classList.remove('on', 'past');
       }
-      ticks[active].classList.add('on');
-      tag.textContent = secs[active].label;
-      tag.style.top = ticks[active].style.top;
+      for (let i = 0; i < active; i++) items[i].classList.add('past');
+      items[active].classList.add('on');
     }
     function onScroll() {
       rail.classList.add('live'); clearTimeout(hideT);
-      hideT = setTimeout(function () { rail.classList.remove('live'); }, 1100);
+      hideT = setTimeout(function () { rail.classList.remove('live'); }, 1400);
       if (!ticking) { ticking = true; requestAnimationFrame(update); }
     }
     addEventListener('scroll', onScroll, { passive: true });
@@ -1315,6 +1357,15 @@
         d.className = cls;
         d.setAttribute('aria-hidden', 'true');
         document.body.appendChild(d);
+      });
+    }
+
+    // MOBILE no-zoom — iOS ignores user-scalable=no, so block its pinch
+    // gestures directly. Lives here (not in mirrorInit) so it applies on every
+    // room even though the mirrorball itself is deactivated on touch devices.
+    if (window.matchMedia && matchMedia('(hover: none), (pointer: coarse)').matches) {
+      ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (g) {
+        addEventListener(g, function (e) { e.preventDefault(); }, { passive: false });
       });
     }
 
