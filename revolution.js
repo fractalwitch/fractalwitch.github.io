@@ -171,7 +171,8 @@
       const onStart = function (e) {
         if (REV.stilled()) return;
         const t = e.changedTouches[0];
-        mirror.tx = t.clientX; mirror.ty = t.clientY; mirror.lastTouch = performance.now();
+        // snap the ball straight onto the finger (no cursor to glide from on touch)
+        mirror.x = mirror.tx = t.clientX; mirror.y = mirror.ty = t.clientY; mirror.lastTouch = performance.now();
         setDark(t.target);
         burst(t.clientX, t.clientY, 0.32 + bands().level * 0.5);
         mirror.omegaBoost = Math.min(1.4, mirror.omegaBoost + 0.5);
@@ -183,7 +184,7 @@
       const onMove = function (e) {
         if (REV.stilled()) return;
         const t = e.touches[0];
-        mirror.tx = t.clientX; mirror.ty = t.clientY; mirror.lastTouch = performance.now();
+        mirror.x = mirror.tx = t.clientX; mirror.y = mirror.ty = t.clientY; mirror.lastTouch = performance.now();
         setDark(t.target);
         if (mirror.charge && Math.hypot(t.clientX - mirror.charge.x, t.clientY - mirror.charge.y) > 14) mirror.charge = null; // a drag/scroll cancels the charge
         for (let i = 0; i < e.touches.length; i++) { const tt = e.touches[i]; mirror.touches[tt.identifier] = { x: tt.clientX, y: tt.clientY }; }
