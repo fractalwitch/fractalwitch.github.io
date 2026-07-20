@@ -879,8 +879,19 @@
         try {
           audio.trackSrc = audio.ctx.createMediaElementSource(el);
           audio.trackGain = audio.ctx.createGain(); audio.trackGain.gain.value = 1;
-          audio.trackSrc.connect(audio.trackGain).connect(audio.ctx.destination);
-          if (audio.analyser) audio.trackGain.connect(audio.analyser);   // let bands() hear the track
+          // LOUDNESS NORMALIZATION — even out the level differences between tracks
+          // so moving from room to room doesn't jump in volume. A compressor acts
+          // as a leveler (tames hot tracks toward a target), a makeup gain lifts
+          // the result back up, and we run the whole thing through the shared soft
+          // limiter so the makeup can never hard-clip a transient.
+          var comp = audio.ctx.createDynamicsCompressor();
+          comp.threshold.value = -20; comp.knee.value = 20;
+          comp.ratio.value = 4; comp.attack.value = 0.008; comp.release.value = 0.25;
+          audio.trackComp = comp;
+          audio.trackMakeup = audio.ctx.createGain(); audio.trackMakeup.gain.value = 1.7;
+          audio.trackSrc.connect(audio.trackGain).connect(comp).connect(audio.trackMakeup);
+          audio.trackMakeup.connect(audio.limiter || audio.ctx.destination);   // soft-clip safety
+          if (audio.analyser) audio.trackMakeup.connect(audio.analyser);        // bands() hears the normalized level
         } catch (e) { /* some engines forbid re-routing — fall back to the element's own output */ }
       }
     } catch (e) {}
@@ -932,25 +943,10 @@
       } catch (e) {}
     });
 
-    // THE UNLOCK — the first real user gesture starts everything. Capture
-    // phase + several event types so it fires no matter what a room's own
-    // handlers do (the turntable calls preventDefault on the canvas, etc.).
-    const EV = ['touchend', 'touchstart', 'pointerdown', 'mousedown', 'keydown', 'click'];
-    function done() { EV.forEach(function (ev) { document.removeEventListener(ev, unlock, true); }); }
-    function unlock(e) {
-      if (audio.enabled) { done(); return; }
-      // if the gesture landed on the ♪ button or the chip, let THEIR handler
-      // toggle it — don't double-fire (which would enable then pause).
-      const t = e && e.target;
-      if (t && t.closest && t.closest('.audio-toggle, .now-playing')) return;
-      startTrack(); markPlaying(); done();
-    }
-    EV.forEach(function (ev) { document.addEventListener(ev, unlock, true); });
-
-    // still TRY straight autoplay for browsers that allow it (desktop);
-    // iOS/most mobile will reject and simply wait for the unlock gesture.
-    const p = el.play();
-    if (p && p.then) p.then(function () { startTrack(); markPlaying(); }).catch(function () {});
+    // PAUSED START (by design) — the track never auto-plays and never starts
+    // on an incidental gesture. Music begins only from a deliberate tap on the
+    // ♪ toggle or the now-playing chip (both route through startTrack()), so
+    // the trigger is always an intentional user choice.
   }
 
   /* ── THE HOLE — theriot's silence: projector idle + 60Hz mains ────── */
@@ -1185,7 +1181,7 @@
     let done = false;
     const go = function () { if (done) return; done = true; location.href = href; };
     w.addEventListener('animationend', go, { once: true });
-    setTimeout(go, 650);                              // safety net if animationend is missed
+    setTimeout(go, 975);                              // safety net if animationend is missed (tracks the .75s close)
   };
   function playEnterReveal() {
     let transit = false;
@@ -1196,7 +1192,7 @@
     w.className = 'rev-wipe wipe-enter';
     const clean = function () { if (w.parentNode) w.parentNode.removeChild(w); wipeEl = null; };
     w.addEventListener('animationend', clean, { once: true });
-    setTimeout(clean, 950);
+    setTimeout(clean, 1425);                          // tracks the .93s open
   }
   // delegated: route plain in-site link clicks through the transition. Anything
   // already handled (defaultPrevented — e.g. the Side B gate, the hub tracklist)
@@ -1393,9 +1389,11 @@
     if (!opts.noAudioToggle) {
       const b = document.createElement('button');
       b.className = 'audio-toggle';
-      b.setAttribute('aria-pressed', String(REV.state.audio));
+      // every page loads paused — the toggle always starts in the off state, so
+      // sound only ever begins from a deliberate tap here (or the chip)
+      b.setAttribute('aria-pressed', 'false');
       b.setAttribute('aria-label', 'Sound on or off. Sound is built live in your browser; nothing is downloaded.');
-      b.textContent = REV.state.audio ? '♪' : '∅';
+      b.textContent = '∅';
       b.addEventListener('click', function () {
         const on = !(REV.audio.enabled());
         REV.audio.enable(on);
@@ -1403,17 +1401,8 @@
         b.textContent = on ? '♪' : '∅';
       });
       document.body.appendChild(b);
-      // returning visitor who already opted in: honor it on first gesture
-      if (REV.state.audio) {
-        const once = function () {
-          REV.audio.enable(true);
-          b.setAttribute('aria-pressed', 'true'); b.textContent = '♪';
-          removeEventListener('pointerdown', once);
-          removeEventListener('keydown', once);
-        };
-        addEventListener('pointerdown', once);
-        addEventListener('keydown', once);
-      }
+      // (no auto-resume: even a returning visitor who opted in before starts
+      // paused, so starting sound is always an intentional tap.)
     }
 
     // the light switch — flip the whole site light ↔ disco-dark.
