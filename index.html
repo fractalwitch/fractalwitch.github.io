@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>The Human Sexual Revolution (Ongoing) · Side A</title>
 <meta name="description" content="An interactive history of the sexual revolution, navigated like a record. Drop the needle on a room.">
-<link rel="stylesheet" href="revolution.css?v=42">
+<link rel="stylesheet" href="revolution.css?v=43">
 <script>try{var _t=JSON.parse(localStorage.getItem("revolution.threshold.v1"));if(_t&&_t.theme==="dark")document.documentElement.dataset.theme="disco";}catch(e){}</script>
 <style>
 /* ═══════════════════════════════════════════════════════════════
@@ -267,7 +267,7 @@ header.masthead .eyebrow { margin-bottom: .6rem; }
   function open() {
     if (gone) return; gone = true;
     l.classList.add('wipe-enter');              // the same record iris used between pages
-    setTimeout(function () { if (l.parentNode) l.parentNode.removeChild(l); }, 750);
+    setTimeout(function () { if (l.parentNode) l.parentNode.removeChild(l); }, 1125);
   }
   setTimeout(open, 900);                         // brief hold, then iris open…
   addEventListener('load', function () { setTimeout(open, 200); });   // …or as soon as it's ready
@@ -315,7 +315,7 @@ header.masthead .eyebrow { margin-bottom: .6rem; }
   </p>
 </nav>
 
-<script src="revolution.js?v=42"></script>
+<script src="revolution.js?v=43"></script>
 <script>
 REV.boot({ scene: 'hub', room: null, track: 'assets/tracks/hub.mp3', trackTitle: 'Strobotone — San Fran (Interlude Edit)' });
 
@@ -605,7 +605,7 @@ for (let i = 0; i < 16; i++) motes.push({
 });
 
 /* HOLD-TO-DROP (touch): press a band, a ring fills, the needle drops */
-const HOLD_MS = 6000;   // deliberate 6-second hold before the needle drops
+const HOLD_MS = 3000;   // deliberate 3-second hold before the needle drops
 let pressBand = -1;                          // band the finger is holding
 let holdT0 = 0;
 let holdProg = 0;                            // 0 → 1

@@ -758,8 +758,8 @@ html[data-temple] .rev-topbar {
   clip-path: circle(0% at 50% 50%);
   will-change: clip-path;
 }
-.rev-wipe.wipe-exit  { animation: rev-wipe-close .5s var(--ease-needle) forwards; }
-.rev-wipe.wipe-enter { animation: rev-wipe-open  .62s var(--ease-needle) forwards; }
+.rev-wipe.wipe-exit  { animation: rev-wipe-close .75s var(--ease-needle) forwards; }
+.rev-wipe.wipe-enter { animation: rev-wipe-open  .93s var(--ease-needle) forwards; }
 @keyframes rev-wipe-close { from { clip-path: circle(0% at 50% 50%); }   to { clip-path: circle(150% at 50% 50%); } }
 @keyframes rev-wipe-open  { from { clip-path: circle(150% at 50% 50%); } to { clip-path: circle(0% at 50% 50%); } }
 
