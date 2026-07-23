@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ΣΩ | 127 — SHADOWS OF ONE OBJECT</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400&family=Courier+Prime:wght@400&display=swap');
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;width:100%;height:100%;background:#020005;overflow:hidden;
+  touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;cursor:grab}
+body.drag{cursor:grabbing}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+
+#dims{position:fixed;left:50%;bottom:1.5rem;transform:translateX(-50%);display:flex;gap:.6rem;z-index:10;pointer-events:none}
+#dims i{width:5px;height:5px;border-radius:50%;display:block;opacity:.5;will-change:transform,opacity}
+
+#forms{position:fixed;left:50%;top:1.4rem;transform:translateX(-50%);display:flex;gap:.5rem;z-index:10;pointer-events:none}
+#forms i{width:16px;height:1px;background:rgba(255,255,255,.16);display:block;transition:background .8s,box-shadow .8s}
+#forms i.on{background:#4ff5ff;box-shadow:0 0 10px #4ff5ff}
+
+#name{position:fixed;left:50%;bottom:3.2rem;transform:translateX(-50%);z-index:10;pointer-events:none;
+  font-family:'Cinzel Decorative',serif;font-size:.62rem;letter-spacing:.42em;text-transform:uppercase;
+  color:rgba(255,255,255,.34);opacity:0;transition:opacity 1.6s;white-space:nowrap}
+#name.show{opacity:1}
+
+#depth{position:fixed;right:1.5rem;top:1.5rem;width:1px;height:52px;background:rgba(255,255,255,.10);z-index:10;pointer-events:none}
+#depth b{position:absolute;left:0;bottom:0;width:1px;height:0%;background:#ffd76a;box-shadow:0 0 8px #ffd76a;transition:height .25s}
+
+#snd{position:fixed;right:1.5rem;bottom:1.5rem;width:15px;height:15px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.26);z-index:12;cursor:pointer;transition:.6s;background:transparent}
+#snd:hover{border-color:rgba(255,255,255,.55)}
+#snd.on{border-color:#ffd76a;background:#ffd76a;box-shadow:0 0 18px #ffd76a,0 0 40px rgba(255,215,106,.4)}
+#snd:focus-visible{outline:1px solid #4ff5ff;outline-offset:4px}
+
+#ref{position:fixed;left:1.5rem;bottom:1.5rem;z-index:12;display:flex;gap:.4rem;align-items:center;
+  font-family:'Courier Prime',monospace;font-size:.52rem;letter-spacing:.2em;color:rgba(255,255,255,.28);
+  cursor:pointer;background:none;border:none;padding:.3rem 0;text-transform:uppercase}
+#ref:hover{color:rgba(255,255,255,.6)}
+#ref i{width:13px;height:13px;border:1px solid rgba(255,255,255,.28);display:block;position:relative}
+#ref.on i{border-color:#4ff5ff;box-shadow:0 0 9px rgba(79,245,255,.5)}
+#ref.on i:after{content:'';position:absolute;inset:3px;background:#4ff5ff}
+#ref.on{color:#4ff5ff}
+
+@media(max-width:600px){#name{font-size:.5rem;letter-spacing:.3em}#dims{gap:.5rem}#ref{font-size:.44rem}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="forms"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div>
+<div id="name"></div>
+<div id="dims"></div>
+<div id="depth"><b></b></div>
+<button id="ref" class="on"><i></i>reference</button>
+<button id="snd" aria-label="sound"></button>
+
+<script>
+'use strict';
+const TAU=Math.PI*2, PHI=(1+Math.sqrt(5))/2;
+const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const lerp=(a,b,t)=>a+(b-a)*t;
+
+/* ── the seven dimensions, as colour ───────────────────────── */
+const DIM=[
+  [255, 47,185],[255,107,157],[255,167,120],[255,215,106],
+  [130,240,190],[ 79,245,255],[155, 92,255],
+];
+const DOTS=[];
+{ const host=document.getElementById('dims');
+  DIM.forEach(c=>{ const e=document.createElement('i');
+    e.style.background=`rgb(${c})`; e.style.boxShadow=`0 0 8px rgb(${c})`; host.appendChild(e); DOTS.push(e); }); }
+
+/* ── 127 points ─────────────────────────────────────────────
+   1+6+12+18+24+30+36 shells. gray code gives each a unique nonzero 7-bit
+   identity, and since consecutive gray codes differ in one bit, the spiral
+   is a hamiltonian path on Q7 — every state once, one dimension per step. */
+const RINGS=6, DIRS=[[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
+const cells=[{q:0,r:0}];
+for(let k=1;k<=RINGS;k++){ let q=-k,r=k;
+  for(let d=0;d<6;d++) for(let s=0;s<k;s++){ cells.push({q,r}); q+=DIRS[d][0]; r+=DIRS[d][1]; } }
+const N=cells.length;
+const pcnt=n=>{let c=0;while(n){n&=n-1;c++}return c};
+const gstate=i=>{const k=i+1; return k^(k>>1)};
+
+/* ── the 127 chord diagrams ─────────────────────────────────
+   point i is either isolated, or paired with some p — and that chord seals
+   off everything between them, so the two sides can never interact. that
+   rule of growth is exactly what "non-crossing" means. M₇ = 127. */
+function motzkin(n){
+  const memo=new Map();
+  function gen(i,j){
+    if(i>=j) return [[]];
+    const k=i*16+j; if(memo.has(k)) return memo.get(k);
+    const out=[];
+    for(const d of gen(i+1,j)) out.push(d);
+    for(let p=i+1;p<j;p++)
+      for(const a of gen(i+1,p)) for(const b of gen(p+1,j))
+        out.push([[i,p],...a,...b]);
+    memo.set(k,out); return out;
+  }
+  return gen(0,n);
+}
+const DIAG=motzkin(7);
+
+const P=cells.map((c,i)=>{
+  const s=gstate(i), n=pcnt(s);
+  let r=0,g=0,b=0;
+  for(let d=0;d<7;d++) if(s>>d&1){ r+=DIM[d][0]; g+=DIM[d][1]; b+=DIM[d][2]; }
+  const D=DIAG[i], iso=[1,1,1,1,1,1,1];
+  for(const [u,v] of D){ iso[u]=0; iso[v]=0; }
+  return {q:c.q, rr:c.r, s, pc:n, D, iso, col:[r/n|0,g/n|0,b/n|0],
+          t:[], sx:0,sy:0,sc:1,dep:0,w4:1,x3:0,y3:0,z3:0,w:0};
+});
+const byState=new Map(P.map(p=>[p.s,p]));
+const BITSET=[...Array(7)].map((_,d)=>P.filter(p=>p.s>>d&1));
+const MARK=P.findIndex(p=>p.s===127);        /* the point holding all seven */
+
+const E=[];
+for(const p of P) for(let d=0;d<7;d++){
+  const t=p.s^(1<<d); if(t===0||t<p.s) continue;
+  const o=byState.get(t); if(o) E.push({a:p,b:o,d,z:0});
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SIX PROJECTIONS OF ONE OBJECT
+   ═══════════════════════════════════════════════════════════ */
+const S3=Math.sqrt(3);
+function target(fn){
+  const pts=P.map(fn);
+  let cx=0,cy=0,cz=0,cw=0;
+  for(const v of pts){cx+=v[0];cy+=v[1];cz+=v[2];cw+=v[3]}
+  cx/=N;cy/=N;cz/=N;cw/=N;
+  let ss=0;
+  for(const v of pts){ v[0]-=cx;v[1]-=cy;v[2]-=cz;v[3]-=cw;
+    ss+=v[0]*v[0]+v[1]*v[1]+v[2]*v[2]+v[3]*v[3]; }
+  const k=1/Math.sqrt(ss/N);
+  for(const v of pts){ v[0]*=k;v[1]*=k;v[2]*=k;v[3]*=k; }
+  return pts;
+}
+const T_HEX=target(p=>[S3*p.q+S3/2*p.rr, 1.5*p.rr, 0, 0]);
+const T_CUB=target(p=>[p.q, -p.q-p.rr, p.rr, 0]);
+const ICO=[[0,1,PHI],[0,-1,PHI],[1,PHI,0],[-1,PHI,0],[PHI,0,1],[PHI,0,-1],[1,1,1]]
+  .map(v=>{const m=Math.hypot(...v);return[v[0]/m,v[1]/m,v[2]/m]});
+const T_ZON=target(p=>{ let x=0,y=0,z=0,w=0;
+  for(let d=0;d<7;d++) if(p.s>>d&1){ x+=ICO[d][0];y+=ICO[d][1];z+=ICO[d][2];w+=0.44*Math.cos(TAU*d/7); }
+  return[x,y,z,w]; });
+function petrie(m){
+  const G=[]; for(let d=0;d<7;d++){ const th=TAU*d/7;
+    G.push([Math.cos(th),Math.sin(th),Math.cos(m*th),Math.sin(m*th)]); }
+  return target(p=>{ let x=0,y=0,z=0,w=0;
+    for(let d=0;d<7;d++) if(p.s>>d&1){ x+=G[d][0];y+=G[d][1];z+=G[d][2];w+=G[d][3]; }
+    return[x,y,z,w]; });
+}
+const TH7=i=>TAU*i/7;
+const T_MTZ=target(p=>{
+  let x=0,y=0,pr=0,pi=0,sp=0;
+  for(const [a,b] of p.D){
+    x+=(Math.cos(TH7(a))+Math.cos(TH7(b)))/2;
+    y+=(Math.sin(TH7(a))+Math.sin(TH7(b)))/2;
+    pr+=Math.cos(TH7(a)+TH7(b));      /* the product mode — the only term that */
+    pi+=Math.sin(TH7(a)+TH7(b));      /* sees the pairing, not just the endpoints */
+    const raw=Math.abs(a-b); sp+=Math.min(raw,7-raw);
+  }
+  let nest=0;
+  for(const [a,b] of p.D) for(const [c,d] of p.D) if(a<c&&d<b) nest++;
+  return [x, y, p.D.length*1.10+0.20*nest+0.46*pr, 0.36*sp+0.70*pi];
+});
+
+const FORMS=[
+  {pts:T_HEX,     name:'a₂ stillpoint',   spin:[.09,.05,.02,.03], tone:0.00},
+  {pts:T_CUB,     name:'cubic section',   spin:[.11,.13,.04,.02], tone:0.18},
+  {pts:T_ZON,     name:'zonohedron',      spin:[.14,.10,.06,.05], tone:0.42},
+  {pts:petrie(2), name:'q₇ shadow · ii',  spin:[.10,.19,.05,.07], tone:0.70},
+  {pts:petrie(3), name:'q₇ shadow · iii', spin:[.13,.16,.08,.04], tone:1.00},
+  {pts:T_MTZ,     name:'motzkin field',   spin:[.08,.12,.07,.03], tone:0.55},
+];
+P.forEach((p,i)=>{ p.t=FORMS.map(f=>f.pts[i]); });
+
+/* ═══════════════════════════════════════════════════════════
+   HARMONIC ENGINE — the counting drives it. in gray code bit d toggles
+   once every 2^(d+1) steps, so seven partials fall into a nested octave
+   polyrhythm with no LFO anywhere.
+   ═══════════════════════════════════════════════════════════ */
+const F0=55, RATIO=[1,2,3,5,7,9,11], ridx=d=>6-d;
+let AC=null,audioOn=false,VOICE=[],amp=new Float32Array(7),master,lpf,wetG,bus,noiseBuf;
+function makeIR(sec,decay){
+  const len=(AC.sampleRate*sec)|0, b=AC.createBuffer(2,len,AC.sampleRate);
+  for(let ch=0;ch<2;ch++){ const d=b.getChannelData(ch);
+    for(let i=0;i<len;i++){ const t=i/len; d[i]=(Math.random()*2-1)*Math.pow(1-t,decay)*(1-t*0.15); } }
+  return b;
+}
+function initAudio(){
+  AC=new (window.AudioContext||window.webkitAudioContext)();
+  master=AC.createGain(); master.gain.value=0;
+  const comp=AC.createDynamicsCompressor();
+  comp.threshold.value=-20; comp.ratio.value=3.5; comp.knee.value=22;
+  comp.attack.value=0.012; comp.release.value=0.35;
+  lpf=AC.createBiquadFilter(); lpf.type='lowpass'; lpf.frequency.value=1400; lpf.Q.value=0.5;
+  const conv=AC.createConvolver(); conv.buffer=makeIR(5.2,2.4);
+  wetG=AC.createGain(); wetG.gain.value=0.46;
+  const dryG=AC.createGain(); dryG.gain.value=0.72;
+  bus=AC.createGain(); bus.gain.value=1;
+  bus.connect(lpf); lpf.connect(dryG); dryG.connect(comp);
+  lpf.connect(conv); conv.connect(wetG); wetG.connect(comp);
+  comp.connect(master); master.connect(AC.destination);
+  for(let d=0;d<7;d++){
+    const i=ridx(d), f=F0*RATIO[i];
+    const g=AC.createGain(); g.gain.value=0;
+    const pan=AC.createStereoPanner();
+    const o1=AC.createOscillator(), o2=AC.createOscillator();
+    o1.type=i<4?'sine':'triangle'; o2.type=o1.type;
+    o1.frequency.value=f; o2.frequency.value=f; o2.detune.value=3+i*1.6;
+    o1.connect(g); o2.connect(g); g.connect(pan); pan.connect(bus);
+    o1.start(); o2.start();
+    VOICE.push({g,pan,f,base:0.30/(1+i*0.82),att:0.05+0.085*d,rel:0.30+0.52*d,on:-1});
+  }
+  const sub=AC.createOscillator(); sub.type='sine'; sub.frequency.value=F0/2;
+  const sg=AC.createGain(); sg.gain.value=0.085; sub.connect(sg); sg.connect(bus); sub.start();
+  noiseBuf=AC.createBuffer(1,AC.sampleRate*2,AC.sampleRate);
+  { const d=noiseBuf.getChannelData(0); let l=0;
+    for(let i=0;i<d.length;i++){ const w=Math.random()*2-1; l=(l+0.02*w)/1.02; d[i]=l*3.2; } }
+  const nz=AC.createBufferSource(); nz.buffer=noiseBuf; nz.loop=true;
+  const nf=AC.createBiquadFilter(); nf.type='bandpass'; nf.frequency.value=760; nf.Q.value=0.7;
+  const ng=AC.createGain(); ng.gain.value=0.045;
+  nz.connect(nf); nf.connect(ng); ng.connect(bus); nz.start();
+}
+function ping(d){
+  if(!audioOn||!AC) return;
+  const t=AC.currentTime, f=F0*RATIO[ridx(d)]*2;
+  const o=AC.createOscillator(), g=AC.createGain();
+  o.type='sine'; o.frequency.value=f;
+  g.gain.setValueAtTime(0,t);
+  g.gain.linearRampToValueAtTime(0.055/(1+ridx(d)*0.35), t+0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t+1.9+ridx(d)*0.4);
+  o.connect(g); g.connect(bus); o.start(t); o.stop(t+2.6+ridx(d)*0.5);
+}
+function whoosh(){
+  if(!audioOn||!AC) return;
+  const t=AC.currentTime;
+  const s=AC.createBufferSource(); s.buffer=noiseBuf; s.loop=true;
+  const bp=AC.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=2.2;
+  bp.frequency.setValueAtTime(220,t); bp.frequency.exponentialRampToValueAtTime(3600,t+2.6);
+  const g=AC.createGain();
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.10,t+0.7);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+3.2);
+  s.connect(bp); bp.connect(g); g.connect(bus); s.start(t); s.stop(t+3.4);
+}
+const SND=document.getElementById('snd');
+SND.addEventListener('click',e=>{ e.stopPropagation();
+  if(!AC) initAudio();
+  if(AC.state==='suspended') AC.resume();
+  audioOn=!audioOn; SND.classList.toggle('on',audioOn);
+  master.gain.setTargetAtTime(audioOn?0.85:0, AC.currentTime, audioOn?0.9:0.4);
+});
+
+/* ═══════════════════════════════════════════════════════════
+   CANVAS
+   ═══════════════════════════════════════════════════════════ */
+const cv=document.getElementById('c'), cx=cv.getContext('2d',{alpha:false});
+let W,H,DPR,CXP,CYP,R0;
+function layout(){
+  DPR=Math.min(devicePixelRatio||1,2); W=innerWidth; H=innerHeight;
+  cv.width=W*DPR; cv.height=H*DPR; cv.style.width=W+'px'; cv.style.height=H+'px';
+  cx.setTransform(DPR,0,0,DPR,0,0);
+  CXP=W/2; CYP=H/2; R0=Math.min(W,H)*0.215;
+}
+addEventListener('resize',()=>{layout();sprites();});
+let SPR=[];
+function sprites(){
+  SPR=P.map(p=>{
+    const s=document.createElement('canvas'); s.width=s.height=48;
+    const g=s.getContext('2d'), gr=g.createRadialGradient(24,24,0,24,24,24);
+    const[r,gg,b]=p.col;
+    gr.addColorStop(0,'rgba(255,255,255,1)');
+    gr.addColorStop(.18,`rgba(${r},${gg},${b},.92)`);
+    gr.addColorStop(.46,`rgba(${r},${gg},${b},.24)`);
+    gr.addColorStop(1,`rgba(${r},${gg},${b},0)`);
+    g.fillStyle=gr; g.fillRect(0,0,48,48); return s;
+  });
+}
+const grain=(()=>{const c=document.createElement('canvas');c.width=c.height=128;
+  const g=c.getContext('2d'),d=g.createImageData(128,128);
+  for(let i=0;i<d.data.length;i+=4){const v=Math.random()*255;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255}
+  g.putImageData(d,0,0);return c})();
+const scan=(()=>{const c=document.createElement('canvas');c.width=1;c.height=4;
+  const g=c.getContext('2d');g.fillStyle='rgba(0,0,0,.3)';g.fillRect(0,3,1,1);return c})();
+
+/* ── 4D double rotation ─────────────────────────────────── */
+const A={xy:0,zw:0,xz:0,yw:0}, V={xy:0,zw:0,xz:0,yw:0};
+const W_CAM=3.35, Z_CAM=3.9;
+const RV=[0,0,0,0];
+function rot4(v,a,out){
+  let x=v[0],y=v[1],z=v[2],w=v[3],c,s,t;
+  c=Math.cos(a.xy);s=Math.sin(a.xy); t=x*c-y*s; y=x*s+y*c; x=t;
+  c=Math.cos(a.zw);s=Math.sin(a.zw); t=z*c-w*s; w=z*s+w*c; z=t;
+  c=Math.cos(a.xz);s=Math.sin(a.xz); t=x*c-z*s; z=x*s+z*c; x=t;
+  c=Math.cos(a.yw);s=Math.sin(a.yw); t=y*c-w*s; w=y*s+w*c; y=t;
+  out=out||RV; out[0]=x;out[1]=y;out[2]=z;out[3]=w; return out;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THE PROJECTION, made explicit so the reference frame can use it too.
+     4D → 3D by perspective in w   (kw: points nearer in w loom larger)
+     3D → 2D by perspective in z   (kz: ordinary depth)
+   ═══════════════════════════════════════════════════════════ */
+const PJ={x:0,y:0,sc:1,x3:0,y3:0,z3:0,kw:1};
+function proj4(v,o){
+  o=o||PJ;
+  const kw=W_CAM/(W_CAM-v[3]);
+  const x3=v[0]*kw, y3=v[1]*kw, z3=v[2]*kw;
+  const kz=Z_CAM/(Z_CAM-z3);
+  o.x=CXP+x3*R0*kz*zoom; o.y=CYP+y3*R0*kz*zoom;
+  o.sc=kz*kw*zoom; o.x3=x3; o.y3=y3; o.z3=z3; o.kw=kw;
+  return o;
+}
+/* for things that live in the projected 3-space: the floor, and the shadows */
+const P3={x:0,y:0,sc:1};
+function proj3(x3,y3,z3,o){
+  o=o||P3;
+  const kz=Z_CAM/(Z_CAM-z3);
+  o.x=CXP+x3*R0*kz*zoom; o.y=CYP+y3*R0*kz*zoom; o.sc=kz*zoom;
+  return o;
+}
+
+/* ── the reference frame ───────────────────────────────────
+   a fixed tesseract cage turning under the same rotation, a fixed floor
+   the cloud drops a shadow onto, and a gnomon showing where each of the
+   four axes is currently pointing. all of it brightens while the shadow
+   is changing and fades back once it settles. */
+const FLOOR=1.62;
+const CAGE=[], CAGE_E=[];
+{ const h=1.16;
+  for(let m=0;m<16;m++) CAGE.push([ (m&1?h:-h),(m&2?h:-h),(m&4?h:-h),(m&8?h:-h) ]);
+  for(let m=0;m<16;m++) for(let b=0;b<4;b++){ const n=m^(1<<b); if(n>m) CAGE_E.push([m,n,b]); }
+}
+const AXC=[[255,47,185],[79,245,255],[255,215,106],[155,92,255]];   /* x y z w */
+const AXN=['x','y','z','w'];
+const TRAIL=[]; const TRAIL_MAX=70;
+let refOn=true;
+const REFBTN=document.getElementById('ref');
+REFBTN.addEventListener('click',e=>{ e.stopPropagation();
+  refOn=!refOn; REFBTN.classList.toggle('on',refOn); });
+
+/* ── morph + input ──────────────────────────────────────── */
+let cur=0,nxt=0,mix=1,hold=0,zoom=1,zoomT=1,head=0;
+const NAME=document.getElementById('name'), DASH=[...document.querySelectorAll('#forms i')];
+const DEPTH=document.querySelector('#depth b');
+const smooth=t=>t*t*t*(t*(t*6-15)+10);
+function go(i){
+  if(mix<1) return;
+  cur=nxt; nxt=(i+FORMS.length)%FORMS.length; mix=0; hold=0;
+  DASH.forEach((d,k)=>d.classList.toggle('on',k===nxt));
+  NAME.textContent=FORMS[nxt].name; NAME.classList.add('show');
+  clearTimeout(go._t); go._t=setTimeout(()=>NAME.classList.remove('show'),4200);
+  whoosh();
+}
+let down=false,px=0,py=0;
+cv.addEventListener('pointerdown',e=>{down=true;px=e.clientX;py=e.clientY;
+  document.body.classList.add('drag'); go._moved=false; cv.setPointerCapture(e.pointerId)});
+cv.addEventListener('pointermove',e=>{
+  if(!down)return; const dx=e.clientX-px,dy=e.clientY-py; px=e.clientX; py=e.clientY;
+  if(Math.abs(dx)+Math.abs(dy)>3) go._moved=true;
+  V.xy+=dx*0.00016; V.xz+=dx*0.00022; V.zw+=dy*0.00024; V.yw+=dy*0.00015;
+});
+addEventListener('pointerup',()=>{ if(down&&!go._moved) go(nxt+1); down=false;
+  document.body.classList.remove('drag')});
+addEventListener('wheel',e=>{ zoomT=clamp(zoomT*(e.deltaY>0?.92:1.09),.42,6.5) },{passive:true});
+addEventListener('keydown',e=>{
+  if(e.key===' '||e.key==='ArrowRight'){e.preventDefault();go(nxt+1)}
+  if(e.key==='ArrowLeft'){e.preventDefault();go(nxt-1)}
+  if(e.key==='ArrowUp'){e.preventDefault();zoomT=clamp(zoomT*1.28,.42,6.5)}
+  if(e.key==='ArrowDown'){e.preventDefault();zoomT=clamp(zoomT/1.28,.42,6.5)}
+  if(e.key==='r'||e.key==='R'){refOn=!refOn;REFBTN.classList.toggle('on',refOn)}
+});
+let pinch=0;
+cv.addEventListener('touchmove',e=>{ if(e.touches.length!==2)return;
+  const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+  if(pinch) zoomT=clamp(zoomT*(d/pinch),.42,6.5); pinch=d; },{passive:true});
+cv.addEventListener('touchend',()=>pinch=0);
+
+/* ── every point carries its own chord diagram ───────────── */
+function figure(p,R,a){
+  const D=p.D;
+  cx.strokeStyle=`rgba(255,255,255,${a*0.09})`; cx.lineWidth=0.6;
+  cx.beginPath(); cx.arc(p.sx,p.sy,R,0,TAU); cx.stroke();
+  for(const [u,v] of D){
+    const t1=-Math.PI/2+TAU*u/7, t2=-Math.PI/2+TAU*v/7;
+    const x1=p.sx+Math.cos(t1)*R, y1=p.sy+Math.sin(t1)*R;
+    const x2=p.sx+Math.cos(t2)*R, y2=p.sy+Math.sin(t2)*R;
+    const kx=p.sx+((x1+x2)/2-p.sx)*0.72, ky=p.sy+((y1+y2)/2-p.sy)*0.72;
+    const c1=DIM[u],c2=DIM[v];
+    cx.strokeStyle=`rgba(${(c1[0]+c2[0])>>1},${(c1[1]+c2[1])>>1},${(c1[2]+c2[2])>>1},${a*0.9})`;
+    cx.lineWidth=Math.max(0.7,R*0.055);
+    cx.beginPath(); cx.moveTo(x1,y1); cx.quadraticCurveTo(kx,ky,x2,y2); cx.stroke();
+  }
+  for(let i=0;i<7;i++){
+    const th=-Math.PI/2+TAU*i/7;
+    const [r,g,b]=DIM[i], lit=p.iso[i]?0.26:1;
+    cx.fillStyle=`rgba(${r},${g},${b},${a*lit*0.95})`;
+    cx.beginPath(); cx.arc(p.sx+Math.cos(th)*R, p.sy+Math.sin(th)*R,
+      Math.max(0.8,R*(p.iso[i]?0.055:0.085)),0,TAU); cx.fill();
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FRAME
+   ═══════════════════════════════════════════════════════════ */
+const TMP=[0,0,0,0], TA={}, TB={};
+let T=0,last=performance.now(),tick=0,openAvg=0;
+function frame(now){
+  const dt=Math.min(.034,(now-last)/1000); last=now; T+=dt; tick++;
+
+  if(mix<1) mix=Math.min(1,mix+dt*0.30);
+  else { hold+=dt; if(hold>13&&!down&&zoom<1.5) go(nxt+1); }
+  const m=smooth(mix);
+  /* the instrumentation is loudest exactly while the shadow is moving */
+  const REF = refOn ? (0.34+0.66*Math.sin(Math.min(1,mix)*Math.PI)) : 0;
+
+  const f=FORMS[nxt].spin, g=FORMS[cur].spin;
+  const rate=k=>(g[k]*(1-m)+f[k]*m)*(REDUCED?0.35:1)*(1-0.72*clamp((zoom-1.4)/2.4,0,1));
+  V.xy*=0.955; V.zw*=0.955; V.xz*=0.955; V.yw*=0.955;
+  A.xy+=(rate(0)+V.xy)*dt*TAU; A.zw+=(rate(1)+V.zw)*dt*TAU;
+  A.xz+=(rate(2)+V.xz)*dt*TAU; A.yw+=(rate(3)+V.yw)*dt*TAU;
+  zoom+=(zoomT-zoom)*Math.min(1,dt*4);
+  head=(head+dt*7.2)%N;
+
+  let meanW=0;
+  for(let i=0;i<N;i++){
+    const p=P[i], a=p.t[cur], b=p.t[nxt];
+    TMP[0]=a[0]+(b[0]-a[0])*m; TMP[1]=a[1]+(b[1]-a[1])*m;
+    TMP[2]=a[2]+(b[2]-a[2])*m; TMP[3]=a[3]+(b[3]-a[3])*m;
+    const v=rot4(TMP,A);
+    p.w=v[3];
+    proj4(v);
+    p.sx=PJ.x; p.sy=PJ.y; p.sc=PJ.sc; p.dep=PJ.z3; p.w4=PJ.kw;
+    p.x3=PJ.x3; p.y3=PJ.y3; p.z3=PJ.z3;
+    meanW+=PJ.kw;
+  }
+  meanW/=N;
+
+  /* audio binding */
+  const idx=head|0, st=gstate(idx);
+  if(audioOn&&AC){
+    const t=AC.currentTime;
+    for(let d=0;d<7;d++){
+      const on=(st>>d)&1, v=VOICE[d];
+      if(v.on!==on){
+        if(v.on!==-1&&on&&d>=3) ping(d);
+        v.on=on; v.g.gain.setTargetAtTime(on?v.base:0, t, (on?v.att:v.rel)/3);
+      }
+      amp[d]+=(((st>>d)&1)*v.base/0.30-amp[d])*Math.min(1,dt*(on?6:2.2));
+    }
+    if(tick%4===0){
+      lpf.frequency.setTargetAtTime(420+3400*clamp((meanW-0.80)/0.55,0,1),t,0.22);
+      wetG.gain.setTargetAtTime(0.30+0.28*FORMS[nxt].tone+0.22*openAvg,t,0.5);
+      for(let d=0;d<7;d++){
+        let sx=0; for(const p of BITSET[d]) sx+=p.sx;
+        VOICE[d].pan.pan.setTargetAtTime(clamp((sx/BITSET[d].length-CXP)/(W*0.34),-.9,.9),t,0.35);
+      }
+    }
+  } else for(let d=0;d<7;d++) amp[d]+=(((st>>d)&1)*0.55-amp[d])*Math.min(1,dt*4);
+  if(tick%3===0) for(let d=0;d<7;d++){
+    const a=clamp(amp[d],0,1);
+    DOTS[d].style.opacity=(0.16+0.84*a).toFixed(3);
+    DOTS[d].style.transform=`scale(${(0.7+1.5*a).toFixed(3)})`;
+  }
+
+  /* ── paint ─────────────────────────────────────────────── */
+  cx.globalCompositeOperation='source-over';
+  cx.fillStyle='rgba(2,0,5,0.26)'; cx.fillRect(0,0,W,H);
+  cx.globalCompositeOperation='lighter';
+
+  /* ── THE FLOOR ──────────────────────────────────────────
+     a fixed plane at y = 1.62, drawn in the projected 3-space. it does not
+     rotate. everything else moves against it, which is the whole point. */
+  if(REF>0.01){
+    const g=2.2, step=0.55;
+    for(let i=-4;i<=4;i++){
+      const c=i*step;
+      for(const [x0,z0,x1,z1] of [[c,-g,c,g],[-g,c,g,c]]){
+        const a1=proj3(x0,FLOOR,z0,TA), ax=a1.x, ay=a1.y;
+        const a2=proj3(x1,FLOOR,z1,TB);
+        const near=clamp((z0+z1)*0.5/2.4+0.5,0,1);
+        cx.strokeStyle=`rgba(155,92,255,${REF*(0.030+0.055*near)*(i===0?2.2:1)})`;
+        cx.lineWidth=i===0?0.9:0.6;
+        cx.beginPath(); cx.moveTo(ax,ay); cx.lineTo(a2.x,a2.y); cx.stroke();
+      }
+    }
+    /* the cast shadow — the cloud dropped straight down onto that plane.
+       it is a second, simpler shadow of the same object, and it moves
+       differently from the one you are looking at. */
+    for(let i=0;i<N;i++){
+      const p=P[i];
+      const s=proj3(p.x3,FLOOR,p.z3,TA);
+      const drop=clamp((FLOOR-p.y3)/2.6,0,1);
+      const r=Math.max(0.6,R0*0.030*s.sc*(0.6+drop*1.5));
+      cx.fillStyle=`rgba(${p.col},${REF*0.13*(1-drop*0.55)})`;
+      cx.beginPath(); cx.ellipse(s.x,s.y,r,r*0.34,0,0,TAU); cx.fill();
+    }
+  }
+
+  /* ── THE CAGE ───────────────────────────────────────────
+     a tesseract of fixed size turning under the identical rotation.
+     it is the calibration object: when the cage turns inside out, so is
+     everything else, and the growing and shrinking is w, not size. */
+  if(REF>0.01){
+    const cp=CAGE.map(v=>{ const r=rot4(v,A,[0,0,0,0]); return proj4(r,{}); });
+    for(const [i,j,b] of CAGE_E){
+      const a=cp[i], q=cp[j];
+      const near=clamp(((a.z3+q.z3)*0.5+2.2)/4.4,0,1);
+      const kw=(a.kw+q.kw)*0.5;
+      cx.strokeStyle=`rgba(${AXC[b]},${REF*(0.035+0.075*near)*Math.min(1.6,kw)})`;
+      cx.lineWidth=0.6+0.7*near;
+      cx.beginPath(); cx.moveTo(a.x,a.y); cx.lineTo(q.x,q.y); cx.stroke();
+    }
+  }
+
+  /* ── MORPH VECTORS ──────────────────────────────────────
+     while a form is changing, the line each point is travelling along,
+     from where it was to where it is going. same 127 points throughout. */
+  if(mix<1&&refOn){
+    const fade=Math.sin(mix*Math.PI);
+    for(let i=0;i<N;i++){
+      const p=P[i];
+      const a=proj4(rot4(p.t[cur],A,[0,0,0,0]),TA);
+      const ax=a.x, ay=a.y;
+      const b=proj4(rot4(p.t[nxt],A,[0,0,0,0]),TB);
+      cx.strokeStyle=`rgba(${p.col},${fade*0.16})`;
+      cx.lineWidth=0.5;
+      cx.beginPath(); cx.moveTo(ax,ay); cx.lineTo(b.x,b.y); cx.stroke();
+      cx.fillStyle=`rgba(255,255,255,${fade*0.20})`;
+      cx.beginPath(); cx.arc(b.x,b.y,1.1,0,TAU); cx.fill();
+    }
+  }
+
+  /* ── edges, depth-sorted, tinted by which dimension they cross ── */
+  for(const e of E) e.z=(e.a.dep+e.b.dep)*0.5;
+  E.sort((u,v)=>u.z-v.z);
+  for(const e of E){
+    const dep=clamp((e.z+2.6)/5.2,0,1), w4=(e.a.w4+e.b.w4)*0.5;
+    const lit=0.055+0.30*dep*dep+0.16*amp[e.d];
+    const[r,g2,b]=DIM[e.d];
+    cx.strokeStyle=`rgba(${r},${g2},${b},${Math.min(.55,lit*w4*0.85)})`;
+    cx.lineWidth=(0.35+1.15*dep)*Math.min(1.9,w4*0.8)*(1+0.35*amp[e.d]);
+    cx.beginPath(); cx.moveTo(e.a.sx,e.a.sy); cx.lineTo(e.b.sx,e.b.sy); cx.stroke();
+  }
+
+  /* the traveller — one light walking the gray path, all 127 states */
+  for(let k=-9;k<=0;k++){
+    const i=((head|0)+k+N)%N, j=(i+1)%N, a=P[i], b=P[j];
+    const f2=(1+k/9), al=f2*f2*0.85;
+    cx.strokeStyle=`rgba(255,255,255,${al*0.5})`; cx.lineWidth=0.6+2.4*f2;
+    cx.beginPath(); cx.moveTo(a.sx,a.sy); cx.lineTo(b.sx,b.sy); cx.stroke();
+    const rad=R0*0.055*a.sc*(0.6+2.2*f2);
+    cx.globalAlpha=al; cx.drawImage(SPR[i],a.sx-rad,a.sy-rad,rad*2,rad*2); cx.globalAlpha=1;
+  }
+
+  const ord=P.map((p,i)=>i).sort((u,v)=>P[u].dep-P[v].dep);
+  let oSum=0,oN=0;
+  for(const i of ord){
+    const p=P[i];
+    if(p.sx<-90||p.sx>W+90||p.sy<-90||p.sy>H+90) continue;
+    const dep=clamp((p.dep+2.6)/5.2,0,1);
+    let res=0; for(let d=0;d<7;d++) if(p.s>>d&1) res+=amp[d];
+    res/=p.pc;
+    const puls=0.80+0.20*Math.sin(T*0.9+p.s*0.31);
+    const figR=R0*0.105*p.sc;
+    const open=clamp((figR-9)/15,0,1);
+    oSum+=open; oN++;
+    const rad=R0*0.048*p.sc*(0.55+0.85*dep)*(0.7+0.14*p.pc)*puls*(0.85+0.42*res);
+    cx.globalAlpha=Math.min(1,(0.10+0.72*dep*dep)*Math.min(1.7,p.w4)*(0.75+0.4*res)*(1-0.62*open));
+    cx.drawImage(SPR[i],p.sx-rad,p.sy-rad,rad*2,rad*2);
+    cx.globalAlpha=1;
+    if(open>0.02) figure(p, figR, open*(0.30+0.70*dep)*Math.min(1.4,p.w4));
+  }
+  openAvg=oN?oSum/oN:0;
+  DEPTH.style.height=(openAvg*100).toFixed(0)+'%';
+
+  /* ── THE MARKED POINT ───────────────────────────────────
+     one named point — the only one holding all seven dimensions — with the
+     path it has taken. it never leaves. every form is the same 127 in a
+     different posture, and tracking one is how you see that. */
+  if(refOn){
+    const mk=P[MARK];
+    TRAIL.push(mk.sx,mk.sy);
+    while(TRAIL.length>TRAIL_MAX*2) TRAIL.splice(0,2);
+    cx.beginPath();
+    for(let i=0;i<TRAIL.length;i+=2) i?cx.lineTo(TRAIL[i],TRAIL[i+1]):cx.moveTo(TRAIL[i],TRAIL[i+1]);
+    cx.strokeStyle=`rgba(255,255,255,${0.10+0.14*REF})`; cx.lineWidth=0.8; cx.stroke();
+    const rr=Math.max(6,R0*0.075*mk.sc);
+    cx.strokeStyle=`rgba(255,255,255,${0.35+0.35*REF})`; cx.lineWidth=1;
+    cx.beginPath(); cx.arc(mk.sx,mk.sy,rr,0,TAU); cx.stroke();
+    for(let q=0;q<4;q++){
+      const ang=q*TAU/4+T*0.35;
+      cx.beginPath();
+      cx.moveTo(mk.sx+Math.cos(ang)*rr*1.25, mk.sy+Math.sin(ang)*rr*1.25);
+      cx.lineTo(mk.sx+Math.cos(ang)*rr*1.7, mk.sy+Math.sin(ang)*rr*1.7);
+      cx.stroke();
+    }
+  }
+
+  /* ── THE GNOMON ─────────────────────────────────────────
+     the four axes under the same rotation, foreshortened by the same two
+     perspectives. watch w: when it points at you it is short and bright,
+     and that is when the whole object is at its largest. */
+  if(REF>0.01){
+    const GX=64, GY=H-96, L=30;
+    cx.strokeStyle=`rgba(255,255,255,${REF*0.10})`; cx.lineWidth=0.6;
+    cx.beginPath(); cx.arc(GX,GY,L*1.32,0,TAU); cx.stroke();
+    for(let k=0;k<4;k++){
+      const e=[0,0,0,0]; e[k]=1;
+      const r=rot4(e,A,[0,0,0,0]);
+      const kw=W_CAM/(W_CAM-r[3]);
+      const z3=r[2]*kw, kz=Z_CAM/(Z_CAM-z3);
+      const ex=GX+r[0]*kw*kz*L, ey=GY+r[1]*kw*kz*L;
+      const bright=clamp(kw*kz*0.62,0.18,1.5);
+      cx.strokeStyle=`rgba(${AXC[k]},${REF*(0.25+0.55*bright)})`;
+      cx.lineWidth=1+1.5*bright;
+      cx.beginPath(); cx.moveTo(GX,GY); cx.lineTo(ex,ey); cx.stroke();
+      cx.fillStyle=`rgba(${AXC[k]},${REF*(0.4+0.6*bright)})`;
+      cx.beginPath(); cx.arc(ex,ey,1.6+1.6*bright,0,TAU); cx.fill();
+      cx.globalCompositeOperation='source-over';
+      cx.fillStyle=`rgba(${AXC[k]},${REF*0.75})`;
+      cx.font='8px "Courier Prime", monospace'; cx.textAlign='center';
+      cx.fillText(AXN[k], ex+(ex-GX)*0.26, ey+(ey-GY)*0.26+3);
+      cx.globalCompositeOperation='lighter';
+    }
+  }
+
+  /* ── THE w STRIP ────────────────────────────────────────
+     where the 127 currently sit along the fourth axis — the one you
+     cannot see directly. as the zw and yw planes turn, the whole
+     distribution slides, and that is the invisible motion made visible. */
+  if(REF>0.01){
+    const SX=W-34, SY=CYP-90, SH2=180, BINS=30;
+    const hist=new Float32Array(BINS);
+    for(let i=0;i<N;i++){
+      const b=clamp(((P[i].w+2.3)/4.6*BINS)|0,0,BINS-1);
+      hist[b]++;
+    }
+    let mx=1; for(let i=0;i<BINS;i++) mx=Math.max(mx,hist[i]);
+    cx.strokeStyle=`rgba(155,92,255,${REF*0.14})`; cx.lineWidth=0.6;
+    cx.beginPath(); cx.moveTo(SX,SY); cx.lineTo(SX,SY+SH2); cx.stroke();
+    for(let i=0;i<BINS;i++){
+      if(!hist[i]) continue;
+      const y=SY+SH2-(i/BINS)*SH2, l=(hist[i]/mx)*22;
+      cx.strokeStyle=`rgba(79,245,255,${REF*(0.20+0.5*hist[i]/mx)})`;
+      cx.lineWidth=SH2/BINS-1.2;
+      cx.beginPath(); cx.moveTo(SX,y); cx.lineTo(SX-l,y); cx.stroke();
+    }
+    /* where the marked point sits on that axis */
+    const my=SY+SH2-clamp((P[MARK].w+2.3)/4.6,0,1)*SH2;
+    cx.strokeStyle=`rgba(255,255,255,${REF*0.7})`; cx.lineWidth=1;
+    cx.beginPath(); cx.moveTo(SX+3,my); cx.lineTo(SX+9,my); cx.stroke();
+  }
+
+  /* ── atmosphere ── */
+  const bl=cx.createRadialGradient(CXP,CYP,0,CXP,CYP,Math.min(W,H)*0.55);
+  bl.addColorStop(0,'rgba(155,92,255,0.045)'); bl.addColorStop(1,'rgba(155,92,255,0)');
+  cx.fillStyle=bl; cx.fillRect(0,0,W,H);
+
+  cx.globalCompositeOperation='source-over';
+  const vg=cx.createRadialGradient(CXP,CYP,Math.min(W,H)*0.20,CXP,CYP,Math.max(W,H)*0.80);
+  vg.addColorStop(0,'rgba(2,0,5,0)'); vg.addColorStop(1,'rgba(2,0,5,0.86)');
+  cx.fillStyle=vg; cx.fillRect(0,0,W,H);
+
+  cx.fillStyle=cx.createPattern(scan,'repeat'); cx.globalAlpha=0.42; cx.fillRect(0,0,W,H);
+  cx.globalAlpha=0.026; cx.save();
+  cx.translate(-(Math.random()*128|0),-(Math.random()*128|0));
+  cx.fillStyle=cx.createPattern(grain,'repeat'); cx.fillRect(0,0,W+128,H+128);
+  cx.restore(); cx.globalAlpha=1;
+
+  requestAnimationFrame(frame);
+}
+layout(); sprites();
+NAME.textContent=FORMS[0].name; NAME.classList.add('show');
+setTimeout(()=>NAME.classList.remove('show'),4200);
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
