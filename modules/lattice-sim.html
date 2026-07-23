@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<title>ΣΩ 127 · DUAL-GRAPH FIELD · Össtessêla</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;1,300;1,500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--void:#030009;--mag:#e040fb;--uv:#7c3aed;--cyan:#00e5ff;--gold:#ffd54f;
+  --rose:#f48fb1;--lime:#76ff03;--plasma:#b388ff;--mint:#1de9b6;
+  --panel:rgba(5,0,18,.93);--border:rgba(179,136,255,.22);
+  --mono:'Space Mono',monospace;--serif:'Cormorant Garamond',serif;
+  --hdr:46px;--sheet:0px}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--void);color:#fff;
+  font-family:var(--mono);-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+#cv{position:fixed;inset:0;z-index:1;touch-action:none}
+
+/* ── header ─────────────────────────────────────────────── */
+#hdr{position:fixed;top:0;left:0;right:0;height:var(--hdr);z-index:30;display:flex;align-items:center;
+  gap:10px;padding:0 10px;background:rgba(3,0,9,.80);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border)}
+#hdr::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--mag),var(--cyan),var(--plasma),transparent);
+  animation:hl 4s ease-in-out infinite}
+@keyframes hl{0%,100%{opacity:.25}50%{opacity:1}}
+.hlogo{font-family:var(--serif);font-size:15px;font-style:italic;font-weight:300;color:var(--plasma);
+  letter-spacing:.05em;white-space:nowrap;text-shadow:0 0 18px rgba(179,136,255,.7);flex:0 0 auto}
+.hlogo b{font-weight:500;color:var(--mag)}
+#hm{display:flex;gap:11px;flex:1;overflow-x:auto;scrollbar-width:none;
+  scroll-snap-type:x proximity;padding:0 2px}
+#hm::-webkit-scrollbar{display:none}
+.hm{display:flex;flex-direction:column;align-items:center;gap:1px;flex:0 0 auto;scroll-snap-align:center}
+.hm-k{font-size:6px;letter-spacing:.2em;color:rgba(255,255,255,.28);text-transform:uppercase;white-space:nowrap}
+.hm-v{font-size:10px;font-weight:700;min-width:46px;text-align:center;transition:color .3s}
+.c{color:var(--cyan);text-shadow:0 0 8px var(--cyan)}
+.m{color:var(--mag);text-shadow:0 0 8px var(--mag)}
+.g{color:var(--gold);text-shadow:0 0 8px var(--gold)}
+.p{color:var(--plasma);text-shadow:0 0 8px var(--plasma)}
+.l{color:var(--lime);text-shadow:0 0 8px var(--lime)}
+.hbtns{display:flex;gap:4px;flex:0 0 auto}
+.mbtn{font-size:7px;letter-spacing:.12em;padding:4px 7px;border:1px solid rgba(179,136,255,.25);
+  background:transparent;color:rgba(255,255,255,.42);cursor:pointer;text-transform:uppercase;
+  transition:.2s;font-family:var(--mono);white-space:nowrap}
+.mbtn.on,.mbtn:active{border-color:var(--mag);color:var(--mag);background:rgba(224,64,251,.09);
+  box-shadow:0 0 10px rgba(224,64,251,.2)}
+
+/* ── narrator: one plain sentence, always current ───────── */
+#narr{position:fixed;left:0;right:0;top:var(--hdr);z-index:25;padding:7px 12px;
+  font-family:var(--serif);font-style:italic;font-size:14px;font-weight:300;letter-spacing:.03em;
+  color:rgba(255,255,255,.62);text-shadow:0 0 22px rgba(3,0,9,1);pointer-events:none;
+  text-align:center;transition:opacity .6s;line-height:1.45}
+#narr.hot{color:var(--gold);text-shadow:0 0 24px rgba(255,213,79,.5),0 0 22px rgba(3,0,9,1)}
+
+/* ── panels ─────────────────────────────────────────────── */
+.sec{font-size:7px;letter-spacing:.24em;color:var(--plasma);text-transform:uppercase;
+  margin:13px 0 7px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.blk:first-child .sec:first-child{margin-top:0}
+#dial{width:100%;height:104px;display:block;cursor:ns-resize;touch-action:none}
+.dl{display:flex;justify-content:space-between;font-size:7px;letter-spacing:.1em;
+  color:rgba(255,255,255,.34);margin-top:5px}
+.dl b{color:var(--gold);font-weight:400}
+.regime{font-family:var(--serif);font-style:italic;font-size:16px;text-align:center;
+  margin-top:5px;letter-spacing:.04em;transition:color .5s}
+.hint{font-size:7.5px;line-height:1.95;color:rgba(255,255,255,.32);letter-spacing:.04em;margin-top:8px}
+.hint em{color:rgba(255,255,255,.6);font-style:normal}
+
+/* ── legend: a running micro-sim beside every mark ──────── */
+.lg{display:flex;gap:8px;align-items:flex-start;margin-bottom:9px}
+.lg canvas{flex:0 0 auto;width:34px;height:26px;border:1px solid rgba(179,136,255,.16);
+  background:rgba(0,0,0,.35);display:block}
+.lg .b{flex:1;min-width:0}
+.lg .n{font-size:8px;letter-spacing:.11em;display:flex;justify-content:space-between;gap:6px;align-items:baseline}
+.lg .n u{text-decoration:none}
+.lg .n b{font-weight:700;font-size:9px}
+.lg .d{font-size:7px;line-height:1.7;color:rgba(255,255,255,.40);letter-spacing:.03em;margin-top:2px}
+
+.trh{display:flex;justify-content:space-between;gap:8px;font-size:7px;letter-spacing:.11em;
+  color:rgba(255,255,255,.34);margin-bottom:4px}
+.trh b{color:var(--cyan);font-weight:700}
+#c-trace{width:100%;height:56px;display:block;border:1px solid rgba(179,136,255,.14);
+  background:rgba(0,0,0,.3);margin:5px 0 7px}
+.tt{display:flex;align-items:center;gap:6px;margin-bottom:3px;font-size:7px;letter-spacing:.04em}
+.tt .nm{flex:0 0 74px;color:rgba(255,255,255,.5);white-space:nowrap}
+.tt .bar{flex:1;height:3px;background:rgba(255,255,255,.06);position:relative;min-width:10px}
+.tt .bar i{position:absolute;left:0;top:0;bottom:0;width:0%;display:block;transition:width .1s linear}
+.tt .val{flex:0 0 66px;text-align:right;color:rgba(255,255,255,.72);font-variant-numeric:tabular-nums}
+#tr-log div{font-size:6.5px;line-height:1.85;letter-spacing:.05em;color:rgba(255,255,255,.42);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tr-log b{font-weight:400;opacity:.5}
+.ep{display:flex;gap:6px;align-items:flex-start;margin-bottom:7px}
+.ep i{flex:0 0 auto;width:5px;height:5px;border-radius:50%;margin-top:5px;display:block}
+.ep .t{font-size:7px;line-height:1.75;letter-spacing:.03em;color:rgba(255,255,255,.42)}
+.ep .t u{text-decoration:none;color:rgba(255,255,255,.8)}
+.e1 i{background:var(--lime);box-shadow:0 0 7px var(--lime)}
+.e2 i{background:var(--gold);box-shadow:0 0 7px var(--gold)}
+.e3 i{background:var(--rose);box-shadow:0 0 7px var(--rose)}
+
+.chwrap{display:flex;gap:1px;height:100%}
+.ch{flex:1;display:flex;flex-direction:column;padding:7px 9px;border-right:1px solid var(--border);min-width:0}
+.ch:last-child{border-right:none}
+.ch-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;gap:5px}
+.ch-t{font-size:6.5px;letter-spacing:.18em;color:rgba(255,255,255,.36);text-transform:uppercase;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ch-v{font-size:8px;white-space:nowrap}
+.ch canvas{flex:1;width:100%;min-height:40px;display:block}
+.ch-d{font-size:6.5px;line-height:1.6;color:rgba(255,255,255,.28);margin-top:4px;letter-spacing:.02em}
+
+/* ── desktop containers ─────────────────────────────────── */
+#side{position:fixed;top:var(--hdr);right:0;bottom:172px;width:266px;z-index:20;
+  background:var(--panel);border-left:1px solid var(--border);padding:12px;
+  overflow-y:auto;backdrop-filter:blur(8px);-webkit-overflow-scrolling:touch}
+#bot{position:fixed;left:0;right:0;bottom:0;height:172px;z-index:20;background:var(--panel);
+  border-top:1px solid var(--border);backdrop-filter:blur(8px)}
+
+/* ── mobile sheet ───────────────────────────────────────── */
+#sheet{position:fixed;left:0;right:0;bottom:0;z-index:28;background:var(--panel);
+  border-top:1px solid var(--border);backdrop-filter:blur(12px);display:none;
+  flex-direction:column;height:56px;transition:height .32s cubic-bezier(.4,0,.2,1);
+  padding-bottom:env(safe-area-inset-bottom)}
+#sheet.open{height:min(62vh,470px)}
+#grip{height:20px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;cursor:grab;touch-action:none}
+#grip::before{content:'';width:36px;height:3px;border-radius:2px;background:rgba(179,136,255,.4)}
+#tabs{display:flex;gap:0;flex:0 0 auto;border-bottom:1px solid var(--border)}
+#tabs button{flex:1;font-family:var(--mono);font-size:7.5px;letter-spacing:.16em;text-transform:uppercase;
+  padding:9px 2px;background:transparent;border:none;border-bottom:2px solid transparent;
+  color:rgba(255,255,255,.36);cursor:pointer;transition:.2s}
+#tabs button.on{color:var(--mag);border-bottom-color:var(--mag)}
+#sbody{flex:1;overflow-y:auto;padding:11px;-webkit-overflow-scrolling:touch;min-height:0}
+#sbody .blk{display:none}
+#sbody .blk.show{display:block}
+#sbody #blk-charts.show{height:100%;min-height:210px}
+#sbody #blk-charts .chwrap{flex-direction:column;height:auto}
+#sbody #blk-charts .ch{border-right:none;border-bottom:1px solid var(--border);min-height:104px}
+
+@media(max-width:900px){
+  :root{--hdr:44px}
+  #side,#bot{display:none}
+  #sheet{display:flex}
+  .hlogo{font-size:12px}
+  #narr{font-size:12.5px;padding:6px 10px}
+  .hm-v{min-width:38px;font-size:9px}
+}
+
+#zoomc{position:fixed;left:10px;z-index:26;display:flex;flex-direction:column;gap:6px}
+#zoomc button{width:32px;height:32px;border:1px solid rgba(179,136,255,.3);background:rgba(5,0,18,.7);
+  color:rgba(255,255,255,.62);font-family:var(--mono);font-size:15px;line-height:1;cursor:pointer;
+  border-radius:50%;backdrop-filter:blur(6px);transition:.2s;padding:0}
+#zoomc button:active{border-color:var(--mag);color:var(--mag);background:rgba(224,64,251,.12)}
+#load{position:fixed;inset:0;background:var(--void);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;z-index:2000;transition:opacity 1s;padding:24px;text-align:center}
+#load.out{opacity:0;pointer-events:none}
+#load h1{font-family:var(--serif);font-size:clamp(20px,7vw,28px);font-style:italic;font-weight:300;
+  color:var(--plasma);letter-spacing:.11em;text-shadow:0 0 40px rgba(179,136,255,.8);margin-bottom:8px}
+#load .s{font-size:8px;letter-spacing:.3em;color:rgba(255,255,255,.25);text-transform:uppercase;margin-bottom:28px}
+#load .go{border:1px solid var(--mag);color:var(--mag);background:transparent;padding:13px 30px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.26em;text-transform:uppercase;cursor:pointer;transition:.3s}
+#load .go:active{background:var(--mag);color:var(--void)}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div id="hdr">
+  <div class="hlogo">ΣΩ <b>127</b></div>
+  <div id="hm">
+    <div class="hm"><div class="hm-k">I coh / I inc</div><div class="hm-v m" id="h-enh">×1.0</div></div>
+    <div class="hm"><div class="hm-k">locked</div><div class="hm-v c" id="h-lock">0%</div></div>
+    <div class="hm"><div class="hm-k">free</div><div class="hm-v p" id="h-free">0%</div></div>
+    <div class="hm"><div class="hm-k">β₀ · β₁</div><div class="hm-v l" id="h-betti">— · —</div></div>
+    <div class="hm"><div class="hm-k">vortices</div><div class="hm-v g" id="h-vort">0</div></div>
+    <div class="hm"><div class="hm-k">dark</div><div class="hm-v p" id="h-dark">0</div></div>
+    <div class="hm"><div class="hm-k">spec λ̄</div><div class="hm-v p" id="h-spec">0.00</div></div>
+    <div class="hm"><div class="hm-k">φ / π</div><div class="hm-v g" id="h-phi">0.72</div></div>
+  </div>
+  <div class="hbtns">
+    <button class="mbtn on" id="b-flow">flow</button>
+    <button class="mbtn on" id="b-ref">grid</button>
+    <button class="mbtn" id="b-sweep">φ auto</button>
+    <button class="mbtn" id="b-snd">snd</button>
+  </div>
+</div>
+
+<div id="narr">the field is charging.</div>
+<div id="zoomc"><button id="z-in">+</button><button id="z-out">−</button></div>
+
+<div id="side"></div>
+<div id="bot"></div>
+
+<div id="sheet">
+  <div id="grip"></div>
+  <div id="tabs">
+    <button data-t="blk-dial" class="on">dial</button>
+    <button data-t="blk-read">read</button>
+    <button data-t="blk-trace">trace</button>
+    <button data-t="blk-charts">charts</button>
+    <button data-t="blk-status">status</button>
+  </div>
+  <div id="sbody"></div>
+</div>
+
+<!-- content blocks; relocated between desktop panels and the mobile sheet -->
+<div id="pool" style="display:none">
+
+  <div class="blk" id="blk-dial">
+    <div class="sec">Q7 coupling phase</div>
+    <canvas id="dial"></canvas>
+    <div class="dl"><span>0 · diffusive</span><span>π · anti</span></div>
+    <div class="dl"><span>D_Q</span><b id="dq">0.080</b></div>
+    <div class="regime" id="regime">chimera</div>
+    <div class="hint">Two graphs on the same 127 points. <em>Hex adjacency</em> is the medium — 342 bonds, diameter 12. <em>Q7</em> is Hamming distance one on the 7-bit states — 441 bonds, mean length 3.94 cells, only 29.5% spatially adjacent. Drag the dial: the <em>phase</em> of the second coupling, not its strength, decides whether the field locks into one or tears into many.</div>
+  </div>
+
+  <div class="blk" id="blk-read">
+    <div class="sec">read the field</div>
+    <div id="legend"></div>
+  </div>
+
+  <div class="blk" id="blk-trace">
+    <div class="sec">integrator trace · live</div>
+    <div class="trh"><span>step <b id="tr-step">0</b></span><span>sim t <b id="tr-t">0.0</b>s</span><span>node <b id="tr-node">63</b></span></div>
+    <div class="trh"><span>Σ|Δψ| this step <b id="tr-res">0.000</b></span></div>
+    <canvas id="c-trace"></canvas>
+    <div id="tr-terms"></div>
+    <div class="hint">Every row is read out of the integrator on the step it happened — magnitude and phase of each term of<br><em>∂ψ/∂t = (2e−1+iω)ψ + (1+iα)D_L∇²hex + D_Q e^{iφ}∇²Q7 − (1+iβ)|ψ|²ψ</em><br>for one node. Nothing here is a recording; if it were, the residual would repeat.</div>
+    <div class="sec">event log</div>
+    <div id="tr-log"></div>
+  </div>
+
+  <div class="blk" id="blk-charts">
+    <div class="chwrap">
+      <div class="ch"><div class="ch-h"><div class="ch-t">betti curves · filtration</div>
+        <div class="ch-v l" id="v-int">∫β₁ 0.0</div></div><canvas id="c-betti"></canvas>
+        <div class="ch-d">Lower the brightness cut left→right. β₀ counts separate islands, β₁ counts loops around a hole. More area = more broken up.</div></div>
+      <div class="ch"><div class="ch-h"><div class="ch-t">local order r</div>
+        <div class="ch-v c" id="v-bim">unimodal</div></div><canvas id="c-hist"></canvas>
+        <div class="ch-d">How many nodes agree with their neighbours. One hump = the field is of one mind. Two humps = a chimera.</div></div>
+      <div class="ch"><div class="ch-h"><div class="ch-t">enhancement · 60 s</div>
+        <div class="ch-v m" id="v-pk">peak ×1</div></div><canvas id="c-enh"></canvas>
+        <div class="ch-d">How much brighter the field is than the same energy radiating out of step. Floor ×1, ceiling ×127.</div></div>
+    </div>
+  </div>
+
+  <div class="blk" id="blk-status">
+    <div class="sec">epistemic status</div>
+    <div class="ep e1"><i></i><div class="t"><u>Exact.</u> β₀/β₁ by Euler characteristic (verified: filled disk → β₁=0; one interior node removed → β₁=1). Enhancement = |Σψ|²/Σ|ψ|². Vortex charge = ±2π winding, integer by construction.</div></div>
+    <div class="ep e2"><i></i><div class="t"><u>Model-dependent.</u> CGLE with α=1.4, β=−0.85 (1+αβ=−0.19). Burst threshold r&gt;0.93, delay τ_R·ln n. Dark cutoff r&lt;0.52. Tuned by sweep, not derived.</div></div>
+    <div class="ep e3"><i></i><div class="t"><u>Interpretive.</u> "Charged", "trapped", reading a burst as release. The physics does not supply these words.</div></div>
+    <div class="sec">measured, negative</div>
+    <div class="ep e1"><i></i><div class="t">Bursts do <u>not</u> cascade through state space. Consecutive-burst Hamming distance 3.0–3.6 vs random baseline 3.53. Hypothesis tested and rejected.</div></div>
+  </div>
+
+</div>
+
+<div id="load">
+  <h1>Dual-Graph Field</h1>
+  <div class="s">127 points · two adjacencies · one amplitude</div>
+  <button class="go" id="go">enter</button>
+</div>
+
+<script>
+'use strict';
+const TAU=Math.PI*2, PHI=(1+Math.sqrt(5))/2;
+const clamp=(v,a,b)=>v<a?a:v>b?b:v, lerp=(a,b,t)=>a+(b-a)*t;
+const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $=id=>document.getElementById(id);
+/* ── luminosity ────────────────────────────────────────────
+   canvas alpha saturates at 1, so a clamp throws away every ratio above it.
+   intensity is tone-mapped instead (Reinhard: v/(1+v), monotone, never hard
+   clips), and anything brighter than the ceiling is expressed by stacking
+   additive passes rather than by an alpha that cannot go higher. */
+const tone=(x,e)=>{const v=Math.max(0,x)*e;return v/(1+v)};
+
+/* ── 127 points, gray-coded ─────────────────────────────── */
+const RINGS=6, DIRS=[[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
+const cells=[{q:0,r:0}];
+for(let k=1;k<=RINGS;k++){let q=-k,r=k;
+  for(let d=0;d<6;d++)for(let s=0;s<k;s++){cells.push({q,r});q+=DIRS[d][0];r+=DIRS[d][1]}}
+const N=cells.length;
+const pcnt=n=>{let c=0;while(n){n&=n-1;c++}return c};
+const ST=new Int16Array(N);for(let i=0;i<N;i++){const k=i+1;ST[i]=k^(k>>1)}
+const POS=new Map();for(let i=0;i<N;i++)POS.set(ST[i],i);
+const DIMC=[[224,64,251],[244,143,177],[255,109,0],[255,213,79],
+            [29,233,182],[0,229,255],[179,136,255]];
+const COL=[],PC=new Int8Array(N);
+for(let i=0;i<N;i++){let r=0,g=0,b=0,n=pcnt(ST[i]);PC[i]=n;
+  for(let d=0;d<7;d++)if(ST[i]>>d&1){r+=DIMC[d][0];g+=DIMC[d][1];b+=DIMC[d][2]}
+  COL.push([r/n|0,g/n|0,b/n|0])}
+
+/* ── the 127 chord diagrams ─────────────────────────────────
+   point i is either isolated, or paired with some p — and that chord seals
+   off everything between them, so the two sides can never interact. that
+   rule of growth is what "non-crossing" means, and it counts M₇ = 127.
+   every node carries one. get close enough and it opens. */
+const DIAG=(function(){
+  const memo=new Map();
+  function gen(i,j){
+    if(i>=j)return[[]];
+    const k=i*16+j;if(memo.has(k))return memo.get(k);
+    const out=[];
+    for(const d of gen(i+1,j))out.push(d);
+    for(let p=i+1;p<j;p++)
+      for(const a of gen(i+1,p))for(const b of gen(p+1,j))out.push([[i,p],...a,...b]);
+    memo.set(k,out);return out}
+  return gen(0,7)})();
+const CHORD=[],ISO=[];
+for(let i=0;i<N;i++){const D=DIAG[i],iso=[1,1,1,1,1,1,1];
+  for(const[u,v]of D){iso[u]=0;iso[v]=0}
+  CHORD.push(D);ISO.push(iso)}
+
+const key=(q,r)=>q+','+r, MAP=new Map(cells.map((c,i)=>[key(c.q,c.r),i]));
+const NB=[],BOND=[];
+for(let i=0;i<N;i++){const c=cells[i],row=[];
+  for(const[dq,dr]of DIRS){const j=MAP.get(key(c.q+dq,c.r+dr));
+    if(j!==undefined){row.push(j);if(j>i)BOND.push(i,j)}}NB.push(row)}
+const BOND_N=BOND.length/2, DEG=new Float32Array(N);
+NB.forEach((r,i)=>DEG[i]=r.length);
+const NBF=new Int16Array(N*6).fill(-1);
+NB.forEach((r,i)=>r.forEach((j,k)=>NBF[i*6+k]=j));
+
+const QNB=[],QBOND=[];
+for(let i=0;i<N;i++){const row=[];
+  for(let d=0;d<7;d++){const t=ST[i]^(1<<d);
+    if(t&&POS.has(t)){const j=POS.get(t);row.push(j);if(j>i)QBOND.push(i,j)}}QNB.push(row)}
+const QBOND_N=QBOND.length/2, QDEG=new Float32Array(N);
+QNB.forEach((r,i)=>QDEG[i]=r.length);
+const QNBF=new Int16Array(N*7).fill(-1);
+QNB.forEach((r,i)=>r.forEach((j,k)=>QNBF[i*7+k]=j));
+
+const DOM=NB.map((row,i)=>{const s=new Set([i]);
+  for(const j of row){s.add(j);for(const k of NB[j])s.add(k)}
+  return Int16Array.from([...s].sort((a,b)=>a-b))});
+const S3=Math.sqrt(3), HX=new Float32Array(N), HY=new Float32Array(N);
+for(let i=0;i<N;i++){HX[i]=cells[i].q+cells[i].r/2;HY[i]=cells[i].r*S3/2}
+const TRI=(()=>{const seen=new Set(),out=[];
+  for(let i=0;i<N;i++)for(const j of NB[i])for(const k of NB[j]){
+    if(!NB[i].includes(k))continue;
+    const s=[i,j,k].sort((a,b)=>a-b).join(',');if(seen.has(s))continue;seen.add(s);
+    const[a,b,c]=s.split(',').map(Number);
+    const ar=(HX[b]-HX[a])*(HY[c]-HY[a])-(HY[b]-HY[a])*(HX[c]-HX[a]);
+    out.push(ar>0?[a,b,c]:[a,c,b])}return out})();
+
+/* ═══════════════════════════════════════════════════════════
+   THE CONTINUUM
+   ψ exists at 127 points and nowhere else. but its low-frequency part is
+   genuinely defined between them: expand in the graph Laplacian's
+   eigenbasis, keep the modes the lattice can actually carry, and the
+   reconstruction is a real continuous field rather than a smear.
+   K=32 captures 99.6% of a smooth field here; everything above λ≈3.6 is
+   detail finer than the spacing and is honestly discarded.
+   Then domain colouring: hue = arg ψ, luminance = |ψ|. At a vortex the
+   whole colour wheel wraps a point — the defect shows itself, unlabelled.
+   ═══════════════════════════════════════════════════════════ */
+const KMODE=32;
+let EVEC=null, EVAL=null, SPECC=0;
+const CK_R=new Float32Array(KMODE), CK_I=new Float32Array(KMODE);
+function jacobiEig(A,n,sweeps){
+  const V=new Float64Array(n*n);
+  for(let i=0;i<n;i++)V[i*n+i]=1;
+  for(let s=0;s<sweeps;s++){
+    let off=0;
+    for(let p=0;p<n-1;p++)for(let q=p+1;q<n;q++)off+=A[p*n+q]*A[p*n+q];
+    if(off<1e-12)break;
+    for(let p=0;p<n-1;p++)for(let q=p+1;q<n;q++){
+      const apq=A[p*n+q];if(Math.abs(apq)<1e-11)continue;
+      const th=(A[q*n+q]-A[p*n+p])/(2*apq);
+      const t=(th>=0?1:-1)/(Math.abs(th)+Math.sqrt(th*th+1));
+      const c=1/Math.sqrt(t*t+1), sn=t*c;
+      for(let k=0;k<n;k++){const a1=A[k*n+p],a2=A[k*n+q];
+        A[k*n+p]=c*a1-sn*a2;A[k*n+q]=sn*a1+c*a2}
+      for(let k=0;k<n;k++){const a1=A[p*n+k],a2=A[q*n+k];
+        A[p*n+k]=c*a1-sn*a2;A[q*n+k]=sn*a1+c*a2}
+      for(let k=0;k<n;k++){const v1=V[k*n+p],v2=V[k*n+q];
+        V[k*n+p]=c*v1-sn*v2;V[k*n+q]=sn*v1+c*v2}
+    }
+  }
+  return V;
+}
+function buildSpectral(){
+  const t0=performance.now();
+  const A=new Float64Array(N*N);
+  for(let i=0;i<N;i++){A[i*N+i]=DEG[i];
+    for(const j of NB[i])A[i*N+j]=-1}
+  const V=jacobiEig(A,N,9);
+  const idx=[...Array(N).keys()].sort((a,b)=>A[a*N+a]-A[b*N+b]);
+  EVEC=new Float32Array(N*KMODE);EVAL=new Float32Array(KMODE);
+  for(let k=0;k<KMODE;k++){const c=idx[k];EVAL[k]=A[c*N+c];
+    for(let i=0;i<N;i++)EVEC[i*KMODE+k]=V[i*N+c]}
+  console.log('spectral basis: '+(performance.now()-t0).toFixed(0)+'ms  λ0='+
+    EVAL[0].toExponential(2)+'  λ'+(KMODE-1)+'='+EVAL[KMODE-1].toFixed(2));
+}
+/* smoothed node values, and the mode amplitudes that produced them */
+const SR=new Float32Array(N), SI=new Float32Array(N);
+function lowpass(){
+  if(!EVEC)return;
+  for(let k=0;k<KMODE;k++){let ar=0,ai=0;
+    for(let i=0;i<N;i++){const v=EVEC[i*KMODE+k];ar+=v*PR[i];ai+=v*PI_[i]}
+    CK_R[k]=ar;CK_I[k]=ai}
+  for(let i=0;i<N;i++){let ar=0,ai=0;
+    for(let k=0;k<KMODE;k++){const v=EVEC[i*KMODE+k];ar+=v*CK_R[k];ai+=v*CK_I[k]}
+    SR[i]=ar;SI[i]=ai}
+  /* spectral centroid — how fine-grained the field is right now */
+  let num=0,den=0;
+  for(let k=0;k<KMODE;k++){const p=CK_R[k]*CK_R[k]+CK_I[k]*CK_I[k];num+=EVAL[k]*p;den+=p}
+  SPECC=den>1e-12?num/den:0;
+}
+/* the interpolation grid, in the fixed hex plane — the medium the physics
+   actually happens on, so the weights are computed once and never again */
+const GRID=56, GN=8;
+let GIDX=null,GW=null,GA=null,GIMG=null,GCV=null;
+function buildGrid(){
+  GIDX=new Int16Array(GRID*GRID*GN);GW=new Float32Array(GRID*GRID*GN);
+  GA=new Float32Array(GRID*GRID);
+  const EXT=6.9, sig=1.15, cut=3.1;
+  for(let gy=0;gy<GRID;gy++)for(let gx=0;gx<GRID;gx++){
+    const x=(gx/(GRID-1)*2-1)*EXT, y=(gy/(GRID-1)*2-1)*EXT, o=(gy*GRID+gx);
+    const cand=[];
+    for(let i=0;i<N;i++){const d=Math.hypot(HX[i]-x,HY[i]-y);
+      if(d<cut)cand.push([Math.exp(-d*d/(2*sig*sig)),i])}
+    cand.sort((a,b)=>b[0]-a[0]);
+    let sum=0;
+    for(let k=0;k<GN;k++){
+      if(k<cand.length){GIDX[o*GN+k]=cand[k][1];GW[o*GN+k]=cand[k][0];sum+=cand[k][0]}
+      else{GIDX[o*GN+k]=0;GW[o*GN+k]=0}}
+    if(sum>1e-6)for(let k=0;k<GN;k++)GW[o*GN+k]/=sum;
+    GA[o]=clamp(sum/0.55,0,1);          /* fades where the lattice ends */
+  }
+  GCV=document.createElement('canvas');GCV.width=GCV.height=GRID;
+  GIMG=GCV.getContext('2d').createImageData(GRID,GRID);
+}
+function renderContinuum(){
+  if(!GIMG||!EVEC)return;
+  let mx=1e-6;for(let i=0;i<N;i++){const m=SR[i]*SR[i]+SI[i]*SI[i];if(m>mx)mx=m}
+  const inv=1/Math.sqrt(mx), d=GIMG.data;
+  for(let o=0;o<GRID*GRID;o++){
+    let ar=0,ai=0;
+    for(let k=0;k<GN;k++){const w=GW[o*GN+k];if(!w)continue;
+      const i=GIDX[o*GN+k];ar+=w*SR[i];ai+=w*SI[i]}
+    const m=Math.hypot(ar,ai)*inv, lum=tone(m*m,5.0)*GA[o];
+    let h=(Math.atan2(ai,ar)/TAU+1)%1;
+    const hh=h*6, fr=hh-Math.floor(hh), q=1-fr;
+    let r,g,b;
+    switch(Math.floor(hh)%6){
+      case 0:r=1;g=fr;b=0;break;   case 1:r=q;g=1;b=0;break;
+      case 2:r=0;g=1;b=fr;break;   case 3:r=0;g=q;b=1;break;
+      case 4:r=fr;g=0;b=1;break;   default:r=1;g=0;b=q}
+    const p=o*4, L=lum*255;
+    d[p]=r*L;d[p+1]=g*L;d[p+2]=b*L;d[p+3]=255;
+  }
+  GCV.getContext('2d').putImageData(GIMG,0,0);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PLASMA — tracers advected by the probability current itself.
+   the bond current J = Im(ψ̄ᵢψⱼ) is a scalar on an edge; summing it along
+   the edge directions gives a vector at every node, which is the discrete
+   current density. that is rasterised to a coarse screen field and the
+   particles simply fall through it. nothing here is procedural noise —
+   turn φ and the streamlines reorganise because the physics did.
+   ═══════════════════════════════════════════════════════════ */
+let flowOn=true;
+const VG=44;                       /* velocity raster resolution */
+let VXG,VYG,VCR,VCI,VWG,PX_,PY_,PPX,PPY,PLF,PN=0;
+let TCV=null,TCX=null;
+function buildPlasma(){
+  VXG=new Float32Array(VG*VG);VYG=new Float32Array(VG*VG);
+  VCR=new Float32Array(VG*VG);VCI=new Float32Array(VG*VG);VWG=new Float32Array(VG*VG);
+  PN=MOB?520:1100;
+  PX_=new Float32Array(PN);PY_=new Float32Array(PN);
+  PPX=new Float32Array(PN);PPY=new Float32Array(PN);PLF=new Float32Array(PN);
+  PALP=new Float32Array(PN);
+  for(let i=0;i<PN;i++)PLF[i]=Math.random()*2;
+}
+function respawn(k){
+  /* born where the field is strong — rejection sampling on |ψ| */
+  let n=0;
+  for(let t=0;t<8;t++){const c=(Math.random()*N)|0;
+    if(AMP[c]*NRMG>Math.random()*0.9){n=c;break} n=c}
+  const a=Math.random()*TAU,r=Math.random()*R0*.22;
+  PX_[k]=SX[n]+Math.cos(a)*r;PY_[k]=SY[n]+Math.sin(a)*r;
+  PPX[k]=PX_[k];PPY[k]=PY_[k];PLF[k]=.6+Math.random()*1.7;
+}
+let NRMG=1;
+function rasteriseFlow(){
+  VXG.fill(0);VYG.fill(0);VCR.fill(0);VCI.fill(0);VWG.fill(0);
+  const x0=0,y0=hdrTop,ww=W,hh=Math.max(40,artBot-hdrTop);
+  const sx=VG/ww, sy=VG/hh;
+  /* vector current at each node, from its bonds */
+  for(let k=0;k<BOND_N;k++){
+    const i=BOND[k*2],j=BOND[k*2+1];
+    const J=(PR[i]*PI_[j]-PI_[i]*PR[j])*NRMG*NRMG;
+    if(Math.abs(J)<1e-4)continue;
+    let dx=SX[j]-SX[i],dy=SY[j]-SY[i];
+    const d=Math.hypot(dx,dy)||1;dx/=d;dy/=d;
+    for(const nd of [i,j]){
+      const gx=(SX[nd]-x0)*sx, gy=(SY[nd]-y0)*sy;
+      const bx=gx|0, by=gy|0;
+      for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++){
+        const cxx=bx+ox,cyy=by+oy;
+        if(cxx<0||cyy<0||cxx>=VG||cyy>=VG)continue;
+        const w=Math.exp(-((cxx+.5-gx)**2+(cyy+.5-gy)**2)*.55), o=cyy*VG+cxx;
+        VXG[o]+=J*dx*w;VYG[o]+=J*dy*w;VWG[o]+=w;
+        const a=AMP[nd]*NRMG||1e-9;
+        VCR[o]+=PR[nd]/a*w;VCI[o]+=PI_[nd]/a*w;
+      }
+    }
+  }
+  for(let o=0;o<VG*VG;o++){const w=VWG[o];
+    if(w>1e-5){VXG[o]/=w;VYG[o]/=w;VCR[o]/=w;VCI[o]/=w}}
+}
+const HUEB=14, HPATH=[], HACC=new Float32Array(14), HCNT=new Int32Array(14);
+let PALP=null;
+function stepPlasma(dt){
+  if(!TCX)return;
+  const x0=0,y0=hdrTop,ww=W,hh=Math.max(40,artBot-hdrTop);
+  const sx=VG/ww, sy=VG/hh;
+  TCX.globalCompositeOperation='destination-out';
+  TCX.fillStyle='rgba(0,0,0,'+(flowOn?.075:.30)+')';
+  TCX.fillRect(0,0,W,H);
+  TCX.globalCompositeOperation='lighter';
+  if(!flowOn)return;
+  for(let b=0;b<HUEB;b++){HPATH[b]=new Path2D();HACC[b]=0;HCNT[b]=0}
+  const SPD=R0*3.4;
+  for(let k=0;k<PN;k++){
+    PLF[k]-=dt;
+    if(PLF[k]<=0||PX_[k]<-40||PX_[k]>W+40||PY_[k]<y0-40||PY_[k]>artBot+40){respawn(k);continue}
+    const gx=clamp((PX_[k]-x0)*sx,0,VG-1.001), gy=clamp((PY_[k]-y0)*sy,0,VG-1.001);
+    const ix=gx|0, iy=gy|0, fx=gx-ix, fy=gy-iy;
+    const o00=iy*VG+ix,o10=o00+1,o01=o00+VG,o11=o01+1;
+    const w00=(1-fx)*(1-fy),w10=fx*(1-fy),w01=(1-fx)*fy,w11=fx*fy;
+    /* how much medium is actually here. outside the lattice this is ~0,
+       and a tracer out there is not in the field at all — it is not
+       "incoherent", it is nowhere. kill it rather than let it wander. */
+    const wgt=VWG[o00]*w00+VWG[o10]*w10+VWG[o01]*w01+VWG[o11]*w11;
+    if(wgt<0.06){respawn(k);continue}
+    let vx=VXG[o00]*w00+VXG[o10]*w10+VXG[o01]*w01+VXG[o11]*w11;
+    let vy=VYG[o00]*w00+VYG[o10]*w10+VYG[o01]*w01+VYG[o11]*w11;
+    const cr=VCR[o00]*w00+VCR[o10]*w10+VCR[o01]*w01+VCR[o11]*w11;
+    const ci=VCI[o00]*w00+VCI[o10]*w10+VCI[o01]*w01+VCI[o11]*w11;
+    const coh=Math.min(1,Math.hypot(cr,ci));
+    /* incoherent regions genuinely do have disordered flow — but the jitter
+       is a fraction of the current, not a multiple of it. it was scaled by
+       R0 and then multiplied by SPD, which also scales by R0, so it ran
+       180× the physics and buried the thing it was meant to decorate. */
+    const ch=(1-coh)*.28;
+    vx+=(Math.random()-.5)*ch;vy+=(Math.random()-.5)*ch;
+    PPX[k]=PX_[k];PPY[k]=PY_[k];
+    let dx=vx*SPD*dt, dy=vy*SPD*dt;
+    const st=Math.hypot(dx,dy);
+    if(st>7){dx*=7/st;dy*=7/st}          /* nothing may streak across the frame */
+    PX_[k]+=dx;PY_[k]+=dy;
+    const spd=Math.hypot(dx,dy);
+    if(spd<.05)continue;
+    const h=(Math.atan2(ci,cr)/TAU+1)%1;
+    const b=clamp((h*HUEB)|0,0,HUEB-1);
+    /* fade toward the rim so the cloud has an edge instead of a hard stop */
+    PALP[k]=clamp(Math.min(1,(wgt-.06)/.34)*(.28+.5*Math.min(1,spd/2.2)),0,1);
+    HACC[b]+=PALP[k];HCNT[b]++;
+    HPATH[b].moveTo(PPX[k],PPY[k]);HPATH[b].lineTo(PX_[k],PY_[k]);
+  }
+  for(let b=0;b<HUEB;b++){
+    const hh2=(b+.5)/HUEB*6, fr=hh2-Math.floor(hh2), q=1-fr;
+    let r,g,bl;
+    switch(Math.floor(hh2)%6){
+      case 0:r=1;g=fr;bl=0;break; case 1:r=q;g=1;bl=0;break;
+      case 2:r=0;g=1;bl=fr;break; case 3:r=0;g=q;bl=1;break;
+      case 4:r=fr;g=0;bl=1;break; default:r=1;g=0;bl=q}
+    const al=HCNT[b]?HACC[b]/HCNT[b]:0;
+    if(al<=.005)continue;
+    TCX.strokeStyle=`rgba(${(r*255)|0},${(g*255)|0},${(bl*255)|0},${al.toFixed(3)})`;
+    TCX.lineWidth=1;TCX.stroke(HPATH[b]);
+  }
+}
+
+/* ═══════════ FIELD — dual-graph CGLE with inversion ═══════════ */
+const ALPHA=1.4,BETA=-0.85,DL=0.30,SW=0.7,NOISE=0.006,TAU_P=4.0,
+      R_TH=0.93,E_TH=0.80,REFR_T=0.9,DT=0.045,SIM_HZ=18,
+      TAU_R=0.30,DARK_TH=0.52,DARK_E=0.78,HOLD=0.985;
+let DQ=0.080, PHIC=0.72*Math.PI, sweepOn=false;
+const PR=new Float32Array(N),PI_=new Float32Array(N),OM=new Float32Array(N),
+      EI=new Float32Array(N),RF=new Float32Array(N),ARM=new Float32Array(N),
+      RL=new Float32Array(N),DK=new Float32Array(N),AMP=new Float32Array(N);
+function gs(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(TAU*v)}
+for(let i=0;i<N;i++){PR[i]=gs()*.12;PI_[i]=gs()*.12;OM[i]=gs()*SW;EI[i]=.6}
+
+let ENH=1,VORT=0,NDARK=0,NREF=0,NARM=0,NLOCK=0,NFREE=0,B0=1,B1=0,INTB1=0,lastBurst=0,lastBurstN=0;
+const FLASH=[],VP=[],ENHIST=[],HIST=new Float32Array(16),BC0=new Float32Array(20),BC1=new Float32Array(20);
+
+let TRACKN=63, STEPS=0, SIMT=0, RESID=0;
+const TR={psi:[0,0],g:[0,0],h:[0,0],q:[0,0],nl:[0,0],d:[0,0],e:0,om:0};
+const TRH={g:[],h:[],q:[],nl:[]};
+const EVLOG=[];
+function ev(t,c){EVLOG.push({t,c,k:STEPS});while(EVLOG.length>7)EVLOG.shift()}
+function simStep(){
+  let resid=0;
+  const cq=Math.cos(PHIC)*DQ, sq=Math.sin(PHIC)*DQ;
+  const nr=new Float32Array(N),ni=new Float32Array(N);
+  for(let i=0;i<N;i++){
+    let lr=0,li=0;
+    for(let k=0;k<6;k++){const j=NBF[i*6+k];if(j<0)break;lr+=PR[j];li+=PI_[j]}
+    lr-=DEG[i]*PR[i];li-=DEG[i]*PI_[i];
+    let qr=0,qi=0;
+    for(let k=0;k<7;k++){const j=QNBF[i*7+k];if(j<0)break;qr+=PR[j];qi+=PI_[j]}
+    qr-=QDEG[i]*PR[i];qi-=QDEG[i]*PI_[i];
+    const re=PR[i],im=PI_[i],A=re*re+im*im,g=2*EI[i]-1,w=OM[i];
+    /* every term kept separate so the trace can report what the integrator
+       actually did on this step, rather than a summary of it */
+    const gR=g*re-w*im,            gI=g*im+w*re;              // (2e−1+iω)ψ
+    const hR=DL*(lr-ALPHA*li),     hI=DL*(ALPHA*lr+li);       // (1+iα)D_L ∇²hex
+    const qR=cq*qr-sq*qi,          qI=cq*qi+sq*qr;            // D_Q e^{iφ} ∇²Q7
+    const nR=-A*(re-BETA*im),      nI=-A*(im+BETA*re);        // −(1+iβ)|ψ|²ψ
+    const dr=gR+hR+qR+nR, di=gI+hI+qI+nI;
+    if(i===TRACKN){TR.psi=[re,im];TR.g=[gR,gI];TR.h=[hR,hI];
+                   TR.q=[qR,qI];TR.nl=[nR,nI];TR.d=[dr,di];TR.e=EI[i];TR.om=w}
+    resid+=Math.abs(dr)+Math.abs(di);
+    nr[i]=re+DT*dr+NOISE*gs()*Math.sqrt(DT);
+    ni[i]=im+DT*di+NOISE*gs()*Math.sqrt(DT);
+  }
+  PR.set(nr);PI_.set(ni);
+  STEPS++;SIMT+=DT;RESID=resid;
+  const mg=(a)=>Math.hypot(a[0],a[1]);
+  TRH.g.push(mg(TR.g));TRH.h.push(mg(TR.h));TRH.q.push(mg(TR.q));TRH.nl.push(mg(TR.nl));
+  for(const k in TRH) while(TRH[k].length>96) TRH[k].shift();
+  for(let i=0;i<N;i++){EI[i]+=DT*(1-EI[i])/TAU_P;RF[i]=Math.max(0,RF[i]-DT);
+    AMP[i]=Math.hypot(PR[i],PI_[i])}
+  let nd=0,na=0,lk=0,fr=0;
+  for(let i=0;i<N;i++){
+    const g=DOM[i];let sr=0,si=0,em=0;
+    for(let k=0;k<g.length;k++){const j=g[k],a=AMP[j]||1e-9;
+      sr+=PR[j]/a;si+=PI_[j]/a;em+=EI[j]}
+    const r=Math.hypot(sr,si)/g.length,e=em/g.length;
+    RL[i]=r;if(r>.90)lk++;if(r<.55)fr++;
+    DK[i]=(r<DARK_TH&&e>DARK_E)?1:0;if(DK[i])nd++;
+    if(RF[i]>0){ARM[i]=0;continue}
+    if(ARM[i]>0){na++;ARM[i]-=DT;
+      if(r<R_TH*HOLD){ARM[i]=0}
+      else if(ARM[i]<=0){
+        const n=g.length;
+        /* peak ∝ n², width ∝ 1/n — the real Dicke scaling. a big domain is
+           brighter AND sharper, which is two cues instead of one. */
+        FLASH.push({dom:g,n,I:n*n,t:0,peak:.30,
+                    w:clamp(.13*(16/n),.09,.6),
+                    life:clamp(.55+.13*(16/n)*4,.9,2.4)});
+        for(let k=0;k<n;k++){EI[g[k]]=.04;RF[g[k]]=REFR_T}
+        const ph=Math.atan2(si,sr);
+        for(let k=0;k<n;k++)for(const j of NB[g[k]]){
+          if(RF[j]>0||!DK[j])continue;
+          const a=AMP[j],t0=Math.atan2(PI_[j],PR[j]);
+          const nt=t0+(((ph-t0+Math.PI*3)%TAU)-Math.PI)*.42;
+          PR[j]=Math.cos(nt)*a;PI_[j]=Math.sin(nt)*a}
+        lastBurst=performance.now();lastBurstN=n;burstSound(n);
+        ev(`burst n=${n} · I=${n*n}× · domain seed ${i}`,'#ffd54f');
+      }
+    } else if(r>R_TH&&e>E_TH) ARM[i]=TAU_R*Math.log(g.length)*(.7+.6*Math.random());
+  }
+  NDARK=nd;NARM=na;NLOCK=lk;NFREE=fr;
+  VP.length=0;
+  const wr=x=>{while(x>Math.PI)x-=TAU;while(x<-Math.PI)x+=TAU;return x};
+  for(const[a,b,c]of TRI){
+    const ta=Math.atan2(PI_[a],PR[a]),tb=Math.atan2(PI_[b],PR[b]),tc=Math.atan2(PI_[c],PR[c]);
+    const n=Math.round((wr(tb-ta)+wr(tc-tb)+wr(ta-tc))/TAU);
+    if(n!==0)VP.push({a,b,c,n})}
+  if(VP.length!==VORT){
+    const d=VP.length-VORT;
+    ev(d>0?`${d} vortex${d>1?'es':''} nucleated · total ${VP.length}`
+          :`${-d} annihilated in pairs · total ${VP.length}`, d>0?'#00e5ff':'#e040fb');
+  }
+  VORT=VP.length;
+  let sr=0,si=0,ii=0,n2=0;
+  for(let i=0;i<N;i++){sr+=PR[i];si+=PI_[i];ii+=PR[i]*PR[i]+PI_[i]*PI_[i];if(RF[i]>0)n2++}
+  ENH=ii>1e-9?(sr*sr+si*si)/ii:1;NREF=n2;
+}
+
+/* β₀/β₁ by Euler characteristic; χ = V−E+F = b₀−b₁ for a planar 2-complex */
+const par=new Int32Array(N);
+function find(x){while(par[x]!==x){par[x]=par[par[x]];x=par[x]}return x}
+function betti(th){
+  let V=0;for(let i=0;i<N;i++){par[i]=i;if(AMP[i]>th)V++}
+  if(!V)return[0,0];
+  let E=0;
+  for(let k=0;k<BOND_N;k++){const i=BOND[k*2],j=BOND[k*2+1];
+    if(AMP[i]>th&&AMP[j]>th){E++;const a=find(i),b=find(j);if(a!==b)par[a]=b}}
+  let F=0;for(const[a,b,c]of TRI)if(AMP[a]>th&&AMP[b]>th&&AMP[c]>th)F++;
+  const seen=new Set();for(let i=0;i<N;i++)if(AMP[i]>th)seen.add(find(i));
+  return[seen.size,seen.size-(V-E+F)];
+}
+function filtration(){
+  let mx=0;for(let i=0;i<N;i++)if(AMP[i]>mx)mx=AMP[i];
+  if(mx<1e-9){BC0.fill(0);BC1.fill(0);INTB1=0;return}
+  let s=0;
+  for(let k=0;k<20;k++){const[b0,b1]=betti(mx*(1-k/19)*.98);
+    BC0[k]=b0;BC1[k]=b1;s+=b1;if(k===13){B0=b0;B1=b1}}
+  INTB1=s;
+}
+
+/* ── audio ── */
+let AC=null,sndOn=false,master,bus,nbuf;
+function initA(){
+  AC=new(window.AudioContext||window.webkitAudioContext)();
+  master=AC.createGain();master.gain.value=0;
+  const cmp=AC.createDynamicsCompressor();cmp.threshold.value=-20;cmp.ratio.value=3.4;
+  bus=AC.createGain();bus.connect(cmp);cmp.connect(master);master.connect(AC.destination);
+  nbuf=AC.createBuffer(1,AC.sampleRate*2,AC.sampleRate);
+  const d=nbuf.getChannelData(0);let l=0;
+  for(let i=0;i<d.length;i++){const w=Math.random()*2-1;l=(l+.02*w)/1.02;d[i]=l*3.2}
+  const sub=AC.createOscillator();sub.type='sine';sub.frequency.value=27.5;
+  const sg=AC.createGain();sg.gain.value=.10;sub.connect(sg);sg.connect(bus);sub.start();
+}
+function burstSound(n){
+  if(!sndOn||!AC)return;
+  const t=AC.currentTime,k=clamp(n*n/400,.05,1),f=55*[1,2,3,5,7,9,11][clamp((n/4)|0,0,6)];
+  for(const[m,g0,d]of[[1,.10*k,3.2],[2,.05*k,2.1],[3,.02*k,1.5]]){
+    const o=AC.createOscillator(),g=AC.createGain();
+    o.type='sine';o.frequency.value=f*m;
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(g0,t+.008);
+    g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(g);g.connect(bus);o.start(t);o.stop(t+d+.2)}
+  const s=AC.createBufferSource();s.buffer=nbuf;s.loop=true;
+  const bp=AC.createBiquadFilter();bp.type='bandpass';bp.Q.value=2.4;
+  bp.frequency.setValueAtTime(3000*k+600,t);bp.frequency.exponentialRampToValueAtTime(260,t+1.4);
+  const g2=AC.createGain();g2.gain.setValueAtTime(.05*k,t);
+  g2.gain.exponentialRampToValueAtTime(.0001,t+1.6);
+  s.connect(bp);bp.connect(g2);g2.connect(bus);s.start(t);s.stop(t+1.8);
+}
+
+/* ── projections ── */
+function target(fn){
+  const p=cells.map((c,i)=>fn(i,c));let cx=0,cy=0,cz=0,cw=0;
+  for(const v of p){cx+=v[0];cy+=v[1];cz+=v[2];cw+=v[3]}
+  cx/=N;cy/=N;cz/=N;cw/=N;let ss=0;
+  for(const v of p){v[0]-=cx;v[1]-=cy;v[2]-=cz;v[3]-=cw;
+    ss+=v[0]*v[0]+v[1]*v[1]+v[2]*v[2]+v[3]*v[3]}
+  const k=1/Math.sqrt(ss/N);
+  for(const v of p){v[0]*=k;v[1]*=k;v[2]*=k;v[3]*=k}return p}
+const ICO=[[0,1,PHI],[0,-1,PHI],[1,PHI,0],[-1,PHI,0],[PHI,0,1],[PHI,0,-1],[1,1,1]]
+  .map(v=>{const m=Math.hypot(...v);return[v[0]/m,v[1]/m,v[2]/m]});
+function petrie(m){const G=[];for(let d=0;d<7;d++){const th=TAU*d/7;
+  G.push([Math.cos(th),Math.sin(th),Math.cos(m*th),Math.sin(m*th)])}
+  return target(i=>{let x=0,y=0,z=0,w=0;
+    for(let d=0;d<7;d++)if(ST[i]>>d&1){x+=G[d][0];y+=G[d][1];z+=G[d][2];w+=G[d][3]}
+    return[x,y,z,w]})}
+const FORMS=[
+  {n:'a₂ stillpoint',p:target((i,c)=>[S3*c.q+S3/2*c.r,1.5*c.r,0,0]),s:[.09,.05,.02,.03]},
+  {n:'cubic section',p:target((i,c)=>[c.q,-c.q-c.r,c.r,0]),s:[.11,.13,.04,.02]},
+  {n:'zonohedron',p:target(i=>{let x=0,y=0,z=0,w=0;
+    for(let d=0;d<7;d++)if(ST[i]>>d&1){x+=ICO[d][0];y+=ICO[d][1];z+=ICO[d][2];w+=.44*Math.cos(TAU*d/7)}
+    return[x,y,z,w]}),s:[.14,.10,.06,.05]},
+  {n:'q₇ shadow · ii',p:petrie(2),s:[.10,.19,.05,.07]},
+  {n:'q₇ shadow · iii',p:petrie(3),s:[.13,.16,.08,.04]},
+];
+
+/* ── canvas + responsive relocation ── */
+const cv=$('cv'),cx=cv.getContext('2d',{alpha:false});
+let W,H,DPR,CXP,CYP,R0,MOB=false;
+const BLK=['blk-dial','blk-read','blk-trace','blk-charts','blk-status'];
+function relocate(){
+  const mob=innerWidth<=900;
+  if(mob===MOB&&MOB!==undefined&&relocate._done)return;
+  MOB=mob;relocate._done=true;
+  const sb=$('sbody'),sd=$('side'),bt=$('bot');
+  if(mob){ BLK.forEach(id=>sb.appendChild($(id)));
+    showTab(sb.dataset.cur||'blk-dial'); }
+  else{ ['blk-dial','blk-read','blk-status'].forEach(id=>{const e=$(id);e.classList.add('show');sd.appendChild(e)});
+    const c=$('blk-charts');c.classList.add('show');c.style.height='100%';bt.appendChild(c); }
+}
+function showTab(id){
+  $('sbody').dataset.cur=id;
+  BLK.forEach(b=>$(b).classList.toggle('show',b===id));
+  [...$('tabs').children].forEach(b=>b.classList.toggle('on',b.dataset.t===id));
+}
+[...$('tabs').children].forEach(b=>b.onclick=()=>{showTab(b.dataset.t);
+  $('sheet').classList.add('open');setTimeout(layout,340)});
+let gy=0,gopen=false;
+$('grip').addEventListener('pointerdown',e=>{gy=e.clientY;gopen=$('sheet').classList.contains('open');
+  $('grip').setPointerCapture(e.pointerId)});
+$('grip').addEventListener('pointerup',e=>{
+  const d=e.clientY-gy;
+  if(Math.abs(d)<6) $('sheet').classList.toggle('open');
+  else $('sheet').classList.toggle('open',d<0);
+  setTimeout(layout,340)});
+
+function layout(){
+  DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;
+  cv.width=W*DPR;cv.height=H*DPR;cv.style.width=W+'px';cv.style.height=H+'px';
+  cx.setTransform(DPR,0,0,DPR,0,0);
+  relocate();
+  const hdrH=MOB?44:46;
+  const sideW=MOB?0:266, botH=MOB?0:172;
+  const shH=MOB?$('sheet').getBoundingClientRect().height:0;
+  /* a viewport shorter than the chrome made availH negative, which made R0
+     negative, which made every radius derived from it negative. clamp the
+     source, not the thirty call sites downstream. */
+  const availW=Math.max(120,W-sideW), availH=Math.max(90,H-hdrH-botH-shH);
+  hdrTop=hdrH; artBot=H-botH-shH; CXP=availW/2; CYP=hdrH+availH/2+(MOB?14:0);
+  R0=Math.max(26,Math.min(availW,availH)*(MOB?.185:.20));
+  if(!TCV){TCV=document.createElement('canvas');TCX=TCV.getContext('2d')}
+  TCV.width=Math.max(1,W*DPR);TCV.height=Math.max(1,H*DPR);
+  TCX.setTransform(DPR,0,0,DPR,0,0);
+  const zc=$('zoomc');if(zc)zc.style.bottom=((MOB?shH:botH)+14)+'px';
+  ['dial','c-betti','c-hist','c-enh','c-trace'].forEach(id=>{const c=$(id);if(c)fitc(c)});
+  LEG.forEach(l=>fitc(l.cv));
+  drawBetti();drawHist();drawEnh();drawDial();
+}
+function fitc(c){const r=c.getBoundingClientRect();
+  if(!r.width||!r.height)return;
+  c.width=Math.max(1,r.width*DPR);c.height=Math.max(1,r.height*DPR);
+  c.getContext('2d').setTransform(DPR,0,0,DPR,0,0)}
+addEventListener('resize',()=>{layout();sprites()});
+addEventListener('orientationchange',()=>setTimeout(()=>{layout();sprites()},260));
+
+let SPR=[];
+function sprites(){SPR=COL.map(([r,g,b])=>{
+  const s=document.createElement('canvas');s.width=s.height=44;
+  const c=s.getContext('2d'),gr=c.createRadialGradient(22,22,0,22,22,22);
+  gr.addColorStop(0,'rgba(255,255,255,1)');
+  gr.addColorStop(.18,`rgba(${r},${g},${b},.92)`);
+  gr.addColorStop(.47,`rgba(${r},${g},${b},.22)`);
+  gr.addColorStop(1,`rgba(${r},${g},${b},0)`);
+  c.fillStyle=gr;c.fillRect(0,0,44,44);return s})}
+
+/* ═══════════ THE GROUNDING FRAME ═══════════════════════════
+   a floor that does not rotate, the cloud's shadow dropped onto it, a
+   gnomon showing where the four axes currently point, and an orthographic
+   inset showing the raw coordinates with no perspective at all. */
+let refOn=true, zoom=1, zoomT=1;
+let orthoBig=-1;                 /* -1 none, 0 = xy, 1 = zw */
+/* ── selection ──────────────────────────────────────────────
+   tap a point and it is followed: its own trail, its six neighbours in the
+   medium, and — the useful part — its seven neighbours in state space,
+   which are scattered anywhere in the picture. */
+let SEL=-1; const STRAIL=[];
+const ORECT=[];                  /* live hit-boxes for the panes */
+const FLOOR=1.62;
+const AXC=[[224,64,251],[0,229,255],[255,213,79],[179,136,255]], AXN=['x','y','z','w'];
+/* seven points on a circle inside every point. chords bow toward the
+   centre, which is also why they never appear to cross when they don't. */
+function figure(sx,sy,R,a,i){
+  if(!(R>0.5)||!isFinite(R))return;
+  cx.strokeStyle=`rgba(255,255,255,${a*.09})`;cx.lineWidth=.6;
+  cx.beginPath();cx.arc(sx,sy,R,0,TAU);cx.stroke();
+  for(const[u,v]of CHORD[i]){
+    const t1=-Math.PI/2+TAU*u/7,t2=-Math.PI/2+TAU*v/7;
+    const x1=sx+Math.cos(t1)*R,y1=sy+Math.sin(t1)*R;
+    const x2=sx+Math.cos(t2)*R,y2=sy+Math.sin(t2)*R;
+    const kx=sx+((x1+x2)/2-sx)*.72,ky=sy+((y1+y2)/2-sy)*.72;
+    const c1=DIMC[u],c2=DIMC[v];
+    cx.strokeStyle=`rgba(${(c1[0]+c2[0])>>1},${(c1[1]+c2[1])>>1},${(c1[2]+c2[2])>>1},${a*.92})`;
+    cx.lineWidth=Math.max(.7,R*.055);
+    cx.beginPath();cx.moveTo(x1,y1);cx.quadraticCurveTo(kx,ky,x2,y2);cx.stroke()}
+  for(let k=0;k<7;k++){
+    const th=-Math.PI/2+TAU*k/7,[r,g,b]=DIMC[k],lit=ISO[i][k]?.26:1;
+    cx.fillStyle=`rgba(${r},${g},${b},${a*lit*.95})`;
+    cx.beginPath();cx.arc(sx+Math.cos(th)*R,sy+Math.sin(th)*R,
+      Math.max(.8,R*(ISO[i][k]?.055:.085)),0,TAU);cx.fill()}
+}
+const A4={xy:0,zw:0,xz:0,yw:0},W_CAM=3.35,Z_CAM=3.9,NEAR=0.42;
+/* the w-divide magnifies z, so a point far out in w can be pushed past the
+   z camera and invert the whole scale. clamping each denominator at NEAR
+   keeps both divides positive and bounded — a near plane, not an abs(). */
+const persp=(cam,v)=>cam/Math.max(NEAR,cam-v);
+function rot4(v,a,o){let x=v[0],y=v[1],z=v[2],w=v[3],c,s,t;
+  c=Math.cos(a.xy);s=Math.sin(a.xy);t=x*c-y*s;y=x*s+y*c;x=t;
+  c=Math.cos(a.zw);s=Math.sin(a.zw);t=z*c-w*s;w=z*s+w*c;z=t;
+  c=Math.cos(a.xz);s=Math.sin(a.xz);t=x*c-z*s;z=x*s+z*c;x=t;
+  c=Math.cos(a.yw);s=Math.sin(a.yw);t=y*c-w*s;w=y*s+w*c;y=t;
+  o[0]=x;o[1]=y;o[2]=z;o[3]=w;return o}
+const SX=new Float32Array(N),SY=new Float32Array(N),SC=new Float32Array(N),
+      DP=new Float32Array(N),KW=new Float32Array(N);
+let form=0,nform=1,mix=1,hold=0;
+const RT=[0,0,0,0],TM=[0,0,0,0];
+/* raw rotated 4D coordinates, kept for the orthographic inset */
+const V4=new Float32Array(N*4);
+let artBot=0, hdrTop=46;
+
+/* ═══════════ LEGEND — a running micro-sim beside every mark ═══════════
+   each swatch simulates only the thing it names, so the eye has a
+   calibrated reference to compare the live field against. */
+const LEG=[
+  {k:'locked',c:'#00e5ff',t:'Locked',d:'Its neighbourhood agrees. Cyan ring. These can fire together.',
+   n:()=>NLOCK,
+   f:(g,w,h,t)=>{for(let i=0;i<7;i++){const a=TAU*i/7,r=w*.28;
+     const p=.6+.4*Math.sin(t*3);
+     g.fillStyle=`rgba(0,229,255,${.35+.55*p})`;
+     g.beginPath();g.arc(w/2+Math.cos(a)*r,h/2+Math.sin(a)*r,1+p*1.1,0,TAU);g.fill()}}},
+  {k:'free',c:'#b388ff',t:'Free',d:'Out of step with its neighbours. No ring. Cannot join a release.',
+   n:()=>NFREE,
+   f:(g,w,h,t)=>{for(let i=0;i<7;i++){const a=TAU*i/7,r=w*.28;
+     const p=.6+.4*Math.sin(t*3+i*2.1);
+     g.fillStyle=`rgba(179,136,255,${.28+.5*p})`;
+     g.beginPath();g.arc(w/2+Math.cos(a)*r,h/2+Math.sin(a)*r,1+p*1.1,0,TAU);g.fill()}}},
+  {k:'dark',c:'#7c3aed',t:'Dark',d:'Fully charged but cancelling itself out. Violet ring. Holds everything, releases nothing.',
+   n:()=>NDARK,
+   f:(g,w,h,t)=>{for(let i=0;i<7;i++){const a=TAU*i/7,r=w*.28;
+     const p=.6+.4*Math.sin(t*3+TAU*i/7);
+     g.fillStyle=`rgba(124,58,237,${.3+.55*p})`;
+     g.beginPath();g.arc(w/2+Math.cos(a)*r,h/2+Math.sin(a)*r,1+p*1.1,0,TAU);g.fill()}
+     g.strokeStyle='rgba(124,58,237,.7)';g.lineWidth=1;
+     g.beginPath();g.arc(w/2,h/2,w*.40,0,TAU);g.stroke()}},
+  {k:'armed',c:'#ffd54f',t:'Armed',d:'Coherent and charged, waiting out the delay. Gold ring tightening. It can still lose it and stand down.',
+   n:()=>NARM,
+   f:(g,w,h,t)=>{const u=(t*.7)%1;
+     g.strokeStyle=`rgba(255,213,79,${.25+.65*u})`;g.lineWidth=.8+1.4*u;
+     g.beginPath();g.arc(w/2,h/2,w*.40*(1-u*.62),0,TAU);g.stroke();
+     g.fillStyle='rgba(255,255,255,.8)';g.beginPath();g.arc(w/2,h/2,1.4,0,TAU);g.fill()}},
+  {k:'vortex',c:'#00e5ff',t:'Vortex',d:'Phase winds a full turn around three nodes. Spinner. Comes as ±1 only, and can vanish only in pairs.',
+   n:()=>VORT,
+   f:(g,w,h,t)=>{const r=w*.24;
+     g.strokeStyle='rgba(0,229,255,.65)';g.lineWidth=1;
+     g.beginPath();g.arc(w/2,h/2,r,0,TAU);g.stroke();
+     for(let q=0;q<3;q++){const a=t*2.2+q*TAU/3;
+       g.beginPath();g.moveTo(w/2+Math.cos(a)*r*1.4,h/2+Math.sin(a)*r*1.4);
+       g.lineTo(w/2+Math.cos(a)*r*2.1,h/2+Math.sin(a)*r*2.1);g.stroke()}}},
+  {k:'burst',c:'#ffd54f',t:'Burst',d:'A domain releases at once. n nodes together radiate n² — 16 nodes are 256× one node, not 16×.',
+   n:()=>FLASH.length,
+   f:(g,w,h,t)=>{const u=(t*.55)%1,ch=Math.cosh((u-.3)/.13),k=1/(ch*ch);
+     const gr=g.createRadialGradient(w/2,h/2,0,w/2,h/2,w*.46);
+     gr.addColorStop(0,`rgba(255,255,255,${k*.85})`);
+     gr.addColorStop(.4,`rgba(255,213,79,${k*.5})`);
+     gr.addColorStop(1,'rgba(255,213,79,0)');
+     g.fillStyle=gr;g.fillRect(0,0,w,h)}},
+  {k:'current',c:'#f48fb1',t:'Current',d:'Flow along the medium, Im(ψ̄ᵢψⱼ). Moving dots. Direction is the direction it actually goes.',
+   n:()=>'—',
+   f:(g,w,h,t)=>{g.strokeStyle='rgba(255,255,255,.10)';g.lineWidth=.7;
+     g.beginPath();g.moveTo(w*.16,h/2);g.lineTo(w*.84,h/2);g.stroke();
+     for(let q=0;q<3;q++){const u=((t*.5)+q/3)%1;
+       g.fillStyle=`rgba(244,143,177,${Math.sin(u*Math.PI)*.9})`;
+       g.beginPath();g.arc(w*.16+u*w*.68,h/2,1.5,0,TAU);g.fill()}}},
+  {k:'q7',c:'#e040fb',t:'Second graph',d:'Long magenta or cyan lines. Distance one in 7-bit identity, but up to eleven cells apart in space.',
+   n:()=>QBOND_N,
+   f:(g,w,h,t)=>{const s=Math.sin(PHIC)>.5?'224,64,251':'0,229,255';
+     g.strokeStyle=`rgba(${s},${.4+.4*Math.sin(t*2)})`;g.lineWidth=1;
+     g.beginPath();g.moveTo(w*.16,h*.72);g.lineTo(w*.84,h*.28);g.stroke();
+     g.fillStyle='#fff';
+     g.beginPath();g.arc(w*.16,h*.72,1.6,0,TAU);g.fill();
+     g.beginPath();g.arc(w*.84,h*.28,1.6,0,TAU);g.fill()}},
+];
+{const host=$('legend');
+ LEG.forEach(l=>{
+   const row=document.createElement('div');row.className='lg';
+   const c=document.createElement('canvas');
+   const b=document.createElement('div');b.className='b';
+   b.innerHTML=`<div class="n"><u style="color:${l.c}">${l.t}</u><b style="color:${l.c}" id="lg-${l.k}">0</b></div><div class="d">${l.d}</div>`;
+   row.appendChild(c);row.appendChild(b);host.appendChild(row);
+   l.cv=c;l.out=null;
+ });}
+
+/* ── the trace, rendered ── */
+const TERMS=[
+  ['ψ','psi','#ffffff'],
+  ['(2e−1+iω)ψ','g','#76ff03'],
+  ['(1+iα)D_L∇²hex','h','#00e5ff'],
+  ['D_Q e^{iφ}∇²Q7','q','#e040fb'],
+  ['−(1+iβ)|ψ|²ψ','nl','#ffd54f'],
+  ['Δψ','d','#f48fb1'],
+];
+{const h=$('tr-terms');
+ TERMS.forEach(([nm,k,c])=>{const d=document.createElement('div');d.className='tt';
+   d.innerHTML=`<span class="nm" style="color:${c}">${nm}</span>`+
+     `<span class="bar"><i id="tb-${k}" style="background:${c};box-shadow:0 0 6px ${c}"></i></span>`+
+     `<span class="val" id="tv-${k}">0.000</span>`;
+   h.appendChild(d)})}
+function drawTrace(){
+  const c=$('c-trace');if(!c||!c.width)return;
+  chart(c,(g,w,h)=>{
+    let mx=1e-4;
+    for(const k of ['g','h','q','nl']) for(const v of TRH[k]) if(v>mx)mx=v;
+    const cols={g:'#76ff03',h:'#00e5ff',q:'#e040fb',nl:'#ffd54f'};
+    for(const k of ['g','h','q','nl']){
+      const a=TRH[k];if(a.length<2)continue;
+      g.strokeStyle=cols[k];g.lineWidth=1;g.globalAlpha=.85;g.beginPath();
+      a.forEach((v,i)=>{const x=i/(a.length-1)*w,y=h-v/mx*h*.92;i?g.lineTo(x,y):g.moveTo(x,y)});
+      g.stroke()}
+    g.globalAlpha=1;
+    g.fillStyle='rgba(255,255,255,.2)';g.font='6px "Space Mono"';g.textAlign='right';
+    g.fillText(mx.toFixed(3),w-3,8);
+    g.textAlign='left';g.fillText('96 steps',3,h-3)});
+  const fm=(a)=>{const m=Math.hypot(a[0],a[1]);
+    return m.toFixed(3)+' ∠'+(a[0]||a[1]?(Math.atan2(a[1],a[0])>=0?'+':'')+Math.atan2(a[1],a[0]).toFixed(2):'0.00')};
+  let mx=1e-4;
+  for(const[,k]of TERMS){const m=Math.hypot(TR[k][0],TR[k][1]);if(m>mx)mx=m}
+  for(const[,k]of TERMS){
+    const m=Math.hypot(TR[k][0],TR[k][1]);
+    const b=$('tb-'+k),v=$('tv-'+k);
+    if(b)b.style.width=(m/mx*100).toFixed(1)+'%';
+    if(v)v.textContent=fm(TR[k]);
+  }
+  $('tr-step').textContent=STEPS;
+  $('tr-t').textContent=SIMT.toFixed(1);
+  $('tr-node').textContent=TRACKN;
+  $('tr-res').textContent=RESID.toFixed(3);
+  const lg=$('tr-log');
+  lg.innerHTML=EVLOG.slice().reverse().map(e=>
+    `<div style="color:${e.c}"><b>${e.k}</b> · ${e.t}</div>`).join('');
+}
+
+/* ── charts ── */
+function chart(c,fn){const g=c.getContext('2d'),w=c.width/DPR,h=c.height/DPR;
+  if(w<2||h<2)return;g.clearRect(0,0,w,h);fn(g,w,h)}
+function drawDial(){const d=$('dial');if(!d.width)return;
+  chart(d,(g,w,h)=>{
+    const cxx=w/2,cyy=h/2+6,R=Math.min(w/2,h)*.72;
+    g.strokeStyle='rgba(179,136,255,.18)';g.lineWidth=1;
+    g.beginPath();g.arc(cxx,cyy,R,Math.PI,TAU);g.stroke();
+    for(let k=0;k<=4;k++){const a=Math.PI+k/4*Math.PI;
+      g.strokeStyle='rgba(255,255,255,.14)';
+      g.beginPath();g.moveTo(cxx+Math.cos(a)*R*.86,cyy+Math.sin(a)*R*.86);
+      g.lineTo(cxx+Math.cos(a)*R,cyy+Math.sin(a)*R);g.stroke()}
+    const t=PHIC/Math.PI,a=Math.PI+t*Math.PI;
+    const gr=g.createLinearGradient(cxx-R,0,cxx+R,0);
+    gr.addColorStop(0,'#00e5ff');gr.addColorStop(.5,'#ffd54f');gr.addColorStop(1,'#e040fb');
+    g.strokeStyle=gr;g.lineWidth=2.6;
+    g.beginPath();g.arc(cxx,cyy,R,Math.PI,a);g.stroke();
+    g.strokeStyle='#fff';g.lineWidth=1.6;
+    g.beginPath();g.moveTo(cxx,cyy);g.lineTo(cxx+Math.cos(a)*R*.9,cyy+Math.sin(a)*R*.9);g.stroke();
+    g.fillStyle='#fff';g.beginPath();g.arc(cxx+Math.cos(a)*R*.9,cyy+Math.sin(a)*R*.9,3.4,0,TAU);g.fill();
+    g.fillStyle='rgba(255,255,255,.85)';g.font='700 15px "Space Mono"';g.textAlign='center';
+    g.fillText(t.toFixed(2)+'π',cxx,cyy-8)})}
+function drawBetti(){const c=$('c-betti');if(!c||!c.width)return;
+  chart(c,(g,w,h)=>{const n=20,bw=w/n;let mx=1;
+    for(let k=0;k<n;k++)mx=Math.max(mx,BC0[k],BC1[k]);
+    for(let k=0;k<n;k++){const x=k*bw;
+      g.fillStyle='rgba(0,229,255,.28)';g.fillRect(x+1,h-BC0[k]/mx*h,bw-2,BC0[k]/mx*h);
+      g.fillStyle='rgba(118,255,3,.75)';g.fillRect(x+bw*.28,h-BC1[k]/mx*h,bw*.44,BC1[k]/mx*h)}
+    g.font='7px "Space Mono"';g.textAlign='left';
+    g.fillStyle='rgba(0,229,255,.6)';g.fillText('β₀',3,9);
+    g.fillStyle='rgba(118,255,3,.85)';g.fillText('β₁',17,9)})}
+function drawHist(){const c=$('c-hist');if(!c||!c.width)return;
+  chart(c,(g,w,h)=>{const n=16,bw=w/n;let mx=1;
+    for(let k=0;k<n;k++)mx=Math.max(mx,HIST[k]);
+    for(let k=0;k<n;k++){const v=HIST[k]/mx,x=k*bw,t=k/(n-1);
+      const col=t>.82?'0,229,255':t<.42?'179,136,255':'255,213,79';
+      g.fillStyle=`rgba(${col},${.25+.6*v})`;g.fillRect(x+1,h-v*h,bw-2,v*h)}
+    g.font='7px "Space Mono"';g.fillStyle='rgba(255,255,255,.22)';
+    g.textAlign='left';g.fillText('free',3,h-2);
+    g.textAlign='right';g.fillText('locked',w-3,h-2)})}
+function drawEnh(){const c=$('c-enh');if(!c||!c.width||ENHIST.length<2)return;
+  chart(c,(g,w,h)=>{let mx=10;for(const v of ENHIST)mx=Math.max(mx,v);
+    g.strokeStyle='rgba(224,64,251,.85)';g.lineWidth=1.2;g.beginPath();
+    ENHIST.forEach((v,i)=>{const x=i/(ENHIST.length-1)*w,y=h-v/mx*h*.92;
+      i?g.lineTo(x,y):g.moveTo(x,y)});g.stroke();
+    g.lineTo(w,h);g.lineTo(0,h);g.closePath();g.fillStyle='rgba(224,64,251,.10)';g.fill();
+    g.font='7px "Space Mono"';g.fillStyle='rgba(255,255,255,.22)';
+    g.textAlign='left';g.fillText('×'+mx.toFixed(0),3,9)})}
+
+/* ── narrator ── */
+const NARR=$('narr');let narrT=0,narrCur='';
+function narrate(){
+  const lo=HIST[0]+HIST[1]+HIST[2]+HIST[3]+HIST[4], hi=HIST[13]+HIST[14]+HIST[15];
+  const now=performance.now();
+  let s='',hot=false;
+  if(now-lastBurst<2100){
+    s=`${lastBurstN} released together — ${lastBurstN*lastBurstN}× brighter than one alone.`;hot=true;
+  } else if(NDARK>14){
+    s=`${NDARK} nodes are fully charged and cannot let go of it.`;
+  } else if(lo>8&&hi>8){
+    s='Locked and turbulent regions coexist. Nothing draws the boundary.';
+  } else if(NLOCK/N>.72){
+    s='The whole field has come to one mind. The second graph is pulling it together.';
+  } else if(NFREE/N>.36){
+    s='The field is torn. Almost nothing agrees with what is beside it.';
+  } else if(NARM>0){
+    s=`${NARM} region${NARM>1?'s are':' is'} charged and coherent, waiting out the delay.`;
+  } else if(VORT>4){
+    s=`${VORT} phase defects are wandering. They can only disappear in pairs.`;
+  } else {
+    s='The field is charging.';
+  }
+  if(s!==narrCur&&(hot||now-narrT>3400)){
+    narrCur=s;narrT=now;NARR.textContent=s;NARR.classList.toggle('hot',hot);
+  }
+}
+
+/* ── input ── */
+let dragDial=false;
+function dialSet(e){
+  const r=$('dial').getBoundingClientRect();
+  const x=e.clientX-r.left-r.width/2, y=e.clientY-r.top-r.height/2-6;
+  let a=Math.atan2(y,x); if(a>0)a=x<0?Math.PI:0;
+  PHIC=clamp(a+Math.PI,0,Math.PI);
+  sweepOn=false;$('b-sweep').classList.remove('on');
+}
+$('dial').addEventListener('pointerdown',e=>{dragDial=true;dialSet(e);
+  $('dial').setPointerCapture(e.pointerId);e.preventDefault()});
+$('dial').addEventListener('pointermove',e=>{if(dragDial){dialSet(e);e.preventDefault()}});
+addEventListener('pointerup',()=>dragDial=false);
+$('b-sweep').onclick=e=>{sweepOn=!sweepOn;e.currentTarget.classList.toggle('on',sweepOn)};
+$('b-snd').onclick=e=>{if(!AC)initA();if(AC.state==='suspended')AC.resume();
+  sndOn=!sndOn;e.currentTarget.classList.toggle('on',sndOn);
+  master.gain.setTargetAtTime(sndOn?.85:0,AC.currentTime,.5)};
+$('b-ref').onclick=e=>{refOn=!refOn;e.currentTarget.classList.toggle('on',refOn)};
+$('b-flow').onclick=e=>{flowOn=!flowOn;e.currentTarget.classList.toggle('on',flowOn)};
+$('z-in').onclick=()=>{zoomT=clamp(zoomT*1.3,.35,6)};
+$('z-out').onclick=()=>{zoomT=clamp(zoomT/1.3,.35,6)};
+addEventListener('wheel',e=>{zoomT=clamp(zoomT*(e.deltaY>0?.92:1.09),.35,6)},{passive:true});
+let pinch=0;
+cv.addEventListener('touchstart',e=>{if(e.touches.length===2){
+  pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,
+                   e.touches[0].clientY-e.touches[1].clientY)}},{passive:true});
+cv.addEventListener('touchmove',e=>{if(e.touches.length!==2){pinch=0;return}
+  const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,
+                     e.touches[0].clientY-e.touches[1].clientY);
+  if(pinch>0)zoomT=clamp(zoomT*(d/pinch),.35,6);pinch=d},{passive:true});
+cv.addEventListener('touchend',()=>pinch=0,{passive:true});
+let pdown=false,px=-1e9,py=-1e9;
+let downAt=0,downX=0,downY=0,moved=false;
+cv.addEventListener('pointerdown',e=>{
+  for(const r of ORECT){
+    if(e.clientX>=r.x&&e.clientX<=r.x+r.w&&e.clientY>=r.y&&e.clientY<=r.y+r.h){
+      orthoBig=(orthoBig===r.p)?-1:r.p; return}}
+  if(orthoBig>=0){orthoBig=-1;return}
+  downAt=performance.now();downX=e.clientX;downY=e.clientY;moved=false;
+  pdown=true;px=e.clientX;py=e.clientY});
+cv.addEventListener('pointermove',e=>{px=e.clientX;py=e.clientY;
+  if(pdown&&Math.hypot(e.clientX-downX,e.clientY-downY)>8)moved=true});
+addEventListener('pointerup',e=>{
+  if(pdown&&!moved&&performance.now()-downAt<420){
+    let best=-1,bd=44;
+    for(let i=0;i<N;i++){const d=Math.hypot(SX[i]-downX,SY[i]-downY);if(d<bd){bd=d;best=i}}
+    if(best>=0&&best!==SEL){SEL=best;TRACKN=best;STRAIL.length=0;
+      ev(`selected node ${best} · state ${ST[best].toString(2).padStart(7,'0')}`,'#ffffff')}
+    else if(best<0)SEL=-1;
+    else {SEL=-1}
+  }
+  pdown=false});
+$('go').onclick=()=>{const l=$('load');l.classList.add('out');
+  setTimeout(()=>{l.style.display='none';layout()},1100)};
+
+const REG=[[0,'globally locked','#00e5ff'],[.45,'partial lock','#1de9b6'],
+           [.62,'chimera','#ffd54f'],[.85,'torn','#e040fb']];
+
+/* ── frame ── */
+let T=0,last=performance.now(),tick=0,acc=0,eAcc=0;
+function frame(now){
+  const dt=Math.min(.034,(now-last)/1000);last=now;T+=dt;tick++;
+  if(sweepOn)PHIC=(Math.sin(T*.075)*.5+.5)*Math.PI;
+  zoom+=(zoomT-zoom)*Math.min(1,dt*4);
+  acc+=dt;let st=0;
+  while(acc>1/SIM_HZ&&st<4){acc-=1/SIM_HZ;simStep();st++}
+  if(pdown&&(moved||performance.now()-downAt>260)){const cell=R0*.6;
+    for(let i=0;i<N;i++){const d=Math.hypot(SX[i]-px,SY[i]-py);
+      if(d>cell)continue;const f=1-d/cell,ph=Math.random()*TAU;
+      PR[i]+=Math.cos(ph)*f*.03;PI_[i]+=Math.sin(ph)*f*.03}}
+
+  if(mix<1)mix=Math.min(1,mix+dt*.30);
+  else{hold+=dt;if(hold>16){hold=0;form=nform;nform=(nform+1)%FORMS.length;mix=0}}
+  const m=mix<1?mix*mix*(3-2*mix):1;
+  const f=FORMS[nform].s,g0=FORMS[form].s,sl=REDUCED?.35:1;
+  A4.xy+=lerp(g0[0],f[0],m)*dt*TAU*sl; A4.zw+=lerp(g0[1],f[1],m)*dt*TAU*sl;
+  A4.xz+=lerp(g0[2],f[2],m)*dt*TAU*sl; A4.yw+=lerp(g0[3],f[3],m)*dt*TAU*sl;
+
+  let maxA=1e-6;for(let i=0;i<N;i++)if(AMP[i]>maxA)maxA=AMP[i];
+  const NRM=1/maxA; NRMG=NRM;
+  for(let i=0;i<N;i++){
+    const a=FORMS[form].p[i],b=FORMS[nform].p[i];
+    TM[0]=lerp(a[0],b[0],m);TM[1]=lerp(a[1],b[1],m);
+    TM[2]=lerp(a[2],b[2],m);TM[3]=lerp(a[3],b[3],m);
+    rot4(TM,A4,RT);
+    V4[i*4]=RT[0];V4[i*4+1]=RT[1];V4[i*4+2]=RT[2];V4[i*4+3]=RT[3];
+    const kw=persp(W_CAM,RT[3]),x3=RT[0]*kw,y3=RT[1]*kw,z3=RT[2]*kw;
+    const kz=persp(Z_CAM,z3);
+    SX[i]=CXP+x3*R0*kz*zoom;SY[i]=CYP+y3*R0*kz*zoom;
+    SC[i]=kz*kw*zoom;DP[i]=z3;KW[i]=kw}
+
+  cx.globalCompositeOperation='source-over';
+  cx.fillStyle='rgba(3,0,9,.30)';cx.fillRect(0,0,W,H);
+  cx.globalCompositeOperation='lighter';
+
+  if(refOn){
+    /* the floor. it does not rotate — everything else moves against it. */
+    const g=2.2,stp=.55;
+    for(let q=-4;q<=4;q++){const c=q*stp;
+      for(const[x0,z0,x1,z1]of[[c,-g,c,g],[-g,c,g,c]]){
+        const k0=persp(Z_CAM,z0),k1=persp(Z_CAM,z1);
+        const ax=CXP+x0*R0*k0*zoom, ay=CYP+FLOOR*R0*k0*zoom;
+        const bx=CXP+x1*R0*k1*zoom, by=CYP+FLOOR*R0*k1*zoom;
+        const near=clamp((z0+z1)*.5/2.4+.5,0,1);
+        cx.strokeStyle=`rgba(124,58,237,${(.030+.055*near)*(q===0?2.2:1)})`;
+        cx.lineWidth=q===0?.9:.6;
+        cx.beginPath();cx.moveTo(ax,ay);cx.lineTo(bx,by);cx.stroke()}}
+    /* the cast shadow — a second, simpler shadow of the same object */
+    for(let i=0;i<N;i++){
+      const z3=V4[i*4+2]*KW[i], y3=V4[i*4+1]*KW[i], x3=V4[i*4]*KW[i];
+      const kz=persp(Z_CAM,z3);
+      const sx=CXP+x3*R0*kz*zoom, sy=CYP+FLOOR*R0*kz*zoom;
+      const drop=clamp((FLOOR-y3)/2.6,0,1);
+      const rr=Math.max(.6,R0*.030*kz*zoom*(.6+drop*1.5));
+      cx.fillStyle=`rgba(${COL[i]},${.13*(1-drop*.55)*(.35+.65*tone(AMP[i]*NRM,3))})`;
+      cx.beginPath();cx.ellipse(sx,sy,rr,rr*.34,0,0,TAU);cx.fill()}
+  }
+
+  for(let k=0;k<QBOND_N;k++){
+    const i=QBOND[k*2],j=QBOND[k*2+1];
+    const C=(PR[i]*PR[j]+PI_[i]*PI_[j])*NRM*NRM;
+    if(C<.16)continue;
+    const dep=clamp(((DP[i]+DP[j])*.5+2.6)/5.2,0,1),s=Math.sin(PHIC);
+    cx.strokeStyle=`rgba(${s>.5?'224,64,251':'0,229,255'},${clamp(C*.30,0,.24)*(.3+.7*dep)})`;
+    cx.lineWidth=.5+C*.9;
+    /* bowed toward the centre, like the chords inside the nodes —
+       these are chords too, just of a bigger circle */
+    const mx2=(SX[i]+SX[j])/2, my2=(SY[i]+SY[j])/2;
+    cx.beginPath();cx.moveTo(SX[i],SY[i]);
+    cx.quadraticCurveTo(CXP+(mx2-CXP)*.62, CYP+(my2-CYP)*.62, SX[j],SY[j]);
+    cx.stroke()}
+
+  for(let k=0;k<BOND_N;k++){
+    const i=BOND[k*2],j=BOND[k*2+1];
+    const J=(PR[i]*PI_[j]-PI_[i]*PR[j])*NRM*NRM,aj=Math.abs(J);
+    if(aj<.035)continue;
+    const dir=J>0?1:-1,dep=clamp(((DP[i]+DP[j])*.5+2.6)/5.2,0,1);
+    for(let q=0;q<(aj>.22?3:2);q++){
+      let t=((T*(.35+aj*2.2)*dir)+q/3+k*.137)%1;if(t<0)t+=1;
+      const x=lerp(SX[i],SX[j],t),y=lerp(SY[i],SY[j],t);
+      const r=(1+3.4*aj)*(.5+.8*dep)*Math.sin(t*Math.PI);
+      const c=t<.5?COL[i]:COL[j];
+      cx.fillStyle=`rgba(${c},${clamp(.15+1.5*aj,0,.8)*(.35+.65*dep)})`;
+      cx.beginPath();cx.arc(x,y,Math.max(.35,r),0,TAU);cx.fill()}}
+
+  /* the plasma sits between the bonds and the nodes */
+  if(TCX){rasteriseFlow();stepPlasma(dt);
+    cx.globalCompositeOperation='lighter';cx.globalAlpha=.85;
+    cx.drawImage(TCV,0,0,W,H);cx.globalAlpha=1}
+
+  const ord=[...Array(N).keys()].sort((a,b)=>DP[a]-DP[b]);
+  for(const i of ord){
+    const dep=clamp((DP[i]+2.6)/5.2,0,1),aa=AMP[i]*NRM,ref=RF[i]>0?.20:1;
+    /* brightness follows intensity |ψ|², not amplitude, through the tone
+       curve — gentle at the bottom, still separating at the top */
+    const lum=tone(aa*aa,4.2);
+    const r=R0*.045*SC[i]*(.5+.8*dep)*(.55+.16*PC[i])*(.40+1.35*lum)*ref;
+    cx.globalAlpha=clamp((.05+.70*dep*dep)*Math.min(1.7,KW[i])*(.22+1.15*lum)*ref,0,1);
+    cx.drawImage(SPR[i],SX[i]-r,SY[i]-r,r*2,r*2);
+    if(lum>.62&&ref>.5){const r2=r*.62;cx.globalAlpha=clamp((lum-.62)*1.9,0,.85);
+      cx.drawImage(SPR[i],SX[i]-r2,SY[i]-r2,r2*2,r2*2)}
+    cx.globalAlpha=1;
+    const figR=R0*.105*SC[i], open=clamp((figR-9)/15,0,1);
+    if(open>.02) figure(SX[i],SY[i],figR,open*(.30+.70*dep)*Math.min(1.4,KW[i])*(.42+.6*lum),i);
+    if(RL[i]>.90&&RF[i]<=0){
+      cx.strokeStyle=`rgba(0,229,255,${(.25+.4*dep)*clamp(aa*1.5,0,1)})`;
+      cx.lineWidth=1;cx.beginPath();cx.arc(SX[i],SY[i],r*1.9+2,0,TAU);cx.stroke()}
+    if(DK[i]>0&&RF[i]<=0){
+      cx.strokeStyle=`rgba(124,58,237,${(.28+.3*dep)*clamp(aa*1.4,0,1)})`;
+      cx.lineWidth=1;cx.beginPath();cx.arc(SX[i],SY[i],r*2.1+3,0,TAU);cx.stroke()}
+    if(ARM[i]>0){const t=clamp(1-ARM[i]/(TAU_R*2.6),0,1);
+      cx.strokeStyle=`rgba(255,213,79,${(.14+.5*t)*(.4+.6*dep)})`;
+      cx.lineWidth=.8+1.4*t;
+      cx.beginPath();cx.arc(SX[i],SY[i],r*(4.6-3*t)+3,0,TAU);cx.stroke()}}
+
+  for(const v of VP){
+    const x=(SX[v.a]+SX[v.b]+SX[v.c])/3,y=(SY[v.a]+SY[v.b]+SY[v.c])/3;
+    const dep=clamp(((DP[v.a]+DP[v.b]+DP[v.c])/3+2.6)/5.2,0,1),rr=4+5*dep;
+    cx.strokeStyle=`rgba(${v.n>0?'0,229,255':'224,64,251'},${.3+.45*dep})`;cx.lineWidth=1;
+    cx.beginPath();cx.arc(x,y,rr,0,TAU);cx.stroke();
+    cx.beginPath();
+    for(let q=0;q<3;q++){const a=T*(v.n>0?2.2:-2.2)+q*TAU/3;
+      cx.moveTo(x+Math.cos(a)*rr*1.35,y+Math.sin(a)*rr*1.35);
+      cx.lineTo(x+Math.cos(a)*rr*2,y+Math.sin(a)*rr*2)}
+    cx.stroke()}
+
+  for(let i=FLASH.length-1;i>=0;i--){
+    const fl=FLASH[i];fl.t+=dt;
+    if(fl.t>fl.life){FLASH.splice(i,1);continue}
+    const ch=Math.cosh((fl.t-fl.peak)/fl.w),k=1/(ch*ch),u=fl.t/fl.life;
+    let ax=0,ay=0;for(let q=0;q<fl.n;q++){ax+=SX[fl.dom[q]];ay+=SY[fl.dom[q]]}
+    ax/=fl.n;ay/=fl.n;
+    /* n=1 → 2 passes at 0.30× radius. n=19 → 9 passes at 2.22×.
+       361 times the intensity now reads as 361 times the intensity. */
+    const mag=fl.I;
+    const passes=clamp(Math.round(2+7*Math.sqrt(mag/361)),1,10);
+    const rad=R0*(.12+.9*u)*Math.pow(mag,.34)*.30;
+    for(let q=0;q<passes;q++){
+      const sh=1-q/(passes+1.4), rr=rad*sh;
+      const gr=cx.createRadialGradient(ax,ay,0,ax,ay,rr);
+      gr.addColorStop(0,`rgba(255,255,255,${k*.20})`);
+      gr.addColorStop(.34,`rgba(255,213,79,${k*.11})`);
+      gr.addColorStop(1,'rgba(255,213,79,0)');
+      cx.fillStyle=gr;cx.beginPath();cx.arc(ax,ay,rr,0,TAU);cx.fill();
+    }
+    for(let q=0;q<fl.n;q++){const p=fl.dom[q];
+      const nr=R0*.05*SC[p]*k*Math.pow(mag,.22)*.45;
+      cx.globalAlpha=clamp(k*.55,0,1);
+      cx.drawImage(SPR[p],SX[p]-nr,SY[p]-nr,nr*2,nr*2)}
+    cx.globalAlpha=1;}
+
+  cx.globalCompositeOperation='source-over';
+  const vg=cx.createRadialGradient(CXP,CYP,R0*.5,CXP,CYP,Math.max(W,H)*.8);
+  vg.addColorStop(0,'rgba(3,0,9,0)');vg.addColorStop(1,'rgba(3,0,9,.86)');
+  cx.fillStyle=vg;cx.fillRect(0,0,W,H);
+
+  /* ── gnomon: where the four axes are pointing right now.
+        watch w — short and bright means it is aimed at you, and that is
+        exactly when the whole object looks largest. */
+  if(refOn){
+    cx.globalCompositeOperation='lighter';
+    const GX=42,GY=artBot-46,L=26;
+    cx.strokeStyle='rgba(255,255,255,.10)';cx.lineWidth=.6;
+    cx.beginPath();cx.arc(GX,GY,L*1.3,0,TAU);cx.stroke();
+    for(let k=0;k<4;k++){
+      const e=[0,0,0,0];e[k]=1;
+      const r=rot4(e,A4,[0,0,0,0]);
+      const kw=persp(W_CAM,r[3]),z3=r[2]*kw,kz=persp(Z_CAM,z3);
+      const ex=GX+r[0]*kw*kz*L, ey=GY+r[1]*kw*kz*L;
+      const br=clamp(kw*kz*.62,.18,1.5);
+      cx.strokeStyle=`rgba(${AXC[k]},${.28+.55*br})`;cx.lineWidth=1+1.5*br;
+      cx.beginPath();cx.moveTo(GX,GY);cx.lineTo(ex,ey);cx.stroke();
+      cx.fillStyle=`rgba(${AXC[k]},${.45+.55*br})`;
+      cx.beginPath();cx.arc(ex,ey,1.6+1.7*br,0,TAU);cx.fill();
+      cx.globalCompositeOperation='source-over';
+      cx.fillStyle=`rgba(${AXC[k]},.8)`;cx.font='8px "Space Mono"';cx.textAlign='center';
+      cx.fillText(AXN[k],ex+(ex-GX)*.3,ey+(ey-GY)*.3+3);
+      cx.globalCompositeOperation='lighter'}
+
+    /* ── orthographic inset: the same 127 points with NO perspective.
+       left pane is the xy rotation plane, right pane is zw. these are the
+       raw coordinates — whatever the main view is doing to the shape,
+       this is what the shape actually is. */
+    const panes=[[0,1,'xy'],[2,3,'zw'],[-1,-1,'ψ']];
+    const BIG=orthoBig>=0;
+    const IS=BIG?Math.min(W-40,artBot-hdrTop-40,520):(MOB?54:74);
+    const PAD=8;
+    const IY=BIG?hdrTop+(artBot-hdrTop-IS)/2:artBot-IS-PAD;
+    const IX=BIG?(W-IS)/2:W-IS*3-PAD-12;
+    ORECT.length=0;
+    cx.globalCompositeOperation='source-over';
+    for(let p=0;p<3;p++){
+      if(BIG&&p!==orthoBig) continue;
+      const ox=BIG?IX:IX+p*(IS+6);
+      ORECT.push({x:ox,y:IY,w:IS,h:IS,p});
+      cx.fillStyle=BIG?'rgba(3,0,9,.93)':'rgba(3,0,9,.72)';cx.fillRect(ox,IY,IS,IS);
+      cx.strokeStyle=BIG?'rgba(179,136,255,.5)':'rgba(179,136,255,.20)';cx.lineWidth=1;
+      cx.strokeRect(ox+.5,IY+.5,IS-1,IS-1);
+      cx.strokeStyle='rgba(255,255,255,.07)';
+      cx.beginPath();cx.moveTo(ox+IS/2,IY+4);cx.lineTo(ox+IS/2,IY+IS-4);
+      cx.moveTo(ox+4,IY+IS/2);cx.lineTo(ox+IS-4,IY+IS/2);cx.stroke();
+      cx.globalCompositeOperation='lighter';
+      if(p===2){
+        /* the continuum: the smoothed field, domain-coloured, in the medium */
+        cx.globalCompositeOperation='source-over';
+        cx.save();cx.beginPath();cx.rect(ox+1,IY+1,IS-2,IS-2);cx.clip();
+        cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';
+        cx.drawImage(GCV,ox+1,IY+1,IS-2,IS-2);
+        cx.restore();
+        if(BIG){
+          /* mode amplitudes: which spatial frequencies are occupied */
+          let mxc=1e-6;for(let k=0;k<KMODE;k++){
+            const v=Math.hypot(CK_R[k],CK_I[k]);if(v>mxc)mxc=v}
+          const bh=30,by=IY+IS-bh-6,bw=(IS-18)/KMODE;
+          for(let k=0;k<KMODE;k++){
+            const v=Math.hypot(CK_R[k],CK_I[k])/mxc;
+            cx.fillStyle=`rgba(179,136,255,${.25+.6*v})`;
+            cx.fillRect(ox+9+k*bw,by+bh-v*bh,bw-1,v*bh)}
+          cx.fillStyle='rgba(255,255,255,.34)';cx.font='8px "Space Mono"';cx.textAlign='left';
+          cx.fillText('mode amplitudes  λ0 → λ'+(KMODE-1),ox+9,by-4);
+          cx.textAlign='right';
+          cx.fillText('centroid λ '+SPECC.toFixed(2),ox+IS-9,by-4)}
+        cx.globalCompositeOperation='source-over';
+        cx.fillStyle='rgba(255,255,255,.55)';
+        cx.font=(BIG?'11px':'7px')+' "Space Mono"';cx.textAlign='left';
+        cx.fillText(BIG?'continuum  ·  domain colouring  ·  '+KMODE+'-mode low-pass':'ψ',
+          ox+(BIG?9:4),IY+(BIG?16:10));
+        cx.fillStyle='rgba(255,255,255,.22)';cx.textAlign='right';
+        cx.fillText(BIG?'hue = phase · luminance = |ψ| · tap to collapse':'tap',
+          ox+IS-(BIG?9:4),IY+IS-(BIG?9:4));
+        continue;
+      }
+      const a=panes[p][0],b=panes[p][1],SCL=IS*.30;
+      if(BIG){ /* the two Q7 and hex graphs both, at size */
+        for(let k=0;k<QBOND_N;k++){const i=QBOND[k*2],j=QBOND[k*2+1];
+          const C=(PR[i]*PR[j]+PI_[i]*PI_[j])*NRM*NRM; if(C<.18)continue;
+          cx.globalCompositeOperation='lighter';
+          cx.strokeStyle=`rgba(224,64,251,${clamp(C*.22,0,.18)})`;cx.lineWidth=.5;
+          cx.beginPath();
+          cx.moveTo(ox+IS/2+V4[i*4+a]*SCL,IY+IS/2+V4[i*4+b]*SCL);
+          cx.lineTo(ox+IS/2+V4[j*4+a]*SCL,IY+IS/2+V4[j*4+b]*SCL);cx.stroke()}}
+      for(let k=0;k<BOND_N;k++){
+        const i=BOND[k*2],j=BOND[k*2+1];
+        cx.strokeStyle='rgba(179,136,255,.10)';cx.lineWidth=.4;
+        cx.beginPath();
+        cx.moveTo(ox+IS/2+V4[i*4+a]*SCL, IY+IS/2+V4[i*4+b]*SCL);
+        cx.lineTo(ox+IS/2+V4[j*4+a]*SCL, IY+IS/2+V4[j*4+b]*SCL);cx.stroke()}
+      for(let i=0;i<N;i++){
+        const lum=tone(AMP[i]*NRM*AMP[i]*NRM,4.2);
+        const px2=ox+IS/2+V4[i*4+a]*SCL, py2=IY+IS/2+V4[i*4+b]*SCL;
+        cx.fillStyle=`rgba(${COL[i]},${.30+.65*lum})`;
+        cx.beginPath();cx.arc(px2,py2,(BIG?1.8:.9)+(BIG?3:1.5)*lum,0,TAU);cx.fill();
+        if(BIG&&RL[i]>.90){cx.strokeStyle=`rgba(0,229,255,${.3+.4*lum})`;cx.lineWidth=.8;
+          cx.beginPath();cx.arc(px2,py2,5+3*lum,0,TAU);cx.stroke()}
+        if(BIG&&DK[i]>0){cx.strokeStyle=`rgba(124,58,237,${.35+.4*lum})`;cx.lineWidth=.8;
+          cx.beginPath();cx.arc(px2,py2,6+3*lum,0,TAU);cx.stroke()}}
+      cx.globalCompositeOperation='source-over';
+      cx.fillStyle='rgba(255,255,255,.55)';
+      cx.font=(BIG?'11px':'7px')+' "Space Mono"';cx.textAlign='left';
+      cx.fillText(panes[p][2]+(BIG?'  ·  orthographic, no perspective':''),ox+(BIG?9:4),IY+(BIG?16:10));
+      cx.fillStyle='rgba(255,255,255,.22)';cx.textAlign='right';
+      cx.fillText(BIG?'tap to collapse':'tap to expand',ox+IS-(BIG?9:4),IY+IS-(BIG?9:4))}
+  }
+  cx.globalCompositeOperation='source-over';
+
+  /* ── selection: relations first, then the readout ── */
+  if(SEL>=0){
+    cx.globalCompositeOperation='lighter';
+    STRAIL.push(SX[SEL],SY[SEL]);while(STRAIL.length>190)STRAIL.splice(0,2);
+    cx.beginPath();
+    for(let i=0;i<STRAIL.length;i+=2)i?cx.lineTo(STRAIL[i],STRAIL[i+1]):cx.moveTo(STRAIL[i],STRAIL[i+1]);
+    cx.strokeStyle='rgba(255,255,255,.30)';cx.lineWidth=1;cx.stroke();
+    /* seven state-space neighbours — one bit apart, anywhere on screen */
+    for(const j of QNB[SEL]){
+      const mx2=(SX[SEL]+SX[j])/2,my2=(SY[SEL]+SY[j])/2;
+      cx.strokeStyle='rgba(224,64,251,.62)';cx.lineWidth=1.2;
+      cx.beginPath();cx.moveTo(SX[SEL],SY[SEL]);
+      cx.quadraticCurveTo(CXP+(mx2-CXP)*.62,CYP+(my2-CYP)*.62,SX[j],SY[j]);cx.stroke();
+      cx.strokeStyle='rgba(224,64,251,.85)';cx.lineWidth=1;
+      cx.beginPath();cx.arc(SX[j],SY[j],Math.max(3,R0*.05*SC[j]),0,TAU);cx.stroke()}
+    /* six neighbours in the medium */
+    for(const j of NB[SEL]){
+      cx.strokeStyle='rgba(29,233,182,.75)';cx.lineWidth=1;
+      cx.beginPath();cx.arc(SX[j],SY[j],Math.max(2.5,R0*.04*SC[j]),0,TAU);cx.stroke()}
+    const rr=Math.max(7,R0*.085*SC[SEL]);
+    cx.strokeStyle='#fff';cx.lineWidth=1.4;
+    cx.beginPath();cx.arc(SX[SEL],SY[SEL],rr,0,TAU);cx.stroke();
+    for(let q=0;q<4;q++){const a=q*TAU/4+T*.5;
+      cx.beginPath();cx.moveTo(SX[SEL]+Math.cos(a)*rr*1.3,SY[SEL]+Math.sin(a)*rr*1.3);
+      cx.lineTo(SX[SEL]+Math.cos(a)*rr*1.9,SY[SEL]+Math.sin(a)*rr*1.9);cx.stroke()}
+
+    /* the panel */
+    cx.globalCompositeOperation='source-over';
+    const PW=MOB?184:212,PH=MOB?176:196,PX=12,PY=hdrTop+34;
+    cx.fillStyle='rgba(3,0,9,.90)';cx.fillRect(PX,PY,PW,PH);
+    cx.strokeStyle='rgba(179,136,255,.4)';cx.lineWidth=1;cx.strokeRect(PX+.5,PY+.5,PW-1,PH-1);
+    cx.strokeStyle='rgba(255,255,255,.16)';cx.beginPath();
+    cx.moveTo(PX+PW,PY+18);cx.lineTo(SX[SEL],SY[SEL]);cx.stroke();
+    let jn=0;for(const j of NB[SEL])jn+=PR[SEL]*PI_[j]-PI_[SEL]*PR[j];
+    jn*=NRM*NRM;
+    const amp=AMP[SEL]*NRM, ph=Math.atan2(PI_[SEL],PR[SEL]);
+    const sh=cells[SEL].q===0&&cells[SEL].r===0?0:
+      Math.max(Math.abs(cells[SEL].q),Math.abs(cells[SEL].r),Math.abs(cells[SEL].q+cells[SEL].r));
+    const st=RF[SEL]>0?['REFRACTORY','#f48fb1']:ARM[SEL]>0?['ARMED','#ffd54f']:
+             DK[SEL]>0?['DARK · trapped','#7c3aed']:RL[SEL]>.90?['LOCKED','#00e5ff']:['free','#b388ff'];
+    const rows=[
+      ['node',String(SEL),'#fff'],
+      ['state',ST[SEL].toString(2).padStart(7,'0')+'  ('+ST[SEL]+')','#b388ff'],
+      ['dims · shell',PC[SEL]+' of 7  ·  shell '+sh,'#b388ff'],
+      ['|ψ| · phase',amp.toFixed(3)+'  ∠'+(ph>=0?'+':'')+ph.toFixed(2),'#00e5ff'],
+      ['inversion e',EI[SEL].toFixed(3),'#76ff03'],
+      ['local order r',RL[SEL].toFixed(3),'#00e5ff'],
+      ['net current',(jn>=0?'+':'')+jn.toFixed(4)+(jn>=0?'  out':'  in'),'#f48fb1'],
+      ['degree',NB[SEL].length+' medium  ·  '+QNB[SEL].length+' state','#e040fb'],
+      ['status',st[0],st[1]],
+    ];
+    cx.font='7px "Space Mono"';cx.textAlign='left';
+    rows.forEach((r,k)=>{const y=PY+16+k*13;
+      cx.fillStyle='rgba(255,255,255,.30)';cx.fillText(r[0],PX+9,y);
+      cx.fillStyle=r[2];cx.textAlign='right';cx.fillText(r[1],PX+PW-9,y);cx.textAlign='left'});
+    /* its own chord diagram, drawn at readable size */
+    cx.globalCompositeOperation='lighter';
+    figure(PX+PW/2,PY+PH-32,24,.95,SEL);
+    cx.globalCompositeOperation='source-over';
+    cx.fillStyle='rgba(255,255,255,.22)';cx.textAlign='center';
+    cx.fillText('its chord diagram · tap again to release',PX+PW/2,PY+PH-5);
+    cx.textAlign='left';
+  }
+
+  /* readouts */
+  eAcc+=dt;
+  if(eAcc>.5){eAcc=0;ENHIST.push(ENH);while(ENHIST.length>120)ENHIST.shift();drawEnh()}
+  if(tick%2===0&&refOn){lowpass();renderContinuum()}
+  if(tick%15===0){
+    filtration();
+    HIST.fill(0);for(let i=0;i<N;i++)HIST[clamp((RL[i]*16)|0,0,15)]++;
+    drawBetti();drawHist();narrate();drawTrace();
+    const lo=HIST[0]+HIST[1]+HIST[2]+HIST[3]+HIST[4],hi=HIST[13]+HIST[14]+HIST[15];
+    const bm=$('v-bim');bm.textContent=(lo>8&&hi>8)?'BIMODAL · chimera':'unimodal';
+    bm.style.color=(lo>8&&hi>8)?'#ffd54f':'rgba(0,229,255,.7)';
+    $('v-int').textContent='∫β₁ '+INTB1.toFixed(1);
+    let pk=0;for(const v of ENHIST)pk=Math.max(pk,v);
+    $('v-pk').textContent='peak ×'+pk.toFixed(0);
+  }
+  if(tick%4===0){
+    drawDial();
+    $('h-enh').textContent='×'+ENH.toFixed(1);
+    $('h-lock').textContent=((NLOCK/N)*100).toFixed(0)+'%';
+    $('h-free').textContent=((NFREE/N)*100).toFixed(0)+'%';
+    $('h-betti').textContent=B0+' · '+B1;
+    $('h-vort').textContent=VORT;
+    $('h-dark').textContent=NDARK;
+    $('h-phi').textContent=(PHIC/Math.PI).toFixed(2);
+    $('h-spec').textContent=SPECC.toFixed(2);
+    const dqe=$('dq');if(dqe)dqe.textContent=DQ.toFixed(3);
+    const t=PHIC/Math.PI;let R=REG[0];for(const q of REG)if(t>=q[0])R=q;
+    const rg=$('regime');if(rg){rg.textContent=R[1];rg.style.color=R[2]}
+  }
+  /* legend micro-sims — only the visible ones */
+  if(tick%5===0){
+    for(const l of LEG){
+      if(!l.cv.width)continue;
+      const r=l.cv.getBoundingClientRect();
+      if(r.bottom<0||r.top>H||!r.width)continue;
+      const g=l.cv.getContext('2d'),w=l.cv.width/DPR,h=l.cv.height/DPR;
+      g.clearRect(0,0,w,h);g.globalCompositeOperation='lighter';
+      l.f(g,w,h,T);g.globalCompositeOperation='source-over';
+      const o=$('lg-'+l.k);if(o)o.textContent=l.n();
+    }
+  }
+  requestAnimationFrame(frame);
+}
+buildSpectral();buildGrid();lowpass();renderContinuum();
+layout();sprites();buildPlasma();
+for(let i=0;i<PN;i++){PX_[i]=CXP;PY_[i]=CYP;PPX[i]=CXP;PPY[i]=CYP}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
