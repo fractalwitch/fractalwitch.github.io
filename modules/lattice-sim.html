@@ -406,12 +406,39 @@ function lowpass(){
 }
 /* the interpolation grid, in the fixed hex plane — the medium the physics
    actually happens on, so the weights are computed once and never again */
-const GRID=56, GN=8;
-let GIDX=null,GW=null,GA=null,GIMG=null,GCV=null;
+const GRID=84, GN=8, GCVS=460, NPH=12, NAMP=5;
+let GIDX=null,GW=null,GA=null,GIMG=null,GCV=null,GBASE=null,FR=null,FI=null,FA=null;
+/* marching squares. corners a=TL b=TR c=BR d=BL (bits 1,2,4,8);
+   edges 0=top 1=right 2=bottom 3=left. */
+const MSTAB=[[],[3,0],[0,1],[3,1],[1,2],[3,0,1,2],[0,2],[2,3],
+             [2,3],[0,2],[0,1,2,3],[1,2],[3,1],[0,1],[3,0],[]];
+function contour(F,lev,paths,bucket){
+  const G=GRID, sc=GCVS/(G-1);
+  for(let y=0;y<G-1;y++)for(let x=0;x<G-1;x++){
+    const o=y*G+x;
+    if(GA[o]<.30||GA[o+1]<.30||GA[o+G]<.30||GA[o+G+1]<.30)continue;
+    const a=F[o]-lev,b=F[o+1]-lev,c=F[o+G+1]-lev,d=F[o+G]-lev;
+    let ix=0;if(a>0)ix|=1;if(b>0)ix|=2;if(c>0)ix|=4;if(d>0)ix|=8;
+    const T=MSTAB[ix];if(!T.length)continue;
+    const px=x*sc, py=y*sc;
+    const E=[[px+a/(a-b)*sc,py],[px+sc,py+b/(b-c)*sc],
+             [px+d/(d-c)*sc,py+sc],[px,py+a/(a-d)*sc]];
+    const p=paths[bucket(o)];if(!p)continue;
+    for(let i=0;i<T.length;i+=2){
+      p.moveTo(E[T[i]][0],E[T[i]][1]);p.lineTo(E[T[i+1]][0],E[T[i+1]][1])}
+  }
+}
+function hueRGB(h){
+  const hh=((h%1)+1)%1*6, fr=hh-Math.floor(hh), q=1-fr;
+  switch(Math.floor(hh)%6){
+    case 0:return[255,fr*255,0]; case 1:return[q*255,255,0];
+    case 2:return[0,255,fr*255]; case 3:return[0,q*255,255];
+    case 4:return[fr*255,0,255]; default:return[255,0,q*255]}
+}
 function buildGrid(){
   GIDX=new Int16Array(GRID*GRID*GN);GW=new Float32Array(GRID*GRID*GN);
   GA=new Float32Array(GRID*GRID);
-  const EXT=6.9, sig=1.15, cut=3.1;
+  const EXT=8.4, sig=1.05, cut=3.0;
   for(let gy=0;gy<GRID;gy++)for(let gx=0;gx<GRID;gx++){
     const x=(gx/(GRID-1)*2-1)*EXT, y=(gy/(GRID-1)*2-1)*EXT, o=(gy*GRID+gx);
     const cand=[];
@@ -425,29 +452,75 @@ function buildGrid(){
     if(sum>1e-6)for(let k=0;k<GN;k++)GW[o*GN+k]/=sum;
     GA[o]=clamp(sum/0.55,0,1);          /* fades where the lattice ends */
   }
-  GCV=document.createElement('canvas');GCV.width=GCV.height=GRID;
-  GIMG=GCV.getContext('2d').createImageData(GRID,GRID);
+  GCV=document.createElement('canvas');GCV.width=GCV.height=GCVS;
+  GBASE=document.createElement('canvas');GBASE.width=GBASE.height=GRID;
+  GIMG=GBASE.getContext('2d').createImageData(GRID,GRID);
+  FR=new Float32Array(GRID*GRID);FI=new Float32Array(GRID*GRID);
+  FA=new Float32Array(GRID*GRID);
 }
 function renderContinuum(){
   if(!GIMG||!EVEC)return;
   let mx=1e-6;for(let i=0;i<N;i++){const m=SR[i]*SR[i]+SI[i]*SI[i];if(m>mx)mx=m}
   const inv=1/Math.sqrt(mx), d=GIMG.data;
+  /* the interpolated field, kept as real arrays so it can be contoured */
   for(let o=0;o<GRID*GRID;o++){
     let ar=0,ai=0;
     for(let k=0;k<GN;k++){const w=GW[o*GN+k];if(!w)continue;
       const i=GIDX[o*GN+k];ar+=w*SR[i];ai+=w*SI[i]}
-    const m=Math.hypot(ar,ai)*inv, lum=tone(m*m,5.0)*GA[o];
-    let h=(Math.atan2(ai,ar)/TAU+1)%1;
-    const hh=h*6, fr=hh-Math.floor(hh), q=1-fr;
-    let r,g,b;
-    switch(Math.floor(hh)%6){
-      case 0:r=1;g=fr;b=0;break;   case 1:r=q;g=1;b=0;break;
-      case 2:r=0;g=1;b=fr;break;   case 3:r=0;g=q;b=1;break;
-      case 4:r=fr;g=0;b=1;break;   default:r=1;g=0;b=q}
-    const p=o*4, L=lum*255;
-    d[p]=r*L;d[p+1]=g*L;d[p+2]=b*L;d[p+3]=255;
+    ar*=inv;ai*=inv;FR[o]=ar;FI[o]=ai;
+    const m=Math.hypot(ar,ai);FA[o]=m;
+    const lum=tone(m*m,5.0)*GA[o];
+    const [r,g,b]=hueRGB((Math.atan2(ai,ar)/TAU+1)%1);
+    const p=o*4;d[p]=r*lum;d[p+1]=g*lum;d[p+2]=b*lum;d[p+3]=255;
   }
-  GCV.getContext('2d').putImageData(GIMG,0,0);
+  GBASE.getContext('2d').putImageData(GIMG,0,0);
+  const g=GCV.getContext('2d');
+  g.setTransform(1,0,0,1,0,0);
+  g.globalCompositeOperation='source-over';
+  g.fillStyle='#030009';g.fillRect(0,0,GCVS,GCVS);
+  /* the smooth field, kept faint — it is the ground, not the figure */
+  g.globalAlpha=.34;g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';
+  g.drawImage(GBASE,0,0,GCVS,GCVS);
+  g.globalAlpha=1;
+  g.globalCompositeOperation='lighter';
+
+  /* ── isoamplitude: closed loops nesting around every maximum ── */
+  {const paths=[];for(let i=0;i<NAMP;i++)paths[i]=new Path2D();
+   let amax=0;for(let o=0;o<GRID*GRID;o++)if(FA[o]>amax)amax=FA[o];
+   for(let i=0;i<NAMP;i++){
+     const lev=amax*(i+1)/(NAMP+1);
+     contour(FA,lev,[paths[i]],()=>0);
+     g.strokeStyle=`rgba(255,255,255,${.055+.05*(i/NAMP)})`;
+     g.lineWidth=1;g.stroke(paths[i]);}}
+
+  /* ── isophase: Im(ψe^{-iθ}) = 0 is exactly where the phase is θ.
+        twelve angles over [0,π); the sign of Re(ψe^{-iθ}) says whether a
+        given branch is θ or θ+π, giving twenty-four hues round the circle.
+        every one of them runs into a vortex core, which is what draws
+        the rosette — the structure is the defect, not an ornament. ── */
+  const NB2=NPH*2, ph=[];
+  for(let i=0;i<NB2;i++)ph[i]=new Path2D();
+  for(let k=0;k<NPH;k++){
+    const th=Math.PI*k/NPH, ct=Math.cos(th), st2=Math.sin(th);
+    const TMPF=FA;                       /* reuse nothing; build inline */
+    const f=new Float32Array(GRID*GRID);
+    for(let o=0;o<GRID*GRID;o++)f[o]=FI[o]*ct-FR[o]*st2;
+    contour(f,0,ph,(o)=>{
+      const re=FR[o]*ct+FI[o]*st2;
+      return k+(re>=0?0:NPH);
+    });
+  }
+  for(let i=0;i<NB2;i++){
+    const th=Math.PI*(i%NPH)/NPH+(i>=NPH?Math.PI:0);
+    const [r,gg,b]=hueRGB((th/TAU+1)%1);
+    g.strokeStyle=`rgba(${r|0},${gg|0},${b|0},.50)`;
+    g.lineWidth=1.15;g.stroke(ph[i]);
+  }
+
+  /* the rim of the medium, so the thing has an edge */
+  g.globalCompositeOperation='source-over';
+  g.strokeStyle='rgba(179,136,255,.20)';g.lineWidth=1;
+  g.beginPath();g.arc(GCVS/2,GCVS/2,GCVS*(6.15/8.4)/2,0,TAU);g.stroke();
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -1463,7 +1536,7 @@ function frame(now){
   /* readouts */
   eAcc+=dt;
   if(eAcc>.5){eAcc=0;ENHIST.push(ENH);while(ENHIST.length>120)ENHIST.shift();drawEnh()}
-  if(tick%2===0&&refOn){lowpass();renderContinuum()}
+  if(tick%4===0&&refOn){lowpass();renderContinuum()}
   if(tick%15===0){
     filtration();
     HIST.fill(0);for(let i=0;i<N;i++)HIST[clamp((RL[i]*16)|0,0,15)]++;
