@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ΣΩ | PHASE TRANSITION OF THE 127 — TEN MOVEMENTS</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Courier+Prime:ital,wght@0,400;1,400&display=swap');
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;width:100%;height:100%;background:#020005;overflow:hidden;
+  font-family:'Courier Prime',monospace;color:rgba(255,255,255,.7);
+  touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+
+#mv{position:fixed;left:2.2rem;top:2rem;z-index:20;pointer-events:none;max-width:min(38rem,60vw)}
+#mv .no{font-family:'Cinzel Decorative',serif;font-size:.72rem;letter-spacing:.5em;color:#ffd76a;
+  text-shadow:0 0 14px rgba(255,215,106,.6);opacity:0;transition:opacity 1.1s}
+#mv h1{font-family:'Cinzel Decorative',serif;font-weight:400;font-size:clamp(1.1rem,3.3vw,2.1rem);
+  letter-spacing:.22em;margin:.35rem 0 .5rem;color:#fff;text-shadow:0 0 30px rgba(255,47,185,.75);
+  opacity:0;transform:translateY(9px);transition:opacity 1.3s,transform 1.3s}
+#mv .line{font-size:.72rem;line-height:2.05;letter-spacing:.075em;color:rgba(255,255,255,.5);
+  opacity:0;transform:translateY(7px);transition:opacity 1.5s .25s,transform 1.5s .25s;
+  border-left:1px solid rgba(155,92,255,.35);padding-left:.9rem}
+#mv.in .no,#mv.in h1,#mv.in .line{opacity:1;transform:none}
+
+#tel{position:fixed;right:2rem;top:2rem;z-index:20;pointer-events:none;text-align:right;
+  font-size:.58rem;letter-spacing:.14em;line-height:2.1}
+#tel .k{color:rgba(255,255,255,.24);text-transform:uppercase}
+#tel .v{color:#fff;font-size:.86rem;letter-spacing:.05em}
+#tel .v.hot{color:#ffd76a;text-shadow:0 0 14px #ffd76a}
+#tel .v.web{color:#4ff5ff;text-shadow:0 0 12px #4ff5ff}
+
+#log{position:fixed;left:2.2rem;bottom:5.4rem;z-index:20;pointer-events:none;
+  font-size:.56rem;letter-spacing:.11em;line-height:2;width:min(30rem,56vw)}
+#log div{opacity:0;animation:lin .5s forwards;color:rgba(255,255,255,.38);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#log div.hi{color:#ffd76a}#log div.cy{color:#4ff5ff}
+@keyframes lin{from{opacity:0;transform:translateX(-9px)}to{opacity:1;transform:none}}
+
+#tones{position:fixed;left:50%;bottom:2.5rem;transform:translateX(-50%);display:flex;gap:.55rem;
+  align-items:flex-end;z-index:20;pointer-events:none;height:26px}
+#tones i{width:3px;height:3px;display:block;border-radius:2px;will-change:height,opacity}
+
+/* ── transport ────────────────────────────────────────────
+   ten segments, proportional to the movements. the playhead
+   crosses them; clicking any of them seeks the track. */
+#tp{position:fixed;left:0;right:0;bottom:0;height:3.6rem;z-index:25;
+  display:flex;align-items:flex-end;padding:0 0 .95rem}
+#seg{position:absolute;left:0;right:0;bottom:1.7rem;height:14px;display:flex;gap:2px;
+  padding:0 1.4rem;cursor:pointer}
+#seg i{position:relative;height:1px;align-self:flex-end;background:rgba(255,255,255,.13);
+  display:block;transition:background .6s,height .4s}
+#seg i b{position:absolute;left:0;top:0;bottom:0;width:0%;background:#4ff5ff;
+  box-shadow:0 0 9px #4ff5ff;display:block}
+#seg i.done{background:rgba(155,92,255,.42)}
+#seg i.now{height:3px;background:rgba(255,255,255,.22)}
+#head{position:absolute;bottom:1.7rem;width:1px;height:15px;background:#ffd76a;
+  box-shadow:0 0 12px #ffd76a;pointer-events:none;transform:translateX(-.5px)}
+#tm{position:absolute;left:1.5rem;bottom:.55rem;font-size:.55rem;letter-spacing:.18em;
+  color:rgba(255,255,255,.34);pointer-events:none}
+#tm b{color:#ffd76a;font-weight:400}
+
+#pp{position:fixed;right:1.5rem;bottom:.35rem;width:26px;height:26px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.3);z-index:26;cursor:pointer;transition:.5s;
+  background:transparent;display:flex;align-items:center;justify-content:center;padding:0}
+#pp:hover{border-color:rgba(255,255,255,.65)}
+#pp.on{border-color:#ffd76a;box-shadow:0 0 16px rgba(255,215,106,.45)}
+#pp span{width:0;height:0;border-left:7px solid rgba(255,255,255,.75);
+  border-top:4.5px solid transparent;border-bottom:4.5px solid transparent;margin-left:2px}
+#pp.on span{width:7px;height:9px;border:none;margin:0;
+  background:linear-gradient(90deg,#ffd76a 0 2.5px,transparent 2.5px 4.5px,#ffd76a 4.5px 7px)}
+#pp:focus-visible{outline:1px solid #4ff5ff;outline-offset:4px}
+
+#begin{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;background:radial-gradient(circle at 50% 46%,#0a0117 0%,#020005 70%);
+  transition:opacity 1.4s;cursor:pointer;text-align:center;padding:2rem}
+#begin.gone{opacity:0;pointer-events:none}
+#begin h2{font-family:'Cinzel Decorative',serif;font-weight:400;font-size:clamp(1.3rem,5vw,2.4rem);
+  letter-spacing:.28em;margin:0 0 1.4rem;color:#fff;text-shadow:0 0 34px #9b5cff}
+#begin p{font-size:.68rem;letter-spacing:.16em;line-height:2.3;color:rgba(255,255,255,.44);margin:.2rem 0}
+#begin .go{margin-top:2.4rem;border:1px solid #ff2fb9;color:#ff2fb9;background:transparent;
+  padding:.95rem 2.1rem;font-family:'Courier Prime',monospace;font-size:.7rem;letter-spacing:.24em;
+  text-transform:uppercase;cursor:pointer;transition:.35s}
+#begin .go:hover{background:#ff2fb9;color:#020005;box-shadow:0 0 34px rgba(255,47,185,.55)}
+#begin .silent{margin-top:1.1rem;font-size:.56rem;letter-spacing:.16em;color:rgba(255,255,255,.28);
+  text-decoration:underline;text-underline-offset:5px;cursor:pointer;background:none;border:none;
+  font-family:'Courier Prime',monospace}
+
+@media(max-width:760px){
+  #mv{left:1.1rem;top:1.3rem;max-width:80vw}
+  #tel{right:1.1rem;top:1.3rem;font-size:.5rem}#tel .v{font-size:.7rem}
+  #log{left:1.1rem;bottom:5rem;font-size:.48rem;width:74vw}
+  #seg{padding:0 1rem}#tm{left:1rem}#pp{right:1rem}
+}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="mv"><div class="no"></div><h1></h1><div class="line"></div></div>
+<div id="tel">
+  <div><span class="k">place 0</span> &nbsp;<span class="v" id="t-fill">0</span></div>
+  <div><span class="k">shell</span> &nbsp;<span class="v" id="t-shell">0</span></div>
+  <div><span class="k">vectors</span> &nbsp;<span class="v" id="t-web">0</span></div>
+  <div><span class="k">carries</span> &nbsp;<span class="v" id="t-car">0</span></div>
+</div>
+<div id="log"></div>
+<div id="tones"></div>
+<div id="tp"><div id="seg"></div><div id="head"></div>
+  <div id="tm"><b id="now">0:00</b> / <span id="dur">6:44</span></div></div>
+<button id="pp" aria-label="play / pause"><span></span></button>
+
+<div id="begin">
+  <h2>127</h2>
+  <p>ten movements · six minutes forty-five</p>
+  <p style="opacity:.55">the score and the geometry share one clock</p>
+  <button class="go" id="go">begin</button>
+  <button class="silent" id="silent">continue without sound</button>
+</div>
+
+<audio id="au" preload="auto" loop crossorigin="anonymous">
+  <source src="./sitting-before-this-one.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+'use strict';
+const TAU=Math.PI*2, clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const lerp=(a,b,t)=>a+(b-a)*t;
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const smoothstep=t=>t*t*(3-2*t);
+const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ═══════════════════════════════════════════════════════════
+   THE FIELD
+     1 + 6 + 12 + 18 + 24 + 30 + 36 = 127        seven shells
+     6 + 1 + 6 = 13                               cells across
+     C(127,2) = 8001                              every pair, once
+   thirteen is the ratio at which one cell's own field fits the cell,
+   which is why this figure nests in itself without a seam.
+   ═══════════════════════════════════════════════════════════ */
+const RINGS=6, SPAN=13, S3=Math.sqrt(3);
+const DIRS=[[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
+const SHELL_N=[1,6,12,18,24,30,36];
+const CUM=[0,1,7,19,37,61,91,127];
+
+const cells=[{q:0,r:0,shell:0}];
+for(let k=1;k<=RINGS;k++){ let q=-k,r=k;
+  for(let d=0;d<6;d++) for(let s=0;s<k;s++){ cells.push({q,r,shell:k}); q+=DIRS[d][0]; r+=DIRS[d][1]; } }
+const N=cells.length;
+
+const COL=[[255,47,185],[255,107,157],[255,167,120],[255,215,106],
+           [130,240,190],[79,245,255],[155,92,255]];
+
+const UX=new Float32Array(N), UY=new Float32Array(N), SH=new Int8Array(N);
+for(let i=0;i<N;i++){ const c=cells[i];
+  UX[i]=c.q+c.r/2; UY[i]=c.r*S3/2; SH[i]=c.shell; }
+
+const key=(q,r)=>q+','+r, MAP=new Map(cells.map((c,i)=>[key(c.q,c.r),i]));
+const ADJ=[];
+for(let i=0;i<N;i++){ const c=cells[i];
+  for(const [dq,dr] of DIRS){ const j=MAP.get(key(c.q+dq,c.r+dr));
+    if(j!==undefined&&j>i) ADJ.push(i,j); } }
+const ADJ_N=ADJ.length/2;
+
+/* the 8001 — every unordered pair, sorted short-to-long so the web
+   weaves outward from local bonds into the long diagonals */
+const PAIRS=(()=>{
+  const a=[];
+  for(let i=0;i<N;i++) for(let j=i+1;j<N;j++)
+    a.push([i,j,Math.hypot(UX[i]-UX[j],UY[i]-UY[j])]);
+  a.sort((p,q)=>p[2]-q[2]);
+  const o=new Int16Array(a.length*2);
+  for(let k=0;k<a.length;k++){o[k*2]=a[k][0];o[k*2+1]=a[k][1]}
+  return o;
+})();
+const PAIR_N=PAIRS.length/2;
+
+/* ═══════════════════════════════════════════════════════════
+   THE SCORE
+   movement boundaries are not spaced evenly — they are placed on the
+   track's own structure. the energy curve has breakdowns at ~141s and
+   ~245s and a fade from ~380s, so:
+     · the forced carry ruptures at 143.1s, inside the first breakdown
+     · negative curvature opens at the second
+     · the spiral runs out through the fade
+   ═══════════════════════════════════════════════════════════ */
+const TOTAL=404.8;
+const STORY=[
+ {at:0,     no:'I',    title:'MICRO-SEED', from:0,
+  line:'one point, then six around it. the first shell closes at seven and cannot hold an eighth.',
+  fill:7,   logZ:.60, web:0,   rays:.05, spin:.45, dust:.5},
+ {at:32,    no:'II',   title:'EXPANSION',
+  line:'1 · 7 · 19 · 37 · 61 · 91 — every ring closes completely before the next can begin.',
+  fill:91,  logZ:.12, web:0,   rays:.18, spin:.95, dust:.8},
+ {at:88.7,  no:'III',  title:'SATURATION',
+  line:'127. seven shells, thirteen cells across. the place is full.',
+  fill:127, logZ:0,   web:0,   rays:1,   spin:.55, dust:1},
+ {at:119.4, no:'IV',   title:'TOTAL INTERCONNECTION',
+  line:'8001 vectors — every pair of the 127, drawn exactly once. nothing added; only what was always implied.',
+  fill:127, logZ:0,   web:1,   rays:.45, spin:.3,  dust:1},
+ {at:141.8, no:'V',    title:'THE FORCED CARRY', snap:true,
+  line:'there is no 128th seat. the unit cannot be held, so it is handed upward and the place returns to nothing.',
+  fill:0,   logZ:0,   web:0,   rays:.25, spin:1.5, dust:1.3},
+ {at:165.0, no:'VI',   title:'DESCENT', from:0,
+  line:'one cell holds the entire figure. fall by thirteen and you arrive exactly where you began, one order down.',
+  fill:127, logZ:1,   web:.12, rays:.12, spin:.85, dust:1.1},
+ {at:205,   no:'VII',  title:'MACRO LATTICE',
+  line:'the same object, one order larger. the eighth is not an eighth thing — it is the first thing, again.',
+  fill:127, logZ:-.72,web:.4,  rays:.35, spin:.5,  dust:.9},
+ {at:245,   no:'VIII', title:'NEGATIVE CURVATURE',
+  line:'six around a point lies flat exactly. seven cannot — {7,3} needs a surface that opens faster than area can fill it. the shells crowd toward a rim infinitely far away.',
+  fill:127, logZ:0,   web:.10, rays:.2,  spin:.35, dust:1, hyp:1},
+ {at:300,   no:'IX',   title:'POSITIVE CURVATURE',
+  line:'bend it the other way and the field becomes finite with no edge at all. the outer shells pass the horizon and return along the far side.',
+  fill:127, logZ:0,   web:.08, rays:.5,  spin:.7,  dust:.9, sph:1},
+ {at:350,   no:'X',    title:'THE CONFORMAL SPIRAL',
+  line:'c = ln 13 ⁄ 2π. at exactly that curl one full turn is one full step of thirteen — the recursion stops running outward and begins running around.',
+  fill:127, logZ:.35, web:.16, rays:.28, spin:.42, dust:1.1, spi:1},
+];
+STORY.forEach((p,i)=>{
+  p.hyp=p.hyp||0; p.sph=p.sph||0; p.spi=p.spi||0;
+  p.end=(i+1<STORY.length)?STORY[i+1].at:TOTAL;
+  p.dur=p.end-p.at;
+  if(p.from===undefined) p.from=i?STORY[i-1].fill:0;
+});
+const CARRY_AT=STORY[4].at+1.3;
+
+const G={fill:0, logZ:.6, web:0, rays:0, spin:.45, dust:.5, hyp:0, sph:0, spi:0};
+let phase=-1, carries=0, flash=0, chroma=0, spinAng=0;
+let clock=0, lastClock=0, carryArmed=true, subAcc=0;
+const shocks=[];
+/* live band energy off the track itself */
+const BAND={lo:0, mid:0, hi:0};
+
+/* ═══════════════════════════════════════════════════════════
+   AUDIO — the track is the clock. no tonal engine; the only
+   synthesis left is the rupture at a phase boundary, sitting
+   well under the music.
+   ═══════════════════════════════════════════════════════════ */
+const A=document.getElementById('au');
+let AC=null, ana=null, bins=null, fxBus=null, playing=false, ready=false;
+
+function initAudio(){
+  if(AC) return;
+  AC=new (window.AudioContext||window.webkitAudioContext)();
+  const src=AC.createMediaElementSource(A);
+  ana=AC.createAnalyser(); ana.fftSize=1024; ana.smoothingTimeConstant=.78;
+  bins=new Uint8Array(ana.frequencyBinCount);
+  const out=AC.createGain(); out.gain.value=1;
+  src.connect(ana); ana.connect(out);
+  fxBus=AC.createGain(); fxBus.gain.value=.30;      /* transition hits stay beneath the score */
+  fxBus.connect(out);
+  out.connect(AC.destination);
+}
+function noiseBuf(sec){
+  const n=(AC.sampleRate*sec)|0, b=AC.createBuffer(1,n,AC.sampleRate), d=b.getChannelData(0);
+  let l=0; for(let i=0;i<n;i++){const w=Math.random()*2-1; l=(l+.02*w)/1.02; d[i]=l*3.2}
+  return b;
+}
+/* a movement boundary: a short filtered breath, no pitch of its own */
+function shift(up){
+  if(!AC||!playing) return;
+  const t=AC.currentTime;
+  const s=AC.createBufferSource(); s.buffer=noiseBuf(3);
+  const bp=AC.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=1.6;
+  bp.frequency.setValueAtTime(up?260:2400,t);
+  bp.frequency.exponentialRampToValueAtTime(up?2800:280,t+1.9);
+  const g=AC.createGain();
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.07,t+.5);
+  g.gain.exponentialRampToValueAtTime(.0001,t+2.4);
+  s.connect(bp); bp.connect(g); g.connect(fxBus); s.start(t); s.stop(t+2.6);
+}
+/* the carry: the one moment that gets a pitched voice, an octave down */
+function rupture(){
+  if(!AC||!playing) return;
+  const t=AC.currentTime, f=32.7;
+  for(const [m,g0,d] of [[1,.18,6.4],[2,.09,4.2],[3,.04,3],[4,.022,2.2]]){
+    const o=AC.createOscillator(), g=AC.createGain();
+    o.type='sine'; o.frequency.value=f*m;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(g0,t+.016);
+    g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(g); g.connect(fxBus); o.start(t); o.stop(t+d+.3);
+  }
+  const s=AC.createBufferSource(); s.buffer=noiseBuf(3.2);
+  const bp=AC.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=2;
+  bp.frequency.setValueAtTime(3200,t); bp.frequency.exponentialRampToValueAtTime(190,t+2.6);
+  const g2=AC.createGain();
+  g2.gain.setValueAtTime(.11,t); g2.gain.exponentialRampToValueAtTime(.0001,t+3);
+  s.connect(bp); bp.connect(g2); g2.connect(fxBus); s.start(t); s.stop(t+3.2);
+}
+
+/* ── transport ── */
+const PP=document.getElementById('pp'), NOWT=document.getElementById('now'),
+      DURT=document.getElementById('dur'), HEAD=document.getElementById('head'),
+      SEGH=document.getElementById('seg');
+const mmss=s=>{s=Math.max(0,s|0);return (s/60|0)+':'+String(s%60).padStart(2,'0')};
+const SEG=[];
+STORY.forEach(p=>{ const e=document.createElement('i'), b=document.createElement('b');
+  e.style.flex=p.dur; e.appendChild(b); SEGH.appendChild(e); SEG.push(e); });
+DURT.textContent=mmss(TOTAL);
+
+A.addEventListener('canplay',()=>{ready=true});
+A.addEventListener('error',()=>{ready=false; say('no track found — running on internal clock','cy')});
+function play(){
+  initAudio(); if(AC.state==='suspended') AC.resume();
+  A.play().then(()=>{playing=true;PP.classList.add('on')}).catch(()=>{playing=false});
+}
+function pause(){ A.pause(); playing=false; PP.classList.remove('on'); }
+PP.addEventListener('click',e=>{e.stopPropagation(); playing?pause():play()});
+SEGH.addEventListener('click',e=>{
+  const r=SEGH.getBoundingClientRect();
+  const f=clamp((e.clientX-r.left)/r.width,0,1);
+  /* segments are proportional to movement length, so the mapping is linear in time */
+  const t=f*TOTAL;
+  clock=t; lastClock=t; carryArmed=(t<CARRY_AT);
+  if(ready){ A.currentTime=t; }
+});
+document.getElementById('go').addEventListener('click',()=>{
+  play(); document.getElementById('begin').classList.add('gone');
+  setTimeout(()=>document.getElementById('begin').style.display='none',1500);
+});
+document.getElementById('silent').addEventListener('click',()=>{
+  document.getElementById('begin').classList.add('gone');
+  setTimeout(()=>document.getElementById('begin').style.display='none',1500);
+});
+addEventListener('keydown',e=>{
+  if(e.key===' '){e.preventDefault(); playing?pause():play()}
+  if(e.key==='ArrowRight'){e.preventDefault(); const t=Math.min(TOTAL-.1,clock+10);
+    clock=t;lastClock=t;if(ready)A.currentTime=t}
+  if(e.key==='ArrowLeft'){e.preventDefault(); const t=Math.max(0,clock-10);
+    clock=t;lastClock=t;carryArmed=(t<CARRY_AT);if(ready)A.currentTime=t}
+});
+
+/* ═══════════════════════════════════════════════════════════
+   CANVAS + CURVATURE
+   ═══════════════════════════════════════════════════════════ */
+const cv=document.getElementById('c'), cx=cv.getContext('2d',{alpha:false});
+let W,H,DPR,CXP,CYP,R0,RDISK=0,RSPH=0,SREF=0;
+function layout(){
+  DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;
+  cv.width=W*DPR;cv.height=H*DPR;cv.style.width=W+'px';cv.style.height=H+'px';
+  cx.setTransform(DPR,0,0,DPR,0,0);
+  CXP=W/2;CYP=H/2;R0=Math.min(W,H)*.86;
+  RDISK=Math.min(W,H)*.455; RSPH=Math.min(W,H)*.40; SREF=R0*.35;
+}
+addEventListener('resize',layout);
+
+/* three maps of the plane the figure is drawn on, applied to screen
+   position so the whole nested stack bends together as one sheet */
+const WOUT=new Float32Array(3);
+function warp(x,y){
+  const r=Math.hypot(x,y);
+  if(r<1e-6){WOUT[0]=x;WOUT[1]=y;WOUT[2]=1;return WOUT}
+  const th=Math.atan2(y,x), REF=Math.min(W,H)*.5;
+  let ox=x,oy=y,dep=1;
+  /* NEGATIVE — Poincaré disk. the rim is infinitely far away. */
+  if(G.hyp>.001){
+    const rr=RDISK*Math.tanh((r/REF)*1.6);
+    ox=lerp(ox,rr*Math.cos(th),G.hyp); oy=lerp(oy,rr*Math.sin(th),G.hyp);
+  }
+  /* POSITIVE — flat radius read as arc length on a sphere. */
+  if(G.sph>.001){
+    const phi=(Math.hypot(ox,oy)/REF)*2.35, rr=RSPH*Math.sin(phi);
+    ox=lerp(ox,rr*Math.cos(th),G.sph); oy=lerp(oy,rr*Math.sin(th),G.sph);
+    dep=lerp(1,Math.cos(phi),G.sph);
+  }
+  /* CONFORMAL — w = z^(1+ic), c = ln(13)/2π. one turn = one step of 13. */
+  if(G.spi>.001){
+    const c=G.spi*Math.log(SPAN)/TAU, rr=Math.hypot(ox,oy);
+    const u=Math.log(rr/SREF), v=Math.atan2(oy,ox);
+    const r2=SREF*Math.exp(u-c*v), v2=v+c*u;
+    ox=r2*Math.cos(v2); oy=r2*Math.sin(v2);
+  }
+  WOUT[0]=ox;WOUT[1]=oy;WOUT[2]=dep;return WOUT;
+}
+
+const GLOW=COL.map(([r,g,b])=>{
+  const s=document.createElement('canvas');s.width=s.height=40;
+  const c=s.getContext('2d'),gr=c.createRadialGradient(20,20,0,20,20,20);
+  gr.addColorStop(0,'rgba(255,255,255,1)');
+  gr.addColorStop(.20,`rgba(${r},${g},${b},.92)`);
+  gr.addColorStop(.48,`rgba(${r},${g},${b},.22)`);
+  gr.addColorStop(1,`rgba(${r},${g},${b},0)`);
+  c.fillStyle=gr;c.fillRect(0,0,40,40);return s;
+});
+const grain=(()=>{const c=document.createElement('canvas');c.width=c.height=128;
+  const g=c.getContext('2d'),d=g.createImageData(128,128);
+  for(let i=0;i<d.data.length;i+=4){const v=Math.random()*255;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255}
+  g.putImageData(d,0,0);return c})();
+const scan=(()=>{const c=document.createElement('canvas');c.width=1;c.height=4;
+  const g=c.getContext('2d');g.fillStyle='rgba(0,0,0,.3)';g.fillRect(0,3,1,1);return c})();
+
+const DUST=[...Array(220)].map(()=>({x:Math.random(),y:Math.random(),z:.25+Math.random()*1.6,
+  a:Math.random()*TAU,v:.008+Math.random()*.03,c:COL[(Math.random()*7)|0]}));
+const TRV=[...Array(46)].map(()=>({e:(Math.random()*ADJ_N)|0,t:Math.random(),sp:.28+Math.random()*.6}));
+
+/* ── DOM ── */
+const MV=document.getElementById('mv'),MVno=MV.querySelector('.no'),
+      MVh=MV.querySelector('h1'),MVl=MV.querySelector('.line');
+const T_fill=document.getElementById('t-fill'),T_shell=document.getElementById('t-shell'),
+      T_web=document.getElementById('t-web'),T_car=document.getElementById('t-car');
+const LOG=document.getElementById('log');
+const TONE=[];{const h=document.getElementById('tones');
+  COL.forEach(c=>{const e=document.createElement('i');
+    e.style.background=`rgb(${c})`;e.style.boxShadow=`0 0 9px rgb(${c})`;h.appendChild(e);TONE.push(e)})}
+function say(txt,cls){
+  const d=document.createElement('div'); d.textContent='› '+txt; if(cls)d.className=cls;
+  LOG.appendChild(d); while(LOG.children.length>7) LOG.removeChild(LOG.firstChild);
+}
+function enter(i,quiet){
+  const p=STORY[i];
+  MV.classList.remove('in');
+  setTimeout(()=>{MVno.textContent=p.no;MVh.textContent=p.title;MVl.textContent=p.line;
+    MV.classList.add('in')},520);
+  SEG.forEach((e,k)=>{e.classList.toggle('done',k<i); e.classList.toggle('now',k===i);
+    if(k>i) e.firstChild.style.width='0%'; if(k<i) e.firstChild.style.width='100%';});
+  say('movement '+p.no+' — '+p.title.toLowerCase(),'cy');
+  if(!quiet) shift(i%2===0);
+}
+
+let dragV=0;
+addEventListener('pointerdown',e=>{if(e.target.closest('#pp,#seg,#begin'))return;dragV+=.55});
+addEventListener('wheel',e=>{dragV+=e.deltaY*.0012},{passive:true});
+
+/* ═══════════════════════════════════════════════════════════
+   FRAME
+   ═══════════════════════════════════════════════════════════ */
+let T=0,last=performance.now(),tick=0,lastShell=-1;
+function frame(now){
+  const dt=Math.min(.034,(now-last)/1000);last=now;T+=dt;tick++;
+  subAcc+=dt*.062;
+
+  /* ── the clock ─────────────────────────────────────────
+     when the track plays it *is* the timeline, so seeking, pausing and
+     looping all carry the geometry with them and nothing can drift. */
+  lastClock=clock;
+  if(playing && ready && !A.paused) clock=A.currentTime;
+  else clock=(clock+dt)%TOTAL;
+  if(clock<lastClock-1){ carryArmed=true; lastShell=-1; }   /* wrapped */
+
+  let ph=0; for(let i=STORY.length-1;i>=0;i--) if(clock>=STORY[i].at){ph=i;break}
+  if(ph!==phase){ const first=phase<0; phase=ph; enter(ph,first); }
+  const P=STORY[phase], pT=clock-P.at, prog=clamp(pT/P.dur,0,1);
+
+  /* fill spans its movement rather than snapping to target */
+  if(P.snap){
+    G.fill=lerp(G.fill, (clock>=CARRY_AT?0:127), Math.min(1,dt*7));
+  } else {
+    G.fill=lerp(P.from,P.fill,ease(clamp(pT/(P.dur*.88),0,1)));
+  }
+  G.logZ=lerp(G.logZ,P.logZ,Math.min(1,dt*1.15));
+  G.web =lerp(G.web ,P.web ,Math.min(1,dt*1.0));
+  G.rays=lerp(G.rays,P.rays,Math.min(1,dt*1.4));
+  G.spin=lerp(G.spin,P.spin,Math.min(1,dt*1.2));
+  G.dust=lerp(G.dust,P.dust,Math.min(1,dt*1.2));
+  G.hyp =lerp(G.hyp ,P.hyp ,Math.min(1,dt*.85));
+  G.sph =lerp(G.sph ,P.sph ,Math.min(1,dt*.85));
+  G.spi =lerp(G.spi ,P.spi ,Math.min(1,dt*.70));
+
+  /* the rupture, once per pass, on the beat it was placed on */
+  if(carryArmed && clock>=CARRY_AT){
+    carryArmed=false; carries++; flash=1; chroma=1; shocks.push({t:0}); rupture();
+    say('place 0 saturated at 127 — no seat for the 128th','hi');
+    setTimeout(()=>say('carry → place 1 · the octave below','hi'),650);
+  }
+  flash=Math.max(0,flash-dt*.75); chroma=Math.max(0,chroma-dt*1.2);
+
+  /* ── the track's own energy, read back into the field ── */
+  if(ana){
+    ana.getByteFrequencyData(bins);
+    let lo=0,mid=0,hi=0;
+    for(let i=1;i<9;i++) lo+=bins[i];
+    for(let i=9;i<64;i++) mid+=bins[i];
+    for(let i=64;i<220;i++) hi+=bins[i];
+    BAND.lo +=((lo/8/255) -BAND.lo )*Math.min(1,dt*9);
+    BAND.mid+=((mid/55/255)-BAND.mid)*Math.min(1,dt*7);
+    BAND.hi +=((hi/156/255)-BAND.hi)*Math.min(1,dt*11);
+  }
+  const PUMP=1+BAND.lo*.55, SPARK=BAND.hi;
+
+  dragV*=.93; spinAng+=(G.spin*.055+dragV+BAND.mid*.02)*dt*TAU;
+
+  const vi=Math.floor(G.fill);
+  let curShell=0; for(let s=6;s>=0;s--) if(vi>CUM[s]){curShell=s;break}
+  if(curShell!==lastShell&&vi>0){
+    if(curShell>lastShell) say('shell '+curShell+' opening · '+SHELL_N[curShell]+' seats · total '+CUM[curShell]);
+    lastShell=curShell;
+  }
+
+  /* ── paint ─────────────────────────────────────────────── */
+  cx.globalCompositeOperation='source-over';
+  cx.fillStyle='rgba(2,0,5,0.29)';cx.fillRect(0,0,W,H);
+  cx.globalCompositeOperation='lighter';
+
+  for(let i=0;i<3;i++){
+    const a=T*.045+i*2.1, rr=Math.min(W,H)*(.45+.16*i);
+    const nx=CXP+Math.cos(a)*W*.17, ny=CYP+Math.sin(a*.8)*H*.15;
+    const c=[[155,92,255],[255,47,185],[79,245,255]][i];
+    const g=cx.createRadialGradient(nx,ny,0,nx,ny,rr);
+    g.addColorStop(0,`rgba(${c},${(.030+.014*Math.sin(T*.3+i))*(1+BAND.mid*1.4)})`);
+    g.addColorStop(1,`rgba(${c},0)`);
+    cx.fillStyle=g;cx.fillRect(0,0,W,H);
+  }
+  for(const d of DUST){
+    d.a+=d.v*dt*7;
+    const px=(d.x+Math.cos(d.a)*.045)*W, py=(d.y+Math.sin(d.a*1.3)*.045)*H;
+    const r=d.z*(.7+.5*Math.sin(T*.7+d.a))*G.dust*(1+SPARK*.9);
+    cx.fillStyle=`rgba(${d.c},${.10*G.dust*(.4+.6/d.z)*(1+SPARK)})`;
+    cx.beginPath();cx.arc(px,py,r,0,TAU);cx.fill();
+  }
+
+  const base=Math.floor(G.logZ), u=G.logZ-base;
+  const sxA=new Float32Array(N), syA=new Float32Array(N);
+  const fxA=new Float32Array(N), fyA=new Float32Array(N), dpA=new Float32Array(N);
+  const CURVED=(G.hyp+G.sph+G.spi)>.01;
+  const SEGN=CURVED?7:1, COPIES=CURVED?7:5;
+
+  for(let cpy=0;cpy<COPIES;cpy++){
+    const sc=R0*Math.pow(SPAN,u-cpy+(CURVED?1.6:0));
+    if(sc<3.2||sc>R0*SPAN*1.6) continue;
+    const cell=sc/SPAN;
+    const a=clamp((Math.log(sc)-Math.log(3.2))/1.5,0,1)*clamp((Math.log(R0*SPAN*1.5)-Math.log(sc))/1.6,0,1);
+    if(a<.004) continue;
+
+    /* bigger figure = higher place, so zooming in walks downward through
+       the places. above: completed cycles. below: the same count, 128× faster. */
+    const lvl=-cpy-base;
+    const v = lvl===0 ? G.fill
+            : lvl>0  ? Math.floor(carries/Math.pow(128,lvl-1))%128
+                     : Math.floor((subAcc*Math.pow(128,-lvl))%128);
+    const isMain = lvl===0;
+
+    const th=spinAng+(u-cpy)*.146, ct=Math.cos(th), st=Math.sin(th);
+    for(let i=0;i<N;i++){
+      const fx=(UX[i]*ct-UY[i]*st)*cell, fy=(UX[i]*st+UY[i]*ct)*cell;
+      fxA[i]=fx; fyA[i]=fy;
+      if(CURVED){const w=warp(fx,fy); sxA[i]=CXP+w[0]; syA[i]=CYP+w[1]; dpA[i]=w[2];}
+      else {sxA[i]=CXP+fx; syA[i]=CYP+fy; dpA[i]=1;}
+    }
+
+    /* counter-rotating shell rings, radius s, through the corner nodes */
+    if(cell>2){
+      for(let s=1;s<=6;s++){
+        const rad=cell*s, sp=th+T*.075*(s%2?1:-1)*(.5+s*.14);
+        const fs=clamp((v-CUM[s])/SHELL_N[s],0,1);
+        cx.strokeStyle=`rgba(${COL[s]},${a*(.028+.065*fs+.11*flash+.03*BAND.mid)})`;
+        cx.lineWidth=.8;
+        const SUB=CURVED?6:1;
+        cx.beginPath();
+        for(let q=0;q<6;q++){
+          const a0=sp+q*TAU/6, a1=sp+(q+1)*TAU/6;
+          const x0=Math.cos(a0)*rad,y0=Math.sin(a0)*rad,x1=Math.cos(a1)*rad,y1=Math.sin(a1)*rad;
+          for(let g=(q?1:0);g<=SUB;g++){
+            const t=g/SUB; let px=lerp(x0,x1,t),py=lerp(y0,y1,t);
+            if(CURVED){const w=warp(px,py);px=w[0];py=w[1]}
+            (q===0&&g===0)?cx.moveTo(CXP+px,CYP+py):cx.lineTo(CXP+px,CYP+py);
+          }
+        }
+        cx.closePath();cx.stroke();
+      }
+    }
+
+    /* THE 8001 — every pair, short-to-long, in three length bands */
+    if(isMain&&G.web>.004&&cell>1.2){
+      const shown=(G.web*PAIR_N)|0;
+      const bands=[[0,.34,'255,47,185'],[.34,.7,'79,245,255'],[.7,1,'155,92,255']];
+      for(const [b0,b1,col] of bands){
+        const s0=(PAIR_N*b0)|0, s1=Math.min(shown,(PAIR_N*b1)|0);
+        if(s1<=s0) continue;
+        cx.strokeStyle=`rgba(${col},${a*(.030+.045*G.web+.05*flash+.02*BAND.hi)})`;
+        cx.lineWidth=.5;
+        cx.beginPath();
+        for(let p=s0;p<s1;p++){
+          const i=PAIRS[p*2],j=PAIRS[p*2+1];
+          if(i>=vi||j>=vi) continue;
+          cx.moveTo(sxA[i],syA[i]);cx.lineTo(sxA[j],syA[j]);
+        }
+        cx.stroke();
+      }
+    }
+
+    /* adjacency bonds — under curvature a bond is the *image* of a
+       straight line, so it is sampled and carried through the map */
+    if(cell>1.4){
+      for(let e=0;e<ADJ_N;e++){
+        const i=ADJ[e*2],j=ADJ[e*2+1];
+        if(i>=v||j>=v) continue;
+        const c1=COL[SH[i]],c2=COL[SH[j]];
+        const dep=(dpA[i]+dpA[j])*.5, back=dep<0?.30:1;
+        cx.strokeStyle=`rgba(${(c1[0]+c2[0])>>1},${(c1[1]+c2[1])>>1},${(c1[2]+c2[2])>>1},${a*(.15+.34*flash+.10*BAND.lo)*back})`;
+        cx.lineWidth=Math.max(.4,cell*.032)*(1+flash*1.4)*(dep<0?.7:1);
+        cx.beginPath();
+        if(SEGN===1){cx.moveTo(sxA[i],syA[i]);cx.lineTo(sxA[j],syA[j])}
+        else for(let s=0;s<=SEGN;s++){
+          const t=s/SEGN, w=warp(lerp(fxA[i],fxA[j],t),lerp(fyA[i],fyA[j],t));
+          s?cx.lineTo(CXP+w[0],CYP+w[1]):cx.moveTo(CXP+w[0],CYP+w[1]);
+        }
+        cx.stroke();
+      }
+    }
+
+    if(isMain&&cell>3){
+      for(const tr of TRV){
+        tr.t+=dt*tr.sp; if(tr.t>1){tr.t=0;tr.e=(Math.random()*ADJ_N)|0}
+        const i=ADJ[tr.e*2],j=ADJ[tr.e*2+1];
+        if(i>=v||j>=v) continue;
+        const px=lerp(sxA[i],sxA[j],tr.t),py=lerp(syA[i],syA[j],tr.t);
+        const r=cell*.10*(1+flash)*PUMP;
+        cx.globalAlpha=a*.75*Math.sin(tr.t*Math.PI);
+        cx.drawImage(GLOW[SH[i]],px-r,py-r,r*2,r*2);
+      }
+      cx.globalAlpha=1;
+    }
+
+    for(let i=0;i<N;i++){
+      const lit = i<Math.floor(v) ? 1 : (i===Math.floor(v) ? (v%1) : 0);
+      if(lit<=.01){
+        if(cell>3.4){cx.fillStyle=`rgba(255,255,255,${a*.055})`;
+          cx.beginPath();cx.arc(sxA[i],syA[i],Math.max(.4,cell*.05),0,TAU);cx.fill()}
+        continue;
+      }
+      const puls=.85+.15*Math.sin(T*1.15+i*.37);
+      /* depth < 0 means the seat has gone over the horizon and is being
+         seen through the body of the sphere. it dims but never vanishes. */
+      const dep=dpA[i], face=dep<0?.26+.2*(1+dep):1, sz=dep<0?.72:1;
+      const r=cell*(.19+.17*lit)*puls*(1+.95*flash)*sz*PUMP;
+      cx.globalAlpha=clamp(a*(.32+.68*lit)*(1+1.2*flash)*face,0,1);
+      cx.drawImage(GLOW[SH[i]],sxA[i]-r,syA[i]-r,r*2,r*2);
+    }
+    cx.globalAlpha=1;
+
+    if(cell>2.6){
+      const full=clamp((v-118)/9,0,1);
+      cx.strokeStyle=`rgba(255,215,106,${a*(.04+.30*full)+a*.45*flash})`;
+      cx.lineWidth=1+2.6*flash;
+      const SUB=CURVED?6:1;
+      cx.beginPath();
+      for(let q=0;q<6;q++){
+        const a0=th+q*TAU/6+Math.PI/6, a1=th+(q+1)*TAU/6+Math.PI/6;
+        const x0=Math.cos(a0)*sc*.5,y0=Math.sin(a0)*sc*.5,x1=Math.cos(a1)*sc*.5,y1=Math.sin(a1)*sc*.5;
+        for(let g=(q?1:0);g<=SUB;g++){
+          const t=g/SUB; let px=lerp(x0,x1,t),py=lerp(y0,y1,t);
+          if(CURVED){const w=warp(px,py);px=w[0];py=w[1]}
+          (q===0&&g===0)?cx.moveTo(CXP+px,CYP+py):cx.lineTo(CXP+px,CYP+py);
+        }
+      }
+      cx.closePath();cx.stroke();
+    }
+  }
+
+  if(G.rays>.01){
+    const R=Math.max(W,H)*.72;
+    for(let i=0;i<42;i++){
+      const ang=spinAng*.5+i*TAU/42+Math.sin(T*.4+i)*.05;
+      const l=R*(.35+.65*(.5+.5*Math.sin(T*.9+i*1.7)))*(1+BAND.lo*.3);
+      const c=COL[i%7];
+      const g=cx.createLinearGradient(CXP,CYP,CXP+Math.cos(ang)*l,CYP+Math.sin(ang)*l);
+      g.addColorStop(0,`rgba(${c},${.055*G.rays*(1+flash*2+BAND.hi)})`);
+      g.addColorStop(1,`rgba(${c},0)`);
+      cx.strokeStyle=g;cx.lineWidth=1+2*G.rays;
+      cx.beginPath();cx.moveTo(CXP,CYP);cx.lineTo(CXP+Math.cos(ang)*l,CYP+Math.sin(ang)*l);cx.stroke();
+    }
+  }
+
+  for(let i=shocks.length-1;i>=0;i--){
+    const s=shocks[i];s.t+=dt;
+    if(s.t>2.6){shocks.splice(i,1);continue}
+    for(let ring=0;ring<3;ring++){
+      const f=clamp((s.t-ring*.16)/2.2,0,1); if(f<=0) continue;
+      const rad=R0*.5*(.1+2.4*f);
+      cx.strokeStyle=`rgba(255,215,106,${(1-f)*(1-f)*.5/(1+ring)})`;
+      cx.lineWidth=1+6*(1-f);
+      cx.beginPath();
+      for(let q=0;q<=6;q++){const ang=spinAng+q*TAU/6+Math.PI/6;
+        const px=CXP+Math.cos(ang)*rad,py=CYP+Math.sin(ang)*rad;
+        q?cx.lineTo(px,py):cx.moveTo(px,py)}
+      cx.stroke();
+    }
+  }
+
+  const cb=cx.createRadialGradient(CXP,CYP,0,CXP,CYP,Math.min(W,H)*.5);
+  cb.addColorStop(0,`rgba(255,240,255,${.03+.20*flash+.03*G.rays+.10*BAND.lo})`);
+  cb.addColorStop(1,'rgba(255,240,255,0)');
+  cx.fillStyle=cb;cx.fillRect(0,0,W,H);
+
+  cx.globalCompositeOperation='source-over';
+  if(chroma>.05&&!REDUCED){
+    const n=Math.ceil(chroma*8);
+    for(let i=0;i<n;i++){
+      const sy=Math.random()*H,sh=8+Math.random()*54,off=(Math.random()-.5)*chroma*90;
+      cx.globalAlpha=.5*chroma;cx.globalCompositeOperation='lighter';
+      cx.drawImage(cv,0,sy*DPR,W*DPR,sh*DPR,off,sy,W,sh);
+      cx.globalCompositeOperation='source-over';
+    }
+    cx.globalAlpha=1;
+    cx.fillStyle=`rgba(255,215,106,${chroma*.05})`;cx.fillRect(0,0,W,H);
+  }
+
+  const vg=cx.createRadialGradient(CXP,CYP,Math.min(W,H)*.15,CXP,CYP,Math.max(W,H)*.82);
+  vg.addColorStop(0,'rgba(2,0,5,0)');vg.addColorStop(1,'rgba(2,0,5,.88)');
+  cx.fillStyle=vg;cx.fillRect(0,0,W,H);
+  cx.fillStyle=cx.createPattern(scan,'repeat');cx.globalAlpha=.40;cx.fillRect(0,0,W,H);
+  cx.globalAlpha=.025+chroma*.05;cx.save();
+  cx.translate(-(Math.random()*128|0),-(Math.random()*128|0));
+  cx.fillStyle=cx.createPattern(grain,'repeat');cx.fillRect(0,0,W+128,H+128);
+  cx.restore();cx.globalAlpha=1;
+
+  /* ── readouts ── */
+  if(tick%3===0){
+    for(let s=0;s<7;s++){
+      const f=clamp((G.fill-CUM[s])/SHELL_N[s],0,1);
+      TONE[s].style.height=(3+21*f*(1+BAND.lo*.4)).toFixed(1)+'px';
+      TONE[s].style.opacity=(.18+.82*f).toFixed(2);
+    }
+    T_fill.textContent=vi+' / 127'; T_fill.className='v'+(vi>=127?' hot':'');
+    T_shell.textContent=curShell+' / 6';
+    const wn=Math.min(PAIR_N,(G.web*PAIR_N)|0);
+    T_web.textContent=wn+(wn>=PAIR_N?' ✦':''); T_web.className='v'+(wn>0?' web':'');
+    T_car.textContent=carries; T_car.className='v'+(flash>.2?' hot':'');
+    NOWT.textContent=mmss(clock);
+    SEG[phase].firstChild.style.width=(prog*100).toFixed(1)+'%';
+    const r=SEGH.getBoundingClientRect();
+    HEAD.style.left=(r.left+r.width*(clock/TOTAL))+'px';
+  }
+  requestAnimationFrame(frame);
+}
+layout();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
