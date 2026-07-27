@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>ΣΩ · THE RECORD · 127 CONTAINS ITSELF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --void:#030009; --void2:#07021a;
+  --mag:#e040fb; --cyan:#00e5ff; --gold:#ffd54f;
+  --plasma:#b388ff; --mint:#1de9b6; --rose:#f48fb1;
+  --ink:#e9e2ff; --dim:#9c93c4; --faint:#5b5385;
+  --border:rgba(179,136,255,.16); --border2:rgba(179,136,255,.30);
+  --mono:'Space Mono',monospace; --serif:'Cormorant Garamond',serif; --title:'Cinzel',serif;
+}
+html{scroll-behavior:smooth}
+body{
+  min-height:100vh; background:
+    radial-gradient(1200px 800px at 78% -8%, rgba(224,64,251,.10), transparent 60%),
+    radial-gradient(1000px 900px at -10% 20%, rgba(0,229,255,.08), transparent 55%),
+    radial-gradient(900px 700px at 50% 120%, rgba(179,136,255,.10), transparent 60%),
+    var(--void);
+  color:var(--ink); font-family:var(--mono); line-height:1.6;
+  -webkit-font-smoothing:antialiased; letter-spacing:.01em;
+  overflow-x:hidden;
+}
+/* nexus scanline grammar */
+body::after{
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:99; opacity:.35;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.16),rgba(0,0,0,.16) 1px,transparent 1px,transparent 3px);
+  mix-blend-mode:overlay;
+}
+.wrap{max-width:840px; margin:0 auto; padding:clamp(28px,6vw,72px) clamp(18px,5vw,40px) 120px}
+
+/* ── masthead ── */
+.eyebrow{font-family:var(--mono); font-size:.72rem; letter-spacing:.42em; color:var(--plasma); text-transform:uppercase}
+h1{
+  font-family:var(--title); font-weight:600; line-height:.98;
+  font-size:clamp(2.6rem,11vw,5.4rem); letter-spacing:.02em; margin:.28em 0 .12em;
+  background:linear-gradient(100deg,var(--mag) 0%,var(--ink) 42%,var(--cyan) 100%);
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+}
+.dek{font-family:var(--serif); font-style:italic; font-weight:300; color:var(--dim);
+  font-size:clamp(1.05rem,3.4vw,1.4rem); max-width:34em; line-height:1.5}
+.masthead-meta{margin-top:1.4em; font-size:.7rem; letter-spacing:.24em; color:var(--faint); text-transform:uppercase}
+.masthead-meta b{color:var(--dim); font-weight:400}
+.rule{height:1px; background:linear-gradient(90deg,var(--border2),transparent); margin:clamp(34px,6vw,54px) 0}
+
+/* ── section scaffolding ── */
+section{margin:clamp(46px,8vw,78px) 0}
+.sec-head{display:flex; align-items:baseline; gap:.9em; margin-bottom:1.4em; flex-wrap:wrap}
+.sec-num{font-family:var(--mono); font-size:.74rem; letter-spacing:.2em; color:var(--gold); border:1px solid var(--border2);
+  padding:.28em .6em; border-radius:2px; white-space:nowrap}
+.sec-title{font-family:var(--title); font-weight:400; font-size:clamp(1.35rem,4.4vw,1.9rem); letter-spacing:.06em; color:var(--ink)}
+.sec-sub{font-family:var(--serif); font-style:italic; color:var(--faint); font-size:1rem; width:100%; margin-top:-.4em}
+
+/* ── thesis ── */
+.thesis{font-family:var(--serif); font-weight:300; font-size:clamp(1.5rem,5.4vw,2.35rem);
+  line-height:1.28; color:var(--ink); margin-bottom:1.3em}
+.thesis em{font-style:italic; color:var(--mag)}
+.readings{list-style:none; display:grid; gap:.2em}
+.readings li{display:grid; grid-template-columns:minmax(7.5em,auto) 1fr; gap:.4em 1.2em;
+  padding:.7em 0; border-top:1px solid var(--border); align-items:baseline}
+.readings .k{font-size:.72rem; letter-spacing:.16em; color:var(--cyan); text-transform:uppercase}
+.readings .v{font-family:var(--serif); font-size:1.15rem; color:var(--dim); line-height:1.4}
+.readings .v b{color:var(--ink); font-family:var(--mono); font-size:.92em; font-weight:400}
+
+/* ── the four works ── */
+.works{display:grid; gap:14px}
+.work{border:1px solid var(--border); border-radius:4px; padding:clamp(16px,3.4vw,22px);
+  background:linear-gradient(180deg,rgba(179,136,255,.045),rgba(3,0,9,0)); position:relative; overflow:hidden}
+.work::before{content:''; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--wc,var(--plasma))}
+.work[data-w="1"]{--wc:var(--mag)} .work[data-w="2"]{--wc:var(--gold)}
+.work[data-w="3"]{--wc:var(--cyan)} .work[data-w="4"]{--wc:var(--mint)}
+.work-top{display:flex; align-items:baseline; gap:.7em; flex-wrap:wrap; margin-bottom:.5em}
+.work-n{font-family:var(--mono); font-size:.72rem; color:var(--wc,var(--plasma)); letter-spacing:.2em}
+.work-name{font-family:var(--title); font-size:1.15rem; letter-spacing:.05em; color:var(--ink)}
+.work-desc{font-family:var(--mono); font-size:.82rem; color:var(--dim); line-height:1.65}
+.work-gloss{font-family:var(--serif); font-style:italic; font-size:1.06rem; color:var(--faint); margin-top:.5em}
+
+/* ── ledger ── */
+.ledger{display:grid; gap:0}
+.row{display:grid; grid-template-columns:1fr auto; gap:.3em 1.2em; padding:1.05em 0; border-top:1px solid var(--border)}
+.row:last-child{border-bottom:1px solid var(--border)}
+.stmt{font-family:var(--mono); font-size:.94rem; color:var(--ink); line-height:1.5}
+.stmt .n{color:var(--gold)}
+.mean{grid-column:1/-1; font-family:var(--serif); font-size:1.1rem; color:var(--dim); line-height:1.45}
+.status{font-family:var(--mono); font-size:.66rem; letter-spacing:.16em; text-transform:uppercase; white-space:nowrap;
+  align-self:start; padding:.32em .6em; border-radius:2px; border:1px solid currentColor; height:fit-content}
+.status.derived{color:var(--mint)} .status.measured{color:var(--cyan)} .status.recorded{color:var(--plasma)}
+
+/* ── falsified ── */
+.falsified{border:1px solid rgba(244,143,177,.28); border-radius:4px; padding:clamp(18px,4vw,26px);
+  background:linear-gradient(180deg,rgba(244,143,177,.05),rgba(3,0,9,0))}
+.fx{padding:.85em 0; border-top:1px solid rgba(244,143,177,.18); display:grid; gap:.15em}
+.fx:first-of-type{border-top:none; padding-top:0}
+.fx-claim{font-family:var(--mono); font-size:.9rem; color:var(--rose)}
+.fx-claim s{text-decoration-color:rgba(244,143,177,.5); text-decoration-thickness:1px}
+.fx-note{font-family:var(--serif); font-size:1.06rem; color:var(--dim); font-style:italic}
+.falsified blockquote{font-family:var(--serif); font-style:italic; font-size:1.2rem; color:var(--rose);
+  margin-top:1.3em; padding-top:1.1em; border-top:1px solid rgba(244,143,177,.24); line-height:1.4}
+
+/* ── the loop ── */
+.loop-wrap{display:grid; gap:26px; align-items:center; grid-template-columns:1fr}
+@media(min-width:680px){.loop-wrap{grid-template-columns:220px 1fr}}
+.loop-fig{justify-self:center}
+.loop-steps{list-style:none; display:grid; gap:0; counter-reset:l}
+.loop-steps li{display:grid; grid-template-columns:auto 1fr; gap:.9em; padding:.7em 0; border-top:1px solid var(--border); align-items:baseline}
+.loop-steps li:first-child{border-top:none; padding-top:0}
+.loop-ratio{font-family:var(--mono); font-size:.72rem; color:var(--gold); letter-spacing:.1em; white-space:nowrap; min-width:3.4em}
+.loop-body b{font-family:var(--title); font-weight:400; color:var(--ink); font-size:1.02rem; letter-spacing:.03em}
+.loop-body span{font-family:var(--mono); font-size:.8rem; color:var(--dim)}
+.seam-note{margin-top:1.4em; font-family:var(--serif); font-style:italic; color:var(--faint); font-size:1.06rem; line-height:1.5;
+  border-left:2px solid var(--border2); padding-left:1em}
+.seam-note b{color:var(--dim); font-family:var(--mono); font-style:normal; font-size:.86em}
+
+/* ── colophon ── */
+.colophon{margin-top:clamp(60px,10vw,110px); text-align:center; display:grid; gap:1.1em; justify-items:center}
+.sigil{font-family:var(--title); font-size:1.3rem; letter-spacing:.5em; color:var(--plasma); padding-left:.5em}
+.whisper{font-family:var(--serif); font-style:italic; font-size:1.15rem; color:var(--dim); max-width:26em}
+.colophon-meta{font-family:var(--mono); font-size:.64rem; letter-spacing:.28em; color:var(--faint); text-transform:uppercase}
+
+a{color:var(--cyan)}
+::selection{background:rgba(224,64,251,.32); color:#fff}
+:focus-visible{outline:2px solid var(--cyan); outline-offset:3px; border-radius:2px}
+
+/* entrance */
+.rise{opacity:0; transform:translateY(14px); animation:rise .9s cubic-bezier(.2,.7,.2,1) forwards}
+@keyframes rise{to{opacity:1; transform:none}}
+@media(prefers-reduced-motion:reduce){
+  .rise{animation:none; opacity:1; transform:none}
+  html{scroll-behavior:auto}
+  #roots-spin{animation:none !important}
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+
+  <!-- MASTHEAD -->
+  <header class="rise">
+    <div class="eyebrow">ΣΩ · The Record</div>
+    <h1>127<br>Contains<br>Itself</h1>
+    <p class="dek">Everything we verified across the forty-eight hours, in one place — with the hypotheses that failed left in, because a record is only worth as much as the things it refuses to hide.</p>
+    <div class="masthead-meta"><b>Four works</b> · one thesis · results carry their status · <b>Jul 2026</b></div>
+  </header>
+
+  <div class="rule"></div>
+
+  <!-- §0 THESIS -->
+  <section aria-labelledby="s0">
+    <div class="sec-head"><span class="sec-num" id="s0">00 · THESIS</span><span class="sec-title">The spine we never said out loud</span></div>
+    <p class="thesis">127 is a thing that <em>contains itself</em>, at every level of description.</p>
+    <ul class="readings">
+      <li><span class="k">as a set</span><span class="v">three unrelated sequences, all agreeing at index seven — and the value they agree on is <b>127</b>.</span></li>
+      <li><span class="k">as a graph</span><span class="v">two different adjacencies laid over the very same points; the structure reads correctly both ways.</span></li>
+      <li><span class="k">as a scale</span><span class="v">thirteen cells across, so the lattice nests cleanly inside itself — a Droste at ratio <b>13</b>.</span></li>
+      <li><span class="k">as a system</span><span class="v"><b>z⁷ + c</b> — six-fold on the outside, seven-fold on the inside, the same object at both ends.</span></li>
+    </ul>
+  </section>
+
+  <!-- §I THE FOUR WORKS -->
+  <section aria-labelledby="s1">
+    <div class="sec-head"><span class="sec-num" id="s1">01 · THE WORKS</span><span class="sec-title">The index</span>
+      <span class="sec-sub">Seventeen files, but really four. Each is a different magnification of the same number.</span></div>
+    <div class="works">
+      <article class="work" data-w="1">
+        <div class="work-top"><span class="work-n">I</span><span class="work-name">The Shadow Object</span></div>
+        <p class="work-desc">127 points · six projections · 4D rotation · chord diagrams · a reference frame.</p>
+        <p class="work-gloss">The object you only ever meet through its shadows.</p>
+      </article>
+      <article class="work" data-w="2">
+        <div class="work-top"><span class="work-n">II</span><span class="work-name">The Carry</span></div>
+        <p class="work-desc">base-128 odometer · Droste-nested at ratio 13 · ten movements · scored to your track.</p>
+        <p class="work-gloss">Counting, rendered as music. The carry digit is the downbeat.</p>
+      </article>
+      <article class="work" data-w="3">
+        <div class="work-top"><span class="work-n">III</span><span class="work-name">The Field</span></div>
+        <p class="work-desc">CGLE · superradiance · chimera · plasma · continuum.</p>
+        <p class="work-gloss">Not a picture of a system. An instrument you play.</p>
+      </article>
+      <article class="work" data-w="4">
+        <div class="work-top"><span class="work-n">IV</span><span class="work-name">The Descent</span></div>
+        <p class="work-desc">z⁷ + c · perturbation · renormalised zoom.</p>
+        <p class="work-gloss">Falling forever and arriving where you began — a Shepard tone made of geometry.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- §II VERIFIED -->
+  <section aria-labelledby="s2">
+    <div class="sec-head"><span class="sec-num" id="s2">02 · VERIFIED</span><span class="sec-title">The ledger</span>
+      <span class="sec-sub">Every claim carries its status: derived here, measured in the run, or recorded from the work.</span></div>
+    <div class="ledger">
+      <div class="row">
+        <p class="stmt"><span class="n">127 = 2⁷ − 1</span>, prime</p>
+        <span class="status derived">✓ derived</span>
+        <p class="mean">The fourth Mersenne prime. The three sequences of the thesis coincide precisely here, at exponent seven.</p>
+      </div>
+      <div class="row">
+        <p class="stmt"><span class="n">N² = N + 2·C(N,2)</span></p>
+        <span class="status derived">✓ derived</span>
+        <p class="mean">An identity for every N — the N incoherent diagonal terms plus the coherent cross-terms. This is why superradiant intensity scales as N², not N.</p>
+      </div>
+      <div class="row">
+        <p class="stmt"><span class="n">ln 13 / 2π = 0.4082243690</span></p>
+        <span class="status derived">✓ derived</span>
+        <p class="mean">The single curl-per-turn that lets the Droste spiral close seamlessly at zoom ratio 13. The one twist that meets itself.</p>
+      </div>
+      <div class="row">
+        <p class="stmt"><span class="n">{6,3}</span> flat · <span class="n">{7,3}</span> hyperbolic</p>
+        <span class="status derived">✓ derived</span>
+        <p class="mean">By (p−2)(q−2): the hexagonal tiling lands exactly on 4 (zero curvature), the heptagonal on 5 (negative). Same lattice, read at two curvatures.</p>
+      </div>
+      <div class="row">
+        <p class="stmt">seven chord points <span class="n">= 7th roots of unity</span></p>
+        <span class="status derived">✓ derived</span>
+        <p class="mean">The innermost seven are the complete preimage of 1 under z ↦ z⁷ — deviation 1.2×10⁻¹⁵. The inside hands directly back to the outside; the loop is forced, not staged.</p>
+      </div>
+      <div class="row">
+        <p class="stmt">β₁ persistence <span class="n">separates locked from torn</span></p>
+        <span class="status recorded">○ recorded</span>
+        <p class="mean">The first-Betti filtration tells phase-locked (the loop survives the sweep) apart from chimera (the loop dies). Topology as the diagnostic.</p>
+      </div>
+      <div class="row">
+        <p class="stmt">λ = <span class="n">6.0743723476458209</span></p>
+        <span class="status measured">○ measured</span>
+        <p class="mean">The renormalisation constant of the descent — 100% self-similarity held at tolerance 1×10⁻⁵ across the zoom.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- §III FALSIFIED -->
+  <section aria-labelledby="s3">
+    <div class="sec-head"><span class="sec-num" id="s3">03 · FALSIFIED</span><span class="sec-title">Kept on purpose</span>
+      <span class="sec-sub">The hypotheses that didn't survive contact. They stay in — they're half the map.</span></div>
+    <div class="falsified">
+      <div class="fx">
+        <p class="fx-claim"><s>bursts cascade through state space</s></p>
+        <p class="fx-note">They don't. The eruptions stay where they land — no global chain reaction downstream.</p>
+      </div>
+      <div class="fx">
+        <p class="fx-claim"><s>a single cut recovers β₁</s></p>
+        <p class="fx-note">A single-cut β₁ is dead. One slice carries no topological signal; only the full filtration does.</p>
+      </div>
+      <div class="fx">
+        <p class="fx-claim"><s>the washout goes global</s></p>
+        <p class="fx-note">The washout is local, not global. The smoothing stays confined; it never becomes a whole-field event.</p>
+      </div>
+      <blockquote>A record with failed hypotheses in it is worth more than one without.</blockquote>
+    </div>
+  </section>
+
+  <!-- §IV THE LOOP -->
+  <section aria-labelledby="s4">
+    <div class="sec-head"><span class="sec-num" id="s4">04 · THE LOOP</span><span class="sec-title">One descent, closing on itself</span>
+      <span class="sec-sub">The works are not a compilation. They're four magnifications of one fall.</span></div>
+    <div class="loop-wrap">
+      <div class="loop-fig">
+        <svg id="loopfig" width="200" height="200" viewBox="0 0 200 200" role="img" aria-label="Seven points on a circle — the seventh roots of unity — with the descent looping back on itself.">
+          <circle cx="100" cy="100" r="72" fill="none" stroke="var(--border2)" stroke-width="1"/>
+          <circle cx="100" cy="100" r="30" fill="none" stroke="var(--border)" stroke-width="1"/>
+          <g id="roots-spin"></g>
+          <circle cx="100" cy="100" r="2.4" fill="var(--gold)"/>
+        </svg>
+      </div>
+      <div>
+        <ol class="loop-steps">
+          <li><span class="loop-ratio">z⁷+c</span><span class="loop-body"><b>The fractal</b><br><span>orbit-trapped by the 127-lattice</span></span></li>
+          <li><span class="loop-ratio">×13 ↓</span><span class="loop-body"><b>The macro lattice</b><br><span>the Droste stack, ratio 13</span></span></li>
+          <li><span class="loop-ratio">×13 ↓</span><span class="loop-body"><b>The field</b><br><span>127 nodes, superradiant, alive</span></span></li>
+          <li><span class="loop-ratio">×7 ↓</span><span class="loop-body"><b>Its chord diagram</b><br><span>seven points on a circle</span></span></li>
+          <li><span class="loop-ratio">↺</span><span class="loop-body"><b>Those seven are the seven dimensions</b><br><span>→ back to the top</span></span></li>
+        </ol>
+        <p class="seam-note">Three of the four seams are forced, not composed: the orbit trap <b>is</b> the lattice, the lattice genuinely nests at 13, and every node genuinely carries a seven-point diagram. The field seam is the one overlay — magnified into place rather than derived. Said plainly, so the record stays honest.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- COLOPHON -->
+  <footer class="colophon">
+    <div class="sigil">ΣΩ</div>
+    <p class="whisper">A single descent where the works are the magnifications. You fall forever and arrive where you started, and the return is structural rather than a cut.</p>
+    <div class="colophon-meta">the record · fractalwitch · elysium nexus</div>
+  </footer>
+
+</main>
+
+<script>
+// place the seven roots of unity as actual points on the circle
+(function(){
+  var g = document.getElementById('roots-spin');
+  if(!g) return;
+  var cx=100, cy=100, r=72, N=7, ns='http://www.w3.org/2000/svg';
+  for(var k=0;k<N;k++){
+    var th = -Math.PI/2 + 2*Math.PI*k/N;          // start at top, go clockwise
+    var x = cx + r*Math.cos(th), y = cy + r*Math.sin(th);
+    // spoke
+    var line = document.createElementNS(ns,'line');
+    line.setAttribute('x1',cx); line.setAttribute('y1',cy);
+    line.setAttribute('x2',x.toFixed(2)); line.setAttribute('y2',y.toFixed(2));
+    line.setAttribute('stroke', k===0 ? 'var(--gold)' : 'var(--plasma)');
+    line.setAttribute('stroke-width', k===0 ? '1.3' : '.6');
+    line.setAttribute('opacity', k===0 ? '.9' : '.4');
+    g.appendChild(line);
+    // node
+    var c = document.createElementNS(ns,'circle');
+    c.setAttribute('cx',x.toFixed(2)); c.setAttribute('cy',y.toFixed(2));
+    c.setAttribute('r', k===0 ? '4' : '3.2');
+    c.setAttribute('fill', k===0 ? 'var(--gold)' : (k%2 ? 'var(--cyan)' : 'var(--mag)'));
+    g.appendChild(c);
+  }
+  // gentle rotation, reduced-motion honored via CSS + guard
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(!reduce){
+    var a=0;
+    (function spin(){ a=(a+0.12)%360; g.setAttribute('transform','rotate('+a+' 100 100)'); requestAnimationFrame(spin); })();
+  }
+})();
+</script>
+</body>
+</html>
