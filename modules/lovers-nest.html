@@ -8,143 +8,85 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap');
 
 :root{
-  --void:#020005;
-  --magenta:#ff00ff;
-  --cyan:#00ffff;
-  --rose:#ff0055;
-  --violet:#8a2be2;
-  --gold:#ffcc55;
+  --void:#020005; --magenta:#ff00ff; --cyan:#00ffff;
+  --rose:#ff0055; --violet:#8a2be2; --gold:#ffcc55;
 }
-
 *{ box-sizing:border-box; }
-
 html,body{
   margin:0; padding:0; width:100%; height:100%;
-  background:var(--void);
-  overflow:hidden;
-  font-family:'Courier Prime',monospace;
-  color:#fff;
-  /* keeps touch dragging the water instead of scrolling the page */
-  touch-action:none;
-  -webkit-user-select:none; user-select:none;
+  background:var(--void); overflow:hidden;
+  font-family:'Courier Prime',monospace; color:#fff;
+  touch-action:none; -webkit-user-select:none; user-select:none;
 }
 
-/* --- THE WATER: ambient current everything is suspended in --- */
+/* --- THE WATER --- */
 #fluid{
-  position:fixed; inset:0; z-index:1;
-  width:100%; height:100%;
-  display:block;
-  background:radial-gradient(circle at 50% 40%, #12002a 0%, #020005 70%);
+  position:fixed; inset:0; z-index:1; width:100%; height:100%; display:block;
+  background:radial-gradient(circle at 50% 42%, #14012e 0%, #050010 55%, #020005 100%);
 }
 
-/* --- THE NEST: where the cells circulate --- */
-#nest{
-  position:fixed; inset:0; z-index:10;
-  overflow:hidden;
-}
+/* --- THE NEST --- */
+#nest{ position:fixed; inset:0; z-index:10; overflow:hidden; }
 
-/* a single cell — bare, edges dissolving straight into the current.
-   emotional intent: a body radiating, not a thumbnail in a frame. */
-.cell{
-  position:absolute;
-  top:0; left:0;
-  will-change:transform;
-  /* feathered mask: no border, the rim melts into the water */
-  -webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%, #000 34%, transparent 70%);
-  mask-image:radial-gradient(ellipse 50% 50% at 50% 50%, #000 34%, transparent 70%);
-  /* dark pixels drop out into the void, light pixels glow into the current */
+/* a bubble: a glassy sphere with the gif living inside it, always visible */
+.bubble{
+  position:absolute; top:0; left:0; border-radius:50%;
+  overflow:hidden; will-change:transform; cursor:grab;
+  box-shadow:
+    inset 0 0 26px rgba(255,255,255,0.22),
+    inset 10px 12px 30px rgba(255,255,255,0.10),
+    inset -8px -10px 26px rgba(0,0,0,0.35),
+    0 0 22px rgba(255,0,255,0.30),
+    0 6px 30px rgba(0,0,0,0.45);
+}
+.bubble img{ width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; }
+.bubble .fill{ position:absolute; inset:0; }               /* placeholder fill */
+.bubble .gloss{                                            /* soap-bubble specular */
+  position:absolute; inset:0; border-radius:50%; pointer-events:none;
   mix-blend-mode:screen;
-  cursor:grab;
-  transition:mask-image .4s ease;
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 16%),
+    radial-gradient(circle at 68% 80%, rgba(180,220,255,0.18) 0%, rgba(255,255,255,0) 26%);
 }
-.cell img{
-  width:100%; height:100%;
-  object-fit:cover;
-  display:block;
-  pointer-events:none;
-  border-radius:50%;
+.bubble .rim{                                              /* iridescent edge */
+  position:absolute; inset:0; border-radius:50%; pointer-events:none;
+  box-shadow: inset 0 0 0 1.5px rgba(255,255,255,0.28);
+  background:radial-gradient(circle at 50% 50%, transparent 62%, rgba(255,0,255,0.10) 82%, rgba(0,255,255,0.12) 100%);
 }
-/* placeholder cells breathe so the nest is alive before real gifs arrive */
-.cell.placeholder{
-  border-radius:50%;
-  animation:pulse 6s ease-in-out infinite;
-}
-.cell.contact{ cursor:grabbing; }
+.bubble.placeholder .fill{ animation:sheen 7s ease-in-out infinite; }
+@keyframes sheen{ 0%,100%{ filter:brightness(0.9) saturate(1.1);} 50%{ filter:brightness(1.2) saturate(1.5);} }
 
-@keyframes pulse{
-  0%,100%{ filter:brightness(0.85) saturate(1.1); }
-  50%{ filter:brightness(1.15) saturate(1.4); }
-}
-
-/* --- OVERLAYS: Elysium Nexus grammar --- */
+/* --- OVERLAYS --- */
 #scanlines{
   position:fixed; inset:0; z-index:40; pointer-events:none;
-  background:repeating-linear-gradient(0deg, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,0.14) 3px);
-  mix-blend-mode:multiply; opacity:.5;
+  background:repeating-linear-gradient(0deg, transparent 0 2px, rgba(0,0,0,0.13) 3px);
+  mix-blend-mode:multiply; opacity:.45;
 }
 #vignette{
   position:fixed; inset:0; z-index:41; pointer-events:none;
-  background:radial-gradient(circle at 50% 45%, transparent 55%, rgba(2,0,5,0.75) 100%);
+  background:radial-gradient(circle at 50% 45%, transparent 58%, rgba(2,0,5,0.7) 100%);
 }
+#titles{ position:fixed; z-index:42; top:5vh; left:0; right:0; text-align:center; pointer-events:none; mix-blend-mode:exclusion; }
+#titles h1{ font-family:'Cinzel',serif; font-weight:700; font-size:clamp(1.7rem,5.5vw,3.4rem); letter-spacing:.30em; margin:0 0 .4em; text-shadow:0 0 24px var(--magenta); }
+#titles .eyebrow{ font-size:.7rem; letter-spacing:.45em; text-transform:uppercase; color:var(--cyan); opacity:.8; }
 
-#titles{
-  position:fixed; z-index:42; top:6vh; left:0; right:0;
-  text-align:center; pointer-events:none;
-  mix-blend-mode:exclusion;
-}
-#titles h1{
-  font-family:'Cinzel',serif; font-weight:700;
-  font-size:clamp(1.8rem,6vw,3.6rem);
-  letter-spacing:.32em; margin:0 0 .5em 0;
-  text-shadow:0 0 24px var(--magenta);
-}
-#titles .eyebrow{
-  font-size:.72rem; letter-spacing:.5em; text-transform:uppercase;
-  color:var(--cyan); opacity:.8;
-}
-
-/* first-touch invitation — an empty screen is an invitation to act */
 #invite{
-  position:fixed; z-index:42; left:0; right:0; bottom:14vh;
-  text-align:center; pointer-events:none;
-  font-size:.85rem; letter-spacing:.25em; color:var(--gold);
-  opacity:.85; transition:opacity 1.2s ease;
+  position:fixed; z-index:42; left:0; right:0; bottom:13vh; text-align:center; pointer-events:none;
+  font-size:.82rem; letter-spacing:.22em; color:var(--gold); opacity:.85; transition:opacity 1.1s ease;
   text-shadow:0 0 12px rgba(255,204,85,.5);
 }
 #invite.gone{ opacity:0; }
 
-/* --- RIM CONTROLS --- */
-.rim{
-  position:fixed; z-index:50; bottom:2rem;
-  display:flex; gap:.6rem; align-items:center;
-  font-size:.72rem; letter-spacing:.2em; text-transform:uppercase;
-}
-.rim.left{ left:1.4rem; }
-.rim button{
-  background:transparent; color:var(--cyan);
-  border:1px solid rgba(0,255,255,.4);
-  padding:.6rem .9rem; font-family:'Courier Prime',monospace;
-  font-size:.72rem; letter-spacing:.2em; cursor:pointer;
-  transition:.3s; border-radius:2px;
-}
-.rim button:hover{ background:var(--cyan); color:#000; box-shadow:0 0 18px var(--cyan); }
-.rim button:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+.rim-ui{ position:fixed; z-index:50; bottom:2rem; left:1.4rem; display:flex; gap:.6rem; align-items:center; font-size:.72rem; letter-spacing:.2em; text-transform:uppercase; }
+.rim-ui button{ background:transparent; color:var(--cyan); border:1px solid rgba(0,255,255,.4); padding:.6rem .9rem; font-family:'Courier Prime',monospace; font-size:.72rem; letter-spacing:.2em; cursor:pointer; transition:.3s; border-radius:2px; }
+.rim-ui button:hover{ background:var(--cyan); color:#000; box-shadow:0 0 18px var(--cyan); }
+.rim-ui button:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
 #count{ color:rgba(255,255,255,.4); }
 
-/* drop-to-add affordance */
-#dropveil{
-  position:fixed; inset:0; z-index:60; pointer-events:none;
-  display:flex; align-items:center; justify-content:center;
-  background:rgba(20,0,42,.55); backdrop-filter:blur(3px);
-  opacity:0; transition:opacity .25s ease;
-  font-family:'Cinzel',serif; font-size:1.4rem; letter-spacing:.3em;
-  color:var(--gold); text-transform:uppercase;
-}
+#dropveil{ position:fixed; inset:0; z-index:60; pointer-events:none; display:flex; align-items:center; justify-content:center; background:rgba(20,0,42,.55); backdrop-filter:blur(3px); opacity:0; transition:opacity .25s; font-family:'Cinzel',serif; font-size:1.4rem; letter-spacing:.3em; color:var(--gold); text-transform:uppercase; }
 #dropveil.show{ opacity:1; }
 
-@media (prefers-reduced-motion: reduce){
-  .cell.placeholder{ animation:none; }
-}
+@media (prefers-reduced-motion: reduce){ .bubble.placeholder .fill{ animation:none; } }
 </style>
 </head>
 <body>
@@ -154,559 +96,243 @@ html,body{
 
 <div id="scanlines"></div>
 <div id="vignette"></div>
+<div id="titles"><div class="eyebrow">bubbles adrift in the current</div><h1>LIQUID LOVER'S NEST</h1></div>
+<div id="invite">drag to stir the water · tap a bubble to draw it close</div>
 
-<div id="titles">
-  <div class="eyebrow">full contact zone · consent-native</div>
-  <h1>LIQUID LOVER'S NEST</h1>
-</div>
-
-<div id="invite">reach slowly — it opens to reverence, never to grip</div>
-
-<div class="rim left">
+<div class="rim-ui">
   <button id="addBtn">⊹ add gifs</button>
   <button id="resetBtn">⟳ recirculate</button>
   <span id="count"></span>
 </div>
-
 <div id="dropveil">release into the nest</div>
-
-<!-- liquefy filter: distorts the LIVE cell (keeps animating while it melts) -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <defs>
-    <filter id="liquefy" x="-45%" y="-45%" width="190%" height="190%" color-interpolation-filters="sRGB">
-      <feTurbulence id="liqNoise" type="fractalNoise" baseFrequency="0.012 0.02" numOctaves="2" seed="7" result="n"/>
-      <feDisplacementMap id="liqMap" in="SourceGraphic" in2="n" scale="0" xChannelSelector="R" yChannelSelector="G"/>
-    </filter>
-  </defs>
-</svg>
-
 <input id="fileInput" type="file" accept="image/gif,image/*" multiple style="display:none">
 
 <script>
 /* ============================================================
-   LIQUID LOVER'S NEST
-   Elysium Nexus · consent-native circulation display
-
-   Two coupled systems, one felt water:
-   1. GPU dye current (Navier-Stokes) — the visible water.
-   2. Cell drift on an ANALYTIC divergence-free stream field —
-      genuinely incompressible circulation, not faked noise.
-   Both are driven by the same pointer, so they read as one body.
-
-   Consent architecture, enforced as mechanics:
-   · generous visibility  → all cells always radiate (default drift)
-   · require reverence    → only slow contact charges a cell open
-   · protect sacred contact→ an insulation RAMP; you can't rip it open
-   · reject extraction    → a fast yank breaks the circuit, cell recoils
-   · mandate overflow     → opening a cell bleeds dye back into the water
+   LIQUID LOVER'S NEST — gifs in bubbles, adrift in the current.
+   No gates. Every bubble is always fully visible.
+   Drag stirs the water and nudges bubbles; tap draws one close.
    ============================================================ */
-
 const REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/* -------- PASTE PERSISTENT GIF URLS HERE (optional) --------
-   Leave empty to start with placeholders; drag-drop or the
-   "add gifs" button loads local files at any time.            */
+/* -------- PASTE GIF URLS HERE (optional) --------
+   Leave empty for placeholder bubbles; add / drop files any time. */
 const GIFS = [
-  "https://giphy.com/gifs/adam-ferriss-aferriss-abt3O3BEwR6wg",
-  "https://giphy.com/gifs/trippy-pink-liquid-xUPGcupEWGbmGv8I3C",
-  "https://giphy.com/gifs/background-test-1VWxO6OKqOpi3wwOKJ",
-  "https://giphy.com/gifs/trippy-gif-artist-ericaofanderson-KyyUBOLa5wxW4WATMq",
+"https://giphy.com/gifs/adam-ferriss-aferriss-abt3O3BEwR6wg",
+"https://giphy.com/gifs/trippy-pink-liquid-xUPGcupEWGbmGv8I3C",
+"https://giphy.com/gifs/background-test-1VWxO6OKqOpi3wwOKJ",
+"https://giphy.com/gifs/trippy-gif-artist-ericaofanderson-KyyUBOLa5wxW4WATMq",
   "https://makeagif.com/gif/-Kcv935",
   "https://share.google/images/aCYNw4d2GSRpBYmji",
 ];
-
-const PLACEHOLDER_COUNT = 26;   // "dozens"
+const PLACEHOLDER_COUNT = 22;
 const PALETTE = ['#ff00ff','#00ffff','#ff0055','#8a2be2','#ffcc55'];
 
-/* ============================================================
-   PART I — THE WATER (WebGL fluid)
-   ============================================================ */
+/* ===================== PART I — THE WATER (WebGL fluid) ===================== */
 const canvas = document.getElementById('fluid');
-let fluidOK = false;
-let splat;                       // exposed splat(x,y,dx,dy,color) in [0..1] space
+let fluidOK = false, splat = null;
 (function initFluid(){
-  const gl = canvas.getContext('webgl', {alpha:false, depth:false, stencil:false, antialias:false, preserveDrawingBuffer:false})
+  const gl = canvas.getContext('webgl',{alpha:false,depth:false,stencil:false,antialias:false})
           || canvas.getContext('experimental-webgl');
-  if(!gl){ return; }
+  if(!gl) return;
+  const hf = gl.getExtension('OES_texture_half_float'); gl.getExtension('OES_texture_half_float_linear');
+  if(!hf) return;
+  const TT = hf.HALF_FLOAT_OES;
+  const CFG={ SIM_RES:REDUCE?128:200, DYE_DISS:0.978, VEL_DISS:0.992, PRESS_IT:18, RADIUS:0.0034 };
 
-  const halfFloat = gl.getExtension('OES_texture_half_float');
-  gl.getExtension('OES_texture_half_float_linear');
-  // velocity/pressure need signed values → byte textures can't. require half-float.
-  if(!halfFloat){ return; }
-  const TEXTYPE = halfFloat.HALF_FLOAT_OES;
+  function sh(t,s){ const o=gl.createShader(t); gl.shaderSource(o,s); gl.compileShader(o); return o; }
+  const vert=sh(gl.VERTEX_SHADER,`precision highp float;attribute vec2 aPosition;varying vec2 vUv,vL,vR,vT,vB;uniform vec2 texelSize;
+    void main(){vUv=aPosition*0.5+0.5;vL=vUv-vec2(texelSize.x,0.);vR=vUv+vec2(texelSize.x,0.);vT=vUv+vec2(0.,texelSize.y);vB=vUv-vec2(0.,texelSize.y);gl_Position=vec4(aPosition,0.,1.);}`);
+  function prog(f){ const p=gl.createProgram(); gl.attachShader(p,vert); gl.attachShader(p,sh(gl.FRAGMENT_SHADER,f)); gl.linkProgram(p);
+    const u={},n=gl.getProgramParameter(p,gl.ACTIVE_UNIFORMS); for(let i=0;i<n;i++){const nm=gl.getActiveUniform(p,i).name; u[nm]=gl.getUniformLocation(p,nm);} return {p,u}; }
 
-  const config = {
-    SIM_RES: REDUCE ? 128 : 200,
-    DENSITY_DISSIPATION: 0.975,
-    VELOCITY_DISSIPATION: 0.992,
-    PRESSURE_ITERATIONS: 18,
-    SPLAT_RADIUS: 0.0032
-  };
+  const splatP=prog(`precision highp float;varying vec2 vUv;uniform sampler2D uTarget;uniform float aspectRatio;uniform vec3 color;uniform vec2 point;uniform float radius;
+    void main(){vec2 p=vUv-point;p.x*=aspectRatio;vec3 s=exp(-dot(p,p)/radius)*color;gl_FragColor=vec4(texture2D(uTarget,vUv).xyz+s,1.);}`);
+  const advP=prog(`precision highp float;varying vec2 vUv;uniform sampler2D uVelocity,uSource;uniform vec2 texelSize;uniform float dt,dissipation;
+    void main(){vec2 c=vUv-dt*texture2D(uVelocity,vUv).xy*texelSize;gl_FragColor=dissipation*texture2D(uSource,c);gl_FragColor.a=1.;}`);
+  const divP=prog(`precision mediump float;varying vec2 vUv,vL,vR,vT,vB;uniform sampler2D uVelocity;
+    void main(){float L=texture2D(uVelocity,vL).x,R=texture2D(uVelocity,vR).x,T=texture2D(uVelocity,vT).y,B=texture2D(uVelocity,vB).y;gl_FragColor=vec4(0.5*(R-L+T-B),0.,0.,1.);}`);
+  const presP=prog(`precision mediump float;varying vec2 vUv,vL,vR,vT,vB;uniform sampler2D uPressure,uDivergence;
+    void main(){float L=texture2D(uPressure,vL).x,R=texture2D(uPressure,vR).x,T=texture2D(uPressure,vT).x,B=texture2D(uPressure,vB).x,d=texture2D(uDivergence,vUv).x;gl_FragColor=vec4((L+R+B+T-d)*0.25,0.,0.,1.);}`);
+  const gradP=prog(`precision mediump float;varying vec2 vUv,vL,vR,vT,vB;uniform sampler2D uPressure,uVelocity;
+    void main(){float L=texture2D(uPressure,vL).x,R=texture2D(uPressure,vR).x,T=texture2D(uPressure,vT).x,B=texture2D(uPressure,vB).x;vec2 v=texture2D(uVelocity,vUv).xy;v-=vec2(R-L,T-B);gl_FragColor=vec4(v,0.,1.);}`);
+  const dispP=prog(`precision highp float;varying vec2 vUv;uniform sampler2D uTexture;void main(){gl_FragColor=vec4(texture2D(uTexture,vUv).rgb,1.);}`);
 
-  function compile(type, src){
-    const s = gl.createShader(type);
-    gl.shaderSource(s, src); gl.compileShader(s);
-    if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.warn(gl.getShaderInfoLog(s));
-    return s;
-  }
-  const baseVert = compile(gl.VERTEX_SHADER, `
-    precision highp float;
-    attribute vec2 aPosition;
-    varying vec2 vUv, vL, vR, vT, vB;
-    uniform vec2 texelSize;
-    void main(){
-      vUv = aPosition*0.5+0.5;
-      vL = vUv - vec2(texelSize.x,0.0);
-      vR = vUv + vec2(texelSize.x,0.0);
-      vT = vUv + vec2(0.0,texelSize.y);
-      vB = vUv - vec2(0.0,texelSize.y);
-      gl_Position = vec4(aPosition,0.0,1.0);
-    }`);
-
-  function prog(fragSrc){
-    const p = gl.createProgram();
-    gl.attachShader(p, baseVert);
-    gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fragSrc));
-    gl.linkProgram(p);
-    if(!gl.getProgramParameter(p, gl.LINK_STATUS)) console.warn(gl.getProgramInfoLog(p));
-    const u = {};
-    const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
-    for(let i=0;i<n;i++){ const nm = gl.getActiveUniform(p,i).name; u[nm] = gl.getUniformLocation(p,nm); }
-    return {p, u};
-  }
-
-  const splatP = prog(`
-    precision highp float; varying vec2 vUv;
-    uniform sampler2D uTarget; uniform float aspectRatio; uniform vec3 color;
-    uniform vec2 point; uniform float radius;
-    void main(){
-      vec2 p = vUv-point; p.x*=aspectRatio;
-      vec3 s = exp(-dot(p,p)/radius)*color;
-      gl_FragColor = vec4(texture2D(uTarget,vUv).xyz + s, 1.0);
-    }`);
-  const advP = prog(`
-    precision highp float; varying vec2 vUv;
-    uniform sampler2D uVelocity, uSource; uniform vec2 texelSize;
-    uniform float dt, dissipation;
-    void main(){
-      vec2 coord = vUv - dt*texture2D(uVelocity,vUv).xy*texelSize;
-      gl_FragColor = dissipation*texture2D(uSource,coord); gl_FragColor.a = 1.0;
-    }`);
-  const divP = prog(`
-    precision mediump float; varying vec2 vUv,vL,vR,vT,vB; uniform sampler2D uVelocity;
-    void main(){
-      float L=texture2D(uVelocity,vL).x, R=texture2D(uVelocity,vR).x;
-      float T=texture2D(uVelocity,vT).y, B=texture2D(uVelocity,vB).y;
-      gl_FragColor = vec4(0.5*(R-L+T-B),0.0,0.0,1.0);
-    }`);
-  const presP = prog(`
-    precision mediump float; varying vec2 vUv,vL,vR,vT,vB;
-    uniform sampler2D uPressure,uDivergence;
-    void main(){
-      float L=texture2D(uPressure,vL).x,R=texture2D(uPressure,vR).x;
-      float T=texture2D(uPressure,vT).x,B=texture2D(uPressure,vB).x;
-      float d=texture2D(uDivergence,vUv).x;
-      gl_FragColor = vec4((L+R+B+T-d)*0.25,0.0,0.0,1.0);
-    }`);
-  const gradP = prog(`
-    precision mediump float; varying vec2 vUv,vL,vR,vT,vB;
-    uniform sampler2D uPressure,uVelocity;
-    void main(){
-      float L=texture2D(uPressure,vL).x,R=texture2D(uPressure,vR).x;
-      float T=texture2D(uPressure,vT).x,B=texture2D(uPressure,vB).x;
-      vec2 v=texture2D(uVelocity,vUv).xy; v-=vec2(R-L,T-B);
-      gl_FragColor = vec4(v,0.0,1.0);
-    }`);
-  const dispP = prog(`
-    precision highp float; varying vec2 vUv; uniform sampler2D uTexture;
-    void main(){ gl_FragColor = vec4(texture2D(uTexture,vUv).rgb,1.0); }`);
-
-  // fullscreen quad
-  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,-1,1,1,1,1,-1]), gl.STATIC_DRAW);
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
-  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([0,1,2,0,2,3]), gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER,gl.createBuffer());
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,-1,1,1,1,1,-1]),gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,gl.createBuffer());
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array([0,1,2,0,2,3]),gl.STATIC_DRAW);
   gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0); gl.enableVertexAttribArray(0);
 
-  function makeFBO(w,h){
-    const tex = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, tex);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,w,h,0,gl.RGBA,TEXTYPE,null);
-    const fbo = gl.createFramebuffer();
-    gl.bindFramebuffer(gl.FRAMEBUFFER,fbo);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0);
+  function FBO(w,h){ const t=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,t);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,w,h,0,gl.RGBA,TT,null);
+    const f=gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER,f); gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);
     gl.viewport(0,0,w,h); gl.clear(gl.COLOR_BUFFER_BIT);
-    return {tex,fbo,w,h,texelX:1/w,texelY:1/h,
-      attach(id){ gl.activeTexture(gl.TEXTURE0+id); gl.bindTexture(gl.TEXTURE_2D,tex); return id; }};
-  }
-  function makeDouble(w,h){
-    let a=makeFBO(w,h), b=makeFBO(w,h);
-    return {get read(){return a;}, get write(){return b;}, swap(){const t=a;a=b;b=t;}};
-  }
-  // check completeness with the demanded format; bail cleanly if the device refuses
-  if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE){ return; }
+    return {tex:t,fbo:f,w,h,tx:1/w,ty:1/h,attach(id){gl.activeTexture(gl.TEXTURE0+id);gl.bindTexture(gl.TEXTURE_2D,t);return id;}}; }
+  function DBL(w,h){ let a=FBO(w,h),b=FBO(w,h); return {get read(){return a;},get write(){return b;},swap(){const t=a;a=b;b=t;}}; }
+  if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE) return;
 
-  let SIMW, SIMH, velocity, dye, divergence, pressure;
-  function allocate(){
-    const ar = canvas.width/canvas.height;
-    SIMH = config.SIM_RES; SIMW = Math.round(config.SIM_RES*ar);
-    velocity = makeDouble(SIMW,SIMH);
-    dye      = makeDouble(SIMW,SIMH);
-    divergence = makeFBO(SIMW,SIMH);
-    pressure = makeDouble(SIMW,SIMH);
-  }
+  let SW,SH,vel,dye,div,pre;
+  function alloc(){ const ar=canvas.width/canvas.height; SH=CFG.SIM_RES; SW=Math.round(CFG.SIM_RES*ar);
+    vel=DBL(SW,SH); dye=DBL(SW,SH); div=FBO(SW,SH); pre=DBL(SW,SH); }
+  function resize(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; alloc(); }
+  resize(); window.addEventListener('resize',()=>{clearTimeout(window.__rz);window.__rz=setTimeout(resize,150);});
 
-  function resize(){
-    canvas.width = Math.floor(window.innerWidth * (window.devicePixelRatio>1?1:1));
-    canvas.height = Math.floor(window.innerHeight);
-    allocate();
-  }
-  resize();
-  window.addEventListener('resize', ()=>{ clearTimeout(window.__rz); window.__rz=setTimeout(resize,150); });
-
-  function draw(target){
-    gl.bindFramebuffer(gl.FRAMEBUFFER, target?target.fbo:null);
-    gl.viewport(0,0, target?target.w:canvas.width, target?target.h:canvas.height);
-    gl.drawElements(gl.TRIANGLES,6,gl.UNSIGNED_SHORT,0);
-  }
+  function draw(t){ gl.bindFramebuffer(gl.FRAMEBUFFER,t?t.fbo:null); gl.viewport(0,0,t?t.w:canvas.width,t?t.h:canvas.height); gl.drawElements(gl.TRIANGLES,6,gl.UNSIGNED_SHORT,0); }
   function use(pr){ gl.useProgram(pr.p); return pr.u; }
 
-  // public splat: coords & deltas in [0..1], color rgb [0..1]
-  splat = function(x,y,dx,dy,color){
-    if(!velocity) return;
-    let u = use(splatP);
-    gl.uniform1i(u.uTarget, velocity.read.attach(0));
-    gl.uniform1f(u.aspectRatio, canvas.width/canvas.height);
-    gl.uniform2f(u.point, x, y);
-    gl.uniform3f(u.color, dx, dy, 0.0);
-    gl.uniform1f(u.radius, config.SPLAT_RADIUS);
-    gl.uniform2f(u.texelSize, velocity.read.texelX, velocity.read.texelY);
-    draw(velocity.write); velocity.swap();
+  splat=function(x,y,dx,dy,color){ if(!vel) return;
+    let u=use(splatP); gl.uniform1i(u.uTarget,vel.read.attach(0)); gl.uniform1f(u.aspectRatio,canvas.width/canvas.height);
+    gl.uniform2f(u.point,x,y); gl.uniform3f(u.color,dx,dy,0.); gl.uniform1f(u.radius,CFG.RADIUS); gl.uniform2f(u.texelSize,vel.read.tx,vel.read.ty);
+    draw(vel.write); vel.swap();
+    u=use(splatP); gl.uniform1i(u.uTarget,dye.read.attach(0)); gl.uniform1f(u.aspectRatio,canvas.width/canvas.height);
+    gl.uniform2f(u.point,x,y); gl.uniform3f(u.color,color[0],color[1],color[2]); gl.uniform1f(u.radius,CFG.RADIUS); gl.uniform2f(u.texelSize,dye.read.tx,dye.read.ty);
+    draw(dye.write); dye.swap(); };
 
-    u = use(splatP);
-    gl.uniform1i(u.uTarget, dye.read.attach(0));
-    gl.uniform1f(u.aspectRatio, canvas.width/canvas.height);
-    gl.uniform2f(u.point, x, y);
-    gl.uniform3f(u.color, color[0], color[1], color[2]);
-    gl.uniform1f(u.radius, config.SPLAT_RADIUS);
-    gl.uniform2f(u.texelSize, dye.read.texelX, dye.read.texelY);
-    draw(dye.write); dye.swap();
-  };
-
-  let last = performance.now();
-  function step(now){
-    let dt = Math.min((now-last)/1000, 0.016); last = now;
-    gl.disable(gl.BLEND);
-    const tx = velocity.read.texelX, ty = velocity.read.texelY;
-
-    // advect velocity
-    let u = use(advP);
-    gl.uniform2f(u.texelSize, tx, ty);
-    gl.uniform1i(u.uVelocity, velocity.read.attach(0));
-    gl.uniform1i(u.uSource, velocity.read.attach(0));
-    gl.uniform1f(u.dt, dt); gl.uniform1f(u.dissipation, config.VELOCITY_DISSIPATION);
-    draw(velocity.write); velocity.swap();
-
-    // advect dye
-    u = use(advP);
-    gl.uniform2f(u.texelSize, tx, ty);
-    gl.uniform1i(u.uVelocity, velocity.read.attach(0));
-    gl.uniform1i(u.uSource, dye.read.attach(1));
-    gl.uniform1f(u.dt, dt); gl.uniform1f(u.dissipation, config.DENSITY_DISSIPATION);
-    draw(dye.write); dye.swap();
-
-    // divergence
-    u = use(divP);
-    gl.uniform2f(u.texelSize, tx, ty);
-    gl.uniform1i(u.uVelocity, velocity.read.attach(0));
-    draw(divergence);
-
-    // pressure solve (Jacobi)
-    u = use(presP);
-    gl.uniform2f(u.texelSize, tx, ty);
-    gl.uniform1i(u.uDivergence, divergence.attach(0));
-    for(let i=0;i<config.PRESSURE_ITERATIONS;i++){
-      gl.uniform1i(u.uPressure, pressure.read.attach(1));
-      draw(pressure.write); pressure.swap();
-    }
-    // subtract gradient → incompressible
-    u = use(gradP);
-    gl.uniform2f(u.texelSize, tx, ty);
-    gl.uniform1i(u.uPressure, pressure.read.attach(0));
-    gl.uniform1i(u.uVelocity, velocity.read.attach(1));
-    draw(velocity.write); velocity.swap();
-
-    // display dye to screen
-    u = use(dispP);
-    gl.uniform2f(u.texelSize, tx, ty);
-    gl.uniform1i(u.uTexture, dye.read.attach(0));
-    draw(null);
-
+  let last=performance.now();
+  function step(now){ let dt=Math.min((now-last)/1000,0.016); last=now; gl.disable(gl.BLEND);
+    const tx=vel.read.tx,ty=vel.read.ty;
+    let u=use(advP); gl.uniform2f(u.texelSize,tx,ty); gl.uniform1i(u.uVelocity,vel.read.attach(0)); gl.uniform1i(u.uSource,vel.read.attach(0)); gl.uniform1f(u.dt,dt); gl.uniform1f(u.dissipation,CFG.VEL_DISS); draw(vel.write); vel.swap();
+    u=use(advP); gl.uniform2f(u.texelSize,tx,ty); gl.uniform1i(u.uVelocity,vel.read.attach(0)); gl.uniform1i(u.uSource,dye.read.attach(1)); gl.uniform1f(u.dt,dt); gl.uniform1f(u.dissipation,CFG.DYE_DISS); draw(dye.write); dye.swap();
+    u=use(divP); gl.uniform2f(u.texelSize,tx,ty); gl.uniform1i(u.uVelocity,vel.read.attach(0)); draw(div);
+    u=use(presP); gl.uniform2f(u.texelSize,tx,ty); gl.uniform1i(u.uDivergence,div.attach(0));
+    for(let i=0;i<CFG.PRESS_IT;i++){ gl.uniform1i(u.uPressure,pre.read.attach(1)); draw(pre.write); pre.swap(); }
+    u=use(gradP); gl.uniform2f(u.texelSize,tx,ty); gl.uniform1i(u.uPressure,pre.read.attach(0)); gl.uniform1i(u.uVelocity,vel.read.attach(1)); draw(vel.write); vel.swap();
+    u=use(dispP); gl.uniform2f(u.texelSize,tx,ty); gl.uniform1i(u.uTexture,dye.read.attach(0)); draw(null);
     requestAnimationFrame(step);
   }
   requestAnimationFrame(step);
-  fluidOK = true;
+  fluidOK=true;
+
+  // ambient current so the water is always faintly alive, no interaction needed
+  function ambient(){
+    if(!fluidOK) return;
+    const r=Math.random(), col = r>0.66?[0.10,0,0.14] : r>0.33?[0,0.10,0.12] : [0.12,0,0.05];
+    splat(Math.random(), Math.random(), (Math.random()-0.5)*120, (Math.random()-0.5)*120, col);
+    setTimeout(ambient, 900 + Math.random()*700);
+  }
+  setTimeout(ambient, 300);
 })();
 
-/* ============================================================
-   PART II — THE CELLS (drifting bodies)
-   ============================================================ */
-const nest = document.getElementById('nest');
-const countEl = document.getElementById('count');
-let W = window.innerWidth, H = window.innerHeight;
-window.addEventListener('resize', ()=>{ W=window.innerWidth; H=window.innerHeight; });
+/* ===================== PART II — THE BUBBLES ===================== */
+const nest=document.getElementById('nest');
+const countEl=document.getElementById('count');
+let W=innerWidth, H=innerHeight, topZ=10;
+addEventListener('resize',()=>{ W=innerWidth; H=innerHeight; });
 
-const cells = [];
-const AMP = REDUCE ? 0.10 : 0.30;   // drift speed off the stream field
+const bubbles=[];
+const rand=(a,b)=>a+Math.random()*(b-a);
 
-/* ANALYTIC divergence-free flow.
-   stream function ψ = Σ sin(aᵢx+pᵢt)·cos(bᵢy+qᵢt)
-   velocity = (∂ψ/∂y, −∂ψ/∂x) ⇒ ∇·v = 0 exactly (incompressible circulation). */
-function flow(x, y, t){
-  const T=[[3.1,2.7,0.31,-0.22],[1.9,2.3,-0.17,0.26],[4.3,3.7,0.13,-0.11]];
-  let vx=0, vy=0;
-  for(const [a,b,p,q] of T){
-    const sx=Math.sin(a*x+p*t), cx=Math.cos(a*x+p*t);
-    const sy=Math.sin(b*y+q*t), cy=Math.cos(b*y+q*t);
-    vx += -b*sx*sy;   // ∂ψ/∂y
-    vy += -a*cx*cy;   // −∂ψ/∂x
-  }
-  return [vx, vy];
+/* analytic divergence-free drift (incompressible circulation, gentle) */
+function flow(x,y,t){
+  const T=[[3.1,2.7,0.31,-0.22],[1.9,2.3,-0.17,0.26]];
+  let vx=0,vy=0;
+  for(const [a,b,p,q] of T){ const sx=Math.sin(a*x+p*t),cx=Math.cos(a*x+p*t),sy=Math.sin(b*y+q*t),cy=Math.cos(b*y+q*t); vx+=-b*sx*sy; vy+=-a*cx*cy; }
+  return [vx,vy];
 }
 
-function rand(a,b){ return a+Math.random()*(b-a); }
+function makeBubble(src){
+  const el=document.createElement('div');
+  el.className='bubble'+(src?'':' placeholder');
+  const base=Math.min(W,H); const size=rand(base*0.13,base*0.22);
+  el.style.width=el.style.height=size+'px';
 
-function makeCell(src){
-  const el = document.createElement('div');
-  el.className = 'cell' + (src ? '' : ' placeholder');
-  const base = Math.min(W,H);
-  const size = rand(base*0.11, base*0.20);
-  el.style.width = el.style.height = size+'px';
+  if(src){ const img=document.createElement('img'); img.src=src; img.alt=''; el.appendChild(img); }
+  else{ const fill=document.createElement('div'); fill.className='fill';
+    const c1=PALETTE[(Math.random()*PALETTE.length)|0], c2=PALETTE[(Math.random()*PALETTE.length)|0];
+    fill.style.background=`radial-gradient(circle at 38% 32%, ${c1} 0%, ${c2} 52%, #10021f 92%)`;
+    el.appendChild(fill); }
+  const gloss=document.createElement('div'); gloss.className='gloss'; el.appendChild(gloss);
+  const ring=document.createElement('div'); ring.className='rim'; el.appendChild(ring);
 
-  if(src){
-    const img = document.createElement('img');
-    img.src = src; img.alt = '';
-    el.appendChild(img);
-  } else {
-    // living placeholder: a soft body of palette light
-    const c1 = PALETTE[(Math.random()*PALETTE.length)|0];
-    const c2 = PALETTE[(Math.random()*PALETTE.length)|0];
-    el.style.background = `radial-gradient(circle at 40% 35%, ${c1} 0%, ${c2} 45%, #06000e 78%)`;
-    el.style.animationDelay = (-rand(0,6))+'s';
-  }
-
-  const cell = {
-    el, size,
-    x: rand(0.12,0.88), y: rand(0.16,0.86),   // normalized position
-    vx: rand(-0.02,0.02), vy: rand(-0.02,0.02),
-    rot: rand(-8,8), spin: rand(-0.3,0.3),
-    charge: 0,          // 0..1 reverence build toward opening
-    liquefy: 0,         // 0..1 rendered melt amount
-    contact: false, broken: 0
-  };
-  nest.appendChild(el);
-  cells.push(cell);
-  updateCount();
-  return cell;
+  const r=size/2;
+  const b={ el,size,r,
+    x:rand(r,W-r), y:rand(r+H*0.14,H-r-H*0.14),
+    vx:rand(-12,12), vy:rand(-12,12),
+    rot:rand(-6,6), spin:rand(-0.25,0.25),
+    wob:rand(0,6.28), wobs:rand(1.4,2.6) };
+  nest.appendChild(el); bubbles.push(b); updateCount();
+  return b;
 }
+function updateCount(){ countEl.textContent = bubbles.length+' bubbles'; }
 
-function updateCount(){
-  const real = cells.filter(c=>!c.el.classList.contains('placeholder')).length;
-  countEl.textContent = real ? `${real} living` : `${cells.length} awaiting`;
-}
-
-/* ============================================================
-   PART III — CONTACT (the consent grammar)
-   ============================================================ */
-let ptr = {x:0.5, y:0.5, px:0.5, py:0.5, down:false, speed:0};
-let contactCell = null;
-const invite = document.getElementById('invite');
-let invited = false;
-
-const REVERENCE_SPEED = 0.020;   // below this = reverent; above = extraction
-const CHARGE_RATE     = 1.9;     // insulation ramp: seconds-scale to fully open
-const liqMap = document.getElementById('liqMap');
-const liqNoise = document.getElementById('liqNoise');
-
-function pointFromEvent(e){
-  const t = e.touches ? e.touches[0] : e;
-  return { x: t.clientX / W, y: t.clientY / H };
-}
-
-function onDown(e){
-  const p = pointFromEvent(e);
-  ptr.x=ptr.px=p.x; ptr.y=ptr.py=p.y; ptr.down=true;
+/* ===================== PART III — POINTER (stir + draw close) ===================== */
+let ptr={x:W/2,y:H/2,px:W/2,py:H/2,down:false}, invited=false;
+const invite=document.getElementById('invite');
+function pt(e){ const t=e.touches?e.touches[0]:e; return {x:t.clientX,y:t.clientY}; }
+function down(e){ const p=pt(e); ptr.x=ptr.px=p.x; ptr.y=ptr.py=p.y; ptr.down=true;
   if(!invited){ invited=true; invite.classList.add('gone'); }
-  const target = e.target.closest ? e.target.closest('.cell') : null;
-  if(target){
-    contactCell = cells.find(c=>c.el===target) || null;
-    if(contactCell) contactCell.contact = true;
-  }
-}
-function onMove(e){
-  const p = pointFromEvent(e);
-  ptr.px=ptr.x; ptr.py=ptr.y; ptr.x=p.x; ptr.y=p.y;
+  const tgt=e.target.closest?e.target.closest('.bubble'):null;
+  if(tgt){ const b=bubbles.find(x=>x.el===tgt); if(b){ b.el.style.zIndex=++topZ; b.pop=1; } } }
+function move(e){ const p=pt(e); ptr.px=ptr.x; ptr.py=ptr.y; ptr.x=p.x; ptr.y=p.y;
   const dx=ptr.x-ptr.px, dy=ptr.y-ptr.py;
-  ptr.speed = Math.hypot(dx,dy);
-
-  // the water always answers the hand
-  if(fluidOK && (ptr.down || ptr.speed>0.001)){
-    const r=Math.random();
-    const col = r>0.66 ? [0.9,0,0.9] : r>0.33 ? [0,0.9,0.9] : [0.9,0,0.35];
-    splat(ptr.x, 1.0-ptr.y, dx*W*6, -dy*H*6, col);
+  if(fluidOK && (ptr.down || Math.hypot(dx,dy)>1)){
+    const r=Math.random(), col=r>0.66?[0.85,0,0.85]:r>0.33?[0,0.85,0.85]:[0.85,0,0.32];
+    splat(ptr.x/W, 1-ptr.y/H, dx*6, -dy*6, col);
   }
-
-  // extraction check on the contacted cell: a fast yank breaks the circuit
-  if(contactCell && ptr.speed > REVERENCE_SPEED){
-    contactCell.broken = 1;              // circuit break
-    contactCell.charge = 0;              // reverence lost
-    // recoil: shove the cell along the yank vector, then release contact
-    contactCell.vx += dx*4; contactCell.vy += dy*4;
-    contactCell.contact = false;
-    contactCell = null;
-  }
+  // stir: push nearby bubbles along the drag
+  for(const b of bubbles){ const ddx=b.x-ptr.x, ddy=b.y-ptr.y, d=Math.hypot(ddx,ddy);
+    if(d<b.r+90){ const k=(1-d/(b.r+90))*0.5; b.vx+=dx*k+ (ddx/(d+1))*6*k; b.vy+=dy*k+(ddy/(d+1))*6*k; } }
 }
-function onUp(){
-  ptr.down=false;
-  if(contactCell){
-    // release: gentle outward recoil, re-cohere
-    contactCell.vx += (contactCell.x-0.5)*0.4;
-    contactCell.vy += (contactCell.y-0.5)*0.4;
-    contactCell.contact = false;
-    contactCell = null;
-  }
-}
+function up(){ ptr.down=false; }
+document.addEventListener('mousedown',down); document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
+document.addEventListener('touchstart',down,{passive:true});
+document.addEventListener('touchmove',e=>{e.preventDefault();move(e);},{passive:false});
+document.addEventListener('touchend',up);
 
-document.addEventListener('mousedown', onDown);
-document.addEventListener('mousemove', onMove);
-document.addEventListener('mouseup', onUp);
-document.addEventListener('touchstart', e=>{ onDown(e); }, {passive:true});
-document.addEventListener('touchmove', e=>{ e.preventDefault(); onMove(e); }, {passive:false});
-document.addEventListener('touchend', onUp);
-
-/* ============================================================
-   PART IV — THE LOOP (drift · open · overflow)
-   ============================================================ */
+/* ===================== PART IV — THE LOOP (drift · nest · wobble) ===================== */
+const AMP = REDUCE?1.6:3.4;
 let t=0, prev=performance.now();
 function loop(now){
-  const dt = Math.min((now-prev)/1000, 0.033); prev=now; t += dt;
+  const dt=Math.min((now-prev)/1000,0.033); prev=now; t+=dt;
 
-  let globalLiquefy = 0;
-
-  for(const c of cells){
-    // --- drift on the incompressible stream field ---
-    const [fx,fy] = flow(c.x*3.0, c.y*3.0, t*0.35);
-    c.vx += fx*AMP*dt; c.vy += fy*AMP*dt;
-
-    // reverent proximity: a slow hand parts the water, cells ease aside gently
-    if(ptr.down && ptr.speed < REVERENCE_SPEED){
-      const dx=c.x-ptr.x, dy=c.y-ptr.y, d=Math.hypot(dx,dy)+1e-4;
-      if(d<0.22){ c.vx += (dx/d)*0.15*dt; c.vy += (dy/d)*0.15*dt; }
-    }
-
-    // damping + integrate
-    c.vx*=0.94; c.vy*=0.94;
-    c.x += c.vx*dt; c.y += c.vy*dt;
-
-    // soft toroidal rebirth (a nest has no hard walls)
-    const m=0.14;
-    if(c.x<-m)c.x=1+m; if(c.x>1+m)c.x=-m;
-    if(c.y<-m)c.y=1+m; if(c.y>1+m)c.y=-m;
-
-    c.rot += c.spin*dt*60;
-
-    // --- CONTACT: reverence charges, insulation ramps, cell opens ---
-    if(c.contact && ptr.down && ptr.speed < REVERENCE_SPEED){
-      c.charge = Math.min(1, c.charge + dt/CHARGE_RATE);   // slow, insulated
-      c.broken = 0;
-    } else if(!c.contact){
-      c.charge = Math.max(0, c.charge - dt*0.7);            // cools when let go
-    }
-    // liquefy follows charge
-    c.liquefy += (c.charge - c.liquefy) * Math.min(1, dt*4);
-    if(c.broken>0) c.broken = Math.max(0, c.broken - dt*1.5);
-
-    // --- OVERFLOW: an opening cell bleeds dye back into the water (loop closes) ---
-    if(c.liquefy > 0.35 && fluidOK && Math.random() < c.liquefy*0.6){
-      splat(c.x, 1.0-c.y, (Math.random()-0.5)*80, (Math.random()-0.5)*80, [c.liquefy*0.7,0,c.liquefy*0.8]);
-    }
-
-    if(c.liquefy > globalLiquefy) globalLiquefy = c.liquefy;
-
-    // --- render the cell ---
-    const px = c.x*W - c.size/2, py = c.y*H - c.size/2;
-    const grip = c.contact ? 1.03 : 1.0;
-    el_transform(c, px, py, grip);
-
-    // circuit-break flicker: rejected extraction reads as glitch/desaturate
-    if(c.broken>0){
-      c.el.style.filter = `hue-rotate(${(Math.random()*40-20)|0}deg) saturate(${1-c.broken*0.8})`;
-      c.el.style.opacity = 0.55 + Math.random()*0.4;
-    } else if(!c.contact){
-      c.el.style.filter = ''; c.el.style.opacity = '';
-    }
-
-    // the opening cell melts and dissolves further into the current
-    if(c.liquefy > 0.02){
-      c.el.style.filter = 'url(#liquefy)';
-      c.el.style.maskImage = c.el.style.webkitMaskImage =
-        `radial-gradient(ellipse 50% 50% at 50% 50%, #000 ${34-c.liquefy*20}%, transparent ${70-c.liquefy*18}%)`;
-    } else if(c.el.style.maskImage){
-      c.el.style.maskImage = c.el.style.webkitMaskImage = '';
-    }
+  // drift
+  for(const b of bubbles){
+    const [fx,fy]=flow(b.x/W*3, b.y/H*3, t*0.3);
+    b.vx+=fx*AMP*dt*10; b.vy+=fy*AMP*dt*10;
   }
-
-  // one shared liquefy filter, driven by the deepest open cell
-  const scale = globalLiquefy*30;
-  liqMap.setAttribute('scale', scale.toFixed(2));
-  const bf = 0.012 + Math.sin(t*0.8)*0.004;
-  liqNoise.setAttribute('baseFrequency', `${bf.toFixed(4)} ${(bf*1.6).toFixed(4)}`);
-
+  // soft collision → bubbles nestle together
+  for(let i=0;i<bubbles.length;i++) for(let j=i+1;j<bubbles.length;j++){
+    const a=bubbles[i], c=bubbles[j]; const dx=c.x-a.x, dy=c.y-a.y; let d=Math.hypot(dx,dy);
+    const min=(a.r+c.r)*0.9; if(d>0 && d<min){ const push=(min-d)/d*0.5, ux=dx*push, uy=dy*push;
+      a.x-=ux; a.y-=uy; c.x+=ux; c.y+=uy; a.vx-=ux*0.6; a.vy-=uy*0.6; c.vx+=ux*0.6; c.vy+=uy*0.6; }
+  }
+  // integrate + soft walls (stay on-screen, nest inward)
+  for(const b of bubbles){
+    b.vx*=0.90; b.vy*=0.90; b.x+=b.vx*dt*60; b.y+=b.vy*dt*60;
+    if(b.x<b.r){b.x=b.r;b.vx=Math.abs(b.vx)*0.6;} if(b.x>W-b.r){b.x=W-b.r;b.vx=-Math.abs(b.vx)*0.6;}
+    if(b.y<b.r){b.y=b.r;b.vy=Math.abs(b.vy)*0.6;} if(b.y>H-b.r){b.y=H-b.r;b.vy=-Math.abs(b.vy)*0.6;}
+    b.rot+=b.spin*dt*60;
+    if(b.pop){ b.pop=Math.max(0,b.pop-dt*2.2); }
+    // surface-tension wobble + tap pop
+    const wob=Math.sin(t*b.wobs+b.wob)*0.035;
+    const pop=b.pop?b.pop*0.12:0;
+    const sx=1+wob+pop, sy=1-wob+pop;
+    b.el.style.transform=`translate3d(${(b.x-b.r).toFixed(1)}px,${(b.y-b.r).toFixed(1)}px,0) rotate(${b.rot.toFixed(1)}deg) scale(${sx.toFixed(3)},${sy.toFixed(3)})`;
+  }
   requestAnimationFrame(loop);
-}
-function el_transform(c, px, py, s){
-  c.el.style.transform = `translate3d(${px.toFixed(1)}px, ${py.toFixed(1)}px, 0) rotate(${c.rot.toFixed(1)}deg) scale(${s})`;
 }
 requestAnimationFrame(loop);
 
-/* ============================================================
-   PART V — LOADING (persistent urls · drop · pick) + reset
-   ============================================================ */
-function seed(){
-  cells.forEach(c=>c.el.remove()); cells.length=0;
-  if(GIFS.length){ GIFS.forEach(u=>makeCell(u)); }
-  else { for(let i=0;i<PLACEHOLDER_COUNT;i++) makeCell(null); }
-  updateCount();
-}
+/* ===================== PART V — LOADING ===================== */
+function seed(){ bubbles.forEach(b=>b.el.remove()); bubbles.length=0;
+  if(GIFS.length) GIFS.forEach(u=>makeBubble(u)); else for(let i=0;i<PLACEHOLDER_COUNT;i++) makeBubble(null); updateCount(); }
 seed();
-
-function addFiles(fileList){
-  const files = [...fileList].filter(f=>f.type.startsWith('image/'));
-  if(!files.length) return;
-  // first real gif clears the placeholders so the nest is truly theirs
-  if(cells.every(c=>c.el.classList.contains('placeholder'))){
-    cells.forEach(c=>c.el.remove()); cells.length=0;
-  }
-  files.forEach(f=>makeCell(URL.createObjectURL(f)));
-}
-
-const fileInput = document.getElementById('fileInput');
-document.getElementById('addBtn').addEventListener('click', ()=>fileInput.click());
-fileInput.addEventListener('change', e=>addFiles(e.target.files));
-document.getElementById('resetBtn').addEventListener('click', seed);
-
-// drag-and-drop anywhere
-const veil = document.getElementById('dropveil');
-['dragenter','dragover'].forEach(ev=>document.addEventListener(ev, e=>{ e.preventDefault(); veil.classList.add('show'); }));
-['dragleave','drop'].forEach(ev=>document.addEventListener(ev, e=>{ e.preventDefault(); veil.classList.remove('show'); }));
-document.addEventListener('drop', e=>{ if(e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files); });
-
-// if the water never came up, keep the nest breathing on curl alone
-if(!fluidOK){ canvas.style.display='none'; }
+function addFiles(list){ const files=[...list].filter(f=>f.type.startsWith('image/')); if(!files.length) return;
+  if(bubbles.every(b=>b.el.classList.contains('placeholder'))){ bubbles.forEach(b=>b.el.remove()); bubbles.length=0; }
+  files.forEach(f=>makeBubble(URL.createObjectURL(f))); }
+const fileInput=document.getElementById('fileInput');
+document.getElementById('addBtn').addEventListener('click',()=>fileInput.click());
+fileInput.addEventListener('change',e=>addFiles(e.target.files));
+document.getElementById('resetBtn').addEventListener('click',seed);
+const veil=document.getElementById('dropveil');
+['dragenter','dragover'].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();veil.classList.add('show');}));
+['dragleave','drop'].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();veil.classList.remove('show');}));
+document.addEventListener('drop',e=>{ if(e.dataTransfer&&e.dataTransfer.files) addFiles(e.dataTransfer.files); });
+if(!fluidOK) canvas.style.display='none';
 </script>
 </body>
 </html>
+
