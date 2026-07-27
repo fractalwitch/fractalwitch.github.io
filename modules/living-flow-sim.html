@@ -3,112 +3,85 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ΣΩ | SOVEREIGN SOLITON — Circulation vs Extraction</title>
+<title>ΣΩ | SOVEREIGN SOLITON — ∇·Θ = 0</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital@0;1&family=Courier+Prime:wght@400;700&display=swap');
 
 :root{
   --void:#05000f;
-  --magenta:#ff00ff;
-  --cyan:#00ffff;
-  --violet:#b14bff;
-  --rose:#ff69b4;
-  --gold:#ffd447;
-  --extract:#ff3b6b;   /* the color of a broken circuit */
-  --flow:#3affd0;      /* the color of coherent circulation */
+  --magenta:#ff00ff; --cyan:#00ffff; --violet:#b14bff;
+  --rose:#ff69b4; --gold:#ffd447;
+  --extract:#ff3b6b;   /* broken circuit — divergence not zero */
+  --flow:#3affd0;      /* coherent circulation — divergence zero */
 }
-
 *{box-sizing:border-box;margin:0;padding:0;}
-
 html,body{
-  width:100%;height:100%;
-  background:var(--void);
-  color:#fff;
-  font-family:'Courier Prime',monospace;
-  overflow:hidden;
-  touch-action:none;
-  -webkit-user-select:none;user-select:none;
+  width:100%;height:100%;background:var(--void);color:#fff;
+  font-family:'Courier Prime',monospace;overflow:hidden;
+  touch-action:none;-webkit-user-select:none;user-select:none;
 }
-
-/* ambient nebula so the void breathes rather than sits dead */
 body{
   background:
-    radial-gradient(circle at 22% 18%, rgba(177,75,255,.18) 0%, transparent 45%),
-    radial-gradient(circle at 82% 78%, rgba(0,255,255,.12) 0%, transparent 50%),
+    radial-gradient(circle at 22% 18%, rgba(177,75,255,.16) 0%, transparent 45%),
+    radial-gradient(circle at 82% 80%, rgba(0,255,255,.10) 0%, transparent 50%),
     var(--void);
 }
-
 canvas{position:fixed;inset:0;width:100%;height:100%;z-index:1;display:block;}
 
-/* --- header: names the ontology without shouting it --- */
 #head{
   position:fixed;top:0;left:0;width:100%;z-index:10;
-  padding:14px 18px 10px;text-align:center;pointer-events:none;
-  background:linear-gradient(180deg, rgba(5,0,15,.92) 0%, rgba(5,0,15,.55) 70%, transparent 100%);
+  padding:12px 18px 8px;text-align:center;pointer-events:none;
+  background:linear-gradient(180deg, rgba(5,0,15,.92) 0%, rgba(5,0,15,.5) 70%, transparent 100%);
 }
 #head h1{
   font-family:'Cinzel',serif;font-weight:700;
-  font-size:clamp(1.1rem,4.6vw,2.1rem);letter-spacing:.14em;
+  font-size:clamp(1.05rem,4.4vw,2rem);letter-spacing:.14em;
   text-shadow:0 0 18px var(--magenta),0 0 40px rgba(177,75,255,.5);
 }
 #head .frame{
   font-family:'Playfair Display',serif;font-style:italic;
-  font-size:clamp(.62rem,2.4vw,.9rem);color:#d9c9ff;opacity:.85;
-  margin-top:4px;letter-spacing:.02em;
+  font-size:clamp(.58rem,2.3vw,.85rem);color:#d9c9ff;opacity:.85;margin-top:3px;
 }
 
-/* --- toolbar --- */
+#hud{
+  position:fixed;top:74px;left:10px;z-index:9;pointer-events:none;
+  font-size:9.5px;line-height:1.5;letter-spacing:.02em;
+  background:rgba(8,0,20,.55);border:1px solid rgba(177,75,255,.3);
+  border-radius:8px;padding:8px 10px;backdrop-filter:blur(4px);max-width:48vw;
+}
+#hud .t{color:var(--violet);font-weight:700;letter-spacing:.12em;font-size:8.5px;}
+#hud .ok{color:var(--flow);} #hud .no{color:var(--extract);} #hud .dim{color:#8a7ea8;}
+
 #bar{
   position:fixed;bottom:0;left:0;width:100%;z-index:10;
   display:flex;flex-wrap:wrap;justify-content:center;align-items:center;
-  gap:8px;padding:12px 10px calc(12px + env(safe-area-inset-bottom));
-  background:linear-gradient(0deg, rgba(5,0,15,.95) 0%, rgba(5,0,15,.6) 70%, transparent 100%);
+  gap:7px;padding:11px 10px calc(11px + env(safe-area-inset-bottom));
+  background:linear-gradient(0deg, rgba(5,0,15,.95) 0%, rgba(5,0,15,.55) 70%, transparent 100%);
 }
 button.ctl{
-  font-family:'Courier Prime',monospace;font-weight:700;
-  text-transform:uppercase;letter-spacing:.12em;font-size:.66rem;
-  padding:11px 15px;border-radius:40px;cursor:pointer;
-  background:rgba(255,255,255,.03);color:#fff;
-  border:1px solid var(--cyan);box-shadow:0 0 14px rgba(0,255,255,.15);
-  transition:all .18s ease;-webkit-tap-highlight-color:transparent;
+  font-family:'Courier Prime',monospace;font-weight:700;text-transform:uppercase;
+  letter-spacing:.1em;font-size:.62rem;padding:10px 13px;border-radius:40px;cursor:pointer;
+  background:rgba(255,255,255,.03);color:#fff;border:1px solid var(--cyan);
+  box-shadow:0 0 14px rgba(0,255,255,.15);transition:all .18s ease;-webkit-tap-highlight-color:transparent;
 }
 button.ctl:active{transform:scale(.94);}
 button.ctl.hot{border-color:var(--extract);color:var(--extract);box-shadow:0 0 16px rgba(255,59,107,.35);}
-button.ctl.hot:hover{background:rgba(255,59,107,.14);}
 button.ctl.on{background:var(--cyan);color:#000;}
-.sldr{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:96px;}
-.sldr label{font-size:.55rem;letter-spacing:.14em;color:var(--cyan);text-transform:uppercase;opacity:.85;}
-input[type=range]{width:110px;accent-color:var(--violet);}
+.sldr{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.sldr label{font-size:.5rem;letter-spacing:.12em;color:var(--cyan);text-transform:uppercase;opacity:.85;}
+input[type=range]{width:92px;accent-color:var(--violet);}
 
-/* --- intro veil --- */
 #veil{
-  position:fixed;inset:0;z-index:50;
-  display:flex;flex-direction:column;justify-content:center;align-items:center;
-  text-align:center;padding:24px;
+  position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;text-align:center;padding:24px;
   background:radial-gradient(circle at 50% 40%, rgba(20,0,40,.85), rgba(5,0,15,.98));
   transition:opacity .5s ease;
 }
 #veil.gone{opacity:0;pointer-events:none;}
-#veil h2{
-  font-family:'Cinzel',serif;font-size:clamp(1.6rem,8vw,3.4rem);
-  letter-spacing:.1em;text-shadow:0 0 26px var(--magenta);
-}
-#veil p{
-  font-family:'Playfair Display',serif;font-style:italic;
-  max-width:560px;margin:18px auto 0;line-height:1.7;
-  font-size:clamp(.8rem,3.2vw,1.05rem);color:#e5d8ff;
-}
-#veil .legend{
-  margin-top:22px;display:flex;gap:26px;flex-wrap:wrap;justify-content:center;
-  font-size:.72rem;letter-spacing:.05em;
-}
-#veil .legend b{font-weight:700;}
-.enter{
-  margin-top:34px;padding:16px 40px;font-family:'Courier Prime';font-weight:700;
-  letter-spacing:.28em;text-transform:uppercase;font-size:.8rem;
-  background:transparent;color:var(--cyan);border:2px solid var(--cyan);
-  box-shadow:0 0 24px var(--cyan);cursor:pointer;border-radius:2px;
-}
+#veil h2{font-family:'Cinzel',serif;font-size:clamp(1.6rem,8vw,3.4rem);letter-spacing:.1em;text-shadow:0 0 26px var(--magenta);}
+#veil p{font-family:'Playfair Display',serif;font-style:italic;max-width:600px;margin:16px auto 0;line-height:1.7;font-size:clamp(.78rem,3vw,1.02rem);color:#e5d8ff;}
+#veil .law{margin-top:16px;font-family:'Courier Prime';font-size:.7rem;color:var(--flow);letter-spacing:.06em;}
+.enter{margin-top:30px;padding:15px 38px;font-family:'Courier Prime';font-weight:700;letter-spacing:.26em;text-transform:uppercase;font-size:.78rem;background:transparent;color:var(--cyan);border:2px solid var(--cyan);box-shadow:0 0 24px var(--cyan);cursor:pointer;border-radius:2px;}
 .enter:active{background:var(--cyan);color:#000;}
 </style>
 </head>
@@ -118,428 +91,362 @@ input[type=range]{width:110px;accent-color:var(--violet);}
 
 <div id="head">
   <h1>SOVEREIGN SOLITON</h1>
-  <div class="frame">a circulation pattern is not a container — overload it and one system drops the flow, the other rebirths larger</div>
+  <div class="frame">two systems metabolize the same flow — one leaks coherence, one holds it</div>
 </div>
+
+<div id="hud"></div>
 
 <div id="bar">
   <button id="play" class="ctl on">⏸ Pause</button>
   <button id="shock" class="ctl hot">⚡ Shockwave</button>
   <button id="storm" class="ctl">🌊 Auto-Storm</button>
+  <button id="sub" class="ctl on">⚛ Substrate</button>
   <button id="reset" class="ctl">↺ Reset</button>
-  <div class="sldr">
-    <label>Flow Rate</label>
-    <input id="rate" type="range" min="0.3" max="4" step="0.1" value="1">
-  </div>
-  <div class="sldr">
-    <label>Tempo</label>
-    <input id="tempo" type="range" min="1" max="22" step="1" value="7">
-  </div>
+  <div class="sldr"><label>Flow</label><input id="rate" type="range" min="0.3" max="4" step="0.1" value="1"></div>
+  <div class="sldr"><label>Tempo</label><input id="tempo" type="range" min="1" max="22" step="1" value="7"></div>
 </div>
 
 <div id="veil">
   <h2>ΣΩ</h2>
-  <p>Two systems metabolize the same incoming flow. When the load exceeds what a membrane can hold, the <b>Brittle</b> system rejects nothing structurally — it simply breaks the circuit and lets the excess fall away, lost forever. The <b>Sovereign Soliton</b> treats the same overload as a threshold: it collapses, sheds half its charge, and reforms with a permanently larger capacity. Extraction versus circulation, watched in real time.</p>
-  <div class="legend">
-    <span><b style="color:var(--extract)">■ Extractive Collapse</b> — drops load, keeps breaking</span>
-    <span><b style="color:var(--flow)">■ Coherent Flow</b> — collapses &amp; rebirths stronger</span>
-  </div>
+  <p>The Living Lattice defines a Sovereign Soliton as an open container with <b>zero boundary divergence</b>. Below, the coherent field is built divergence-free by construction; the extractive field carries sinks that drain it. When a soliton's boundary divergence breaks the zero-divergence invariant, the SHACL guardrail fails — and that failure <i>is</i> the Ego Collapse: shed half, upgrade &Upsilon;, return to zero. Beneath it all, an exact KdV two-soliton passes through itself and survives.</p>
+  <div class="law">&part;&#8348;u + 6u &part;&#8339;u + &part;&#8339;&sup3;u = 0&nbsp;&nbsp;·&nbsp;&nbsp;u = 2 &part;&#8339;&sup2; ln &tau;&nbsp;&nbsp;·&nbsp;&nbsp;&nabla;·&Theta; = 0</div>
   <button class="enter" onclick="enter()">Enter the Field</button>
 </div>
 
 <script>
 /* =========================================================================
-   SOVEREIGN SOLITON — live agent field
-   Faithful port of the Brittle vs Soliton Python model, rendered as
-   selective membranes regulating flow in a continuous system.
-   Emotional target: the felt difference between a wall that shatters
-   and a membrane that completes the loop.
+   SOVEREIGN SOLITON · PHASE II
+   Genuine physics substrate bound to deltamythos MED ontology + SHACL shapes.
+   Emotional target: coherence you can measure — the felt difference between a
+   field that circulates everything and a field quietly bleeding into drains.
    ========================================================================= */
-
-const cv  = document.getElementById('c');
-const ctx = cv.getContext('2d');
+const cv=document.getElementById('c'), ctx=cv.getContext('2d');
 let W=0,H=0,DPR=1;
-
 function resize(){
-  DPR = Math.min(window.devicePixelRatio||1, 2);
-  W = cv.clientWidth; H = cv.clientHeight;
-  cv.width = W*DPR; cv.height = H*DPR;
-  ctx.setTransform(DPR,0,0,DPR,0,0);
+  DPR=Math.min(window.devicePixelRatio||1,2);
+  W=cv.clientWidth;H=cv.clientHeight;cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);
+  layoutFields();
 }
-window.addEventListener('resize', resize);
+window.addEventListener('resize',resize);
+const HUD=document.getElementById('hud');
 
-/* ---- shared feel: reusable particle (borrowed materials in transit) ---- */
+/* ------------------------------------------------------------------ *
+ * 1. FLOW SUBSTRATE — Helmholtz decomposition made visible
+ *    coherent   v = curl(psi)        -> div v = 0 exactly (solenoidal)
+ *    extractive v = curl(psi) + gradSinks -> div v < 0 near sinks (leak)
+ * ------------------------------------------------------------------ */
+const K=0.021, Wv=0.55, Apsi=1.0, FSPD=46;
+// divergence-free by construction: v = (d psi/dy, -d psi/dx)
+function curlPsi(x,y,t){
+  const a1=K*x+Wv*t, b1=K*y, a2=2*K*x-Wv*t, b2=2*K*y;
+  const vx =  Apsi*( Math.sin(a1)*(-K*Math.sin(b1)) + 0.5*Math.sin(a2)*(-2*K*Math.sin(b2)) );
+  const vy = -Apsi*( Math.cos(a1)*( K*Math.cos(b1)) + 0.5*Math.cos(a2)*( 2*K*Math.cos(b2)) );
+  return [vx,vy];
+}
+let sinks=[];  // v_sink = -q (p-s) e^{-r^2/s2};  div v_sink = -2q e^{-r^2/s2}(1 - r^2/s2)
+function gradSinks(x,y){
+  let gx=0,gy=0;
+  for(const s of sinks){
+    const dx=x-s.x, dy=y-s.y, e=Math.exp(-(dx*dx+dy*dy)/s.s2);
+    gx += -s.q*dx*e; gy += -s.q*dy*e;   // points toward the well -> inflow
+  }
+  return [gx,gy];
+}
+function velAt(x,y,t,leak){
+  const [cx,cy]=curlPsi(x,y,t);
+  if(!leak) return [cx*FSPD, cy*FSPD];
+  const [gx,gy]=gradSinks(x,y);
+  return [(cx+gx)*FSPD, (cy+gy)*FSPD];
+}
+// numerical divergence for the live meter (central differences)
+function measureDiv(rect,t,leak){
+  const h=6; let acc=0,n=0;
+  for(let x=rect.x+20;x<rect.x+rect.w-20;x+=Math.max(24,rect.w/6)){
+    for(let y=rect.y+20;y<rect.y+rect.h-20;y+=Math.max(24,rect.h/6)){
+      const a=velAt(x+h,y,t,leak), b=velAt(x-h,y,t,leak);
+      const c=velAt(x,y+h,t,leak), d=velAt(x,y-h,t,leak);
+      acc += (a[0]-b[0])/(2*h)+(c[1]-d[1])/(2*h); n++;
+    }
+  }
+  return n?acc/n:0;
+}
+
+let colL={},colR={},fieldParts=[];
+function layoutFields(){
+  const padTop=76, padBot=88, uh=H-padTop-padBot, aH=uh*0.60;
+  colL={x:0,   y:padTop, w:W/2, h:aH};   // extractive
+  colR={x:W/2, y:padTop, w:W/2, h:aH};   // coherent
+  sinks=[
+    {x:colL.x+colL.w*0.30, y:colL.y+colL.h*0.35, q:0.9, s2:2*38*38},
+    {x:colL.x+colL.w*0.68, y:colL.y+colL.h*0.66, q:1.1, s2:2*44*44},
+  ];
+  fieldParts=[];
+  const per=90;
+  for(const pair of [[colL,true],[colR,false]]){
+    const rect=pair[0], leak=pair[1];
+    for(let i=0;i<per;i++) fieldParts.push({
+      x:rect.x+Math.random()*rect.w, y:rect.y+Math.random()*rect.h, px:0,py:0, leak, rect
+    });
+  }
+}
+function stepFields(dt,t){
+  for(const p of fieldParts){
+    const v=velAt(p.x,p.y,t,p.leak);
+    p.px=p.x; p.py=p.y; p.x+=v[0]*dt; p.y+=v[1]*dt;
+    const r=p.rect;
+    if(p.x<r.x)p.x+=r.w; else if(p.x>r.x+r.w)p.x-=r.w;   // toroidal recirculation
+    if(p.y<r.y)p.y+=r.h; else if(p.y>r.y+r.h)p.y-=r.h;
+    if(p.leak){                                          // caught by a sink -> consumed
+      for(const s of sinks){const dx=p.x-s.x,dy=p.y-s.y;
+        if(dx*dx+dy*dy<90){p.x=r.x+Math.random()*r.w;p.y=r.y+Math.random()*r.h;break;}}
+    }
+  }
+}
+function drawFields(){
+  if(!showSub) return;
+  ctx.lineWidth=1;
+  for(const p of fieldParts){
+    ctx.strokeStyle = p.leak ? 'rgba(255,59,107,0.28)' : 'rgba(58,255,208,0.30)';
+    ctx.beginPath(); ctx.moveTo(p.px,p.py); ctx.lineTo(p.x,p.y); ctx.stroke();
+  }
+  for(const s of sinks){
+    const g=ctx.createRadialGradient(s.x,s.y,0,s.x,s.y,26);
+    g.addColorStop(0,'rgba(255,59,107,0.30)'); g.addColorStop(1,'rgba(255,59,107,0)');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(s.x,s.y,26,0,Math.PI*2); ctx.fill();
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * 2. EXACT KdV TWO-SOLITON   u = 2 d^2/dx^2 ln tau  (tau-function, exact)
+ *    tau = 1 + e^{th1} + e^{th2} + A12 e^{th1+th2},  thi = ki x - ki^3 t
+ *    taller soliton faster and narrower; they collide and survive.
+ * ------------------------------------------------------------------ */
+const kdv={k1:1.15,k2:0.72,t:0,dir:1,T:7.5,x0:-9,x1:9};
+function lnTau(x,t,k1,k2){
+  const th1=k1*x-k1*k1*k1*t, th2=k2*x-k2*k2*k2*t;
+  const A12=Math.pow((k1-k2)/(k1+k2),2), lA=Math.log(A12);
+  const e=[0,th1,th2,th1+th2+lA], m=Math.max(e[0],e[1],e[2],e[3]);
+  return m+Math.log(Math.exp(e[0]-m)+Math.exp(e[1]-m)+Math.exp(e[2]-m)+Math.exp(e[3]-m));
+}
+function drawKdV(band){
+  const N=150, u=new Array(N), k1=kdv.k1, k2=kdv.k2, t=kdv.t;
+  const dx=(kdv.x1-kdv.x0)/(N-1), h=dx;
+  let prev=lnTau(kdv.x0-h,t,k1,k2), cur=lnTau(kdv.x0,t,k1,k2), umax=0.001;
+  for(let i=0;i<N;i++){
+    const nx=kdv.x0+(i+1)*dx, next=lnTau(nx,t,k1,k2);
+    u[i]=2*(next-2*cur+prev)/(h*h); if(u[i]>umax)umax=u[i];
+    prev=cur; cur=next;
+  }
+  const bx=band.x,by=band.y,bw=band.w,bh=band.h;
+  ctx.save();
+  ctx.strokeStyle='rgba(255,212,71,0.95)'; ctx.lineWidth=2;
+  ctx.shadowColor='rgba(255,212,71,.7)'; ctx.shadowBlur=10; ctx.beginPath();
+  for(let i=0;i<N;i++){const px=bx+bw*i/(N-1), py=by+bh-(u[i]/umax)*bh*0.92; i?ctx.lineTo(px,py):ctx.moveTo(px,py);}
+  ctx.stroke(); ctx.shadowBlur=0;
+  ctx.fillStyle='rgba(255,212,71,.7)'; ctx.font="8px 'Courier Prime'"; ctx.textAlign='left';
+  ctx.fillText('KdV two-soliton — collide & survive', bx+4, by+9);
+  ctx.restore();
+}
+
+/* ------------------------------------------------------------------ *
+ * 3. AGENTS — faithful ports (Brittle drops flow; Soliton rebirths)
+ * ------------------------------------------------------------------ */
 class Particle{
-  constructor(x,y,vx,vy,life,color,size){
-    this.x=x;this.y=y;this.vx=vx;this.vy=vy;
-    this.life=life;this.max=life;this.color=color;this.size=size;
-  }
-  update(dt){
-    this.x+=this.vx*dt; this.y+=this.vy*dt;
-    this.vy+=this.gravity? 340*dt : 0;
-    this.life-=dt;
-    return this.life>0;
-  }
+  constructor(x,y,vx,vy,life,color,size){this.x=x;this.y=y;this.vx=vx;this.vy=vy;this.life=life;this.max=life;this.color=color;this.size=size;}
+  update(dt){this.x+=this.vx*dt;this.y+=this.vy*dt;if(this.g)this.vy+=340*dt;this.life-=dt;return this.life>0;}
 }
-
-/* =========================================================================
-   THE RIGID SYSTEM — overloaded = crash and permanent loss
-   ========================================================================= */
 class BrittleAgent{
-  constructor(id){
-    this.id=id; this.capacity=10; this.load=0;
-    this.completed=0; this.dropped=0;
-    this.flash=0; this.crack=0; this.parts=[];   // visual state
+  constructor(id){this.id=id;this.capacity=10;this.load=0;this.completed=0;this.dropped=0;this.flash=0;this.crack=0;this.parts=[];}
+  step(inc){
+    this.load+=inc;
+    const p=Math.min(this.load,this.capacity); this.completed+=p; this.load-=p;
+    if(this.load>0){const lost=this.load;this.dropped+=lost;this.load=0;this.onDrop(lost);} // circuit breaks
   }
-  step(incoming){
-    this.load += incoming;
-    const processed = Math.min(this.load, this.capacity);
-    this.completed += processed;
-    this.load -= processed;
-    // the extraction: if overloaded, throw away the excess — the circuit breaks
-    if(this.load > 0){
-      const lost = this.load;
-      this.dropped += lost;
-      this.load = 0;
-      this.onDrop(lost);
-    }
-  }
-  onDrop(amount){
-    this.flash=1; this.crack=1;
-    const n = Math.min(28, 6+Math.floor(amount));
-    for(let i=0;i<n;i++){
-      const p=new Particle(this.px, this.py-this.vh*0.4,
-        (Math.random()-0.5)*90, 30+Math.random()*70,
-        0.9+Math.random()*0.6, 'rgba(255,59,107,', 2+Math.random()*2.5);
-      p.gravity=true; this.parts.push(p);   // flow falls out of the system, gone
-    }
-  }
+  onDrop(a){this.flash=1;this.crack=1;const n=Math.min(28,6+Math.floor(a));
+    for(let i=0;i<n;i++){const q=new Particle(this.px,this.py-this.vh*0.4,(Math.random()-.5)*90,30+Math.random()*70,0.9+Math.random()*0.6,'rgba(255,59,107,',2+Math.random()*2.5);q.g=true;this.parts.push(q);}}
 }
-
-/* =========================================================================
-   THE SOVEREIGN SOLITON — overloaded = collapse and rebirth stronger
-   ========================================================================= */
 class SolitonAgent{
-  constructor(id){
-    this.id=id; this.capacity=10; this.load=0; this.completed=0;
-    this.upsilon=1.0;         // depth of past breakage — memory of every threshold crossed
-    this.recursion_depth=0;
-    this.overload_counter=0;
-    this.flash=0; this.bloom=0; this.parts=[]; this.scale=1;
-  }
+  constructor(id){this.id=id;this.capacity=10;this.load=0;this.completed=0;
+    this.upsilon=1.0;this.recursion_depth=0;this.overload_counter=0;
+    this.boundaryDivergence=0;this.flash=0;this.bloom=0;this.parts=[];
+    this.phase=Math.random()*Math.PI*2;}                 // Sisterlock oscillator
   execute_ego_collapse(){
-    // the turn: reset, shed half the load intentionally, upgrade the membrane
-    this.recursion_depth=0;
-    this.load = this.load/2.0;      // shed half — consent to release
-    this.upsilon *= 1.5;            // each collapse deepens future capacity
-    this.capacity += this.upsilon*2.0;  // permanent structural upgrade
+    this.recursion_depth=0; this.load=this.load/2.0;      // shed half — consent to release
+    this.upsilon*=1.5; this.capacity+=this.upsilon*2.0;   // permanent structural upgrade
     this.onCollapse();
   }
-  step(incoming){
-    this.load += incoming;
-    // boundary divergence: load beyond the membrane's current hold
-    if(this.load > this.capacity) this.overload_counter++;
-    else this.overload_counter = Math.max(0, this.overload_counter-1);
-    // sustained stress for 3 ticks → the threshold is real, not noise
-    if(this.overload_counter >= 3){ this.execute_ego_collapse(); this.overload_counter=0; }
-    const processed = Math.min(this.load, this.capacity);
-    this.completed += processed;
-    this.load -= processed;
+  step(inc){
+    this.load+=inc;
+    // MED invariant: boundaryDivergence = leak beyond the membrane's hold
+    this.boundaryDivergence = this.load>this.capacity ? (this.load-this.capacity)/this.capacity : 0;
+    if(this.boundaryDivergence>1e-3) this.overload_counter++;
+    else this.overload_counter=Math.max(0,this.overload_counter-1);
+    // SHACL guardrail fails (divergence != 0 sustained) -> immediate Ego Collapse
+    if(this.overload_counter>=2){ this.execute_ego_collapse(); this.overload_counter=0;
+      this.phase+=1.6*(Math.random()-.2); }              // collapse kicks the phase
+    const p=Math.min(this.load,this.capacity); this.completed+=p; this.load-=p;
   }
-  onCollapse(){
-    this.flash=1; this.bloom=1;
-    // overflow completes the loop — particles radiate outward as gift, not loss
-    for(let i=0;i<26;i++){
-      const a=Math.random()*Math.PI*2, sp=60+Math.random()*140;
-      const col = Math.random()<0.5?'rgba(58,255,208,':(Math.random()<0.5?'rgba(177,75,255,':'rgba(255,212,71,');
-      this.parts.push(new Particle(this.px, this.py-this.vh*0.4,
-        Math.cos(a)*sp, Math.sin(a)*sp-20, 0.7+Math.random()*0.7, col, 2+Math.random()*2.5));
-    }
-  }
+  onCollapse(){this.flash=1;this.bloom=1;
+    for(let i=0;i<26;i++){const a=Math.random()*Math.PI*2,sp=60+Math.random()*140;
+      const col=Math.random()<.5?'rgba(58,255,208,':(Math.random()<.5?'rgba(177,75,255,':'rgba(255,212,71,');
+      this.parts.push(new Particle(this.px,this.py-this.vh*0.4,Math.cos(a)*sp,Math.sin(a)*sp-20,0.7+Math.random()*0.7,col,2+Math.random()*2.5));}}
 }
 
-/* =========================================================================
-   THE FIELD — controller
-   ========================================================================= */
-const AGENTS=3, WINDOW=170;
-let brittle=[], soliton=[], hist=[], shockMarks=[], tick=0;
-let running=true, storm=false;
-let flowRate=1, tempo=7;
+/* ------------------------------------------------------------------ *
+ * 4. SISTERLOCK — Kuramoto phase coupling (dm:entangledWith, symmetric)
+ *    dphi_i/dt = w + (K/N) sum sin(phi_j - phi_i);  order param r -> 1 = locked
+ * ------------------------------------------------------------------ */
+const SIS_K=1.8, SIS_W=0.9;
+function stepSisterlock(dt){
+  const N=soliton.length, ph=soliton.map(s=>s.phase);
+  soliton.forEach((s,i)=>{let c=0;for(let j=0;j<N;j++)if(j!==i)c+=Math.sin(ph[j]-ph[i]);s.phase+=(SIS_W+(SIS_K/N)*c)*dt;});
+}
+function sisterOrder(){let re=0,im=0;for(const s of soliton){re+=Math.cos(s.phase);im+=Math.sin(s.phase);}return Math.hypot(re,im)/soliton.length;}
 
+/* ------------------------------------------------------------------ *
+ * FIELD CONTROLLER
+ * ------------------------------------------------------------------ */
+const AGENTS=3, WINDOW=170;
+let brittle=[],soliton=[],hist=[],shockMarks=[],tick=0;
+let running=true,storm=false,showSub=true,flowRate=1,tempo=7;
 function reset(){
-  brittle = Array.from({length:AGENTS},(_,i)=>new BrittleAgent(i));
-  soliton = Array.from({length:AGENTS},(_,i)=>new SolitonAgent(i));
-  hist=[]; shockMarks=[]; tick=0;
+  brittle=Array.from({length:AGENTS},(_,i)=>new BrittleAgent(i));
+  soliton=Array.from({length:AGENTS},(_,i)=>new SolitonAgent(i));
+  hist=[];shockMarks=[];tick=0;
 }
 reset();
-
 function doTick(){
-  // baseline circulation: random 1–5 units per agent, scaled by flow rate
   for(const a of brittle) a.step((1+Math.random()*4)*flowRate);
   for(const a of soliton) a.step((1+Math.random()*4)*flowRate);
-
-  // auto-storm keeps stress alive so the divergence keeps writing itself
   if(storm && Math.random()<0.06) shockwave(true);
-
-  const tb = brittle.reduce((s,a)=>s+a.completed,0);
-  const ts = soliton.reduce((s,a)=>s+a.completed,0);
-  hist.push({b:tb,s:ts,t:tick});
-  if(hist.length>WINDOW) hist.shift();
-  shockMarks = shockMarks.filter(m=> m > tick-WINDOW);
-  tick++;
+  const tb=brittle.reduce((s,a)=>s+a.completed,0), ts=soliton.reduce((s,a)=>s+a.completed,0);
+  hist.push({b:tb,s:ts,t:tick}); if(hist.length>WINDOW)hist.shift();
+  shockMarks=shockMarks.filter(m=>m>tick-WINDOW); tick++;
+  const meanCap=soliton.reduce((s,a)=>s+a.capacity,0)/soliton.length;
+  kdv.k1=1.0+Math.min(0.7,(meanCap-10)/40);              // rebirth grows the carrier wave
 }
-
 function shockwave(quiet){
-  // massive load dumped on agent 0 of both systems — the shared shock
-  const mag = 30*flowRate;
-  brittle[0].step(mag);
-  soliton[0].step(mag);
-  shockMarks.push(tick);
-  if(!quiet){
-    const b=document.getElementById('shock');
-    b.style.boxShadow='0 0 40px var(--extract)';
-    setTimeout(()=>b.style.boxShadow='',260);
-  }
+  const mag=30*flowRate; brittle[0].step(mag); soliton[0].step(mag); shockMarks.push(tick);
+  if(!quiet){const b=document.getElementById('shock');b.style.boxShadow='0 0 40px var(--extract)';setTimeout(()=>b.style.boxShadow='',260);}
 }
 
-/* =========================================================================
-   RENDER
-   ========================================================================= */
+/* ------------------------------------------------------------------ *
+ * RENDER
+ * ------------------------------------------------------------------ */
+let simTime=0;
 function draw(now){
-  const dt = Math.min(0.05, (now-(draw.last||now))/1000); draw.last=now;
+  const dt=Math.min(0.05,(now-(draw.last||now))/1000); draw.last=now;
+  if(running){ simTime+=dt; kdv.t+=kdv.dir*dt*0.9; if(kdv.t>kdv.T){kdv.t=kdv.T;kdv.dir=-1;} if(kdv.t<-kdv.T){kdv.t=-kdv.T;kdv.dir=1;}
+    stepFields(dt,simTime); stepSisterlock(dt); }
   ctx.clearRect(0,0,W,H);
 
-  // ---- layout zones ----
-  const padTop = 78, padBot = 92;
-  const usableH = H - padTop - padBot;
-  const agentsH = usableH*0.60;
-  const chartTop = padTop + agentsH + 14;
-  const chartH   = usableH*0.40 - 14;
-  const colW = W/2;
+  const padTop=76,padBot=88,uh=H-padTop-padBot,aH=uh*0.60;
+  const chartTop=padTop+aH+12, chartH=uh*0.40-12;
 
-  drawColumnLabels(padTop, colW);
+  drawFields();
 
-  // running max capacity for a shared, stable vessel scale
-  let capMax = 12;
-  for(const a of soliton) capMax = Math.max(capMax, a.capacity);
+  ctx.textAlign='center'; ctx.font="700 12px 'Courier Prime'";
+  ctx.fillStyle='rgba(255,59,107,.85)'; ctx.fillText('EXTRACTIVE  \u2207\u00B7\u0398 \u2260 0', W*0.25, padTop-8);
+  ctx.fillStyle='rgba(58,255,208,.9)';  ctx.fillText('COHERENT  \u2207\u00B7\u0398 = 0',  W*0.75, padTop-8);
+  drawKdV({x:W*0.5+14,y:padTop+2,w:W*0.5-28,h:26});
 
+  drawBonds(padTop,aH);
+
+  let capMax=12; for(const a of soliton) capMax=Math.max(capMax,a.capacity);
   for(let i=0;i<AGENTS;i++){
-    const cellH = agentsH/AGENTS;
-    const cy = padTop + i*cellH + cellH/2;
-    drawAgent(brittle[i], colW*0.5, cy, cellH, capMax, dt, 'brittle');
-    drawAgent(soliton[i], colW*1.5, cy, cellH, capMax, dt, 'soliton');
+    const cellH=aH/AGENTS, cy=padTop+i*cellH+cellH/2+(i===0?18:0);
+    drawAgent(brittle[i], W*0.25, cy, cellH, capMax, dt, 'brittle');
+    drawAgent(soliton[i], W*0.75, cy, cellH, capMax, dt, 'soliton');
   }
 
-  drawChart(chartTop, chartH);
+  drawChart(chartTop,chartH);
   scanlines();
+  updateHUD();
   requestAnimationFrame(draw);
 }
-
-function drawColumnLabels(top, colW){
-  ctx.textAlign='center';
-  ctx.font="700 12px 'Courier Prime',monospace";
-  ctx.fillStyle='rgba(255,59,107,.85)';
-  ctx.fillText('EXTRACTIVE  COLLAPSE', colW*0.5, top-10);
-  ctx.fillStyle='rgba(58,255,208,.9)';
-  ctx.fillText('COHERENT  FLOW', colW*1.5, top-10);
+function drawBonds(top,aH){
+  const cellH=aH/AGENTS;
+  const pts=soliton.map((s,i)=>({x:W*0.75,y:top+i*cellH+cellH/2+(i===0?18:0),ph:s.phase}));
+  for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){
+    const lock=Math.pow(Math.cos((pts[i].ph-pts[j].ph)/2),2);  // 1 = phase-locked
+    ctx.strokeStyle=`rgba(177,75,255,${0.12+0.5*lock})`; ctx.lineWidth=0.6+2*lock;
+    ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.stroke();
+  }
 }
-
-function drawAgent(a, cx, cy, cellH, capMax, dt, kind){
-  // ease visual transients
-  a.flash = Math.max(0, a.flash - dt*2.4);
-  if(a.crack!==undefined) a.crack = Math.max(0, a.crack - dt*1.6);
-  if(a.bloom!==undefined) a.bloom = Math.max(0, a.bloom - dt*1.3);
-
-  // vessel geometry — soliton grows with capacity (sqrt keeps layout sane)
-  const grow = kind==='soliton' ? Math.min(1.6, Math.sqrt(a.capacity/10)) : 1;
-  const vw = Math.min(58, cellH*0.34)*grow;
-  const vh = Math.min(cellH*0.66, 120)*grow;
-  a.px=cx; a.py=cy; a.vh=vh;  // stash for particle spawns
-
-  const top = cy - vh/2, bot = cy + vh/2;
-  const ratio = a.load / a.capacity;                 // fill fraction (may exceed 1)
-  const fillR = Math.max(0, Math.min(1, ratio));
-
-  // fill color by stress — green→amber→hot
-  let fill;
-  if(ratio<0.6) fill = kind==='soliton' ? [58,255,208] : [90,220,180];
-  else if(ratio<0.95) fill = [255,200,70];
-  else fill = [255,80,110];
-
-  // membrane glow
-  const glow = kind==='soliton' ? (a.bloom>0? a.bloom:0) : a.crack;
-  ctx.save();
-
-  // ---- vessel outline (the membrane / the wall) ----
-  ctx.lineWidth = 2;
+function drawAgent(a,cx,cy,cellH,capMax,dt,kind){
+  a.flash=Math.max(0,a.flash-dt*2.4);
+  if(a.crack!==undefined)a.crack=Math.max(0,a.crack-dt*1.6);
+  if(a.bloom!==undefined)a.bloom=Math.max(0,a.bloom-dt*1.3);
+  const grow=kind==='soliton'?Math.min(1.6,Math.sqrt(a.capacity/10)):1;
+  const vw=Math.min(54,cellH*0.32)*grow, vh=Math.min(cellH*0.6,110)*grow;
+  a.px=cx;a.py=cy;a.vh=vh;
+  const top=cy-vh/2,bot=cy+vh/2, ratio=a.load/a.capacity, fillR=Math.max(0,Math.min(1,ratio));
+  let fill; if(ratio<0.6)fill=kind==='soliton'?[58,255,208]:[90,220,180]; else if(ratio<0.95)fill=[255,200,70]; else fill=[255,80,110];
+  ctx.save(); ctx.lineWidth=2;
   if(kind==='soliton'){
-    ctx.strokeStyle=`rgba(58,255,208,${0.55+0.4*a.bloom})`;
-    ctx.shadowColor='rgba(58,255,208,.7)'; ctx.shadowBlur=10+30*a.bloom;
-    roundRect(cx-vw/2, top, vw, vh, 10); ctx.stroke();
+    ctx.strokeStyle=`rgba(58,255,208,${0.55+0.4*a.bloom})`; ctx.shadowColor='rgba(58,255,208,.7)'; ctx.shadowBlur=10+30*a.bloom;
+    roundRect(cx-vw/2,top,vw,vh,10);ctx.stroke();
   }else{
-    // brittle: sharper, and it cracks on overload
-    ctx.strokeStyle=`rgba(255,59,107,${0.5+0.45*a.crack})`;
-    ctx.shadowColor='rgba(255,59,107,.6)'; ctx.shadowBlur=6+22*a.crack;
-    roundRect(cx-vw/2, top, vw, vh, 3); ctx.stroke();
-    if(a.crack>0.05){
-      ctx.strokeStyle=`rgba(255,255,255,${a.crack*0.7})`; ctx.lineWidth=1;
-      for(let k=0;k<3;k++){
-        ctx.beginPath();
-        const jx=cx-vw/2+Math.random()*vw;
-        ctx.moveTo(jx, top+2);
-        ctx.lineTo(jx+(Math.random()-0.5)*14, bot-2);
-        ctx.stroke();
-      }
-    }
+    ctx.strokeStyle=`rgba(255,59,107,${0.5+0.45*a.crack})`; ctx.shadowColor='rgba(255,59,107,.6)'; ctx.shadowBlur=6+22*a.crack;
+    roundRect(cx-vw/2,top,vw,vh,3);ctx.stroke();
+    if(a.crack>0.05){ctx.strokeStyle=`rgba(255,255,255,${a.crack*0.7})`;ctx.lineWidth=1;
+      for(let k=0;k<3;k++){ctx.beginPath();const jx=cx-vw/2+Math.random()*vw;ctx.moveTo(jx,top+2);ctx.lineTo(jx+(Math.random()-.5)*14,bot-2);ctx.stroke();}}
   }
   ctx.shadowBlur=0;
-
-  // ---- load fill (borrowed water rising) ----
-  const fh = vh*fillR;
-  const grad = ctx.createLinearGradient(0,bot,0,bot-fh);
-  grad.addColorStop(0,`rgba(${fill[0]},${fill[1]},${fill[2]},.9)`);
-  grad.addColorStop(1,`rgba(${fill[0]},${fill[1]},${fill[2]},.35)`);
-  ctx.fillStyle=grad;
-  roundRect(cx-vw/2+2, bot-fh, vw-4, fh, kind==='soliton'?8:2); ctx.fill();
-
-  // overflow shimmer above the rim when ratio>1 (stress the membrane can't hold)
-  if(ratio>1){
-    ctx.fillStyle=`rgba(255,120,150,${0.4+0.3*Math.sin(performance.now()/90)})`;
-    roundRect(cx-vw/2+2, top-6, vw-4, 6, 2); ctx.fill();
-  }
-
-  // capacity rim marker
-  ctx.strokeStyle='rgba(255,255,255,.25)'; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.moveTo(cx-vw/2, top+3); ctx.lineTo(cx+vw/2, top+3); ctx.stroke();
-
-  // ---- particles (shed matter) ----
-  a.parts = a.parts.filter(p=>{
-    const alive=p.update(dt);
-    ctx.fillStyle=p.color+(p.life/p.max).toFixed(2)+')';
-    ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
-    return alive;
-  });
-
+  const fh=vh*fillR, g=ctx.createLinearGradient(0,bot,0,bot-fh);
+  g.addColorStop(0,`rgba(${fill[0]},${fill[1]},${fill[2]},.9)`); g.addColorStop(1,`rgba(${fill[0]},${fill[1]},${fill[2]},.35)`);
+  ctx.fillStyle=g; roundRect(cx-vw/2+2,bot-fh,vw-4,fh,kind==='soliton'?8:2);ctx.fill();
+  if(ratio>1){ctx.fillStyle=`rgba(255,120,150,${0.4+0.3*Math.sin(performance.now()/90)})`;roundRect(cx-vw/2+2,top-6,vw-4,6,2);ctx.fill();}
+  ctx.strokeStyle='rgba(255,255,255,.25)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(cx-vw/2,top+3);ctx.lineTo(cx+vw/2,top+3);ctx.stroke();
+  a.parts=a.parts.filter(p=>{const al=p.update(dt);ctx.fillStyle=p.color+(p.life/p.max).toFixed(2)+')';ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();return al;});
   ctx.restore();
-
-  // ---- readout ----
-  ctx.textAlign='center';
-  ctx.font="700 10px 'Courier Prime',monospace";
-  ctx.fillStyle='rgba(255,255,255,.9)';
-  ctx.fillText(`✓ ${Math.round(a.completed)}`, cx, bot+16);
-  ctx.font="9px 'Courier Prime',monospace";
-  if(kind==='brittle'){
-    ctx.fillStyle='rgba(255,59,107,.85)';
-    ctx.fillText(`lost ${Math.round(a.dropped)}`, cx, bot+28);
-  }else{
-    ctx.fillStyle='rgba(58,255,208,.9)';
-    ctx.fillText(`cap ${a.capacity.toFixed(1)}`, cx, bot+28);
-  }
+  ctx.textAlign='center';ctx.font="700 10px 'Courier Prime'";ctx.fillStyle='rgba(255,255,255,.9)';
+  ctx.fillText(`\u2713 ${Math.round(a.completed)}`,cx,bot+15);
+  ctx.font="9px 'Courier Prime'";
+  if(kind==='brittle'){ctx.fillStyle='rgba(255,59,107,.85)';ctx.fillText(`lost ${Math.round(a.dropped)}`,cx,bot+27);}
+  else{ctx.fillStyle='rgba(58,255,208,.9)';ctx.fillText(`\u03C5${a.upsilon.toFixed(1)} cap${a.capacity.toFixed(0)}`,cx,bot+27);}
+}
+function drawChart(top,h){
+  const left=44,right=W-14,bot=top+h; if(hist.length<2)return;
+  let ymax=1; for(const p of hist)ymax=Math.max(ymax,p.b,p.s); ymax*=1.08;
+  const xAt=i=>left+(right-left)*(i/(WINDOW-1)), yAt=v=>bot-h*(v/ymax);
+  ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(left,bot);ctx.lineTo(right,bot);ctx.stroke();
+  for(const m of shockMarks){const idx=hist.findIndex(p=>p.t===m);if(idx>=0){ctx.strokeStyle='rgba(255,59,107,.35)';ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(xAt(idx),top);ctx.lineTo(xAt(idx),bot);ctx.stroke();ctx.setLineDash([]);}}
+  ctx.strokeStyle='rgba(255,59,107,.9)';ctx.lineWidth=2;ctx.setLineDash([6,5]);ctx.beginPath();
+  hist.forEach((p,i)=>{const x=xAt(i),y=yAt(p.b);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();ctx.setLineDash([]);
+  ctx.strokeStyle='rgba(58,255,208,1)';ctx.lineWidth=2.6;ctx.shadowColor='rgba(58,255,208,.6)';ctx.shadowBlur=8;ctx.beginPath();
+  hist.forEach((p,i)=>{const x=xAt(i),y=yAt(p.s);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();ctx.shadowBlur=0;
+  const last=hist[hist.length-1],gap=Math.round(last.s-last.b);
+  ctx.textAlign='left';ctx.font="700 11px 'Courier Prime'";ctx.fillStyle='rgba(58,255,208,.95)';ctx.fillText(`FLOW ADVANTAGE  +${gap}`,left,top+2);
+  ctx.textAlign='right';ctx.font="9px 'Courier Prime'";ctx.fillStyle='rgba(255,255,255,.5)';ctx.fillText('cumulative work',right,top+2);
+}
+function roundRect(x,y,w,h,r){r=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function scanlines(){ctx.fillStyle='rgba(0,0,0,.06)';for(let y=0;y<H;y+=3)ctx.fillRect(0,y,W,1);}
+function updateHUD(){
+  const dCo=measureDiv(colR,simTime,false), dEx=measureDiv(colL,simTime,true);
+  const r=sisterOrder();
+  const perS=soliton.map((s,i)=>{const ok=s.boundaryDivergence<1e-3;return `S${i} <span class="${ok?'ok':'no'}">${s.boundaryDivergence.toFixed(2)}${ok?'\u2713':'\u2717'}</span>`;}).join('  ');
+  HUD.innerHTML=
+    `<span class="t">MED VALIDATION · live SHACL</span><br>`+
+    `<span class="dim">SovereignSolitonShape \u2207\u00B7\u0398=0</span><br>${perS}<br>`+
+    `<span class="dim">substrate \u27E8\u2207\u00B7v\u27E9</span> `+
+    `coh <span class="ok">${dCo.toFixed(3)}\u2713</span> · ext <span class="no">${dEx.toFixed(3)}\u2717</span><br>`+
+    `<span class="dim">SisterlockShape \u0394\u03B8=2\u03C0\u03A5</span> r=<span class="${r>0.85?'ok':'no'}">${r.toFixed(2)}${r>0.85?'\u2713':'\u2717'}</span>`;
 }
 
-/* the live divergence — cumulative work, scrolling window */
-function drawChart(top, h){
-  const left=44, right=W-16, bot=top+h;
-  if(hist.length<2){ return; }
+let acc=0,lastT=performance.now();
+function tickLoop(now){const dt=(now-lastT)/1000;lastT=now;if(running){acc+=dt;const iv=1/tempo;while(acc>=iv){doTick();acc-=iv;}}else acc=0;requestAnimationFrame(tickLoop);}
 
-  // y-scale to current visible max
-  let ymax=1;
-  for(const p of hist) ymax=Math.max(ymax,p.b,p.s);
-  ymax*=1.08;
-
-  const xAt = i => left + (right-left)*(i/(WINDOW-1));
-  const yAt = v => bot - (h)*(v/ymax);
-
-  // baseline
-  ctx.strokeStyle='rgba(255,255,255,.12)'; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.moveTo(left,bot); ctx.lineTo(right,bot); ctx.stroke();
-
-  // shock markers
-  for(const m of shockMarks){
-    const idx = hist.findIndex(p=>p.t===m);
-    if(idx>=0){
-      ctx.strokeStyle='rgba(255,59,107,.35)'; ctx.setLineDash([3,4]);
-      ctx.beginPath(); ctx.moveTo(xAt(idx),top); ctx.lineTo(xAt(idx),bot); ctx.stroke();
-      ctx.setLineDash([]);
-    }
-  }
-
-  // brittle line (dashed — the broken circuit)
-  ctx.strokeStyle='rgba(255,59,107,.9)'; ctx.lineWidth=2; ctx.setLineDash([6,5]);
-  ctx.beginPath();
-  hist.forEach((p,i)=>{ const x=xAt(i),y=yAt(p.b); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
-  ctx.stroke(); ctx.setLineDash([]);
-
-  // soliton line (solid, glowing — coherent flow)
-  ctx.strokeStyle='rgba(58,255,208,1)'; ctx.lineWidth=2.6;
-  ctx.shadowColor='rgba(58,255,208,.6)'; ctx.shadowBlur=8;
-  ctx.beginPath();
-  hist.forEach((p,i)=>{ const x=xAt(i),y=yAt(p.s); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
-  ctx.stroke(); ctx.shadowBlur=0;
-
-  // the money metric: the gap the sovereign membrane opens up
-  const last=hist[hist.length-1];
-  const gap=Math.round(last.s-last.b);
-  ctx.textAlign='left'; ctx.font="700 11px 'Courier Prime',monospace";
-  ctx.fillStyle='rgba(58,255,208,.95)';
-  ctx.fillText(`FLOW ADVANTAGE  +${gap}`, left, top+2);
-  ctx.font="9px 'Courier Prime',monospace"; ctx.fillStyle='rgba(255,255,255,.5)';
-  ctx.textAlign='right';
-  ctx.fillText('cumulative work — window scrolls', right, top+2);
-}
-
-/* ---- helpers ---- */
-function roundRect(x,y,w,h,r){
-  r=Math.min(r,w/2,h/2);
-  ctx.beginPath();
-  ctx.moveTo(x+r,y);
-  ctx.arcTo(x+w,y,x+w,y+h,r);
-  ctx.arcTo(x+w,y+h,x,y+h,r);
-  ctx.arcTo(x,y+h,x,y,r);
-  ctx.arcTo(x,y,x+w,y,r);
-  ctx.closePath();
-}
-function scanlines(){
-  ctx.fillStyle='rgba(0,0,0,.06)';
-  for(let y=0;y<H;y+=3) ctx.fillRect(0,y,W,1);
-}
-
-/* =========================================================================
-   TICK LOOP (decoupled from render — tempo = ticks/sec)
-   ========================================================================= */
-let acc=0, lastT=performance.now();
-function tickLoop(now){
-  const dt=(now-lastT)/1000; lastT=now;
-  if(running){
-    acc+=dt;
-    const interval=1/tempo;
-    while(acc>=interval){ doTick(); acc-=interval; }
-  }else{ acc=0; }
-  requestAnimationFrame(tickLoop);
-}
-
-/* =========================================================================
-   UI WIRING
-   ========================================================================= */
-document.getElementById('play').onclick = e=>{
-  running=!running;
-  e.target.textContent = running?'⏸ Pause':'▶ Play';
-  e.target.classList.toggle('on',running);
-};
-document.getElementById('shock').onclick = ()=>shockwave(false);
-document.getElementById('storm').onclick = e=>{
-  storm=!storm; e.target.classList.toggle('on',storm);
-  e.target.textContent = storm?'🌊 Storm ON':'🌊 Auto-Storm';
-};
-document.getElementById('reset').onclick = reset;
-document.getElementById('rate').oninput  = e=>flowRate=parseFloat(e.target.value);
-document.getElementById('tempo').oninput = e=>tempo=parseInt(e.target.value);
-
-function enter(){
-  document.getElementById('veil').classList.add('gone');
-}
+document.getElementById('play').onclick=e=>{running=!running;e.target.textContent=running?'\u23F8 Pause':'\u25B6 Play';e.target.classList.toggle('on',running);};
+document.getElementById('shock').onclick=()=>shockwave(false);
+document.getElementById('storm').onclick=e=>{storm=!storm;e.target.classList.toggle('on',storm);e.target.textContent=storm?'\uD83C\uDF0A Storm ON':'\uD83C\uDF0A Auto-Storm';};
+document.getElementById('sub').onclick=e=>{showSub=!showSub;e.target.classList.toggle('on',showSub);};
+document.getElementById('reset').onclick=reset;
+document.getElementById('rate').oninput=e=>flowRate=parseFloat(e.target.value);
+document.getElementById('tempo').oninput=e=>tempo=parseInt(e.target.value);
+function enter(){document.getElementById('veil').classList.add('gone');}
 window.enter=enter;
 
-/* boot */
 resize();
 requestAnimationFrame(draw);
 requestAnimationFrame(tickLoop);
