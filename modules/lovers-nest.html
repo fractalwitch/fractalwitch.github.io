@@ -13,7 +13,7 @@ html,body{ margin:0; padding:0; width:100%; height:100%; background:var(--void);
 
 /* LAYER 0 — gradient hue hub (the colorful aura, bottom) */
 #huebg{ position:fixed; inset:0; z-index:0; pointer-events:none;
-  background:radial-gradient(circle at 50% 46%, rgba(255,0,255,.40) 0%, rgba(0,255,255,.24) 32%, rgba(138,43,226,.22) 58%, rgba(2,0,5,1) 84%);
+  background:radial-gradient(circle at 50% 46%, rgba(255,0,255,.26) 0%, rgba(0,255,255,.16) 32%, rgba(138,43,226,.15) 58%, rgba(2,0,5,1) 82%);
   animation:huerot 26s linear infinite; }
 @keyframes huerot{ to{ filter:hue-rotate(360deg); } }
 
@@ -26,8 +26,8 @@ html,body{ margin:0; padding:0; width:100%; height:100%; background:var(--void);
 .disc{ position:absolute; top:0; left:0; overflow:hidden; cursor:grab; will-change:transform,border-radius;
   box-shadow: inset 0 0 26px rgba(255,255,255,0.10), inset 8px 10px 28px rgba(255,255,255,0.06);
   /* soft gradient edge: the gif fades out at its rim and melts into the goo */
-  -webkit-mask-image:radial-gradient(closest-side, #000 58%, rgba(0,0,0,0) 100%);
-  mask-image:radial-gradient(closest-side, #000 58%, rgba(0,0,0,0) 100%); }
+  -webkit-mask-image:radial-gradient(ellipse 100% 100% at 50% 50%, #000 84%, rgba(0,0,0,0) 100%);
+  mask-image:radial-gradient(ellipse 100% 100% at 50% 50%, #000 84%, rgba(0,0,0,0) 100%); }
 .disc img{ width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; }
 .disc .fill{ position:absolute; inset:0; }
 .disc .gloss{ position:absolute; inset:0; pointer-events:none; mix-blend-mode:screen;
@@ -100,8 +100,8 @@ const SIZE_MAX= 0.36;
 const DRIFT   = 1.1;    // continuous current push (higher = wanders more)
 const DAMP    = 0.94;   // velocity retention (higher = more glide)
 const MAXSPD  = 1.8;    // hard speed cap px/frame — keeps it lava-slow
-const STICK   = 0.006;  // faint surface-tension cling
-const SEP     = 0.020;  // spacing push (higher = more room between blobs)
+const STICK   = 0.010;  // faint surface-tension cling
+const SEP     = 0.016;  // spacing push (higher = more room between blobs)
 const THRESH  = 1.0;    // metaball merge threshold (lower = melts/bridges more)
 const LIQUID_OPACITY = 0.45;   // the top water film (also set in #fluid css)
 const MAX_BLOBS = 40;
@@ -163,26 +163,26 @@ const gcanvas=document.getElementById('goo'); let gooOK=false, gooDraw=null;
   const v=sh(gl.VERTEX_SHADER,`attribute vec2 aP;void main(){gl_Position=vec4(aP,0.,1.);}`);
   const f=sh(gl.FRAGMENT_SHADER,`precision highp float;
     uniform vec2 uRes; uniform int uCount; uniform float uThresh;
-    uniform vec3 uBlobs[${MAX_BLOBS}]; uniform vec3 uColors[${MAX_BLOBS}];
+    uniform vec4 uBlobs[${MAX_BLOBS}]; uniform vec3 uColors[${MAX_BLOBS}];   // xy=center, zw=rx,ry
     void main(){
       vec2 p = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y);
       float field=0.0; vec3 col=vec3(0.0); float wsum=0.0;
-      vec2 bestC=vec2(0.0); float bestR=1.0; float bestK=-1.0;
+      vec2 bestC=vec2(0.0); vec2 bestRR=vec2(1.0); float bestK=-1.0;
       for(int i=0;i<${MAX_BLOBS};i++){
         if(i>=uCount) break;
-        vec2 c=uBlobs[i].xy; float r=uBlobs[i].z;
-        float d2=dot(p-c,p-c)+1.0; float k=(r*r)/d2;
+        vec2 c=uBlobs[i].xy; vec2 rr=uBlobs[i].zw;
+        vec2 q=(p-c)/rr; float d2=dot(q,q)+0.0002; float k=1.0/d2;   // elliptical field
         field+=k; float w=k*k; col+=uColors[i]*w; wsum+=w;
-        if(k>bestK){bestK=k;bestC=c;bestR=r;}
+        if(k>bestK){bestK=k;bestC=c;bestRR=rr;}
       }
       if(wsum>0.0) col/=wsum;
       float a=smoothstep(uThresh*0.72,uThresh,field);
       if(a<=0.003) discard;
-      float core=smoothstep(uThresh*0.9,uThresh*2.4,field);
-      vec3 outc=mix(col*0.42,col*1.28,core);
-      vec2 rel=(p-bestC)/bestR;
+      float core=smoothstep(uThresh*0.9,uThresh*2.6,field);
+      vec3 outc=mix(col*0.5,col*1.42,core);            // brighter, more saturated melt
+      vec2 rel=(p-bestC)/bestRR;
       float hl=smoothstep(0.85,0.0,length(rel-vec2(-0.28,-0.34)));
-      outc+=hl*hl*0.55;
+      outc+=hl*hl*0.5;
       gl_FragColor=vec4(outc*a,a);
     }`);
   const p=gl.createProgram();gl.attachShader(p,v);gl.attachShader(p,f);gl.linkProgram(p);
@@ -192,16 +192,16 @@ const gcanvas=document.getElementById('goo'); let gooOK=false, gooDraw=null;
   const aP=gl.getAttribLocation(p,'aP');gl.enableVertexAttribArray(aP);gl.vertexAttribPointer(aP,2,gl.FLOAT,false,0,0);
   const uRes=gl.getUniformLocation(p,'uRes'),uCount=gl.getUniformLocation(p,'uCount'),uThresh=gl.getUniformLocation(p,'uThresh'),
         uBlobs=gl.getUniformLocation(p,'uBlobs[0]'),uColors=gl.getUniformLocation(p,'uColors[0]');
-  const posArr=new Float32Array(MAX_BLOBS*3),colArr=new Float32Array(MAX_BLOBS*3);
+  const posArr=new Float32Array(MAX_BLOBS*4),colArr=new Float32Array(MAX_BLOBS*3);
   function resize(){gcanvas.width=innerWidth;gcanvas.height=innerHeight;gl.viewport(0,0,gcanvas.width,gcanvas.height);}
   resize();addEventListener('resize',()=>{clearTimeout(window.__rz2);window.__rz2=setTimeout(resize,150);});
   gl.enable(gl.BLEND);gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
   gooDraw=function(list){
     gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);
     const n=Math.min(list.length,MAX_BLOBS);
-    for(let i=0;i<n;i++){const b=list[i];posArr[i*3]=b.x;posArr[i*3+1]=b.y;posArr[i*3+2]=b.r;colArr[i*3]=b.col[0];colArr[i*3+1]=b.col[1];colArr[i*3+2]=b.col[2];}
+    for(let i=0;i<n;i++){const b=list[i];posArr[i*4]=b.x;posArr[i*4+1]=b.y;posArr[i*4+2]=b.rx;posArr[i*4+3]=b.ry;colArr[i*3]=b.col[0];colArr[i*3+1]=b.col[1];colArr[i*3+2]=b.col[2];}
     gl.uniform2f(uRes,gcanvas.width,gcanvas.height);gl.uniform1i(uCount,n);gl.uniform1f(uThresh,THRESH);
-    gl.uniform3fv(uBlobs,posArr);gl.uniform3fv(uColors,colArr);gl.drawArrays(gl.TRIANGLES,0,3);
+    gl.uniform4fv(uBlobs,posArr);gl.uniform3fv(uColors,colArr);gl.drawArrays(gl.TRIANGLES,0,3);
   };
   gooOK=true;
 })();
@@ -214,8 +214,9 @@ const blobs=[]; const rand=(a,b)=>a+Math.random()*(b-a);
 function flow(x,y,t){const T=[[3.1,2.7,0.31,-0.22],[1.9,2.3,-0.17,0.26]];let vx=0,vy=0;for(const[a,b,p,q]of T){const sx=Math.sin(a*x+p*t),cx=Math.cos(a*x+p*t),sy=Math.sin(b*y+q*t),cy=Math.cos(b*y+q*t);vx+=-b*sx*sy;vy+=-a*cx*cy;}return[vx,vy];}
 function morph(t,seed){const p=i=>(50+Math.sin(t*0.5+seed+i*1.27)*13).toFixed(1);return `${p(0)}% ${p(1)}% ${p(2)}% ${p(3)}% / ${p(4)}% ${p(5)}% ${p(6)}% ${p(7)}%`;}
 
-function discSize(b){ b.D=b.r*2*0.78; b.disc.style.width=b.disc.style.height=b.D+'px'; }
-function setR(b,r){ const base=Math.min(W,H); b.r=Math.max(base*0.05,Math.min(base*0.42,r)); discSize(b); }
+function dims(b){ const s=Math.sqrt(b.ar); b.rx=b.r*s; b.ry=b.r/s;
+  b.Dw=b.rx*2*0.92; b.Dh=b.ry*2*0.92; b.disc.style.width=b.Dw+'px'; b.disc.style.height=b.Dh+'px'; }
+function setR(b,r){ const base=Math.min(W,H); b.r=Math.max(base*0.05,Math.min(base*0.42,r)); dims(b); }
 
 function makeBlob(src){
   if(blobs.length>=MAX_BLOBS) return null;
@@ -229,8 +230,9 @@ function makeBlob(src){
   const b={ disc,r,col,
     x:rand(r,W-r), y:rand(r+H*0.14,H-r-H*0.08),
     vx:rand(-0.6,0.6), vy:rand(-0.6,0.6), seed:rand(0,6.28),
+    ar:rand(0.72,1.38),
     hue0:rand(0,360), hueDir:(Math.random()<0.5?-1:1)*(0.7+Math.random()*0.6) };
-  discSize(b);
+  dims(b);
   blobs.push(b); updateCount(); return b;
 }
 function updateCount(){ countEl.textContent=blobs.length+' blobs'; }
@@ -303,8 +305,8 @@ function loop(now){
     if(b.pop) b.pop=Math.max(0,b.pop-dt*1.8);
     const pop=b.pop?b.pop*0.10:0;
     // slow RGB pulse — the goo body drifts hue on a very slow clock (gifs untouched)
-    b.col=hsl2rgb(((b.hue0 + t*HUE_SPEED*b.hueDir)%360+360)%360/360, 0.85, 0.6);
-    b.disc.style.transform=`translate3d(${(b.x-b.D/2).toFixed(1)}px,${(b.y-b.D/2).toFixed(1)}px,0) scale(${(1+pop).toFixed(3)})`;
+    b.col=hsl2rgb(((b.hue0 + t*HUE_SPEED*b.hueDir)%360+360)%360/360, 1.0, 0.52);
+    b.disc.style.transform=`translate3d(${(b.x-b.Dw/2).toFixed(1)}px,${(b.y-b.Dh/2).toFixed(1)}px,0) scale(${(1+pop).toFixed(3)})`;
     b.disc.style.borderRadius=morph(t,b.seed);
   }
   if(gooOK) gooDraw(blobs);
