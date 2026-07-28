@@ -58,6 +58,31 @@ html,body{ margin:0; padding:0; width:100%; height:100%; background:var(--void);
 #dropveil{ position:fixed; inset:0; z-index:60; pointer-events:none; display:flex; align-items:center; justify-content:center; background:rgba(20,0,42,.55); backdrop-filter:blur(3px); opacity:0; transition:opacity .25s; font-family:'Cinzel',serif; font-size:1.4rem; letter-spacing:.3em; color:var(--gold); text-transform:uppercase; }
 #dropveil.show{ opacity:1; }
 @media (prefers-reduced-motion: reduce){ .disc.placeholder .fill{ animation:none; } }
+
+/* --- TRAY (hot library of loaded gifs) --- */
+#tray{ position:fixed; z-index:55; left:0; right:0; bottom:0; max-height:54vh;
+  transform:translateY(105%); transition:transform .35s cubic-bezier(.2,.8,.2,1);
+  background:rgba(6,0,16,.93); backdrop-filter:blur(10px);
+  border-top:1px solid rgba(0,255,255,.35); box-shadow:0 -8px 44px rgba(255,0,255,.22);
+  display:flex; flex-direction:column; }
+#tray.open{ transform:translateY(0); }
+.tray-head{ display:flex; justify-content:space-between; align-items:center; padding:.9rem 1.2rem;
+  font-family:'Cinzel',serif; letter-spacing:.25em; text-transform:uppercase; color:var(--cyan); font-size:.8rem;
+  border-bottom:1px solid rgba(0,255,255,.15); }
+.tray-head button{ background:none;border:none;color:var(--rose);font-size:1.1rem;cursor:pointer; }
+#trayList{ overflow-y:auto; padding:.6rem 1rem; display:flex; flex-direction:column; gap:.5rem; }
+.tray-empty{ color:rgba(255,255,255,.4); padding:1.2rem; text-align:center; letter-spacing:.15em; font-size:.78rem; }
+.tray-row{ display:flex; align-items:center; gap:.7rem; padding:.4rem .5rem; border:1px solid rgba(255,0,255,.16); border-radius:4px; }
+.tray-row img{ width:44px;height:44px;object-fit:cover;border-radius:50%; box-shadow:0 0 10px rgba(0,255,255,.4); flex:0 0 auto; background:#10021f; }
+.tray-row .tname{ flex:1 1 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#ddd; font-size:.76rem; letter-spacing:.05em; }
+.tray-row .tcount{ color:var(--gold); letter-spacing:.1em; font-size:.8rem; }
+.tctrl{ display:flex; gap:.35rem; flex:0 0 auto; }
+.tctrl button{ width:32px;height:32px; background:transparent; color:var(--cyan); border:1px solid rgba(0,255,255,.4); border-radius:3px; cursor:pointer; font-size:1rem; line-height:1; }
+.tctrl button:hover{ background:var(--cyan); color:#000; }
+.tctrl button.del{ color:var(--rose); border-color:rgba(255,0,85,.5); }
+.tctrl button.del:hover{ background:var(--rose); color:#000; }
+.tray-foot{ padding:.7rem 1.2rem; border-top:1px solid rgba(0,255,255,.15); }
+.tray-foot button{ background:transparent;color:var(--gold);border:1px solid rgba(255,204,85,.4);padding:.5rem .9rem;font-family:'Courier Prime',monospace;letter-spacing:.2em;cursor:pointer;border-radius:2px;font-size:.72rem; }
 </style>
 </head>
 <body>
@@ -74,7 +99,13 @@ html,body{ margin:0; padding:0; width:100%; height:100%; background:var(--void);
 <div class="rim-ui">
   <button id="addBtn">⊹ add gifs</button>
   <button id="resetBtn">⟳ recirculate</button>
+  <button id="trayBtn">☰ tray</button>
   <span id="count"></span>
+</div>
+<div id="tray">
+  <div class="tray-head"><span>loaded gifs</span><button id="trayClose">✕</button></div>
+  <div id="trayList"></div>
+  <div class="tray-foot"><button id="trayAdd">⊹ add more gifs</button></div>
 </div>
 <div id="dropveil">release into the nest</div>
 <input id="fileInput" type="file" accept="image/gif,image/*" multiple style="display:none">
@@ -218,7 +249,7 @@ function dims(b){ const s=Math.sqrt(b.ar); b.rx=b.r*s; b.ry=b.r/s;
   b.Dw=b.rx*2*0.92; b.Dh=b.ry*2*0.92; b.disc.style.width=b.Dw+'px'; b.disc.style.height=b.Dh+'px'; }
 function setR(b,r){ const base=Math.min(W,H); b.r=Math.max(base*0.05,Math.min(base*0.42,r)); dims(b); }
 
-function makeBlob(src){
+function makeBlob(src,libId){
   if(blobs.length>=MAX_BLOBS) return null;
   const base=Math.min(W,H); const r=rand(base*SIZE_MIN, base*SIZE_MAX)/2;
   const col=hexRGB(PALETTE[(Math.random()*PALETTE.length)|0]);
@@ -227,7 +258,7 @@ function makeBlob(src){
   else{const fill=document.createElement('div');fill.className='fill';const c2=PALETTE[(Math.random()*PALETTE.length)|0];fill.style.background=`radial-gradient(circle at 38% 32%, rgb(${col.map(c=>(c*255)|0).join(',')}) 0%, ${c2} 58%, #10021f 92%)`;disc.appendChild(fill);}
   const gloss=document.createElement('div');gloss.className='gloss';disc.appendChild(gloss);
   glass.appendChild(disc);
-  const b={ disc,r,col,
+  const b={ disc,r,col, libId:libId||null,
     x:rand(r,W-r), y:rand(r+H*0.14,H-r-H*0.08),
     vx:rand(-0.6,0.6), vy:rand(-0.6,0.6), seed:rand(0,6.28),
     ar:rand(0.72,1.38),
@@ -314,23 +345,87 @@ function loop(now){
 }
 requestAnimationFrame(loop);
 
-/* ===================== PART VI — LOADING ===================== */
-function clearAll(){ blobs.forEach(b=>b.disc.remove()); blobs.length=0; }
-function seed(){ clearAll(); if(GIFS.length) GIFS.forEach(u=>makeBlob(u)); else for(let i=0;i<COUNT;i++) makeBlob(null); updateCount(); }
-seed();
-function addFiles(list){const files=[...list].filter(f=>f.type.startsWith('image/'));if(!files.length)return;
-  if(blobs.every(b=>b.disc.classList.contains('placeholder'))) clearAll();
-  files.forEach(f=>makeBlob(URL.createObjectURL(f)));}
-const fileInput=document.getElementById('fileInput');
-document.getElementById('addBtn').addEventListener('click',()=>fileInput.click());
-fileInput.addEventListener('change',e=>addFiles(e.target.files));
-document.getElementById('resetBtn').addEventListener('click',seed);
-const veil=document.getElementById('dropveil');
-['dragenter','dragover'].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();veil.classList.add('show');}));
-['dragleave','drop'].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();veil.classList.remove('show');}));
-document.addEventListener('drop',e=>{if(e.dataTransfer&&e.dataTransfer.files)addFiles(e.dataTransfer.files);});
-if(!fluidOK) canvas.style.display='none';
-if(!gooOK) gcanvas.style.display='none';
+/* ===================== PART VI — LIBRARY · PERSISTENCE · TRAY ===================== */
+function removeBlob(b){ const i=blobs.indexOf(b); if(i>=0){ b.disc.remove(); blobs.splice(i,1); updateCount(); } }
+function clearPlaceholders(){ for(let i=blobs.length-1;i>=0;i--){ if(blobs[i].disc.classList.contains("placeholder")){ blobs[i].disc.remove(); blobs.splice(i,1);} } }
+function seedPlaceholders(){ for(let i=0;i<COUNT;i++) makeBlob(null,null); }
+
+/* durable storage for locally-added gifs (IndexedDB). remote GIFS[] persist as code. */
+let db=null;
+function idbOpen(){ return new Promise(res=>{ try{ if(!("indexedDB" in window)) return res(null);
+  const rq=indexedDB.open("nest-gifs",1);
+  rq.onupgradeneeded=e=>{ e.target.result.createObjectStore("gifs",{keyPath:"id"}); };
+  rq.onsuccess=e=>{ db=e.target.result; res(db); };
+  rq.onerror=()=>res(null);
+}catch(e){ res(null); } }); }
+function idbPut(rec){ try{ if(db) db.transaction("gifs","readwrite").objectStore("gifs").put(rec); }catch(e){} }
+function idbDelete(id){ try{ if(db) db.transaction("gifs","readwrite").objectStore("gifs").delete(id); }catch(e){} }
+function idbAll(){ return new Promise(res=>{ try{ if(!db) return res([]); const rq=db.transaction("gifs","readonly").objectStore("gifs").getAll(); rq.onsuccess=()=>res(rq.result||[]); rq.onerror=()=>res([]); }catch(e){ res([]); } }); }
+
+/* library of unique sources; nest blobs reference them by libId */
+let library=[], libSeq=0;
+const libById=id=>library.find(l=>l.id===id);
+const countInstances=id=>blobs.filter(b=>b.libId===id).length;
+function addInstance(id){ const l=libById(id); if(!l) return; clearPlaceholders(); makeBlob(l.url,id); updateCount(); renderTray(); }
+function removeInstance(id){ for(let i=blobs.length-1;i>=0;i--){ if(blobs[i].libId===id){ removeBlob(blobs[i]); break; } } if(!blobs.length && !library.length) seedPlaceholders(); renderTray(); }
+function removeSource(id){ for(let i=blobs.length-1;i>=0;i--){ if(blobs[i].libId===id) removeBlob(blobs[i]); }
+  const l=libById(id); if(l && l.kind==="local"){ idbDelete(id); if(l.url.indexOf("blob:")===0){ try{URL.revokeObjectURL(l.url);}catch(e){} } }
+  library=library.filter(x=>x.id!==id); if(!blobs.length && !library.length) seedPlaceholders(); updateCount(); renderTray(); }
+
+function addFiles(list){ const files=[...list].filter(f=>f.type.indexOf("image/")===0); if(!files.length) return;
+  files.forEach(f=>{ const id="local-"+(++libSeq)+"-"+Date.now(); const url=URL.createObjectURL(f); const name=f.name||"gif";
+    library.push({id,url,name,kind:"local"}); idbPut({id,blob:f,name});
+    clearPlaceholders(); makeBlob(url,id);
+  });
+  updateCount(); renderTray();
+}
+
+/* the tray UI */
+const tray=document.getElementById("tray"), trayList=document.getElementById("trayList");
+function tbtn(txt,fn,cls){ const b=document.createElement("button"); b.textContent=txt; if(cls)b.className=cls; b.onclick=fn; return b; }
+function renderTray(){
+  trayList.innerHTML="";
+  if(!library.length){ const e=document.createElement("div"); e.className="tray-empty"; e.textContent="no gifs loaded yet — add some"; trayList.appendChild(e); return; }
+  library.forEach(l=>{
+    const row=document.createElement("div"); row.className="tray-row";
+    const img=document.createElement("img"); img.src=l.url; img.alt="";
+    const name=document.createElement("span"); name.className="tname"; name.textContent=l.name+(l.kind==="remote"?" ⋯":"");
+    const cnt=document.createElement("span"); cnt.className="tcount"; cnt.textContent="×"+countInstances(l.id);
+    const ctrl=document.createElement("div"); ctrl.className="tctrl";
+    ctrl.append(tbtn("−",()=>removeInstance(l.id)), tbtn("+",()=>addInstance(l.id)), tbtn("✕",()=>removeSource(l.id),"del"));
+    row.append(img,name,cnt,ctrl); trayList.appendChild(row);
+  });
+}
+
+/* recirculate: scatter existing blobs to new spots (never clears) */
+function recirculate(){ for(const b of blobs){ b.x=rand(b.r,W-b.r); b.y=rand(b.r+H*0.15,H-b.r-H*0.08); b.vx=rand(-2,2); b.vy=rand(-2,2); } }
+
+/* wiring */
+const fileInput=document.getElementById("fileInput");
+document.getElementById("addBtn").addEventListener("click",()=>fileInput.click());
+document.getElementById("trayAdd").addEventListener("click",()=>fileInput.click());
+fileInput.addEventListener("change",e=>{ addFiles(e.target.files); e.target.value=""; });
+document.getElementById("resetBtn").addEventListener("click",recirculate);
+document.getElementById("trayBtn").addEventListener("click",()=>{ tray.classList.toggle("open"); renderTray(); });
+document.getElementById("trayClose").addEventListener("click",()=>tray.classList.remove("open"));
+const veil=document.getElementById("dropveil");
+["dragenter","dragover"].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();veil.classList.add("show");}));
+["dragleave","drop"].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();veil.classList.remove("show");}));
+document.addEventListener("drop",e=>{ if(e.dataTransfer&&e.dataTransfer.files) addFiles(e.dataTransfer.files); });
+
+/* boot: restore remote + stored-local sources, else placeholders */
+(async function boot(){
+  await idbOpen();
+  GIFS.forEach((u,i)=>library.push({id:"remote-"+i,url:u,name:(u.split("/").pop()||"gif"),kind:"remote"}));
+  const stored=await idbAll();
+  stored.forEach(rec=>{ try{ const url=URL.createObjectURL(rec.blob); library.push({id:rec.id,url,name:rec.name||"gif",kind:"local"}); }catch(e){} });
+  if(library.length) library.forEach(l=>makeBlob(l.url,l.id));
+  else seedPlaceholders();
+  updateCount(); renderTray();
+})();
+
+if(!fluidOK) canvas.style.display="none";
+if(!gooOK) gcanvas.style.display="none";
 </script>
 </body>
 </html>
