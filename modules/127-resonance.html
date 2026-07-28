@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resonance 126 → 127 | Living Lattice</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      color: #eee;
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.2rem;
+      padding: 1.5rem;
+    }
+    h1 {
+      font-weight: 300;
+      letter-spacing: 0.15em;
+      font-size: 1.1rem;
+      color: #c9a0ff;
+      text-transform: uppercase;
+    }
+    #wrap {
+      position: relative;
+      border: 1px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(180, 80, 255, 0.15);
+    }
+    canvas {
+      display: block;
+      image-rendering: pixelated;
+    }
+    #readout {
+      font-family: ui-monospace, monospace;
+      font-size: 1.05rem;
+      color: #ff9a5a;
+      letter-spacing: 0.05em;
+    }
+    .controls {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      background: #1a1a1a;
+      border: 1px solid #444;
+      color: #ddd;
+      padding: 0.45rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    button:hover { background: #2a2a2a; border-color: #777; }
+    button.active { background: #3a1a5a; border-color: #a060ff; color: #e0c0ff; }
+    footer {
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+      color: #555;
+      letter-spacing: 0.04em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Resonance · 126 → 127</h1>
+  <div id="wrap">
+    <canvas id="c" width="400" height="400"></canvas>
+  </div>
+  <div id="readout">Tune = 126.00</div>
+  <div class="controls">
+    <button id="play">Play</button>
+    <button id="pause">Pause</button>
+    <button id="reset">Reset</button>
+    <button id="loop" class="active">Loop</button>
+  </div>
+  <footer>∇ · Θ → 0 &nbsp;·&nbsp; Living Lattice</footer>
+
+  <script>
+    // ---------------------------------------------------------------
+    // Exact port of the Python resonance model
+    // ---------------------------------------------------------------
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d', { alpha: false });
+    const readout = document.getElementById('readout');
+
+    const W = 400, H = 400;
+    const FREQ_BINS = 150;
+    const GATE_BINS = 100;
+
+    // Inferno-ish colormap (simplified)
+    function inferno(t) {
+      t = Math.max(0, Math.min(1, t));
+      // rough approximation of matplotlib inferno
+      const r = Math.min(1, Math.max(0, 1.5 * t - 0.1));
+      const g = Math.min(1, Math.max(0, 1.8 * t - 0.6));
+      const b = Math.min(1, Math.max(0, 2.2 * t - 1.1));
+      // more accurate polynomial-ish for better look
+      const rr = Math.floor(255 * Math.min(1, Math.pow(t, 0.6) * 1.4));
+      const gg = Math.floor(255 * Math.min(1, Math.pow(Math.max(0, t - 0.25), 1.1) * 1.6));
+      const bb = Math.floor(255 * Math.min(1, Math.pow(Math.max(0, t - 0.55), 0.9) * 2.2));
+      return [rr, gg, bb];
+    }
+
+    function generateFrame(tuneParam) {
+      const img = ctx.createImageData(W, H);
+      const data = img.data;
+
+      const freqRange = [];
+      for (let i = 0; i < FREQ_BINS; i++) freqRange.push(0.8 + (1.2 - 0.8) * i / (FREQ_BINS - 1));
+      const gateRange = [];
+      for (let j = 0; j < GATE_BINS; j++) gateRange.push(j / (GATE_BINS - 1));
+
+      const shiftFactor = (tuneParam - 127.0) * 0.5;
+
+      // We map the scientific grid onto the canvas
+      for (let py = 0; py < H; py++) {
+        for (let px = 0; px < W; px++) {
+          // map pixel → (freq, gate)
+          const fi = Math.floor(px / W * FREQ_BINS);
+          const gi = Math.floor((H - 1 - py) / H * GATE_BINS); // origin lower
+          const f = freqRange[Math.min(fi, FREQ_BINS - 1)];
+          const g = gateRange[Math.min(gi, GATE_BINS - 1)];
+
+          // Lorentzian resonance
+          const resonance = 1.0 / (1.0
+            + Math.pow((f - 1.0) / 0.05, 2)
+            + Math.pow((g - 0.5) / 0.1, 2));
+
+          // absorption null moves with tune
+          const expTerm = Math.exp(-Math.pow(g - 0.5 - shiftFactor * 0.1, 2) / 0.01);
+          let reflectivity = 1.0 - resonance * expTerm;
+          reflectivity = Math.max(0, Math.min(1, reflectivity));
+
+          const [r, gCol, b] = inferno(reflectivity);
+          const idx = (py * W + px) * 4;
+          data[idx]     = r;
+          data[idx + 1] = gCol;
+          data[idx + 2] = b;
+          data[idx + 3] = 255;
+        }
+      }
+      return img;
+    }
+
+    // ---------------------------------------------------------------
+    // Animation state
+    // ---------------------------------------------------------------
+    let tune = 126.0;
+    const startTune = 126.0;
+    const endTune   = 127.0;
+    const steps     = 20;
+    const stepSize  = (endTune - startTune) / (steps - 1);
+    let frameIdx    = 0;
+    let playing     = false;
+    let looping     = true;
+    let lastTime    = 0;
+    const frameMs   = 200; // same as original duration=0.2
+
+    function draw() {
+      const img = generateFrame(tune);
+      ctx.putImageData(img, 0, 0);
+      readout.textContent = `Tune = ${tune.toFixed(2)}`;
+    }
+
+    function tick(ts) {
+      if (!playing) return;
+      if (ts - lastTime >= frameMs) {
+        lastTime = ts;
+        frameIdx++;
+        if (frameIdx >= steps) {
+          if (looping) {
+            frameIdx = 0;
+          } else {
+            frameIdx = steps - 1;
+            playing = false;
+            document.getElementById('play').classList.remove('active');
+          }
+        }
+        tune = startTune + frameIdx * stepSize;
+        draw();
+      }
+      requestAnimationFrame(tick);
+    }
+
+    // Controls
+    document.getElementById('play').onclick = () => {
+      if (!playing) {
+        playing = true;
+        lastTime = performance.now();
+        document.getElementById('play').classList.add('active');
+        requestAnimationFrame(tick);
+      }
+    };
+    document.getElementById('pause').onclick = () => {
+      playing = false;
+      document.getElementById('play').classList.remove('active');
+    };
+    document.getElementById('reset').onclick = () => {
+      playing = false;
+      frameIdx = 0;
+      tune = startTune;
+      document.getElementById('play').classList.remove('active');
+      draw();
+    };
+    document.getElementById('loop').onclick = (e) => {
+      looping = !looping;
+      e.target.classList.toggle('active', looping);
+    };
+
+    // First frame
+    draw();
+  </script>
+</body>
+</html>
