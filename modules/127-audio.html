@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>⟁ CRYSTALLINE 127 · SONIC ARCHITECTURE</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;700&display=swap');
+
+:root{
+    --c-void:#020005;
+    --c-magenta:#ff00ff;
+    --c-cyan:#00ffff;
+    --c-rose:#ff0055;
+    --c-violet:#8a2be2;
+    --c-gold:#ffd700;
+    --c-plasma:#b026ff;
+}
+
+*{ box-sizing:border-box; margin:0; padding:0; }
+
+html,body{
+    width:100%; min-height:100%;
+    background-color:var(--c-void);
+    font-family:'Courier Prime', monospace;
+    color:#fff;
+    overflow-x:hidden;
+    -webkit-tap-highlight-color:transparent;
+}
+
+/* ---- THE FIELD (visualiser canvas) ---- */
+#field{
+    position:fixed; inset:0;
+    width:100%; height:100%;
+    z-index:1;
+    background:radial-gradient(circle at 50% 45%, #1a0033 0%, #05000f 55%, #000 100%);
+    touch-action:none;
+}
+
+/* ---- SCANLINE SKIN ---- */
+#scanlines{
+    position:fixed; inset:0; z-index:2;
+    pointer-events:none;
+    background:repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,0.025) 0px,
+        rgba(255,255,255,0.025) 1px,
+        transparent 2px,
+        transparent 3px
+    );
+    mix-blend-mode:overlay;
+    opacity:0.6;
+}
+
+/* ---- SHARED OVERLAY LAYOUT ---- */
+.veil{
+    position:fixed; inset:0; z-index:10;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    padding:2rem 1.4rem;
+    text-align:center;
+    transition:opacity 0.9s ease;
+}
+.veil.gone{ opacity:0; pointer-events:none; }
+
+.eyebrow{
+    font-size:0.62rem; letter-spacing:0.55em;
+    text-transform:uppercase;
+    color:var(--c-cyan);
+    text-shadow:0 0 12px rgba(0,255,255,0.6);
+    margin-bottom:1.6rem; padding-left:0.55em;
+}
+
+h1.sigil{
+    font-family:'Cinzel', serif;
+    font-weight:700;
+    font-size:clamp(2.6rem, 12vw, 5.4rem);
+    line-height:0.95;
+    letter-spacing:0.04em;
+    background:linear-gradient(120deg,var(--c-magenta),var(--c-cyan) 45%,var(--c-gold));
+    -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 0 26px rgba(255,0,255,0.35));
+    animation:breathe 7s ease-in-out infinite;
+}
+@keyframes breathe{
+    0%,100%{ filter:drop-shadow(0 0 20px rgba(255,0,255,0.25)); }
+    50%{ filter:drop-shadow(0 0 40px rgba(0,255,255,0.45)); }
+}
+
+.subline{
+    font-size:0.72rem; letter-spacing:0.32em;
+    text-transform:uppercase;
+    color:rgba(255,255,255,0.72);
+    margin-top:1.1rem;
+}
+
+.threshold-copy{
+    max-width:34ch;
+    margin:2.2rem auto 0;
+    font-size:0.92rem; line-height:1.85;
+    color:rgba(255,255,255,0.82);
+}
+.threshold-copy em{ color:var(--c-gold); font-style:normal; }
+
+/* ---- THE RITUAL BUTTON ---- */
+.threshold-btn{
+    margin-top:2.6rem;
+    padding:1.05rem 2.4rem;
+    font-family:'Cinzel', serif;
+    font-size:0.92rem; font-weight:700;
+    letter-spacing:0.28em;
+    color:#fff;
+    background:rgba(255,0,255,0.06);
+    border:1px solid var(--c-magenta);
+    border-radius:60px;
+    cursor:pointer;
+    text-transform:uppercase;
+    box-shadow:0 0 24px rgba(255,0,255,0.25), inset 0 0 18px rgba(255,0,255,0.08);
+    transition:all 0.35s cubic-bezier(.25,.8,.25,1);
+    -webkit-user-select:none; user-select:none;
+}
+.threshold-btn:hover,.threshold-btn:focus-visible{
+    background:rgba(0,255,255,0.12);
+    border-color:var(--c-cyan);
+    box-shadow:0 0 42px rgba(0,255,255,0.5), inset 0 0 22px rgba(0,255,255,0.12);
+    transform:translateY(-2px);
+    outline:none;
+}
+.threshold-btn:active{ transform:scale(0.97); }
+
+.fine{
+    margin-top:2.4rem;
+    font-size:0.62rem; letter-spacing:0.18em;
+    color:rgba(255,255,255,0.4);
+    line-height:1.9;
+}
+.fine b{ color:rgba(0,255,255,0.7); font-weight:700; }
+
+/* ---- CONSOLE (playing state) ---- */
+#console{
+    position:fixed; left:0; right:0; bottom:0; z-index:11;
+    display:flex; flex-direction:column; align-items:center;
+    gap:1rem;
+    padding:1.4rem 1rem calc(1.4rem + env(safe-area-inset-bottom));
+    background:linear-gradient(to top, rgba(2,0,5,0.92) 0%, rgba(2,0,5,0.6) 60%, transparent 100%);
+    transform:translateY(120%);
+    transition:transform 0.8s cubic-bezier(.25,.8,.25,1);
+    pointer-events:none;
+}
+#console.up{ transform:translateY(0); pointer-events:auto; }
+
+.readout{
+    display:flex; flex-wrap:wrap; justify-content:center;
+    gap:0.5rem 0.9rem;
+    max-width:640px; width:100%;
+    font-size:0.6rem; letter-spacing:0.12em;
+}
+.chip{
+    display:flex; align-items:center; gap:0.4rem;
+    padding:0.3rem 0.6rem;
+    border-radius:40px;
+    background:rgba(255,255,255,0.03);
+    border:1px solid rgba(255,255,255,0.09);
+    white-space:nowrap;
+}
+.dot{ width:7px; height:7px; border-radius:50%; box-shadow:0 0 8px currentColor; }
+.chip b{ font-weight:700; letter-spacing:0.05em; }
+.chip span{ color:rgba(255,255,255,0.55); }
+
+.transport{
+    display:flex; align-items:center; gap:1.1rem;
+    width:100%; max-width:520px;
+}
+.membrane-wrap{
+    flex:1; display:flex; flex-direction:column; gap:0.35rem;
+}
+.membrane-label{
+    font-size:0.54rem; letter-spacing:0.28em; text-transform:uppercase;
+    color:rgba(255,255,255,0.5);
+}
+input[type=range]{
+    -webkit-appearance:none; appearance:none;
+    width:100%; height:3px; border-radius:3px;
+    background:linear-gradient(to right,var(--c-magenta),var(--c-cyan));
+    outline:none;
+}
+input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none;
+    width:20px; height:20px; border-radius:50%;
+    background:#fff;
+    box-shadow:0 0 12px rgba(255,255,255,0.8);
+    cursor:pointer;
+}
+input[type=range]::-moz-range-thumb{
+    width:20px; height:20px; border:none; border-radius:50%;
+    background:#fff; box-shadow:0 0 12px rgba(255,255,255,0.8); cursor:pointer;
+}
+
+.withdraw-btn{
+    flex-shrink:0;
+    padding:0.8rem 1.4rem;
+    font-family:'Cinzel', serif;
+    font-size:0.68rem; font-weight:700; letter-spacing:0.22em;
+    text-transform:uppercase;
+    color:var(--c-rose);
+    background:rgba(255,0,85,0.06);
+    border:1px solid var(--c-rose);
+    border-radius:50px; cursor:pointer;
+    transition:all 0.3s ease;
+    -webkit-user-select:none; user-select:none;
+}
+.withdraw-btn:hover,.withdraw-btn:focus-visible{
+    background:rgba(255,0,85,0.16);
+    box-shadow:0 0 22px rgba(255,0,85,0.4);
+    outline:none;
+}
+.withdraw-btn:active{ transform:scale(0.96); }
+
+.timecode{
+    font-size:0.6rem; letter-spacing:0.2em;
+    color:rgba(255,255,255,0.55);
+}
+.timecode b{ color:var(--c-gold); }
+
+@media (prefers-reduced-motion: reduce){
+    h1.sigil{ animation:none; }
+    .veil,#console{ transition:none; }
+}
+</style>
+</head>
+<body>
+    <canvas id="field"></canvas>
+    <div id="scanlines"></div>
+
+    <!-- THRESHOLD -->
+    <div class="veil" id="veil">
+        <div class="eyebrow">Össtessêla Research Ensemble</div>
+        <h1 class="sigil">CRYSTALLINE&nbsp;127</h1>
+        <div class="subline">Sonic Architecture · Self-Similar Field</div>
+        <p class="threshold-copy">
+            Two carriers, seven apart, rotating against each other around a still centre.
+            A <em>7&nbsp;Hz</em> beat rises in the space between them.
+            The field asks to be <em>entered</em>, not taken.
+        </p>
+        <button class="threshold-btn" id="enterBtn">◈&nbsp;&nbsp;Enter the Field&nbsp;&nbsp;◈</button>
+        <p class="fine">
+            Synthesised live in your browser — <b>nothing is streamed, nothing is stored</b>.<br>
+            Headphones restore the stereo vortex &amp; binaural beat.
+        </p>
+    </div>
+
+    <!-- CONSOLE -->
+    <div id="console">
+        <div class="readout" id="readout"></div>
+        <div class="transport">
+            <div class="membrane-wrap">
+                <span class="membrane-label">Membrane · flow rate</span>
+                <input type="range" id="vol" min="0" max="1" step="0.01" value="0.72" aria-label="Volume membrane">
+            </div>
+            <button class="withdraw-btn" id="withdrawBtn">◈ Withdraw ◈</button>
+        </div>
+        <div class="timecode">∞ looping · <b id="elapsed">0:00</b> in the field</div>
+    </div>
+
+<script>
+/* =====================================================================
+   CRYSTALLINE 127 — Web Audio port of render_audio.py
+   A faithful live synthesis of the 12/7 crystalline sonic architecture.
+   ---------------------------------------------------------------------
+   TUNING KNOBS — everything you'd want to reach for lives right here.
+   ===================================================================== */
+const CONFIG = {
+    carrierL : { freq:127, gainDb:-12, panPeriod:8, panFn:'-cos', color:'#ff00ff', label:'127 Hz', role:'Left carrier' },
+    carrierR : { freq:120, gainDb:-12, panPeriod:8, panFn:'+cos', color:'#00ffff', label:'120 Hz', role:'Right carrier' },
+    solfeggio: { freq:528, gainDb:-35, panPeriod:4, panFn:'sin',  color:'#ffd700', label:'528 Hz', role:'Centre vortex' },
+    pink     : { gainDb:-24, tremoloHz:7, tremoloDepth:0.25, bufferSeconds:15 },
+    beatHz   : 7,          // 127 − 120, the theta beat that lives between the carriers
+    volume   : 0.72,       // default membrane
+};
+
+const dB = db => Math.pow(10, db/20);   // decibels → linear gain
+
+/* ---------------------------------------------------------------------
+   AUDIO ENGINE
+   --------------------------------------------------------------------- */
+let ctx = null, analyser = null, master = null;
+let startedAt = 0, playing = false;
+let nodes = [];   // keep refs so we can stop() cleanly
+
+// Periodic-wave helpers so we can drive pan LFOs with exact ±cos / ±sin.
+// Web Audio: x(t) = Σ real[k]·cos(2πkft) + imag[k]·sin(2πkft)
+function wave(kind){
+    const real = new Float32Array([0,0]);
+    const imag = new Float32Array([0,0]);
+    if(kind==='+cos') real[1]=1;
+    if(kind==='-cos') real[1]=-1;
+    if(kind==='sin')  imag[1]=1;
+    if(kind==='-sin') imag[1]=-1;
+    return ctx.createPeriodicWave(real, imag, {disableNormalization:true});
+}
+
+// True pink noise floor (Paul Kellet filter → clean −3 dB/oct slope),
+// peak-normalised to match the script's normalise-then-attenuate stage.
+function makePinkBuffer(seconds){
+    const n = Math.floor(ctx.sampleRate * seconds);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const out = buf.getChannelData(0);
+    let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0, peak=0;
+    for(let i=0;i<n;i++){
+        const w = Math.random()*2-1;
+        b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750759;
+        b2=0.96900*b2+w*0.1538520; b3=0.86650*b3+w*0.3104856;
+        b4=0.55000*b4+w*0.5329522; b5=-0.7616*b5-w*0.0168980;
+        const p = b0+b1+b2+b3+b4+b5+b6+w*0.5362;
+        b6=w*0.115926;
+        out[i]=p; if(Math.abs(p)>peak) peak=Math.abs(p);
+    }
+    if(peak>0){ for(let i=0;i<n;i++) out[i]/=peak; }   // true-peak normalise
+    return buf;
+}
+
+// Build one panned oscillator carrier with a phase-locked pan LFO.
+function buildCarrier(cfg, t0){
+    const osc = ctx.createOscillator(); osc.type='sine'; osc.frequency.value=cfg.freq;
+    const g   = ctx.createGain(); g.gain.value = dB(cfg.gainDb);
+    const pan = ctx.createStereoPanner();               // equal-power law, matches the script
+    const lfo = ctx.createOscillator();
+    if(cfg.panFn==='sin') lfo.type='sine'; else lfo.setPeriodicWave(wave(cfg.panFn));
+    lfo.frequency.value = 1/cfg.panPeriod;              // one rotation per panPeriod seconds
+    lfo.connect(pan.pan);                               // ±1 → full L .. full R
+    osc.connect(g).connect(pan).connect(master);
+    osc.start(t0); lfo.start(t0);                       // phase-locked start
+    nodes.push(osc,lfo);
+    return {pan};
+}
+
+function startEngine(){
+    ctx = new (window.AudioContext||window.webkitAudioContext)();
+    master = ctx.createGain(); master.gain.value = CONFIG.volume;
+    analyser = ctx.createAnalyser(); analyser.fftSize = 1024;
+    const limiter = ctx.createDynamicsCompressor();     // gentle safety brickwall
+    limiter.threshold.value=-3; limiter.ratio.value=12; limiter.attack.value=0.002;
+    master.connect(analyser).connect(limiter).connect(ctx.destination);
+
+    const t0 = ctx.currentTime + 0.06;                  // common start → phase-lock
+    startedAt = t0;
+
+    buildCarrier(CONFIG.carrierL, t0);   // 127 Hz, −12 dB, pan −cos(2π t/8)
+    buildCarrier(CONFIG.carrierR, t0);   // 120 Hz, −12 dB, pan +cos(2π t/8)
+    buildCarrier(CONFIG.solfeggio, t0);  // 528 Hz, −35 dB, pan  sin(2π t/4)
+
+    // Pink-noise theta floor: 1 − 0.25·(1+sin(2π·7·t)) tremolo, centred.
+    const pink = ctx.createBufferSource();
+    pink.buffer = makePinkBuffer(CONFIG.pink.bufferSeconds); pink.loop=true;
+    const pinkGain = ctx.createGain(); pinkGain.gain.value = dB(CONFIG.pink.gainDb);
+    const trem = ctx.createGain();
+    trem.gain.value = 1 - CONFIG.pink.tremoloDepth;                 // 0.75 baseline
+    const tremLfo = ctx.createOscillator();
+    tremLfo.setPeriodicWave(wave('-sin')); tremLfo.frequency.value=CONFIG.pink.tremoloHz;
+    const tremDepth = ctx.createGain(); tremDepth.gain.value = CONFIG.pink.tremoloDepth; // ×0.25
+    tremLfo.connect(tremDepth).connect(trem.gain);                 // 0.75 − 0.25·sin(2π·7·t)
+    pink.connect(pinkGain).connect(trem).connect(master);
+    pink.start(t0); tremLfo.start(t0);
+    nodes.push(pink,tremLfo);
+
+    playing = true;
+}
+
+function stopEngine(){
+    playing=false;
+    nodes.forEach(n=>{ try{ n.stop(); }catch(e){} });
+    nodes=[];
+    if(ctx){ ctx.close(); ctx=null; }
+}
+
+/* ---------------------------------------------------------------------
+   THE FIELD — reactive vortex visualiser
+   Positions are computed analytically from the audio clock (so they are
+   *exactly* the stereo pan), while brightness breathes with live RMS.
+   --------------------------------------------------------------------- */
+const canvas = document.getElementById('field');
+const g = canvas.getContext('2d');
+let DPR=1, W=0, H=0;
+function resize(){
+    DPR = Math.min(window.devicePixelRatio||1, 2);
+    W = canvas.width  = Math.floor(innerWidth*DPR);
+    H = canvas.height = Math.floor(innerHeight*DPR);
+    canvas.style.width=innerWidth+'px'; canvas.style.height=innerHeight+'px';
+}
+resize(); addEventListener('resize', resize);
+
+const TAU = Math.PI*2;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let td = null;
+function rms(){
+    if(!analyser) return 0;
+    if(!td) td = new Uint8Array(analyser.fftSize);
+    analyser.getByteTimeDomainData(td);
+    let s=0; for(let i=0;i<td.length;i++){ const v=(td[i]-128)/128; s+=v*v; }
+    return Math.sqrt(s/td.length);
+}
+
+function orb(x,y,r,color,intensity){
+    const grd = g.createRadialGradient(x,y,0,x,y,r);
+    grd.addColorStop(0, color);
+    grd.addColorStop(0.25, color);
+    grd.addColorStop(1, 'rgba(0,0,0,0)');
+    g.globalAlpha = intensity;
+    g.fillStyle = grd;
+    g.beginPath(); g.arc(x,y,r,0,TAU); g.fill();
+    g.globalAlpha = 1;
+}
+
+function draw(){
+    requestAnimationFrame(draw);
+
+    // motion-blur trail
+    g.globalCompositeOperation='source-over';
+    g.fillStyle = reduce ? 'rgba(5,0,15,1)' : 'rgba(5,0,15,0.22)';
+    g.fillRect(0,0,W,H);
+    g.globalCompositeOperation='lighter';
+
+    const cx=W/2, cy=H*0.46;
+    const R = Math.min(W,H)*0.26;
+    const t = playing ? (ctx.currentTime - startedAt) : performance.now()/1000;
+    const level = playing ? Math.min(rms()*3.2, 1) : 0.12;
+
+    // 7 Hz beat pulse — the theta interference between the carriers
+    const beat = 0.5 + 0.5*Math.sin(TAU*CONFIG.beatHz*t);
+    const beatScale = 1 + (reduce?0:0.05*beat) + level*0.10;
+
+    // --- 528 Hz centre vortex (gold core), pan = sin(2π t/4) ---
+    const p4 = Math.sin(TAU*t/CONFIG.solfeggio.panPeriod);
+    orb(cx + p4*R*0.28, cy, R*0.34*(1+level*0.4), 'rgba(255,215,0,0.16)', 0.5+level*0.4);
+    orb(cx + p4*R*0.28, cy, R*0.10, 'rgba(255,235,150,0.9)', 0.6+beat*0.3);
+
+    // --- Counter-rotating carriers. x-projection == true stereo pan ---
+    // pan127 = -cos(2π t/8) ; pan120 = +cos(2π t/8)
+    const a = TAU*t/CONFIG.carrierL.panPeriod;
+    const rr = R*beatScale;
+    const x1 = cx - Math.cos(a)*rr, y1 = cy + Math.sin(a)*rr*0.72;  // 127 (magenta)
+    const x2 = cx + Math.cos(a)*rr, y2 = cy - Math.sin(a)*rr*0.72;  // 120 (cyan)
+
+    // filament of tension between them, brightening on the beat
+    g.strokeStyle = `rgba(180,38,255,${0.10+beat*0.28+level*0.25})`;
+    g.lineWidth = (1+beat*2)*DPR;
+    g.beginPath(); g.moveTo(x1,y1); g.lineTo(x2,y2); g.stroke();
+
+    const glow = 0.55 + level*0.45;
+    orb(x1,y1, R*0.30*(1+level*0.5), 'rgba(255,0,255,0.20)', glow);
+    orb(x1,y1, R*0.085, 'rgba(255,150,255,0.95)', glow);
+    orb(x2,y2, R*0.30*(1+level*0.5), 'rgba(0,255,255,0.20)', glow);
+    orb(x2,y2, R*0.085, 'rgba(150,255,255,0.95)', glow);
+
+    // pink-noise haze — a soft grain breathing with the whole field
+    if(!reduce && playing){
+        g.globalAlpha = 0.05 + level*0.06;
+        for(let i=0;i<26;i++){
+            const ang=Math.random()*TAU, rad=Math.random()*R*1.7;
+            g.fillStyle='rgba(255,180,220,0.5)';
+            g.fillRect(cx+Math.cos(ang)*rad, cy+Math.sin(ang)*rad, DPR, DPR);
+        }
+        g.globalAlpha=1;
+    }
+    g.globalCompositeOperation='source-over';
+}
+draw();
+
+/* ---------------------------------------------------------------------
+   READOUT + TRANSPORT
+   --------------------------------------------------------------------- */
+const readoutEl = document.getElementById('readout');
+function chip(color,label,sub){
+    return `<span class="chip"><span class="dot" style="color:${color};background:${color}"></span>`
+         + `<b>${label}</b><span>${sub}</span></span>`;
+}
+readoutEl.innerHTML =
+      chip(CONFIG.carrierL.color, CONFIG.carrierL.label, 'left ↺')
+    + chip(CONFIG.carrierR.color, CONFIG.carrierR.label, 'right ↻')
+    + chip('#b026ff', CONFIG.beatHz+' Hz', 'θ beat')
+    + chip(CONFIG.solfeggio.color, CONFIG.solfeggio.label, 'centre')
+    + chip('#ff69b4', 'pink', '7 Hz tremolo');
+
+const elapsedEl = document.getElementById('elapsed');
+setInterval(()=>{
+    if(!playing){ elapsedEl.textContent='0:00'; return; }
+    const s=Math.floor(ctx.currentTime-startedAt);
+    elapsedEl.textContent = Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+},500);
+
+const veil=document.getElementById('veil');
+const consoleEl=document.getElementById('console');
+const vol=document.getElementById('vol');
+vol.value = CONFIG.volume;
+
+document.getElementById('enterBtn').addEventListener('click', async ()=>{
+    if(playing) return;
+    startEngine();
+    if(ctx.state==='suspended') await ctx.resume();     // iOS / autoplay consent
+    veil.classList.add('gone');
+    consoleEl.classList.add('up');
+});
+
+document.getElementById('withdrawBtn').addEventListener('click', ()=>{
+    stopEngine();
+    consoleEl.classList.remove('up');
+    veil.classList.remove('gone');
+});
+
+vol.addEventListener('input', ()=>{
+    if(master) master.gain.setTargetAtTime(parseFloat(vol.value), ctx.currentTime, 0.02);
+});
+</script>
+</body>
+</html>
