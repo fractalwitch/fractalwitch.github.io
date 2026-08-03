@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<title>ΣΩ · CYMATICKA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--void:#030009;--mag:#e040fb;--cyan:#00e5ff;--gold:#ffd54f;--plasma:#b388ff;--mint:#1de9b6;--rose:#f48fb1;
+--ink:#e9e2ff;--dim:#9c93c4;--faint:#5b5385;--border:rgba(179,136,255,.20);--mono:'Space Mono',monospace;--title:'Cinzel',serif;}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--void);color:var(--ink);font-family:var(--mono);
+-webkit-tap-highlight-color:transparent;overscroll-behavior:none;user-select:none;-webkit-user-select:none;touch-action:none;-webkit-font-smoothing:antialiased}
+#gl,#rings{position:fixed;inset:0;width:100%;height:100%;display:block}
+#gl{z-index:1} #rings{z-index:2;touch-action:none}
+#scan{position:fixed;inset:0;z-index:3;pointer-events:none;opacity:.20;background:repeating-linear-gradient(0deg,rgba(0,0,0,.16),rgba(0,0,0,.16) 1px,transparent 1px,transparent 3px);mix-blend-mode:overlay}
+#brand{position:fixed;top:10px;left:0;right:0;z-index:5;text-align:center;pointer-events:none}
+#brand .t{font-family:var(--title);font-weight:600;font-size:clamp(1rem,4.2vw,1.5rem);letter-spacing:.42em;color:#fff;text-shadow:0 0 16px rgba(0,229,255,.6),0 0 40px rgba(224,64,251,.3)}
+#hud{position:fixed;top:42px;left:0;right:0;z-index:5;display:flex;flex-direction:column;align-items:center;gap:3px;pointer-events:none;padding:0 12px}
+#odo{display:flex;align-items:baseline;gap:.5em}
+#odo .lab{font-size:.54rem;letter-spacing:.34em;color:var(--faint);text-transform:uppercase}
+#odo .num{font-family:var(--title);font-weight:600;font-size:1.5rem;letter-spacing:.16em;color:var(--gold);text-shadow:0 0 14px rgba(255,213,79,.5)}
+#odo .num.lock{color:var(--rose);text-shadow:0 0 16px rgba(244,143,177,.6)}
+#wf{font-size:.6rem;letter-spacing:.06em;color:var(--cyan);opacity:.9;white-space:nowrap;overflow:hidden;max-width:96vw;text-overflow:ellipsis}
+#tags{font-size:.52rem;letter-spacing:.24em;color:var(--dim);text-transform:uppercase}
+#legend{position:fixed;left:0;right:0;bottom:calc(84px + env(safe-area-inset-bottom));z-index:5;display:flex;flex-wrap:wrap;justify-content:center;gap:6px 12px;padding:0 14px;pointer-events:none}
+.leg{display:flex;align-items:center;gap:.45em;font-size:.56rem;letter-spacing:.08em}
+.leg .dot{width:8px;height:8px;border-radius:50%;box-shadow:0 0 8px currentColor}
+.leg .ln{color:var(--dim);text-transform:uppercase} .leg .lv{color:#fff;font-weight:700}
+#util{position:fixed;left:50%;bottom:calc(10px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:6;display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:96vw}
+.btn{font-family:var(--mono);font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);background:rgba(179,136,255,.08);border:1px solid var(--border);border-radius:3px;padding:.6em .8em;cursor:pointer}
+.btn:active{background:rgba(0,229,255,.16)} .btn.on{border-color:var(--mint);color:var(--mint)}
+.btn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.help-fab{position:fixed;top:10px;right:12px;z-index:7;width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:rgba(179,136,255,.08);color:var(--plasma);font-family:var(--title);font-size:.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+#intro{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:22px;background:radial-gradient(1000px 800px at 50% 42%,rgba(0,229,255,.10),transparent 60%),var(--void);transition:opacity .6s;text-align:center;padding:24px}
+#intro.gone{opacity:0;pointer-events:none}
+#intro h1{font-family:var(--title);font-weight:600;font-size:clamp(2.2rem,12vw,4.4rem);letter-spacing:.30em;padding-left:.30em;background:linear-gradient(100deg,var(--cyan),#fff 55%,var(--mint));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+#intro p{max-width:31em;color:var(--dim);font-size:.9rem;line-height:1.7} #intro em{color:var(--cyan);font-style:normal}
+#enter{margin-top:6px;font-family:var(--title);letter-spacing:.3em;font-size:1rem;color:var(--cyan);background:transparent;border:1px solid var(--cyan);border-radius:4px;padding:1em 2.4em;cursor:pointer;box-shadow:0 0 24px rgba(0,229,255,.3);text-transform:uppercase}
+#enter:active{background:var(--cyan);color:#000}
+#info{position:fixed;inset:0;z-index:25;background:rgba(3,0,9,.94);display:none;flex-direction:column;padding:clamp(24px,6vw,60px);overflow-y:auto}
+#info.show{display:flex}
+#info h2{font-family:var(--title);letter-spacing:.2em;color:var(--ink);font-size:1.3rem;margin-bottom:1em}
+#info .gi{display:grid;grid-template-columns:6em 1fr;gap:1em;padding:.6em 0;border-top:1px solid var(--border);align-items:baseline;max-width:660px}
+#info .gi b{font-size:.62rem;letter-spacing:.16em;color:var(--gold);text-transform:uppercase} #info .gi span{color:var(--dim);font-size:.85rem;line-height:1.6}
+#info .note{margin-top:1.4em;max-width:660px;color:var(--faint);font-size:.8rem;line-height:1.7;border-left:2px solid var(--border);padding-left:1em} #info .note b{color:var(--mint)}
+#info .close{margin-top:1.8em;align-self:flex-start}
+#toast{position:fixed;left:50%;bottom:calc(64px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:8;font-size:.6rem;letter-spacing:.16em;color:var(--rose);opacity:0;transition:opacity .3s;pointer-events:none;text-transform:uppercase}
+#toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){#intro{transition:none}}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<canvas id="rings"></canvas>
+<div id="scan"></div>
+<div id="brand"><div class="t">CYMATICKA</div></div>
+<div id="hud">
+  <div id="odo"><span class="lab">pattern №</span><span class="num" id="odoNum">012</span></div>
+  <div id="wf">Ψ = cos 3x·cos 4y + cos 4x·cos 3y</div>
+  <div id="tags">PLATE · SUM · sand</div>
+</div>
+<button class="help-fab" id="helpBtn" aria-label="What the rings do">?</button>
+<div id="legend"></div>
+<div id="toast"></div>
+<div id="util">
+  <button class="btn" id="recast">⟳ recast</button>
+  <button class="btn" id="freeze">❄ hold</button>
+  <button class="btn" id="bound">▦ plate</button>
+  <button class="btn" id="invert">◓ powder</button>
+  <button class="btn" id="react">◈ react</button>
+  <button class="btn" id="listen">♪ listen</button>
+  <button class="btn" id="tint">◐ tint</button>
+</div>
+<div id="intro">
+  <h1>CYMATICKA</h1>
+  <p>A vibrating plate seeded with hundreds of thousands of grains of sand. Each grain slows where the plate is still, so the sand <em>flows</em> into the figure on its own. Turn the dials, let it go quiet to zoom in, switch on <em>react</em> for living Turing patterns, or <em>listen</em> and let sound drive the plate.</p>
+  <button id="enter">look in</button>
+</div>
+<div id="info">
+  <h2>DIALS &amp; SWITCHES</h2>
+  <div class="gi"><b>Freq</b><span>Driving frequency; climbs into denser resonances. In react mode it sets the feed rate.</span></div>
+  <div class="gi"><b>Mode</b><span>Ratio between the two wavenumbers — walks the family of figures. In react mode, the kill rate.</span></div>
+  <div class="gi"><b>Phase δ</b><span>Phase between the two modes: SUM, rotating, DIFFERENCE.</span></div>
+  <div class="gi"><b>Drive</b><span>How hard it's shaken — grain energy and how tightly the sand piles.</span></div>
+  <div class="gi"><b>∇127</b><span>Phases into the seven-fold roots-of-unity attractor; the odometer rolls to 127.</span></div>
+  <div class="gi"><b>◈ react</b><span>Reaction–diffusion (Gray–Scott) discovery layer — a living Turing field the same sand settles onto.</span></div>
+  <div class="gi"><b>♪ listen</b><span>Uses your microphone to drive the plate: louder sound raises the drive, higher pitch raises the frequency.</span></div>
+  <p class="note">The sand is ~400k GPU grains under <b>space-dependent diffusion</b> (Abramian, Protière, Lazarus &amp; Devauchelle, Phys. Rev. Research 2025): step length ∝ local amplitude, no drift, so grains pile where the field is still. <b>◓ powder</b> streams grains to antinodes (inverse-Chladni / acoustic streaming). <b>◈ react</b> is a genuine Gray–Scott Turing simulation — a pattern-formation cousin of the plate, not plate physics, and labelled as such. The microphone audio never leaves your device.</p>
+  <button class="btn close" id="infoClose">close</button>
+</div>
+
+<script>
+"use strict";
+/* ═══════════ TUNING ═══════════ */
+const TUNE = { ringGap:0.12, PGRID:640, RDN:256 };   // PGRID: grains per side (640 = ~410k). Lower to 512/384 for battery.
+const HUES = [0.00,0.16,0.45,0.72,0.90];
+const ACCENT = { mag:'#e040fb', cyan:'#00e5ff', plasma:'#b388ff', gold:'#ffd54f', mint:'#1de9b6', rose:'#f48fb1' };
+
+const glc=document.getElementById('gl');
+const gl=glc.getContext('webgl2',{antialias:false,alpha:false,premultipliedAlpha:false});
+let floatOK=false;
+if(gl){ floatOK=!!gl.getExtension('EXT_color_buffer_float'); if(!floatOK) floatOK=!!gl.getExtension('EXT_color_buffer_half_float'); }
+const PARTICLES=!!(gl&&floatOK);
+
+/* ═══════════ SHARED GLSL ═══════════ */
+const COMMON=[
+"#define PI 3.14159265359","#define TAU 6.28318530718",
+"uniform float uTime,uFreq,uMode,uPhase,uP127,uBound;",
+"uniform sampler2D uRDTex; uniform float uRD,uRDLevel;",
+"float hash(vec2 p){ return fract(sin(dot(p,vec2(41.3,289.1)))*43758.5453); }",
+"float vnoise(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.0-2.0*f);",
+"  float a=hash(i),b=hash(i+vec2(1.0,0.0)),c=hash(i+vec2(0.0,1.0)),d=hash(i+vec2(1.0,1.0));",
+"  return mix(mix(a,b,f.x),mix(c,d,f.x),f.y); }",
+"float j0ish(vec2 p,float k){ float s=0.0;",
+"  for(int j=0;j<12;j++){ float th=TAU*float(j)/12.0; s+=cos(k*dot(p,vec2(cos(th),sin(th)))); } return s/12.0; }",
+"float sevenfold(vec2 p,float k){ float s=0.0;",
+"  for(int j=0;j<7;j++){ float th=TAU*float(j)/7.0; s+=cos(k*dot(p,vec2(cos(th),sin(th)))); } return s/7.0; }",
+"float ampCy(vec2 pin){",
+"  float dl=uPhase*PI; float cd=cos(dl);",
+"  float sp=sin(dl)*0.55*uTime; float cs=cos(sp), sn=sin(sp);",
+"  vec2 p=vec2(pin.x*cs-pin.y*sn, pin.x*sn+pin.y*cs)*PI;",
+"  float f=uFreq; float ratio=1.2+uMode*1.8; float a=f, b=f*ratio;",
+"  float psi1=cos(a*p.x)*cos(b*p.y), psi2=cos(b*p.x)*cos(a*p.y);",
+"  float envP=sqrt(max(psi1*psi1+psi2*psi2+2.0*psi1*psi2*cd,0.0))*0.7071;",
+"  float ang=atan(p.y,p.x); float rad=j0ish(p,f*1.15);",
+"  float cm=cos(f*ang), smf=sin(f*ang);",
+"  float envD=abs(rad)*sqrt(max(cm*cm+smf*smf+2.0*cm*smf*cd,0.0))*0.7071;",
+"  float env7=abs(sevenfold(p,f));",
+"  float envB=mix(envP,envD,uBound); return mix(envB,env7,uP127);",
+"}",
+"float amp(vec2 pin){",
+"  float cy=ampCy(pin);",
+"  if(uRD<0.001) return cy;",
+"  vec2 uv=clamp(pin*0.5+0.5,0.001,0.999);",
+"  float v=texture(uRDTex,uv).g;",
+"  float rd=abs(v-uRDLevel)*3.5;",
+"  return mix(cy,rd,uRD);",
+"}"
+].join("\n");
+
+const PAL=[
+"vec3 tintPal(float h){",
+"  vec3 cyan=vec3(0.10,0.85,1.00), teal=vec3(0.10,1.00,0.70), viol=vec3(0.72,0.45,1.00), gold=vec3(1.00,0.80,0.32), rose=vec3(1.00,0.45,0.75);",
+"  float t=fract(h)*4.0;",
+"  if(t<1.0) return mix(cyan,teal,t);",
+"  if(t<2.0) return mix(teal,viol,t-1.0);",
+"  if(t<3.0) return mix(viol,gold,t-2.0);",
+"  return mix(gold,rose,t-3.0);",
+"}"
+].join("\n");
+
+const VS_FULL="#version 300 es\nin vec2 a; void main(){ gl_Position=vec4(a,0.0,1.0); }";
+
+const FS_FIELD=["#version 300 es","precision highp float;","out vec4 O;",
+"uniform vec2 uCenter; uniform float uDispR,uHue,uDrive,uPowder,uBg;", COMMON, PAL,
+"void main(){",
+"  vec2 frag=gl_FragCoord.xy; vec2 rel=(frag-uCenter)/uDispR; float rr=length(rel);",
+"  vec3 col=vec3(0.008,0.0,0.028);",
+"  float halo=smoothstep(1.9,1.0,rr); col+=tintPal(uHue)*halo*0.05;",
+"  if(rr<=1.004){",
+"    float A=amp(rel);",
+"    float w=mix(0.14,0.02,uDrive)+0.012*smoothstep(1.0,0.2,rr);",
+"    float node=1.0-smoothstep(0.0,w,A); float anti=smoothstep(0.55,1.15,A);",
+"    float patt=mix(node,anti,uPowder);",
+"    float grain=hash(frag+floor(uTime*7.0)); float micro=vnoise(rel*250.0);",
+"    float sg=0.24+0.76*smoothstep(0.42,0.74,micro*0.6+grain*0.55);",
+"    vec3 tint=tintPal(uHue+0.05*rr);",
+"    col += tint*( patt*mix(0.20,0.0,1.0-uBg) + patt*sg*mix(0.0,1.55,uBg) + smoothstep(0.0,1.0,A)*0.045 );",
+"    if(uRD>0.001){ vec2 uv=clamp(rel*0.5+0.5,0.0,1.0); float v=texture(uRDTex,uv).g; col+=tintPal(uHue+0.20)*v*0.16*uRD; }",
+"    col *= smoothstep(1.02,0.5,rr)*0.72+0.28;",
+"    float bez=smoothstep(0.94,1.0,rr); col=mix(col, tint*0.42+vec3(0.03), bez*0.55);",
+"    col += (hash(frag*1.3+uTime)-0.5)*0.016;",
+"  }",
+"  O=vec4(max(col,0.0),1.0);",
+"}"].join("\n");
+
+const FS_SIM=["#version 300 es","precision highp float;","out vec4 O;",
+"uniform sampler2D uPos; uniform float uFrame,uStep,uThermal,uDrift,uPowder;", COMMON,
+"void main(){",
+"  ivec2 t=ivec2(gl_FragCoord.xy); vec2 pos=texelFetch(uPos,t,0).xy;",
+"  float A=amp(pos);",
+"  float seed=hash(gl_FragCoord.xy+vec2(uFrame*0.017,uFrame*0.029)); float ang=seed*TAU;",
+"  float stp=uStep*A + uThermal; vec2 np=pos+vec2(cos(ang),sin(ang))*stp;",
+"  if(uPowder>0.001){ float e=0.02;",
+"    vec2 g=vec2(amp(pos+vec2(e,0.0))-amp(pos-vec2(e,0.0)), amp(pos+vec2(0.0,e))-amp(pos-vec2(0.0,e)));",
+"    float gl2=length(g); if(gl2>1e-4) np+=(g/gl2)*uDrift*uPowder; }",
+"  float rr=length(np); if(rr>0.995){ np=normalize(np)*(1.99-rr); }",
+"  float re=hash(gl_FragCoord.yx+vec2(uFrame*0.031,7.0));",
+"  if(re>0.9992){ float r2=sqrt(hash(gl_FragCoord.xy+vec2(uFrame,3.0))); float a2=hash(gl_FragCoord.yx+vec2(1.0,uFrame))*TAU; np=vec2(cos(a2),sin(a2))*r2; }",
+"  O=vec4(np,0.0,1.0);",
+"}"].join("\n");
+
+const VS_DRAW=["#version 300 es","precision highp float;",
+"uniform sampler2D uPos; uniform int uP; uniform vec2 uRes,uCenter; uniform float uDispR,uPtSize;","out float vA;",
+"void main(){ int id=gl_VertexID; ivec2 t=ivec2(id%uP, id/uP); vec2 pos=texelFetch(uPos,t,0).xy;",
+"  vec2 px=uCenter+pos*uDispR; gl_Position=vec4((px/uRes)*2.0-1.0, 0.0, 1.0); gl_PointSize=uPtSize; vA=length(pos); }"].join("\n");
+const FS_DRAW=["#version 300 es","precision highp float;","in float vA; out vec4 O;","uniform float uHue;", PAL,
+"void main(){ vec2 d=gl_PointCoord-0.5; float r=length(d); if(r>0.5) discard; float al=smoothstep(0.5,0.0,r);",
+"  vec3 c=tintPal(uHue+0.05*vA); O=vec4(c*al, al); }"].join("\n");
+
+// reaction-diffusion (Gray-Scott)
+const FS_RD=["#version 300 es","precision highp float;","out vec4 O;",
+"uniform sampler2D uSrc; uniform vec2 uTexel; uniform float uF,uK,uDu,uDv,uDt;",
+"void main(){",
+"  vec2 uv=gl_FragCoord.xy*uTexel; vec2 c=texture(uSrc,uv).xy;",
+"  vec2 t=uTexel;",
+"  vec2 lap = texture(uSrc,uv+vec2(-t.x,0.0)).xy*0.2 + texture(uSrc,uv+vec2(t.x,0.0)).xy*0.2",
+"           + texture(uSrc,uv+vec2(0.0,-t.y)).xy*0.2 + texture(uSrc,uv+vec2(0.0,t.y)).xy*0.2",
+"           + texture(uSrc,uv+vec2(-t.x,-t.y)).xy*0.05 + texture(uSrc,uv+vec2(t.x,-t.y)).xy*0.05",
+"           + texture(uSrc,uv+vec2(-t.x,t.y)).xy*0.05 + texture(uSrc,uv+vec2(t.x,t.y)).xy*0.05 - c;",
+"  float u=c.x, v=c.y, uvv=u*v*v;",
+"  u += (uDu*lap.x - uvv + uF*(1.0-u))*uDt;",
+"  v += (uDv*lap.y + uvv - (uF+uK)*v)*uDt;",
+"  O=vec4(clamp(u,0.0,1.0), clamp(v,0.0,1.0), 0.0, 1.0);",
+"}"].join("\n");
+
+/* ═══════════ GL PLUMBING ═══════════ */
+let progField,progSim,progDraw,progRD, U={},US={},UD={},UR={}, quadVAO, posTex=[],fbo=[],cur=0, P=TUNE.PGRID;
+let rdTex=[],rdFbo=[],rdCur=0, RDN=TUNE.RDN;
+function mkShader(type,src){ const s=gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s);
+  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s),src); return s; }
+function mkProg(vs,fs){ const p=gl.createProgram(); gl.attachShader(p,mkShader(gl.VERTEX_SHADER,vs)); gl.attachShader(p,mkShader(gl.FRAGMENT_SHADER,fs)); gl.linkProgram(p);
+  if(!gl.getProgramParameter(p,gl.LINK_STATUS)) console.error(gl.getProgramInfoLog(p)); return p; }
+function unis(p,names){ const o={}; names.forEach(n=>o[n]=gl.getUniformLocation(p,n)); return o; }
+function mkTex(w,h,data){ const tx=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,tx);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA32F,w,h,0,gl.RGBA,gl.FLOAT,data||null);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE); return tx; }
+function mkFbo(tx){ const f=gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER,f);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tx,0); return f; }
+
+function seedRDData(){ const d=new Float32Array(RDN*RDN*4);
+  for(let i=0;i<RDN*RDN;i++){ d[4*i]=1.0; d[4*i+1]=0.0; }
+  for(let s=0;s<40;s++){ const bx=(Math.random()*RDN)|0, by=(Math.random()*RDN)|0, rad=6+Math.random()*8;
+    for(let y=-rad;y<=rad;y++)for(let x=-rad;x<=rad;x++){ const px=(bx+x+RDN)%RDN, py=(by+y+RDN)%RDN;
+      if(x*x+y*y<=rad*rad){ const idx=(py*RDN+px)*4; d[idx]=0.5; d[idx+1]=0.25; } } }
+  return d; }
+function reseedRD(){ if(!PARTICLES) return; const d=seedRDData();
+  for(let k=0;k<2;k++){ gl.bindTexture(gl.TEXTURE_2D,rdTex[k]); gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA32F,RDN,RDN,0,gl.RGBA,gl.FLOAT,d); }
+  rdCur=0; }
+
+function initGL(){
+  progField=mkProg(VS_FULL,FS_FIELD);
+  U=unis(progField,["uCenter","uDispR","uHue","uDrive","uPowder","uBg","uTime","uFreq","uMode","uPhase","uP127","uBound","uRDTex","uRD","uRDLevel"]);
+  quadVAO=gl.createVertexArray(); gl.bindVertexArray(quadVAO);
+  const qb=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,qb);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  const la=gl.getAttribLocation(progField,'a'); gl.enableVertexAttribArray(la); gl.vertexAttribPointer(la,2,gl.FLOAT,false,0,0);
+  gl.bindVertexArray(null);
+  gl.useProgram(progField); gl.uniform1i(U.uRDTex,1);
+
+  if(PARTICLES){
+    progSim=mkProg(VS_FULL,FS_SIM);
+    US=unis(progSim,["uPos","uFrame","uStep","uThermal","uDrift","uPowder","uTime","uFreq","uMode","uPhase","uP127","uBound","uRDTex","uRD","uRDLevel"]);
+    gl.useProgram(progSim); gl.uniform1i(US.uPos,0); gl.uniform1i(US.uRDTex,1);
+    progDraw=mkProg(VS_DRAW,FS_DRAW);
+    UD=unis(progDraw,["uPos","uP","uRes","uCenter","uDispR","uPtSize","uHue"]);
+    gl.useProgram(progDraw); gl.uniform1i(UD.uPos,0);
+    progRD=mkProg(VS_FULL,FS_RD);
+    UR=unis(progRD,["uSrc","uTexel","uF","uK","uDu","uDv","uDt"]);
+    gl.useProgram(progRD); gl.uniform1i(UR.uSrc,0);
+    // particle textures
+    const data=new Float32Array(P*P*4);
+    for(let i=0;i<P*P;i++){ const rr=Math.sqrt(Math.random()), a=Math.random()*Math.PI*2;
+      data[4*i]=Math.cos(a)*rr; data[4*i+1]=Math.sin(a)*rr; data[4*i+2]=Math.random(); data[4*i+3]=Math.random(); }
+    for(let k=0;k<2;k++){ posTex[k]=mkTex(P,P,k===0?data:null); fbo[k]=mkFbo(posTex[k]); }
+    // RD textures
+    const rdd=seedRDData();
+    for(let k=0;k<2;k++){ rdTex[k]=mkTex(RDN,RDN,rdd); rdFbo[k]=mkFbo(rdTex[k]); }
+    gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  }
+}
+if(gl) initGL();
+
+/* ═══════════ RINGS (2D overlay) ═══════════ */
+const rc=document.getElementById('rings'); const ctx=rc.getContext('2d');
+const TAU=Math.PI*2;
+function hexa(hex,a){ const n=parseInt(hex.slice(1),16); return "rgba("+((n>>16)&255)+","+((n>>8)&255)+","+(n&255)+","+a+")"; }
+class Ring{
+  constructor(cfg){ Object.assign(this,cfg); }
+  frac(){ let f=(this.value-this.min)/(this.max-this.min); return this.wrap?((f%1)+1)%1:Math.max(0,Math.min(1,f)); }
+  angle(){ return this.wrap ? this.frac()*TAU-Math.PI/2 : (-Math.PI/2)+(this.frac()-0.5)*1.5*Math.PI; }
+  fmt(){ if(this.disp) return this.disp(this.value); if(this.step>=1) return String(Math.round(this.value)); return this.value.toFixed(2); }
+  set(v){ if(this.wrap){ const r=this.max-this.min; v=this.min+(((v-this.min)%r)+r)%r; } else v=Math.max(this.min,Math.min(this.max,v));
+    if(this.step>=1) v=Math.round(v/this.step)*this.step; this.value=v; }
+}
+const RINGS=[
+  new Ring({key:'freq', label:'FREQ',   accent:'cyan',  min:2,max:9,step:0.05,value:3.0, disp:v=>v.toFixed(1), onC:v=>state.freq=v}),
+  new Ring({key:'mode', label:'MODE',   accent:'mag',   min:0,max:1,step:0.01,value:0.35,onC:v=>state.mode=v}),
+  new Ring({key:'phase',label:'PHASE δ',accent:'plasma',min:0,max:1,step:0.01,value:0.1, onC:v=>state.phase=v}),
+  new Ring({key:'drive',label:'DRIVE',  accent:'gold',  min:0,max:1,step:0.01,value:0.5, onC:v=>state.drive=v}),
+  new Ring({key:'p127', label:'∇127',   accent:'rose',  min:0,max:1,step:0.01,value:0.0, onC:v=>state.p127=v})
+];
+const state={ freq:3.0, mode:0.35, phase:0.1, drive:0.5, p127:0.0,
+  bound:0,boundTarget:0, powder:0,powderTarget:0, rd:0,rdTarget:0, hueIdx:0,hue:HUES[0], frozen:false };
+
+let W=0,H=0,DPR=1, cx=0,cy=0, wheelR=0, dispR=0;
+let focus=0, focusTarget=0, collapseTimer=null;
+const TOPPAD=118, BOTPAD=150, IDLE_MS=3000;
+function openControls(){ focusTarget=0; clearTimeout(collapseTimer); }
+function armCollapse(){ clearTimeout(collapseTimer); collapseTimer=setTimeout(()=>{ focusTarget=1; }, IDLE_MS); }
+function layout(){
+  DPR=Math.min(window.devicePixelRatio||1,2); W=window.innerWidth; H=window.innerHeight;
+  for(const c of [glc,rc]){ c.width=Math.floor(W*DPR); c.height=Math.floor(H*DPR); c.style.width=W+'px'; c.style.height=H+'px'; }
+  if(gl) gl.viewport(0,0,glc.width,glc.height); ctx.setTransform(DPR,0,0,DPR,0,0); computeGeom();
+}
+function computeGeom(){
+  const availOpen=Math.max(150,H-TOPPAD-BOTPAD), availZoom=Math.max(150,H-92);
+  const avail=availOpen+(availZoom-availOpen)*focus;
+  wheelR=Math.max(30,Math.min(W*0.47,avail*0.5)); cx=W/2;
+  const cyOpen=TOPPAD+availOpen/2, cyZoom=H*0.5; cy=cyOpen+(cyZoom-cyOpen)*focus;
+  dispR=Math.max(14,wheelR*(0.40+0.52*focus));
+}
+window.addEventListener('resize',layout);
+
+function ringBounds(i){ const band=(wheelR-dispR)/RINGS.length, gap=band*TUNE.ringGap;
+  return {rIn:dispR+i*band+gap, rOut:dispR+(i+1)*band-gap, rMid:dispR+(i+0.5)*band, band}; }
+function drawRings(){
+  if(wheelR<24||dispR<10) return; ctx.clearRect(0,0,W,H);
+  const vis=Math.max(0,1-0.86*focus);
+  ctx.lineWidth=2; ctx.strokeStyle=hexa(ACCENT.cyan,0.30); ctx.beginPath(); ctx.arc(cx,cy,dispR+3,0,TAU); ctx.stroke();
+  ctx.strokeStyle="rgba(179,136,255,0.18)"; ctx.beginPath(); ctx.arc(cx,cy,dispR+7,0,TAU); ctx.stroke();
+  for(let b=0;b<4;b++){ const a=Math.PI/4+b*Math.PI/2; ctx.fillStyle="rgba(233,226,255,"+(0.55*(0.4+0.6*vis)).toFixed(3)+")"; ctx.beginPath();
+    ctx.arc(cx+Math.cos(a)*(dispR+7),cy+Math.sin(a)*(dispR+7),2.1,0,TAU); ctx.fill(); }
+  if(vis<0.02) return; ctx.globalAlpha=vis;
+  for(let i=0;i<RINGS.length;i++){
+    const R=RINGS[i], {rIn,rOut,rMid}=ringBounds(i); if(rOut<=rIn) continue;
+    const acc=ACCENT[R.accent], ang=R.angle();
+    ctx.beginPath(); ctx.arc(cx,cy,rOut,0,TAU); ctx.arc(cx,cy,rIn,0,TAU,true); ctx.fillStyle=hexa(acc,0.05); ctx.fill('evenodd');
+    ctx.lineWidth=1; ctx.strokeStyle=hexa(acc,0.28); ctx.beginPath(); ctx.arc(cx,cy,rOut,0,TAU); ctx.stroke();
+    ctx.strokeStyle=hexa(acc,0.14); ctx.beginPath(); ctx.arc(cx,cy,rIn,0,TAU); ctx.stroke();
+    const teeth=Math.max(24,Math.min(46,Math.round(rMid*0.34))), tLen=(rOut-rIn)*0.42;
+    ctx.lineWidth=Math.max(1.4,(rOut-rIn)*0.14); ctx.strokeStyle=hexa(acc,0.55);
+    for(let t=0;t<teeth;t++){ const ta=ang+t/teeth*TAU; ctx.beginPath();
+      ctx.moveTo(cx+Math.cos(ta)*rOut,cy+Math.sin(ta)*rOut); ctx.lineTo(cx+Math.cos(ta)*(rOut-tLen),cy+Math.sin(ta)*(rOut-tLen)); ctx.stroke(); }
+    ctx.lineWidth=Math.max(2.5,(rOut-rIn)*0.22); ctx.strokeStyle=acc; ctx.shadowColor=acc; ctx.shadowBlur=10;
+    ctx.beginPath(); ctx.moveTo(cx+Math.cos(ang)*rIn,cy+Math.sin(ang)*rIn); ctx.lineTo(cx+Math.cos(ang)*rOut,cy+Math.sin(ang)*rOut); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx+Math.cos(ang)*rMid,cy+Math.sin(ang)*rMid,(rOut-rIn)*0.16,0,TAU); ctx.fillStyle=acc; ctx.fill(); ctx.shadowBlur=0;
+  }
+  ctx.globalAlpha=1;
+}
+
+/* ═══════════ INTERACTION ═══════════ */
+let active=null,lastAng=0,moved=0;
+function ptAngle(e){ return Math.atan2(e.clientY-cy,e.clientX-cx); }
+function hitRing(e){ const r=Math.hypot(e.clientX-cx,e.clientY-cy); if(r<dispR) return -1;
+  for(let i=0;i<RINGS.length;i++){ const {rIn,rOut}=ringBounds(i); if(r>=rIn-4&&r<=rOut+4) return i; } return null; }
+rc.addEventListener('pointerdown',e=>{ openControls();
+  if(focus>0.35){ e.preventDefault(); return; }
+  const h=hitRing(e); if(h===null||h<0){ e.preventDefault(); return; }
+  active=RINGS[h]; lastAng=ptAngle(e); moved=0; rc.setPointerCapture(e.pointerId); e.preventDefault(); });
+rc.addEventListener('pointermove',e=>{ if(!active) return;
+  const a=ptAngle(e); let da=a-lastAng; if(da>Math.PI)da-=TAU; if(da<-Math.PI)da+=TAU; lastAng=a; moved+=Math.abs(da);
+  active.set(active.value+da/TAU*(active.max-active.min)*1.12); active.onC(active.value); updateLegend(); updatePattern(); });
+function endDrag(){ active=null; armCollapse(); }
+rc.addEventListener('pointerup',endDrag); rc.addEventListener('pointercancel',endDrag);
+
+const legEl=document.getElementById('legend'); const utilEl=document.getElementById('util');
+function buildLegend(){ legEl.innerHTML=''; RINGS.forEach(R=>{ const d=document.createElement('div'); d.className='leg';
+  d.innerHTML='<span class="dot" style="color:'+ACCENT[R.accent]+';background:'+ACCENT[R.accent]+'"></span><span class="ln">'+R.label+'</span><span class="lv" id="lv-'+R.key+'">'+R.fmt()+'</span>';
+  legEl.appendChild(d); }); }
+function updateLegend(){ RINGS.forEach(R=>{ const el=document.getElementById('lv-'+R.key); if(el) el.textContent=R.fmt(); }); }
+
+/* ═══════════ ODOMETER ═══════════ */
+const odoNum=document.getElementById('odoNum'), wfEl=document.getElementById('wf'), tagEl=document.getElementById('tags');
+let patTarget=12, patShown=12;
+function updatePattern(){
+  const m=Math.round(state.freq), n=Math.round(state.freq*(1.2+state.mode*1.8));
+  const regime=state.phase<0.25?'SUM':state.phase>0.75?'DIFF':'ROT';
+  const sign=regime==='DIFF'?'−':regime==='SUM'?'+':'⊕';
+  const bnd=state.bound>0.5?'DRUM':'PLATE'; const mat=state.powderTarget?'powder':'sand';
+  const free=(m*n)%1000; patTarget=Math.round(free*(1-state.p127)+127*state.p127);
+  if(state.rdTarget){ wfEl.textContent='Ψ ≈ Gray–Scott  F='+(0.012+(state.freq-2)/7*0.048).toFixed(3)+'  k='+(0.045+state.mode*0.021).toFixed(3); }
+  else { wfEl.textContent = state.p127>0.5 ? 'Ψ = Σ e^(2πik/7),  k = 0 … 6' : 'Ψ = cos '+m+'x·cos '+n+'y '+sign+' cos '+n+'x·cos '+m+'y'; }
+  tagEl.textContent=(state.rdTarget?'REACT · ':(state.p127>0.6?'127 · ':''))+bnd+' · '+regime+' · '+mat;
+  odoNum.classList.toggle('lock',state.p127>0.6);
+}
+
+/* ═══════════ AUDIO ═══════════ */
+const audio={ on:false, ctx:null, an:null, data:null, level:0, centroid:0 };
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1800); }
+async function toggleAudio(btn){
+  if(audio.on){ audio.on=false; btn.classList.remove('on'); btn.textContent='♪ listen'; return; }
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    audio.ctx=audio.ctx||new (window.AudioContext||window.webkitAudioContext)();
+    if(audio.ctx.state==='suspended') await audio.ctx.resume();
+    const src=audio.ctx.createMediaStreamSource(stream);
+    audio.an=audio.ctx.createAnalyser(); audio.an.fftSize=2048; audio.an.smoothingTimeConstant=0.75;
+    src.connect(audio.an); audio.data=new Uint8Array(audio.an.frequencyBinCount);
+    audio.on=true; btn.classList.add('on'); btn.textContent='♪ on'; openControls(); armCollapse();
+  }catch(err){ toast('mic denied'); btn.textContent='♪ denied'; setTimeout(()=>btn.textContent='♪ listen',1500); }
+}
+function sampleAudio(){
+  if(!audio.on||!audio.an) { audio.level+=(0-audio.level)*0.1; audio.centroid+=(0-audio.centroid)*0.1; return; }
+  audio.an.getByteFrequencyData(audio.data); const d=audio.data, N=d.length;
+  let sum=0, wsum=0; for(let i=0;i<N;i++){ sum+=d[i]; wsum+=i*d[i]; }
+  const lvl=Math.min(1,(sum/N)/90); const cen=sum>1? (wsum/sum)/N : 0;
+  audio.level+=(lvl-audio.level)*0.25; audio.centroid+=(cen-audio.centroid)*0.2;
+}
+
+/* ═══════════ BUTTONS ═══════════ */
+document.getElementById('recast').onclick=recast;
+document.getElementById('freeze').onclick=function(){ state.frozen=!state.frozen; this.textContent=state.frozen?'▶ drift':'❄ hold'; };
+document.getElementById('bound').onclick=function(){ state.boundTarget=state.boundTarget?0:1; this.classList.toggle('on',!!state.boundTarget); this.textContent=state.boundTarget?'◉ drum':'▦ plate'; updatePattern(); };
+document.getElementById('invert').onclick=function(){ state.powderTarget=state.powderTarget?0:1; this.classList.toggle('on',!!state.powderTarget); this.textContent=state.powderTarget?'◓ nodes':'◓ powder'; updatePattern(); };
+document.getElementById('react').onclick=function(){ state.rdTarget=state.rdTarget?0:1; this.classList.toggle('on',!!state.rdTarget); this.textContent=state.rdTarget?'◈ waves':'◈ react'; if(state.rdTarget) reseedRD(); updatePattern(); };
+document.getElementById('listen').onclick=function(){ toggleAudio(this); };
+document.getElementById('tint').onclick=()=>{ state.hueIdx=(state.hueIdx+1)%HUES.length; state.hue=HUES[state.hueIdx]; };
+['recast','freeze','bound','invert','react','listen','tint','helpBtn'].forEach(id=>{ const el=document.getElementById(id);
+  el.addEventListener('pointerdown',openControls); el.addEventListener('pointerup',armCollapse); });
+function recast(){ const targets=RINGS.map(R=>R.min+Math.random()*(R.max-R.min)); const start=RINGS.map(R=>R.value); const t0=performance.now();
+  if(state.rdTarget) reseedRD();
+  (function anim(){ const k=Math.min(1,(performance.now()-t0)/850); const e=k<0.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+    RINGS.forEach((R,i)=>{ R.set(start[i]+(targets[i]-start[i])*e); R.onC(R.value); }); updateLegend(); updatePattern();
+    if(k<1) requestAnimationFrame(anim); })(); }
+
+/* ═══════════ LOOP ═══════════ */
+let simTime=0,lastNow=performance.now(),uframe=0, effFreq=3, effDrive=0.5;
+function setFieldUniforms(loc){
+  gl.uniform1f(loc.uTime,simTime); gl.uniform1f(loc.uFreq,effFreq); gl.uniform1f(loc.uMode,state.mode);
+  gl.uniform1f(loc.uPhase,state.phase); gl.uniform1f(loc.uP127,state.p127); gl.uniform1f(loc.uBound,state.bound);
+  gl.uniform1f(loc.uRD,state.rd); gl.uniform1f(loc.uRDLevel,0.28);
+}
+function frame(now){
+  const dt=Math.min(0.05,(now-lastNow)/1000); lastNow=now;
+  focus+=(focusTarget-focus)*Math.min(1,dt*4.5); computeGeom();
+  const ctrlOp=Math.max(0,1-focus*1.15).toFixed(3); legEl.style.opacity=ctrlOp; utilEl.style.opacity=ctrlOp;
+  utilEl.style.pointerEvents = focus>0.5?'none':'auto';
+  if(!state.frozen) simTime+=dt;
+  state.powder+=(state.powderTarget-state.powder)*Math.min(1,dt*6);
+  state.bound +=(state.boundTarget -state.bound )*Math.min(1,dt*5);
+  state.rd    +=(state.rdTarget    -state.rd    )*Math.min(1,dt*3);
+  patShown+=(patTarget-patShown)*Math.min(1,dt*7); odoNum.textContent=String(Math.round(patShown)).padStart(3,'0');
+  uframe++;
+  sampleAudio();
+  effFreq = state.freq + (audio.on? audio.centroid*5.0 : 0);
+  effDrive = Math.min(1, state.drive + (audio.on? audio.level*0.7 : 0));
+
+  if(PARTICLES){
+    // RD sim substeps
+    if(state.rd>0.01 && !state.frozen){
+      gl.useProgram(progRD); gl.bindVertexArray(quadVAO); gl.viewport(0,0,RDN,RDN);
+      gl.uniform2f(UR.uTexel,1/RDN,1/RDN);
+      gl.uniform1f(UR.uF,0.012+(state.freq-2)/7*0.048); gl.uniform1f(UR.uK,0.045+state.mode*0.021);
+      gl.uniform1f(UR.uDu,0.16); gl.uniform1f(UR.uDv,0.08); gl.uniform1f(UR.uDt,1.0);
+      for(let s=0;s<6;s++){ gl.bindFramebuffer(gl.FRAMEBUFFER,rdFbo[1-rdCur]);
+        gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,rdTex[rdCur]); gl.uniform1i(UR.uSrc,0);
+        gl.drawArrays(gl.TRIANGLES,0,3); rdCur=1-rdCur; }
+      gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+    }
+    // particle sim
+    if(!state.frozen){
+      gl.bindFramebuffer(gl.FRAMEBUFFER,fbo[1-cur]); gl.viewport(0,0,P,P);
+      gl.useProgram(progSim); gl.bindVertexArray(quadVAO);
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,posTex[cur]); gl.uniform1i(US.uPos,0);
+      gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,rdTex[rdCur]); gl.uniform1i(US.uRDTex,1);
+      gl.uniform1f(US.uFrame,uframe);
+      gl.uniform1f(US.uStep,0.025+0.035*effDrive); gl.uniform1f(US.uThermal,0.0012); gl.uniform1f(US.uDrift,0.012); gl.uniform1f(US.uPowder,state.powder);
+      setFieldUniforms(US);
+      gl.drawArrays(gl.TRIANGLES,0,3); cur=1-cur;
+      gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+    }
+  }
+
+  // render field
+  gl.viewport(0,0,glc.width,glc.height); gl.disable(gl.BLEND);
+  gl.useProgram(progField); gl.bindVertexArray(quadVAO);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, PARTICLES?rdTex[rdCur]:null); gl.uniform1i(U.uRDTex,1);
+  gl.uniform2f(U.uCenter,cx*DPR,glc.height-cy*DPR); gl.uniform1f(U.uDispR,dispR*DPR);
+  gl.uniform1f(U.uHue,state.hue); gl.uniform1f(U.uDrive,effDrive); gl.uniform1f(U.uPowder,state.powder);
+  gl.uniform1f(U.uBg,PARTICLES?0.0:1.0); setFieldUniforms(U);
+  gl.drawArrays(gl.TRIANGLES,0,3);
+
+  if(PARTICLES){
+    gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
+    gl.useProgram(progDraw); gl.bindVertexArray(null);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,posTex[cur]); gl.uniform1i(UD.uPos,0);
+    gl.uniform1i(UD.uP,P); gl.uniform2f(UD.uRes,glc.width,glc.height);
+    gl.uniform2f(UD.uCenter,cx*DPR,glc.height-cy*DPR); gl.uniform1f(UD.uDispR,dispR*DPR);
+    gl.uniform1f(UD.uPtSize,Math.max(1.3,Math.min(3.2,dispR*DPR*0.010))); gl.uniform1f(UD.uHue,state.hue);
+    gl.drawArrays(gl.POINTS,0,P*P); gl.disable(gl.BLEND);
+  }
+  drawRings();
+  requestAnimationFrame(frame);
+}
+
+/* ═══════════ START ═══════════ */
+document.getElementById('enter').onclick=()=>{
+  if(!gl){ document.getElementById('intro').innerHTML='<p style="color:#f48fb1;max-width:24em">WebGL2 could not start on this browser. Try Chrome or Safari 15+.</p>'; return; }
+  document.getElementById('intro').classList.add('gone');
+  focus=0; focusTarget=0; layout(); buildLegend(); updatePattern(); lastNow=performance.now(); armCollapse(); requestAnimationFrame(frame);
+};
+document.getElementById('helpBtn').onclick=()=>document.getElementById('info').classList.add('show');
+document.getElementById('infoClose').onclick=()=>document.getElementById('info').classList.remove('show');
+layout();
+</script>
+</body>
+</html>
