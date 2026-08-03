@@ -23,7 +23,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--void);color:va
 #odo .lab{font-size:.54rem;letter-spacing:.34em;color:var(--faint);text-transform:uppercase}
 #odo .num{font-family:var(--title);font-weight:600;font-size:1.5rem;letter-spacing:.16em;color:var(--gold);text-shadow:0 0 14px rgba(255,213,79,.5)}
 #odo .num.lock{color:var(--rose);text-shadow:0 0 16px rgba(244,143,177,.6)}
-#wf{font-size:.6rem;letter-spacing:.06em;color:var(--cyan);opacity:.9;white-space:nowrap;overflow:hidden;max-width:96vw;text-overflow:ellipsis}
+#wf{font-size:.6rem;letter-spacing:.05em;color:var(--cyan);opacity:.9;white-space:nowrap;overflow:hidden;max-width:96vw;text-overflow:ellipsis}
 #tags{font-size:.52rem;letter-spacing:.24em;color:var(--dim);text-transform:uppercase}
 #legend{position:fixed;left:0;right:0;bottom:calc(84px + env(safe-area-inset-bottom));z-index:5;display:flex;flex-wrap:wrap;justify-content:center;gap:6px 12px;padding:0 14px;pointer-events:none}
 .leg{display:flex;align-items:center;gap:.45em;font-size:.56rem;letter-spacing:.08em}
@@ -70,32 +70,32 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--void);color:va
   <button class="btn" id="freeze">❄ hold</button>
   <button class="btn" id="bound">▦ plate</button>
   <button class="btn" id="invert">◓ powder</button>
-  <button class="btn" id="react">◈ react</button>
+  <button class="btn" id="field">◈ cymatic</button>
   <button class="btn" id="listen">♪ listen</button>
   <button class="btn" id="tint">◐ tint</button>
 </div>
 <div id="intro">
   <h1>CYMATICKA</h1>
-  <p>A vibrating plate seeded with hundreds of thousands of grains of sand. Each grain slows where the plate is still, so the sand <em>flows</em> into the figure on its own. Turn the dials, let it go quiet to zoom in, switch on <em>react</em> for living Turing patterns, or <em>listen</em> and let sound drive the plate.</p>
+  <p>A vibrating plate seeded with hundreds of thousands of grains of sand. Each grain slows where the plate is still, so the sand <em>flows</em> into the figure on its own. Turn the dials, let it go quiet to zoom in, cycle the <em>field</em> through cymatics, living Turing patterns, and a real rippling membrane, or <em>listen</em> and let sound drive it.</p>
   <button id="enter">look in</button>
 </div>
 <div id="info">
   <h2>DIALS &amp; SWITCHES</h2>
-  <div class="gi"><b>Freq</b><span>Driving frequency; climbs into denser resonances. In react mode it sets the feed rate.</span></div>
-  <div class="gi"><b>Mode</b><span>Ratio between the two wavenumbers — walks the family of figures. In react mode, the kill rate.</span></div>
+  <div class="gi"><b>Freq</b><span>Driving frequency. In react it is the feed rate; in ripple, the pitch of the driver exciting the membrane.</span></div>
+  <div class="gi"><b>Mode</b><span>Wavenumber ratio of the two plate modes. In react, the kill rate; in ripple, the boundary shape (3-gon → circle).</span></div>
   <div class="gi"><b>Phase δ</b><span>Phase between the two modes: SUM, rotating, DIFFERENCE.</span></div>
-  <div class="gi"><b>Drive</b><span>How hard it's shaken — grain energy and how tightly the sand piles.</span></div>
-  <div class="gi"><b>∇127</b><span>Phases into the seven-fold roots-of-unity attractor; the odometer rolls to 127.</span></div>
-  <div class="gi"><b>◈ react</b><span>Reaction–diffusion (Gray–Scott) discovery layer — a living Turing field the same sand settles onto.</span></div>
-  <div class="gi"><b>♪ listen</b><span>Uses your microphone to drive the plate: louder sound raises the drive, higher pitch raises the frequency.</span></div>
-  <p class="note">The sand is ~400k GPU grains under <b>space-dependent diffusion</b> (Abramian, Protière, Lazarus &amp; Devauchelle, Phys. Rev. Research 2025): step length ∝ local amplitude, no drift, so grains pile where the field is still. <b>◓ powder</b> streams grains to antinodes (inverse-Chladni / acoustic streaming). <b>◈ react</b> is a genuine Gray–Scott Turing simulation — a pattern-formation cousin of the plate, not plate physics, and labelled as such. The microphone audio never leaves your device.</p>
+  <div class="gi"><b>Drive</b><span>How hard it's shaken — grain energy, and in ripple the amount of energy fed to the membrane.</span></div>
+  <div class="gi"><b>∇127</b><span>Phases into the seven-fold roots-of-unity attractor; in ripple it warps the boundary toward a heptagon. Odometer rolls to 127.</span></div>
+  <div class="gi"><b>◈ field</b><span>Cycles the substrate: CYMATIC (analytic plate) → REACT (Gray–Scott Turing) → RIPPLE (time-domain membrane). The same sand settles onto whichever field.</span></div>
+  <div class="gi"><b>♪ listen</b><span>Uses your microphone to drive the plate: louder raises the drive, higher pitch raises the frequency.</span></div>
+  <p class="note">RIPPLE solves the genuine 2-D wave equation <b>∂²u/∂t² = c²∇²u</b> by leapfrog finite differences on a 256² grid, with a driven centre source and a reflecting polygon boundary — waves propagate, bounce, and build standing modes that depend on the boundary shape. The sand tracks the running amplitude envelope, so it settles on the true nodes. REACT is a Gray–Scott reaction–diffusion (a pattern-formation cousin, not plate physics). The sand itself is space-dependent diffusion (Abramian et&nbsp;al., Phys. Rev. Research 2025). Microphone audio never leaves your device.</p>
   <button class="btn close" id="infoClose">close</button>
 </div>
 
 <script>
 "use strict";
 /* ═══════════ TUNING ═══════════ */
-const TUNE = { ringGap:0.12, PGRID:640, RDN:256 };   // PGRID: grains per side (640 = ~410k). Lower to 512/384 for battery.
+const TUNE = { ringGap:0.12, PGRID:1024, RDN:256, FDN:256 };
 const HUES = [0.00,0.16,0.45,0.72,0.90];
 const ACCENT = { mag:'#e040fb', cyan:'#00e5ff', plasma:'#b388ff', gold:'#ffd54f', mint:'#1de9b6', rose:'#f48fb1' };
 
@@ -110,6 +110,7 @@ const COMMON=[
 "#define PI 3.14159265359","#define TAU 6.28318530718",
 "uniform float uTime,uFreq,uMode,uPhase,uP127,uBound;",
 "uniform sampler2D uRDTex; uniform float uRD,uRDLevel;",
+"uniform sampler2D uFDTDTex; uniform float uFDTD;",
 "float hash(vec2 p){ return fract(sin(dot(p,vec2(41.3,289.1)))*43758.5453); }",
 "float vnoise(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.0-2.0*f);",
 "  float a=hash(i),b=hash(i+vec2(1.0,0.0)),c=hash(i+vec2(0.0,1.0)),d=hash(i+vec2(1.0,1.0));",
@@ -132,12 +133,10 @@ const COMMON=[
 "  float envB=mix(envP,envD,uBound); return mix(envB,env7,uP127);",
 "}",
 "float amp(vec2 pin){",
-"  float cy=ampCy(pin);",
-"  if(uRD<0.001) return cy;",
-"  vec2 uv=clamp(pin*0.5+0.5,0.001,0.999);",
-"  float v=texture(uRDTex,uv).g;",
-"  float rd=abs(v-uRDLevel)*3.5;",
-"  return mix(cy,rd,uRD);",
+"  float f=ampCy(pin);",
+"  if(uRD>0.001){ vec2 uv=clamp(pin*0.5+0.5,0.001,0.999); float v=texture(uRDTex,uv).g; f=mix(f, clamp(1.0-v*3.5,0.0,1.0), uRD); }",
+"  if(uFDTD>0.001){ vec2 uv=clamp(pin*0.5+0.5,0.001,0.999); float e=texture(uFDTDTex,uv).b; f=mix(f,e*2.2,uFDTD); }",
+"  return f;",
 "}"
 ].join("\n");
 
@@ -155,7 +154,7 @@ const PAL=[
 const VS_FULL="#version 300 es\nin vec2 a; void main(){ gl_Position=vec4(a,0.0,1.0); }";
 
 const FS_FIELD=["#version 300 es","precision highp float;","out vec4 O;",
-"uniform vec2 uCenter; uniform float uDispR,uHue,uDrive,uPowder,uBg;", COMMON, PAL,
+"uniform vec2 uCenter; uniform float uDispR,uHue,uHueSpread,uDrive,uPowder,uBg;", COMMON, PAL,
 "void main(){",
 "  vec2 frag=gl_FragCoord.xy; vec2 rel=(frag-uCenter)/uDispR; float rr=length(rel);",
 "  vec3 col=vec3(0.008,0.0,0.028);",
@@ -167,9 +166,10 @@ const FS_FIELD=["#version 300 es","precision highp float;","out vec4 O;",
 "    float patt=mix(node,anti,uPowder);",
 "    float grain=hash(frag+floor(uTime*7.0)); float micro=vnoise(rel*250.0);",
 "    float sg=0.24+0.76*smoothstep(0.42,0.74,micro*0.6+grain*0.55);",
-"    vec3 tint=tintPal(uHue+0.05*rr);",
-"    col += tint*( patt*mix(0.20,0.0,1.0-uBg) + patt*sg*mix(0.0,1.55,uBg) + smoothstep(0.0,1.0,A)*0.045 );",
-"    if(uRD>0.001){ vec2 uv=clamp(rel*0.5+0.5,0.0,1.0); float v=texture(uRDTex,uv).g; col+=tintPal(uHue+0.20)*v*0.16*uRD; }",
+"    vec3 tint=tintPal(uHue+uHueSpread*rr);",
+"    col += tint*( patt*mix(0.20,0.0,1.0-uBg)*(1.0-0.9*uFDTD) + patt*sg*mix(0.0,1.55,uBg) + smoothstep(0.0,1.0,A)*0.045*(1.0-0.7*uFDTD) );",
+"    if(uRD>0.001){ vec2 uv=clamp(rel*0.5+0.5,0.0,1.0); float v=texture(uRDTex,uv).g; col+=tintPal(uHue+0.20)*smoothstep(0.04,0.30,v)*0.5*uRD; }",
+"    if(uFDTD>0.001){ vec2 uv=clamp(rel*0.5+0.5,0.0,1.0); float u=texture(uFDTDTex,uv).r; col+=(tintPal(uHue)*max(u,0.0)+tintPal(uHue+0.5)*max(-u,0.0))*0.55*uFDTD; }",
 "    col *= smoothstep(1.02,0.5,rr)*0.72+0.28;",
 "    float bez=smoothstep(0.94,1.0,rr); col=mix(col, tint*0.42+vec3(0.03), bez*0.55);",
 "    col += (hash(frag*1.3+uTime)-0.5)*0.016;",
@@ -190,23 +190,22 @@ const FS_SIM=["#version 300 es","precision highp float;","out vec4 O;",
 "  float rr=length(np); if(rr>0.995){ np=normalize(np)*(1.99-rr); }",
 "  float re=hash(gl_FragCoord.yx+vec2(uFrame*0.031,7.0));",
 "  if(re>0.9992){ float r2=sqrt(hash(gl_FragCoord.xy+vec2(uFrame,3.0))); float a2=hash(gl_FragCoord.yx+vec2(1.0,uFrame))*TAU; np=vec2(cos(a2),sin(a2))*r2; }",
-"  O=vec4(np,0.0,1.0);",
+"  O=vec4(np, A, 1.0);",
 "}"].join("\n");
 
 const VS_DRAW=["#version 300 es","precision highp float;",
 "uniform sampler2D uPos; uniform int uP; uniform vec2 uRes,uCenter; uniform float uDispR,uPtSize;","out float vA;",
-"void main(){ int id=gl_VertexID; ivec2 t=ivec2(id%uP, id/uP); vec2 pos=texelFetch(uPos,t,0).xy;",
-"  vec2 px=uCenter+pos*uDispR; gl_Position=vec4((px/uRes)*2.0-1.0, 0.0, 1.0); gl_PointSize=uPtSize; vA=length(pos); }"].join("\n");
-const FS_DRAW=["#version 300 es","precision highp float;","in float vA; out vec4 O;","uniform float uHue;", PAL,
+"void main(){ int id=gl_VertexID; ivec2 t=ivec2(id%uP, id/uP); vec4 pd=texelFetch(uPos,t,0); vec2 pos=pd.xy;",
+"  vec2 px=uCenter+pos*uDispR; gl_Position=vec4((px/uRes)*2.0-1.0, 0.0, 1.0); gl_PointSize=uPtSize; vA=pd.z; }"].join("\n");
+const FS_DRAW=["#version 300 es","precision highp float;","in float vA; out vec4 O;","uniform float uHue,uHueSpread;", PAL,
 "void main(){ vec2 d=gl_PointCoord-0.5; float r=length(d); if(r>0.5) discard; float al=smoothstep(0.5,0.0,r);",
-"  vec3 c=tintPal(uHue+0.05*vA); O=vec4(c*al, al); }"].join("\n");
+"  vec3 c=tintPal(uHue+uHueSpread*vA*1.4); O=vec4(c, al*0.5); }"].join("\n");
 
-// reaction-diffusion (Gray-Scott)
+// Gray-Scott reaction-diffusion
 const FS_RD=["#version 300 es","precision highp float;","out vec4 O;",
 "uniform sampler2D uSrc; uniform vec2 uTexel; uniform float uF,uK,uDu,uDv,uDt;",
 "void main(){",
-"  vec2 uv=gl_FragCoord.xy*uTexel; vec2 c=texture(uSrc,uv).xy;",
-"  vec2 t=uTexel;",
+"  vec2 uv=gl_FragCoord.xy*uTexel; vec2 c=texture(uSrc,uv).xy; vec2 t=uTexel;",
 "  vec2 lap = texture(uSrc,uv+vec2(-t.x,0.0)).xy*0.2 + texture(uSrc,uv+vec2(t.x,0.0)).xy*0.2",
 "           + texture(uSrc,uv+vec2(0.0,-t.y)).xy*0.2 + texture(uSrc,uv+vec2(0.0,t.y)).xy*0.2",
 "           + texture(uSrc,uv+vec2(-t.x,-t.y)).xy*0.05 + texture(uSrc,uv+vec2(t.x,-t.y)).xy*0.05",
@@ -217,9 +216,30 @@ const FS_RD=["#version 300 es","precision highp float;","out vec4 O;",
 "  O=vec4(clamp(u,0.0,1.0), clamp(v,0.0,1.0), 0.0, 1.0);",
 "}"].join("\n");
 
+// 2nd-order membrane FDTD (genuine time-domain wave), r=u_curr g=u_prev b=envelope
+const FS_FDTD=["#version 300 es","precision highp float;","out vec4 O;",
+"uniform sampler2D uSrc; uniform vec2 uTexel; uniform float uC2,uDamp,uDriveAmp,uDriveFreq,uTime,uShape,uP127;",
+"#define PI 3.14159265359","#define TAU 6.28318530718",
+"float inside(vec2 uv){ vec2 p=(uv-0.5)*2.0; float r=length(p); float a=atan(p.y,p.x);",
+"  float n=mix(3.0+uShape*17.0, 7.0, uP127); float seg=TAU/n;",
+"  float redge=cos(PI/n)/cos(mod(a,seg)-seg*0.5); return step(r, 0.92*redge); }",
+"void main(){",
+"  vec2 uv=gl_FragCoord.xy*uTexel; vec4 c=texture(uSrc,uv); float u=c.r, uprev=c.g, env=c.b; vec2 t=uTexel;",
+"  float lap = texture(uSrc,uv+vec2(t.x,0.0)).r + texture(uSrc,uv-vec2(t.x,0.0)).r",
+"            + texture(uSrc,uv+vec2(0.0,t.y)).r + texture(uSrc,uv-vec2(0.0,t.y)).r - 4.0*u;",
+"  float un = 2.0*u - uprev + uC2*lap - uDamp*(u-uprev);",
+"  vec2 pc=(uv-0.5)*2.0; float d2=dot(pc,pc);",
+"  un += exp(-d2*55.0)*uDriveAmp*sin(uDriveFreq*uTime*TAU);",
+"  un *= inside(uv);",
+"  env = max(env*0.985, abs(un));",
+"  O=vec4(un, u, env, 1.0);",
+"}"].join("\n");
+
 /* ═══════════ GL PLUMBING ═══════════ */
-let progField,progSim,progDraw,progRD, U={},US={},UD={},UR={}, quadVAO, posTex=[],fbo=[],cur=0, P=TUNE.PGRID;
+let progField,progSim,progDraw,progRD,progFDTD, U={},US={},UD={},UR={},UF={}, quadVAO;
+let posTex=[],fbo=[],cur=0, P=TUNE.PGRID;
 let rdTex=[],rdFbo=[],rdCur=0, RDN=TUNE.RDN;
+let fdTex=[],fdFbo=[],fdCur=0, FDN=TUNE.FDN, fdTime=0;
 function mkShader(type,src){ const s=gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s);
   if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s),src); return s; }
 function mkProg(vs,fs){ const p=gl.createProgram(); gl.attachShader(p,mkShader(gl.VERTEX_SHADER,vs)); gl.attachShader(p,mkShader(gl.FRAGMENT_SHADER,fs)); gl.linkProgram(p);
@@ -233,47 +253,52 @@ function mkFbo(tx){ const f=gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEB
   gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tx,0); return f; }
 
 function seedRDData(){ const d=new Float32Array(RDN*RDN*4);
-  for(let i=0;i<RDN*RDN;i++){ d[4*i]=1.0; d[4*i+1]=0.0; }
-  for(let s=0;s<40;s++){ const bx=(Math.random()*RDN)|0, by=(Math.random()*RDN)|0, rad=6+Math.random()*8;
-    for(let y=-rad;y<=rad;y++)for(let x=-rad;x<=rad;x++){ const px=(bx+x+RDN)%RDN, py=(by+y+RDN)%RDN;
-      if(x*x+y*y<=rad*rad){ const idx=(py*RDN+px)*4; d[idx]=0.5; d[idx+1]=0.25; } } }
+  for(let i=0;i<RDN*RDN;i++){ d[4*i]=1.0; d[4*i+1]=0.0; }         // u=1, v=0 everywhere
+  const lo=Math.floor(RDN*0.32), hi=Math.floor(RDN*0.68);        // large central seed w/ jitter -> reliably ignites
+  for(let y=lo;y<hi;y++)for(let x=lo;x<hi;x++){ const idx=(y*RDN+x)*4; d[idx+1]=(Math.random()<0.5?1.0:0.7); }
   return d; }
 function reseedRD(){ if(!PARTICLES) return; const d=seedRDData();
-  for(let k=0;k<2;k++){ gl.bindTexture(gl.TEXTURE_2D,rdTex[k]); gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA32F,RDN,RDN,0,gl.RGBA,gl.FLOAT,d); }
-  rdCur=0; }
+  for(let k=0;k<2;k++){ gl.bindTexture(gl.TEXTURE_2D,rdTex[k]); gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA32F,RDN,RDN,0,gl.RGBA,gl.FLOAT,d); } rdCur=0; }
+function resetFDTD(){ if(!PARTICLES) return; const z=new Float32Array(FDN*FDN*4);
+  for(let k=0;k<2;k++){ gl.bindTexture(gl.TEXTURE_2D,fdTex[k]); gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA32F,FDN,FDN,0,gl.RGBA,gl.FLOAT,z); } fdCur=0; fdTime=0; }
 
 function initGL(){
   progField=mkProg(VS_FULL,FS_FIELD);
-  U=unis(progField,["uCenter","uDispR","uHue","uDrive","uPowder","uBg","uTime","uFreq","uMode","uPhase","uP127","uBound","uRDTex","uRD","uRDLevel"]);
+  U=unis(progField,["uCenter","uDispR","uHue","uHueSpread","uDrive","uPowder","uBg","uTime","uFreq","uMode","uPhase","uP127","uBound","uRDTex","uRD","uRDLevel","uFDTDTex","uFDTD"]);
   quadVAO=gl.createVertexArray(); gl.bindVertexArray(quadVAO);
   const qb=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,qb);
   gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
   const la=gl.getAttribLocation(progField,'a'); gl.enableVertexAttribArray(la); gl.vertexAttribPointer(la,2,gl.FLOAT,false,0,0);
   gl.bindVertexArray(null);
-  gl.useProgram(progField); gl.uniform1i(U.uRDTex,1);
+  gl.useProgram(progField); gl.uniform1i(U.uRDTex,1); gl.uniform1i(U.uFDTDTex,2);
 
   if(PARTICLES){
     progSim=mkProg(VS_FULL,FS_SIM);
-    US=unis(progSim,["uPos","uFrame","uStep","uThermal","uDrift","uPowder","uTime","uFreq","uMode","uPhase","uP127","uBound","uRDTex","uRD","uRDLevel"]);
-    gl.useProgram(progSim); gl.uniform1i(US.uPos,0); gl.uniform1i(US.uRDTex,1);
-    progDraw=mkProg(VS_DRAW,FS_DRAW);
-    UD=unis(progDraw,["uPos","uP","uRes","uCenter","uDispR","uPtSize","uHue"]);
+    US=unis(progSim,["uPos","uFrame","uStep","uThermal","uDrift","uPowder","uTime","uFreq","uMode","uPhase","uP127","uBound","uRDTex","uRD","uRDLevel","uFDTDTex","uFDTD"]);
+    gl.useProgram(progSim); gl.uniform1i(US.uPos,0); gl.uniform1i(US.uRDTex,1); gl.uniform1i(US.uFDTDTex,2);
+    progDraw=mkProg(VS_DRAW,FS_DRAW); UD=unis(progDraw,["uPos","uP","uRes","uCenter","uDispR","uPtSize","uHue","uHueSpread"]);
     gl.useProgram(progDraw); gl.uniform1i(UD.uPos,0);
-    progRD=mkProg(VS_FULL,FS_RD);
-    UR=unis(progRD,["uSrc","uTexel","uF","uK","uDu","uDv","uDt"]);
+    progRD=mkProg(VS_FULL,FS_RD); UR=unis(progRD,["uSrc","uTexel","uF","uK","uDu","uDv","uDt"]);
     gl.useProgram(progRD); gl.uniform1i(UR.uSrc,0);
-    // particle textures
+    progFDTD=mkProg(VS_FULL,FS_FDTD); UF=unis(progFDTD,["uSrc","uTexel","uC2","uDamp","uDriveAmp","uDriveFreq","uTime","uShape","uP127"]);
+    gl.useProgram(progFDTD); gl.uniform1i(UF.uSrc,0);
     const data=new Float32Array(P*P*4);
     for(let i=0;i<P*P;i++){ const rr=Math.sqrt(Math.random()), a=Math.random()*Math.PI*2;
       data[4*i]=Math.cos(a)*rr; data[4*i+1]=Math.sin(a)*rr; data[4*i+2]=Math.random(); data[4*i+3]=Math.random(); }
     for(let k=0;k<2;k++){ posTex[k]=mkTex(P,P,k===0?data:null); fbo[k]=mkFbo(posTex[k]); }
-    // RD textures
-    const rdd=seedRDData();
-    for(let k=0;k<2;k++){ rdTex[k]=mkTex(RDN,RDN,rdd); rdFbo[k]=mkFbo(rdTex[k]); }
+    const rdd=seedRDData(); for(let k=0;k<2;k++){ rdTex[k]=mkTex(RDN,RDN,rdd); rdFbo[k]=mkFbo(rdTex[k]); }
+    const z=new Float32Array(FDN*FDN*4); for(let k=0;k<2;k++){ fdTex[k]=mkTex(FDN,FDN,z); fdFbo[k]=mkFbo(fdTex[k]); }
     gl.bindFramebuffer(gl.FRAMEBUFFER,null);
   }
 }
 if(gl) initGL();
+
+/* ═══════════ RD PARAMETER PATH (lively Gray-Scott presets) ═══════════ */
+const RD_PRESETS=[[0.018,0.051],[0.014,0.054],[0.029,0.057],[0.030,0.062],[0.0545,0.062],[0.058,0.065]];
+function rdFK(){ const t=state.mode*(RD_PRESETS.length-1); const i=Math.min(RD_PRESETS.length-2,Math.floor(t)); const fr=t-i;
+  const F=RD_PRESETS[i][0]+(RD_PRESETS[i+1][0]-RD_PRESETS[i][0])*fr + (state.freq-5.5)/3.5*0.004;
+  const k=RD_PRESETS[i][1]+(RD_PRESETS[i+1][1]-RD_PRESETS[i][1])*fr;
+  return [Math.max(0.01,Math.min(0.07,F)), k]; }
 
 /* ═══════════ RINGS (2D overlay) ═══════════ */
 const rc=document.getElementById('rings'); const ctx=rc.getContext('2d');
@@ -295,7 +320,7 @@ const RINGS=[
   new Ring({key:'p127', label:'∇127',   accent:'rose',  min:0,max:1,step:0.01,value:0.0, onC:v=>state.p127=v})
 ];
 const state={ freq:3.0, mode:0.35, phase:0.1, drive:0.5, p127:0.0,
-  bound:0,boundTarget:0, powder:0,powderTarget:0, rd:0,rdTarget:0, hueIdx:0,hue:HUES[0], frozen:false };
+  bound:0,boundTarget:0, powder:0,powderTarget:0, sub:0, rd:0,rdTarget:0, fdtd:0,fdtdTarget:0, hueIdx:0,hue:HUES[0],hueMode:0,hueSpread:0.05, frozen:false };
 
 let W=0,H=0,DPR=1, cx=0,cy=0, wheelR=0, dispR=0;
 let focus=0, focusTarget=0, collapseTimer=null;
@@ -373,9 +398,12 @@ function updatePattern(){
   const sign=regime==='DIFF'?'−':regime==='SUM'?'+':'⊕';
   const bnd=state.bound>0.5?'DRUM':'PLATE'; const mat=state.powderTarget?'powder':'sand';
   const free=(m*n)%1000; patTarget=Math.round(free*(1-state.p127)+127*state.p127);
-  if(state.rdTarget){ wfEl.textContent='Ψ ≈ Gray–Scott  F='+(0.012+(state.freq-2)/7*0.048).toFixed(3)+'  k='+(0.045+state.mode*0.021).toFixed(3); }
-  else { wfEl.textContent = state.p127>0.5 ? 'Ψ = Σ e^(2πik/7),  k = 0 … 6' : 'Ψ = cos '+m+'x·cos '+n+'y '+sign+' cos '+n+'x·cos '+m+'y'; }
-  tagEl.textContent=(state.rdTarget?'REACT · ':(state.p127>0.6?'127 · ':''))+bnd+' · '+regime+' · '+mat;
+  if(state.sub===2){ const ns=Math.round((3+state.mode*17)*(1-state.p127)+7*state.p127);
+    wfEl.textContent='∂²u/∂t² = c²∇²u   ·   '+ns+'-gon membrane'; tagEl.textContent='RIPPLE · '+ns+'-GON · '+mat; }
+  else if(state.sub===1){ const fk=rdFK(); wfEl.textContent='Ψ ≈ Gray–Scott  F='+fk[0].toFixed(3)+'  k='+fk[1].toFixed(3);
+    tagEl.textContent='REACT · '+bnd+' · '+mat; }
+  else { wfEl.textContent = state.p127>0.5 ? 'Ψ = Σ e^(2πik/7),  k = 0 … 6' : 'Ψ = cos '+m+'x·cos '+n+'y '+sign+' cos '+n+'x·cos '+m+'y';
+    tagEl.textContent=(state.p127>0.6?'127 · ':'')+bnd+' · '+regime+' · '+mat; }
   odoNum.classList.toggle('lock',state.p127>0.6);
 }
 
@@ -395,25 +423,32 @@ async function toggleAudio(btn){
   }catch(err){ toast('mic denied'); btn.textContent='♪ denied'; setTimeout(()=>btn.textContent='♪ listen',1500); }
 }
 function sampleAudio(){
-  if(!audio.on||!audio.an) { audio.level+=(0-audio.level)*0.1; audio.centroid+=(0-audio.centroid)*0.1; return; }
+  if(!audio.on||!audio.an){ audio.level+=(0-audio.level)*0.1; audio.centroid+=(0-audio.centroid)*0.1; return; }
   audio.an.getByteFrequencyData(audio.data); const d=audio.data, N=d.length;
   let sum=0, wsum=0; for(let i=0;i<N;i++){ sum+=d[i]; wsum+=i*d[i]; }
-  const lvl=Math.min(1,(sum/N)/90); const cen=sum>1? (wsum/sum)/N : 0;
+  const lvl=Math.min(1,(sum/N)/90); const cen=sum>1?(wsum/sum)/N:0;
   audio.level+=(lvl-audio.level)*0.25; audio.centroid+=(cen-audio.centroid)*0.2;
 }
 
 /* ═══════════ BUTTONS ═══════════ */
+const SUBS=['◈ cymatic','◈ react','◈ ripple'];
 document.getElementById('recast').onclick=recast;
 document.getElementById('freeze').onclick=function(){ state.frozen=!state.frozen; this.textContent=state.frozen?'▶ drift':'❄ hold'; };
 document.getElementById('bound').onclick=function(){ state.boundTarget=state.boundTarget?0:1; this.classList.toggle('on',!!state.boundTarget); this.textContent=state.boundTarget?'◉ drum':'▦ plate'; updatePattern(); };
 document.getElementById('invert').onclick=function(){ state.powderTarget=state.powderTarget?0:1; this.classList.toggle('on',!!state.powderTarget); this.textContent=state.powderTarget?'◓ nodes':'◓ powder'; updatePattern(); };
-document.getElementById('react').onclick=function(){ state.rdTarget=state.rdTarget?0:1; this.classList.toggle('on',!!state.rdTarget); this.textContent=state.rdTarget?'◈ waves':'◈ react'; if(state.rdTarget) reseedRD(); updatePattern(); };
+document.getElementById('field').onclick=function(){ state.sub=(state.sub+1)%3;
+  state.rdTarget=state.sub===1?1:0; state.fdtdTarget=state.sub===2?1:0;
+  this.textContent=SUBS[state.sub]; this.classList.toggle('on',state.sub!==0);
+  if(state.sub===1) reseedRD(); if(state.sub===2) resetFDTD(); updatePattern(); };
 document.getElementById('listen').onclick=function(){ toggleAudio(this); };
-document.getElementById('tint').onclick=()=>{ state.hueIdx=(state.hueIdx+1)%HUES.length; state.hue=HUES[state.hueIdx]; };
-['recast','freeze','bound','invert','react','listen','tint','helpBtn'].forEach(id=>{ const el=document.getElementById(id);
+const TINTS=['◐ cyan','◐ teal','◐ violet','◐ gold','◐ mix','✧ drift','✧ spectrum'];
+document.getElementById('tint').onclick=function(){ state.hueMode=(state.hueMode+1)%TINTS.length;
+  if(state.hueMode<=4) state.hue=HUES[state.hueMode];
+  this.textContent=TINTS[state.hueMode]; this.classList.toggle('on',state.hueMode>=5); };
+['recast','freeze','bound','invert','field','listen','tint','helpBtn'].forEach(id=>{ const el=document.getElementById(id);
   el.addEventListener('pointerdown',openControls); el.addEventListener('pointerup',armCollapse); });
 function recast(){ const targets=RINGS.map(R=>R.min+Math.random()*(R.max-R.min)); const start=RINGS.map(R=>R.value); const t0=performance.now();
-  if(state.rdTarget) reseedRD();
+  if(state.sub===1) reseedRD(); if(state.sub===2) resetFDTD();
   (function anim(){ const k=Math.min(1,(performance.now()-t0)/850); const e=k<0.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
     RINGS.forEach((R,i)=>{ R.set(start[i]+(targets[i]-start[i])*e); R.onC(R.value); }); updateLegend(); updatePattern();
     if(k<1) requestAnimationFrame(anim); })(); }
@@ -423,7 +458,7 @@ let simTime=0,lastNow=performance.now(),uframe=0, effFreq=3, effDrive=0.5;
 function setFieldUniforms(loc){
   gl.uniform1f(loc.uTime,simTime); gl.uniform1f(loc.uFreq,effFreq); gl.uniform1f(loc.uMode,state.mode);
   gl.uniform1f(loc.uPhase,state.phase); gl.uniform1f(loc.uP127,state.p127); gl.uniform1f(loc.uBound,state.bound);
-  gl.uniform1f(loc.uRD,state.rd); gl.uniform1f(loc.uRDLevel,0.28);
+  gl.uniform1f(loc.uRD,state.rd); gl.uniform1f(loc.uRDLevel,0.28); gl.uniform1f(loc.uFDTD,state.fdtd);
 }
 function frame(now){
   const dt=Math.min(0.05,(now-lastNow)/1000); lastNow=now;
@@ -434,22 +469,38 @@ function frame(now){
   state.powder+=(state.powderTarget-state.powder)*Math.min(1,dt*6);
   state.bound +=(state.boundTarget -state.bound )*Math.min(1,dt*5);
   state.rd    +=(state.rdTarget    -state.rd    )*Math.min(1,dt*3);
+  state.fdtd  +=(state.fdtdTarget  -state.fdtd  )*Math.min(1,dt*3);
   patShown+=(patTarget-patShown)*Math.min(1,dt*7); odoNum.textContent=String(Math.round(patShown)).padStart(3,'0');
   uframe++;
   sampleAudio();
   effFreq = state.freq + (audio.on? audio.centroid*5.0 : 0);
   effDrive = Math.min(1, state.drive + (audio.on? audio.level*0.7 : 0));
+  if(state.hueMode===5){ state.hue=(state.hue+dt*0.05)%1; state.hueSpread=0.05; }
+  else if(state.hueMode===6){ state.hueSpread=0.75; } else { state.hueSpread=0.05; }
+  const effHue=(state.hue + (audio.on? audio.level*0.12 : 0))%1;
 
   if(PARTICLES){
-    // RD sim substeps
+    // reaction-diffusion substeps
     if(state.rd>0.01 && !state.frozen){
       gl.useProgram(progRD); gl.bindVertexArray(quadVAO); gl.viewport(0,0,RDN,RDN);
       gl.uniform2f(UR.uTexel,1/RDN,1/RDN);
-      gl.uniform1f(UR.uF,0.012+(state.freq-2)/7*0.048); gl.uniform1f(UR.uK,0.045+state.mode*0.021);
-      gl.uniform1f(UR.uDu,0.16); gl.uniform1f(UR.uDv,0.08); gl.uniform1f(UR.uDt,1.0);
+      var fk=rdFK(); gl.uniform1f(UR.uF,fk[0]); gl.uniform1f(UR.uK,fk[1]);
+      gl.uniform1f(UR.uDu,1.0); gl.uniform1f(UR.uDv,0.5); gl.uniform1f(UR.uDt,1.0);
       for(let s=0;s<6;s++){ gl.bindFramebuffer(gl.FRAMEBUFFER,rdFbo[1-rdCur]);
         gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,rdTex[rdCur]); gl.uniform1i(UR.uSrc,0);
         gl.drawArrays(gl.TRIANGLES,0,3); rdCur=1-rdCur; }
+      gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+    }
+    // membrane FDTD substeps
+    if(state.fdtd>0.01 && !state.frozen){
+      gl.useProgram(progFDTD); gl.bindVertexArray(quadVAO); gl.viewport(0,0,FDN,FDN);
+      gl.uniform2f(UF.uTexel,1/FDN,1/FDN); gl.uniform1f(UF.uC2,0.25); gl.uniform1f(UF.uDamp,0.0015);
+      gl.uniform1f(UF.uDriveAmp,0.05+0.16*effDrive); gl.uniform1f(UF.uDriveFreq,0.02+(state.freq-2)/7*0.16);
+      gl.uniform1f(UF.uShape,state.mode); gl.uniform1f(UF.uP127,state.p127);
+      for(let s=0;s<6;s++){ fdTime+=1.0; gl.uniform1f(UF.uTime,fdTime);
+        gl.bindFramebuffer(gl.FRAMEBUFFER,fdFbo[1-fdCur]);
+        gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,fdTex[fdCur]); gl.uniform1i(UF.uSrc,0);
+        gl.drawArrays(gl.TRIANGLES,0,3); fdCur=1-fdCur; }
       gl.bindFramebuffer(gl.FRAMEBUFFER,null);
     }
     // particle sim
@@ -458,6 +509,7 @@ function frame(now){
       gl.useProgram(progSim); gl.bindVertexArray(quadVAO);
       gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,posTex[cur]); gl.uniform1i(US.uPos,0);
       gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,rdTex[rdCur]); gl.uniform1i(US.uRDTex,1);
+      gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D,fdTex[fdCur]); gl.uniform1i(US.uFDTDTex,2);
       gl.uniform1f(US.uFrame,uframe);
       gl.uniform1f(US.uStep,0.025+0.035*effDrive); gl.uniform1f(US.uThermal,0.0012); gl.uniform1f(US.uDrift,0.012); gl.uniform1f(US.uPowder,state.powder);
       setFieldUniforms(US);
@@ -470,8 +522,9 @@ function frame(now){
   gl.viewport(0,0,glc.width,glc.height); gl.disable(gl.BLEND);
   gl.useProgram(progField); gl.bindVertexArray(quadVAO);
   gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, PARTICLES?rdTex[rdCur]:null); gl.uniform1i(U.uRDTex,1);
+  gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, PARTICLES?fdTex[fdCur]:null); gl.uniform1i(U.uFDTDTex,2);
   gl.uniform2f(U.uCenter,cx*DPR,glc.height-cy*DPR); gl.uniform1f(U.uDispR,dispR*DPR);
-  gl.uniform1f(U.uHue,state.hue); gl.uniform1f(U.uDrive,effDrive); gl.uniform1f(U.uPowder,state.powder);
+  gl.uniform1f(U.uHue,effHue); gl.uniform1f(U.uHueSpread,state.hueSpread); gl.uniform1f(U.uDrive,effDrive); gl.uniform1f(U.uPowder,state.powder);
   gl.uniform1f(U.uBg,PARTICLES?0.0:1.0); setFieldUniforms(U);
   gl.drawArrays(gl.TRIANGLES,0,3);
 
@@ -481,7 +534,7 @@ function frame(now){
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,posTex[cur]); gl.uniform1i(UD.uPos,0);
     gl.uniform1i(UD.uP,P); gl.uniform2f(UD.uRes,glc.width,glc.height);
     gl.uniform2f(UD.uCenter,cx*DPR,glc.height-cy*DPR); gl.uniform1f(UD.uDispR,dispR*DPR);
-    gl.uniform1f(UD.uPtSize,Math.max(1.3,Math.min(3.2,dispR*DPR*0.010))); gl.uniform1f(UD.uHue,state.hue);
+    gl.uniform1f(UD.uPtSize,Math.max(1.2,Math.min(3.0,dispR*DPR*0.010))); gl.uniform1f(UD.uHue,effHue); gl.uniform1f(UD.uHueSpread,state.hueSpread);
     gl.drawArrays(gl.POINTS,0,P*P); gl.disable(gl.BLEND);
   }
   drawRings();
