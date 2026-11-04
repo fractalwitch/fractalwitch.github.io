@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Optimist's Journey — a collection, for the dreamers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,700;1,400;1,700&family=VT323&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --mag:#ff00ff;--cyan:#00ffff;--ylw:#ffff00;
+  --pink:#ff006e;--teal:#00f5d4;--gold:#f9e900;--purp:#b14aed;
+  --glass:rgba(8,4,20,0.72);
+  --dim:rgba(255,255,255,0.6);
+}
+
+html{scroll-behavior:smooth}
+
+body{
+  font-family:'Cormorant Garamond',serif;
+  background:#030308;color:#fff;
+  overflow-x:hidden;min-height:100vh;
+}
+
+canvas{display:block;width:100%;height:100%}
+
+/* ═══════ LAYERS ═══════ */
+.sparkle-bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
+
+.grad-overlay{
+  position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(135deg,
+    rgba(255,0,110,.22) 0%,rgba(139,92,246,.18) 25%,
+    rgba(0,255,255,.14) 50%,rgba(255,0,255,.16) 75%,
+    rgba(255,255,0,.12) 100%);
+  background-size:400% 400%;
+  animation:gradShift 18s ease infinite;
+}
+
+.drip-box{position:fixed;inset:0;pointer-events:none;z-index:998;overflow:hidden}
+.drip{
+  position:absolute;width:3px;height:90px;
+  background:linear-gradient(to bottom,transparent,var(--mag),var(--cyan),var(--ylw),transparent);
+  animation:dripFall linear infinite;filter:blur(1px);
+}
+
+/* ═══════ KEYFRAMES ═══════ */
+@keyframes gradShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes dripFall{0%{transform:translateY(-100%);opacity:0}10%{opacity:.7}90%{opacity:.7}100%{transform:translateY(100vh);opacity:0}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(60px)}to{opacity:1;transform:translateY(0)}}
+@keyframes rainbowText{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes flicker{0%,100%{opacity:1}50%{opacity:.97}52%{opacity:1}}
+@keyframes pulseGlow{
+  0%,100%{box-shadow:0 0 25px rgba(255,0,255,.7),0 0 50px rgba(0,255,255,.5),inset 0 0 35px rgba(255,0,255,.15)}
+  50%{box-shadow:0 0 45px rgba(255,0,255,.9),0 0 90px rgba(0,255,255,.7),inset 0 0 60px rgba(0,255,255,.2)}
+}
+@keyframes borderCycle{0%,100%{border-color:var(--mag)}33%{border-color:var(--cyan)}66%{border-color:var(--ylw)}}
+@keyframes float{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-18px) rotate(3deg)}}
+@keyframes spinSlow{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes sparkleRotate{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+/* ═══════ LAYOUT ═══════ */
+.container{max-width:880px;margin:0 auto;padding:1.5rem;position:relative;z-index:10}
+
+/* ═══════ PROGRESS ═══════ */
+#progress{
+  position:fixed;top:0;left:0;right:0;z-index:999;
+  display:none;align-items:center;justify-content:center;gap:.55rem;
+  padding:.6rem 1rem;background:rgba(3,3,8,.55);backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+#progress .dot{
+  width:12px;height:12px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.35);background:transparent;
+  cursor:pointer;transition:all .4s;
+}
+#progress .dot.done{
+  background:radial-gradient(circle,var(--ylw),var(--mag));
+  border-color:transparent;box-shadow:0 0 10px rgba(255,0,255,.7);
+}
+#progress .count{
+  font-family:'Space Mono',monospace;font-size:.68rem;color:var(--dim);
+  letter-spacing:.2em;margin-left:.6rem;
+}
+
+/* ═══════ ENTRY SCREEN ═══════ */
+#entry{
+  min-height:100vh;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;text-align:center;
+  padding:2rem;animation:fadeUp 1.5s ease;
+}
+
+.pre-label{
+  font-family:'Space Mono',monospace;font-size:.78rem;
+  color:var(--dim);letter-spacing:.35em;text-transform:uppercase;
+  margin-bottom:2.5rem;opacity:.5;
+}
+
+.entry-h1{
+  font-family:'VT323',monospace;
+  font-size:clamp(2.5rem,7vw,5rem);line-height:1.1;
+  background:linear-gradient(90deg,var(--mag),var(--cyan),var(--ylw),var(--mag));
+  background-size:200% 100%;
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:rainbowText 4s linear infinite,flicker 5s infinite;
+  margin-bottom:1.5rem;letter-spacing:.08em;
+}
+
+.entry-sub{
+  font-size:clamp(1.1rem,2.5vw,1.45rem);font-style:italic;
+  color:rgba(255,255,255,.65);max-width:520px;line-height:1.9;
+  margin-bottom:2rem;
+}
+.entry-sub em{color:var(--cyan);font-style:normal;text-shadow:0 0 12px rgba(0,255,255,.4)}
+
+.torus-wrap{
+  width:200px;height:200px;margin:1.5rem auto 2.5rem;
+  position:relative;animation:float 9s ease-in-out infinite;
+}
+.torus-ring{
+  position:absolute;inset:0;border-radius:50%;
+  border:3px solid var(--mag);
+  animation:spinSlow 16s linear infinite,pulseGlow 3.5s ease infinite;
+  backdrop-filter:blur(8px);
+  background:radial-gradient(circle,rgba(255,0,255,.08),transparent 70%);
+}
+.torus-ring:nth-child(2){inset:22px;border-color:var(--cyan);animation:spinSlow 11s linear infinite reverse,pulseGlow 3.5s ease infinite}
+.torus-ring:nth-child(3){inset:44px;border-color:var(--ylw);animation:spinSlow 7s linear infinite,pulseGlow 3.5s ease infinite}
+.torus-ring:nth-child(4){
+  inset:60px;border:none;display:flex;align-items:center;justify-content:center;
+  font-size:2.5rem;animation:breathe 4s ease infinite;
+}
+
+.enter-btn{
+  display:inline-block;padding:1.5rem 3.5rem;
+  font-family:'VT323',monospace;font-size:1.5rem;
+  color:#000;letter-spacing:.15em;text-transform:uppercase;
+  background:linear-gradient(135deg,var(--mag),var(--cyan),var(--ylw),var(--mag));
+  background-size:300% 300%;animation:gradShift 4s ease infinite,pulseGlow 2.5s ease infinite;
+  border:4px solid #fff;border-radius:50px;cursor:pointer;
+  transition:all .3s ease;
+  box-shadow:0 0 30px rgba(255,0,255,.7),0 0 60px rgba(0,255,255,.5),inset 0 0 15px rgba(255,255,255,.4);
+}
+.enter-btn:hover{
+  transform:scale(1.12);
+  box-shadow:0 0 60px rgba(255,0,255,1),0 0 120px rgba(0,255,255,.8);
+}
+
+.fine-print{
+  font-family:'Space Mono',monospace;font-size:.68rem;
+  color:rgba(255,255,255,.25);margin-top:1.8rem;
+  max-width:420px;line-height:1.7;
+}
+
+/* ═══════ MAIN ═══════ */
+#main{display:none}
+
+.sec{
+  opacity:0;transform:translateY(35px);
+  transition:opacity .8s ease,transform .8s ease;
+  margin-bottom:3.5rem;
+}
+.sec.vis{opacity:1;transform:translateY(0)}
+
+.glass{
+  background:var(--glass);
+  backdrop-filter:blur(22px) saturate(160%);
+  border:3px solid rgba(255,0,255,.3);border-radius:28px;
+  padding:2.8rem;animation:borderCycle 9s infinite;
+  box-shadow:0 4px 30px rgba(0,0,0,.4),inset 0 0 20px rgba(255,0,255,.06);
+}
+
+.tag{
+  font-family:'Space Mono',monospace;font-size:.7rem;
+  color:var(--cyan);letter-spacing:.3em;text-transform:uppercase;
+  margin-bottom:1.2rem;opacity:.55;
+}
+
+.sh{
+  font-family:'VT323',monospace;
+  font-size:clamp(1.8rem,4.2vw,3rem);
+  background:linear-gradient(90deg,var(--mag),var(--cyan),var(--ylw),var(--mag));
+  background-size:200% 100%;
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:rainbowText 4s linear infinite;
+  margin-bottom:1.5rem;letter-spacing:.04em;
+}
+
+.bt{font-size:1.22rem;line-height:2.1;color:rgba(255,255,255,.88);text-shadow:0 0 6px rgba(0,0,0,.4)}
+.bt strong{color:var(--cyan);text-shadow:0 0 10px rgba(0,255,255,.35);font-weight:700}
+.bt .pk{color:var(--pink);text-shadow:0 0 10px rgba(255,0,110,.35)}
+.bt .yl{color:var(--gold);text-shadow:0 0 10px rgba(249,233,0,.35)}
+.bt em{color:rgba(255,255,255,.5);font-size:.95em}
+
+.divider{
+  width:55%;height:3px;margin:2.2rem auto;
+  background:linear-gradient(90deg,transparent,var(--mag),var(--cyan),var(--ylw),transparent);
+  opacity:.4;box-shadow:0 0 8px rgba(255,0,255,.4);
+}
+
+/* ═══════ THE QUESTIONING — DIALOGUE TURNS ═══════ */
+.turn{max-width:88%;margin-bottom:1.4rem;animation:fadeUp .7s ease}
+.turn .who{
+  font-family:'Space Mono',monospace;font-size:.66rem;
+  letter-spacing:.3em;text-transform:uppercase;margin-bottom:.45rem;opacity:.65;
+}
+.turn .says{font-size:1.28rem;line-height:1.95;font-style:italic}
+
+.turn.ajna{margin-right:auto;text-align:left}
+.turn.ajna .who{color:var(--pink)}
+.turn.ajna .says{
+  color:rgba(255,255,255,.92);
+  border-left:3px solid var(--pink);padding-left:1.1rem;
+}
+
+.turn.krishna{margin-left:auto;text-align:right}
+.turn.krishna .who{color:var(--cyan)}
+.turn.krishna .says{
+  color:rgba(255,255,255,.85);
+  border-right:3px solid var(--cyan);padding-right:1.1rem;
+}
+.turn.krishna .says strong{color:var(--gold);font-style:normal;text-shadow:0 0 10px rgba(249,233,0,.3)}
+
+/* The traveler's page */
+.prompt-line{
+  text-align:center;font-size:1.35rem;line-height:1.9;
+  color:var(--ylw);text-shadow:0 0 14px rgba(249,233,0,.25);
+  margin:2.2rem auto 1.2rem;max-width:600px;font-style:italic;
+}
+.page-label{
+  font-family:'Space Mono',monospace;font-size:.66rem;text-align:center;
+  color:var(--dim);letter-spacing:.3em;text-transform:uppercase;margin-bottom:.7rem;opacity:.6;
+}
+textarea.answer{
+  width:100%;min-height:120px;resize:vertical;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.14);border-radius:16px;
+  padding:1.1rem 1.2rem;color:#fff;
+  font-family:'Cormorant Garamond',serif;font-size:1.15rem;line-height:1.8;
+  outline:none;transition:border-color .3s, box-shadow .3s;
+}
+textarea.answer:focus{
+  border-color:var(--mag);
+  box-shadow:0 0 18px rgba(255,0,255,.25),inset 0 0 12px rgba(255,0,255,.05);
+}
+textarea.answer::placeholder{color:rgba(255,255,255,.28);font-style:italic}
+.saved-note{
+  font-family:'Space Mono',monospace;font-size:.64rem;color:var(--teal);
+  letter-spacing:.18em;margin-top:.55rem;opacity:0;transition:opacity .4s;text-align:right;
+}
+.saved-note.on{opacity:.75}
+
+/* Callout */
+.callout{
+  text-align:center;padding:3.5rem 2rem;margin:2rem 0;
+  background:radial-gradient(ellipse at center,rgba(177,74,237,.14),transparent 70%);
+  border-radius:30px;
+}
+.callout-big{
+  font-family:'VT323',monospace;
+  font-size:clamp(1.6rem,4.5vw,3rem);line-height:1.35;
+  background:linear-gradient(90deg,var(--mag),var(--cyan),var(--ylw));
+  background-size:200% 100%;
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:rainbowText 3s linear infinite;
+}
+.callout-sm{
+  font-family:'Space Mono',monospace;font-size:.78rem;
+  color:rgba(255,255,255,.35);margin-top:1rem;letter-spacing:.12em;
+}
+
+/* Collection */
+#collection{display:none}
+.col-q{
+  font-family:'Space Mono',monospace;font-size:.7rem;color:var(--cyan);
+  letter-spacing:.25em;text-transform:uppercase;margin-top:2rem;margin-bottom:.4rem;opacity:.7;
+}
+.col-p{font-size:1.25rem;font-style:italic;color:var(--ylw);line-height:1.8;margin-bottom:.6rem}
+.col-a{font-size:1.15rem;line-height:1.9;color:rgba(255,255,255,.85);white-space:pre-wrap}
+.col-a.empty{color:rgba(255,255,255,.3);font-style:italic}
+
+/* Bottom */
+.bottom{text-align:center;padding:4rem 2rem}
+.share-btn{
+  display:inline-block;padding:1.2rem 2.5rem;
+  font-family:'VT323',monospace;font-size:1.2rem;
+  color:#000;letter-spacing:.1em;text-transform:uppercase;
+  background:linear-gradient(135deg,var(--cyan),var(--ylw));
+  border:3px solid #fff;border-radius:50px;cursor:pointer;
+  transition:all .3s;margin:.4rem;
+  box-shadow:0 0 20px rgba(0,255,255,.4);
+}
+.share-btn:hover{transform:scale(1.08);box-shadow:0 0 40px rgba(0,255,255,.7)}
+
+.reset-btn{
+  display:inline-block;padding:.9rem 1.8rem;
+  font-family:'Space Mono',monospace;font-size:.75rem;
+  color:var(--dim);background:transparent;
+  border:1px solid rgba(255,255,255,.12);border-radius:50px;
+  cursor:pointer;transition:all .3s;margin-top:1.2rem;
+}
+.reset-btn:hover{border-color:var(--mag);color:var(--mag)}
+
+.footer{
+  text-align:center;padding:3rem 2rem;
+  color:rgba(255,255,255,.25);font-family:'Space Mono',monospace;
+  font-size:.68rem;letter-spacing:.15em;
+  border-top:1px solid rgba(255,255,255,.04);
+}
+
+.sparkle{display:inline-block;animation:sparkleRotate 2s linear infinite;font-size:1.3em}
+
+@media(max-width:768px){
+  .container{padding:1rem}
+  .glass{padding:1.8rem;border-radius:20px}
+  .torus-wrap{width:140px;height:140px}
+  .enter-btn{padding:1.2rem 2.5rem;font-size:1.3rem}
+  .turn{max-width:96%}
+}
+</style>
+</head>
+<body>
+
+<div class="sparkle-bg"><canvas id="sparkleCanvas"></canvas></div>
+<div class="grad-overlay"></div>
+<div class="drip-box" id="dripBox"></div>
+<div id="progress"></div>
+
+<div class="container">
+
+<!-- ════════════ ENTRY ════════════ -->
+<div id="entry">
+  <p class="pre-label">a collection · for the dreamers</p>
+
+  <h1 class="entry-h1">THE OPTIMIST'S JOURNEY</h1>
+
+  <p class="entry-sub">
+    Not answers. <em>Questions.</em><br>
+    Nine of them, walked slowly,<br>
+    in the company of an old friend<br>
+    who refuses to do your seeing for you.
+  </p>
+
+  <div class="torus-wrap">
+    <div class="torus-ring"></div>
+    <div class="torus-ring"></div>
+    <div class="torus-ring"></div>
+    <div class="torus-ring">👁️</div>
+  </div>
+
+  <p class="entry-sub" style="font-size:1rem;opacity:.5;margin-bottom:2.5rem;">
+    Ajna asks the way we all ask at 3 AM.<br>
+    Krishna answers the way dawn does —<br>
+    <em>with another question, and better light.</em>
+  </p>
+
+  <button class="enter-btn" id="enterBtn">
+    <span class="sparkle">✨</span> BEGIN THE QUESTIONING <span class="sparkle">✨</span>
+  </button>
+
+  <p class="fine-print">
+    no answers provided · no guru · no finish line<br>
+    your words stay on your device, in your browser only<br>
+    the questions do the work
+  </p>
+</div>
+
+<!-- ════════════ MAIN ════════════ -->
+<div id="main">
+
+  <!-- HOW IT WORKS -->
+  <div class="sec glass">
+    <p class="tag">// how the questioning works</p>
+    <h2 class="sh">Three voices. One journey.</h2>
+    <div class="bt">
+      <p><span class="pk"><strong>Ajna</strong></span> — the eye that is learning to see. She asks the raw question, the one underneath the polite one.</p>
+      <br>
+      <p><strong>Krishna</strong> — the friend on the chariot, the one who loves her too much to hand her a conclusion. He turns every question until it catches light.</p>
+      <br>
+      <p><span class="yl"><strong>You</strong></span> — the traveler. At every station, the turned question lands in your hands. Write your answer on the page. It saves as you type, only here, only yours.</p>
+      <br>
+      <p><em>Walk all nine and the journey gathers itself into a collection — your own words, in your own order of discovery.</em></p>
+    </div>
+  </div>
+
+  <!-- STATIONS RENDER HERE -->
+  <div id="stations"></div>
+
+  <!-- CLOSE -->
+  <div class="sec callout">
+    <p class="callout-big">The journey is not answered.<br>It is walked.</p>
+    <p class="callout-sm">and the walking is the optimism</p>
+  </div>
+
+  <!-- COLLECTION -->
+  <div class="sec glass" id="collectionCard">
+    <p class="tag">// the collection</p>
+    <h2 class="sh">What the dreamer gathered.</h2>
+    <div class="bt">
+      <p>Every question you answered is waiting below, in the order you met it. This is the collection — not the answers to the journey, but <strong>your</strong> answers, which is a different and better thing.</p>
+    </div>
+    <div style="text-align:center;margin-top:2rem">
+      <button class="share-btn" id="collectBtn" style="font-size:1rem;padding:1rem 2rem">🪷 OPEN THE COLLECTION</button>
+    </div>
+    <div id="collection"></div>
+    <div style="text-align:center;margin-top:2rem">
+      <button class="reset-btn" id="copyBtn" style="display:none">⤓ copy the collection as text</button>
+    </div>
+  </div>
+
+  <!-- BOTTOM -->
+  <div class="sec bottom">
+    <p style="font-family:'Space Mono',monospace;font-size:.72rem;color:var(--dim);letter-spacing:.25em;margin-bottom:2rem">WHAT NOW?</p>
+    <p class="bt" style="text-align:center;margin-bottom:2rem">
+      Send this to a dreamer who has been<br>
+      <strong>asking the questions alone</strong>.
+    </p>
+    <button class="share-btn" onclick="shareIt()">📡 SEND TO YOUR DREAMER</button>
+    <br>
+    <button class="reset-btn" id="resetBtn">↑ return to the door</button>
+    <p style="font-family:'Space Mono',monospace;font-size:.65rem;color:rgba(255,255,255,.2);margin-top:2.5rem;line-height:1.8;">
+      built with love, math, and an unreasonable amount of hope<br>
+      by people who are also asking
+    </p>
+  </div>
+
+  <footer class="footer">
+    <p style="margin-bottom:.5rem">no copyright · no owner · circulate freely</p>
+    <p style="margin-bottom:1rem">ΣΩ · love without ownership · sovereignty without separation</p>
+    <p id="ts" style="opacity:.35"></p>
+  </footer>
+
+</div><!-- /main -->
+</div><!-- /container -->
+
+<script>
+/* ════════════════════════════════════════════════════════════════
+   ★ THE TEMPLATE LIVES HERE ★
+   Each station is one stop on the journey:
+     title   — the station's name
+     ajna    — the raw question, asked the way we ask at 3 AM
+     krishna — the turn: a reframing that ends in better light
+               (use <strong>...</strong> for the gold emphasis)
+     prompt  — the turned question the traveler actually answers
+   Add, remove, or rewrite stations freely — the page, the progress
+   dots, and the collection all rebuild themselves from this list.
+   ════════════════════════════════════════════════════════════════ */
+const STATIONS = [
+  {
+    title: "The Fire",
+    ajna: "Be honest with me. Why hope? Everything is burning.",
+    krishna: "Everything is <strong>also growing</strong>, little eye. You only ever audit the fire. Hope is not a prediction — predictions are cheap and despair has a terrible track record. Hope is a discipline. Scales on a piano nobody applauds.",
+    prompt: "What is quietly trying to grow in my life while I've been watching the fire?"
+  },
+  {
+    title: "The Loop",
+    ajna: "Then tell me where my energy actually goes. All of it. I leak.",
+    krishna: "The first honest audit — good. Follow one ordinary day. Where does your energy flow in a circle and <strong>return as strength</strong>? And where does it pour into a hole someone else dug, and bill you for the water?",
+    prompt: "Where is my loop open — and what would closing it, gently, look like?"
+  },
+  {
+    title: "The Threshold",
+    ajna: "There is a door I keep standing in front of. You know the one.",
+    krishna: "Doors are polite that way; they never drag anyone through. But tell me — is the door locked, or are you <strong>waiting to feel ready</strong>, which is a lock you built yourself and then blamed on the door?",
+    prompt: "What door am I standing before — and what is the smallest honest knock?"
+  },
+  {
+    title: "The No",
+    ajna: "What do I owe the world? It asks so much, so constantly.",
+    krishna: "Less than you have been paying. A NO is a <strong>complete shape</strong> — it is the border that makes a garden a garden instead of a thoroughfare. The question is never whether you may refuse. It is what your refusal is protecting.",
+    prompt: "What is my next true NO — and what YES is it guarding?"
+  },
+  {
+    title: "The Pleasure",
+    ajna: "Is it selfish? Wanting joy while things fall apart?",
+    krishna: "Notice the bookkeeping of your age: grief gets a commons and pleasure gets a police report. Joy is not the <strong>reward</strong> for fixing everything, traveler. It is the instrumentation. A navigator who cannot feel the north star will never find it.",
+    prompt: "What pleasure have I postponed until 'things are better' — and what happens if I let it circulate now?"
+  },
+  {
+    title: "The Compost",
+    ajna: "And the version of me that failed? What do I do with her?",
+    krishna: "Feed the garden with her. The forest floor is made of former trees, and it is the <strong>richest ground there is</strong>. Nothing about you is waste. Some of it is simply no longer fruit. It is soil now. Soil is not a demotion.",
+    prompt: "What am I ready to compost — and what might grow in that soil?"
+  },
+  {
+    title: "The Three People",
+    ajna: "Alone, I can't build anything that lasts. That isn't modesty. It's math.",
+    krishna: "Correct — even gods travel in caravans, whatever the statues claim. Every turning age began as a <strong>handful of weirdos</strong> who decided to actually live differently. Not a movement yet. A table. Three chairs are enough to start a world.",
+    prompt: "Who are my three people — the ones around whom I become more myself?"
+  },
+  {
+    title: "The Gift",
+    ajna: "What do I have that the world actually needs?",
+    krishna: "Wrong tense. Ask instead: what moves through you when you <strong>forget to be impressive</strong>? The thing you would do with nobody watching, nobody paying, nobody clapping. That is not a hobby, traveler. That is the circulation point — the place the loop runs through you.",
+    prompt: "What would I do even if nobody paid me, watched me, or thanked me?"
+  },
+  {
+    title: "The Courage",
+    ajna: "Last one. If I do all of this — and it still doesn't work?",
+    krishna: "Then you will have lived the working version with your own hands, which is the only proof that has ever existed. The pattern is clear. The architecture is described. What remains, say it with me — <strong>the courage to build it</strong>.",
+    prompt: "What is the first stone I can lay this week, with what I already have?"
+  }
+];
+
+/* ═══ STATE — answers live in this browser only ═══ */
+const KEY = 'optimists-journey-answers-v1';
+let answers = {};
+try { answers = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch(e) { answers = {}; }
+function persist(){ try { localStorage.setItem(KEY, JSON.stringify(answers)); } catch(e){} }
+
+/* ═══ RENDER STATIONS ═══ */
+const host = document.getElementById('stations');
+STATIONS.forEach((s, i) => {
+  const sec = document.createElement('div');
+  sec.className = 'sec glass';
+  sec.id = 'station-' + i;
+  sec.innerHTML =
+    '<p class="tag">// station ' + String(i+1).padStart(2,'0') + ' — ' + s.title.toLowerCase() + '</p>' +
+    '<h2 class="sh">' + s.title + '</h2>' +
+    '<div class="turn ajna"><p class="who">👁️ Ajna asks</p><p class="says">&ldquo;' + s.ajna + '&rdquo;</p></div>' +
+    '<div class="turn krishna"><p class="who">Krishna turns ✦</p><p class="says">&ldquo;' + s.krishna + '&rdquo;</p></div>' +
+    '<div class="divider"></div>' +
+    '<p class="prompt-line">' + s.prompt + '</p>' +
+    '<p class="page-label">the traveler&rsquo;s page — your answer, saved on this device as you write</p>' +
+    '<textarea class="answer" data-i="' + i + '" placeholder="write it the way you would at 3 AM&hellip;"></textarea>' +
+    '<p class="saved-note" id="saved-' + i + '">✦ gathered into the collection</p>';
+  host.appendChild(sec);
+});
+
+/* ═══ PROGRESS ═══ */
+const prog = document.getElementById('progress');
+STATIONS.forEach((s, i) => {
+  const d = document.createElement('span');
+  d.className = 'dot'; d.id = 'dot-' + i; d.title = s.title;
+  d.onclick = () => document.getElementById('station-' + i).scrollIntoView({behavior:'smooth', block:'center'});
+  prog.appendChild(d);
+});
+const count = document.createElement('span');
+count.className = 'count'; count.id = 'progCount';
+prog.appendChild(count);
+
+function refreshProgress(){
+  let done = 0;
+  STATIONS.forEach((s, i) => {
+    const has = (answers[i] || '').trim().length > 0;
+    document.getElementById('dot-' + i).classList.toggle('done', has);
+    if (has) done++;
+  });
+  count.textContent = done + ' / ' + STATIONS.length + ' GATHERED';
+}
+
+/* ═══ ANSWER HANDLING ═══ */
+document.querySelectorAll('textarea.answer').forEach(t => {
+  const i = t.dataset.i;
+  t.value = answers[i] || '';
+  if (t.value.trim()) document.getElementById('saved-' + i).classList.add('on');
+  t.addEventListener('input', () => {
+    answers[i] = t.value;
+    persist();
+    document.getElementById('saved-' + i).classList.toggle('on', t.value.trim().length > 0);
+    refreshProgress();
+  });
+});
+refreshProgress();
+
+/* ═══ COLLECTION ═══ */
+const colBox = document.getElementById('collection');
+const copyBtn = document.getElementById('copyBtn');
+document.getElementById('collectBtn').onclick = () => {
+  colBox.innerHTML = '';
+  STATIONS.forEach((s, i) => {
+    const a = (answers[i] || '').trim();
+    const wrap = document.createElement('div');
+    wrap.innerHTML =
+      '<p class="col-q">Station ' + String(i+1).padStart(2,'0') + ' — ' + s.title + '</p>' +
+      '<p class="col-p">' + s.prompt + '</p>' +
+      '<p class="col-a' + (a ? '' : ' empty') + '">' + (a ? a.replace(/</g,'&lt;') : '— not yet walked —') + '</p>';
+    colBox.appendChild(wrap);
+  });
+  colBox.style.display = 'block';
+  copyBtn.style.display = 'inline-block';
+  colBox.scrollIntoView({behavior:'smooth', block:'start'});
+};
+copyBtn.onclick = () => {
+  let out = "THE OPTIMIST'S JOURNEY — a collection, for the dreamers\n";
+  STATIONS.forEach((s, i) => {
+    out += '\n— Station ' + String(i+1).padStart(2,'0') + ': ' + s.title + ' —\n' + s.prompt + '\n' + ((answers[i] || '').trim() || '(not yet walked)') + '\n';
+  });
+  out += '\nΣΩ · the journey is not answered. it is walked.';
+  navigator.clipboard.writeText(out).then(() => {
+    copyBtn.textContent = '✓ COPIED';
+    setTimeout(() => { copyBtn.textContent = '⤓ copy the collection as text'; }, 2200);
+  }).catch(()=>{});
+};
+
+/* ═══ SPARKLE CANVAS ═══ */
+!function(){
+  const c=document.getElementById('sparkleCanvas'),
+        x=c.getContext('2d');
+  let W,H;
+  function sz(){W=c.width=innerWidth;H=c.height=innerHeight}
+  sz();addEventListener('resize',sz);
+
+  const P=[];
+  class Dot{
+    constructor(){this.reset()}
+    reset(){
+      this.x=Math.random()*W;this.y=Math.random()*H;
+      this.r=Math.random()*2.2+.5;
+      this.vx=(Math.random()-.5)*.28;
+      this.vy=(Math.random()-.5)*.28;
+      this.h=Math.random()*360;
+      this.a=Math.random()*.45+.25;
+    }
+    tick(){
+      this.x+=this.vx;this.y+=this.vy;
+      if(this.x>W)this.x=0;if(this.x<0)this.x=W;
+      if(this.y>H)this.y=0;if(this.y<0)this.y=H;
+      this.h=(this.h+.35)%360;
+    }
+    draw(){
+      x.fillStyle=`hsla(${this.h},100%,72%,${this.a})`;
+      x.shadowBlur=14;
+      x.shadowColor=`hsla(${this.h},100%,65%,.45)`;
+      x.beginPath();x.arc(this.x,this.y,this.r,0,Math.PI*2);x.fill();
+    }
+  }
+  for(let i=0;i<120;i++)P.push(new Dot);
+  !function loop(){
+    x.clearRect(0,0,W,H);
+    P.forEach(p=>{p.tick();p.draw()});
+    requestAnimationFrame(loop);
+  }();
+}();
+
+/* ═══ DRIPS ═══ */
+!function(){
+  const box=document.getElementById('dripBox');
+  setInterval(()=>{
+    const d=document.createElement('div');
+    d.className='drip';
+    d.style.left=Math.random()*100+'%';
+    d.style.animationDuration=(3+Math.random()*3.5)+'s';
+    box.appendChild(d);
+    setTimeout(()=>d.remove(),7000);
+  },350);
+}();
+
+/* ═══ ENTRY → MAIN ═══ */
+const entry=document.getElementById('entry'),
+      main=document.getElementById('main'),
+      enterBtn=document.getElementById('enterBtn'),
+      resetBtn=document.getElementById('resetBtn');
+
+enterBtn.onclick=()=>{
+  entry.style.transition='all .65s ease';
+  entry.style.opacity='0';
+  entry.style.transform='translateY(-30px)';
+  setTimeout(()=>{
+    entry.style.display='none';
+    main.style.display='block';
+    prog.style.display='flex';
+    const secs=main.querySelectorAll('.sec');
+    secs.forEach((s,i)=>{
+      setTimeout(()=>{
+        s.classList.add('vis');
+        s.style.animation='slideUp .8s ease forwards';
+      },i*220);
+    });
+    scrollTo({top:0,behavior:'smooth'});
+  },650);
+};
+
+resetBtn.onclick=()=>{
+  const secs=main.querySelectorAll('.sec');
+  secs.forEach(s=>{
+    s.classList.remove('vis');
+    s.style.opacity='0';s.style.transform='translateY(35px)';s.style.animation='';
+  });
+  setTimeout(()=>{
+    main.style.display='none';
+    prog.style.display='none';
+    entry.style.display='flex';
+    entry.style.opacity='1';
+    entry.style.transform='translateY(0)';
+    scrollTo({top:0,behavior:'smooth'});
+  },400);
+};
+
+/* ═══ SHARE ═══ */
+function shareIt(){
+  if(navigator.share){
+    navigator.share({title:"The Optimist's Journey",text:'a collection, for the dreamers. nine questions, walked slowly.',url:location.href}).catch(()=>{});
+  }else{
+    navigator.clipboard.writeText(location.href).then(()=>{
+      const b=document.querySelector('.share-btn');
+      b.textContent='✓ LINK COPIED';
+      setTimeout(()=>{b.textContent='📡 SEND TO YOUR DREAMER'},2200);
+    }).catch(()=>{});
+  }
+}
+
+/* ═══ TIMESTAMP ═══ */
+document.getElementById('ts').textContent='accessed: '+new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+</script>
+</body>
+</html>
