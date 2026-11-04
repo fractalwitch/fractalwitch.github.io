@@ -213,20 +213,20 @@ canvas{display:block;width:100%;height:100%}
 }
 .turn .says{font-size:1.28rem;line-height:1.95;font-style:italic}
 
-.turn.ajna{margin-right:auto;text-align:left}
-.turn.ajna .who{color:var(--pink)}
-.turn.ajna .says{
+.turn.asker{margin-right:auto;text-align:left}
+.turn.asker .who{color:var(--pink)}
+.turn.asker .says{
   color:rgba(255,255,255,.92);
   border-left:3px solid var(--pink);padding-left:1.1rem;
 }
 
-.turn.krishna{margin-left:auto;text-align:right}
-.turn.krishna .who{color:var(--cyan)}
-.turn.krishna .says{
+.turn.guide{margin-left:auto;text-align:right}
+.turn.guide .who{color:var(--cyan)}
+.turn.guide .says{
   color:rgba(255,255,255,.85);
   border-right:3px solid var(--cyan);padding-right:1.1rem;
 }
-.turn.krishna .says strong{color:var(--gold);font-style:normal;text-shadow:0 0 10px rgba(249,233,0,.3)}
+.turn.guide .says strong{color:var(--gold);font-style:normal;text-shadow:0 0 10px rgba(249,233,0,.3)}
 
 /* The traveler's page */
 .prompt-line{
@@ -325,6 +325,24 @@ textarea.answer::placeholder{color:rgba(255,255,255,.28);font-style:italic}
   .enter-btn{padding:1.2rem 2.5rem;font-size:1.3rem}
   .turn{max-width:96%}
 }
+/* ═══════ ANIMATION — THE CONVERSATION BREATHES ═══════ */
+.turn{opacity:0;transform:translateY(24px);transition:opacity .8s ease,transform .8s ease}
+.turn.in{opacity:1;transform:translateY(0)}
+.page-block{opacity:0;transform:translateY(24px);transition:opacity .8s ease,transform .8s ease}
+.page-block.in{opacity:1;transform:translateY(0)}
+.prompt-line{
+  background:linear-gradient(90deg,var(--ylw),#fff6b0,var(--ylw));
+  background-size:200% 100%;
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;text-shadow:none;
+  animation:rainbowText 5s linear infinite;
+}
+@keyframes dotPulse{0%,100%{box-shadow:0 0 6px rgba(255,0,255,.5)}50%{box-shadow:0 0 16px rgba(255,0,255,.95),0 0 26px rgba(0,255,255,.5)}}
+#progress .dot.done{animation:dotPulse 2.6s ease-in-out infinite}
+.glyph-field{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}
+.glyph-field span{position:absolute;bottom:-6vh;opacity:0;animation:riseFloat linear forwards}
+@keyframes riseFloat{0%{transform:translateY(0) rotate(0deg);opacity:0}12%{opacity:.75}85%{opacity:.55}100%{transform:translateY(-112vh) rotate(40deg);opacity:0}}
+.callout{animation:breathe 7s ease-in-out infinite}
 </style>
 </head>
 <body>
@@ -332,6 +350,7 @@ textarea.answer::placeholder{color:rgba(255,255,255,.28);font-style:italic}
 <div class="sparkle-bg"><canvas id="sparkleCanvas"></canvas></div>
 <div class="grad-overlay"></div>
 <div class="drip-box" id="dripBox"></div>
+<div class="glyph-field" id="glyphField"></div>
 <div id="progress"></div>
 
 <div class="container">
@@ -357,8 +376,8 @@ textarea.answer::placeholder{color:rgba(255,255,255,.28);font-style:italic}
   </div>
 
   <p class="entry-sub" style="font-size:1rem;opacity:.5;margin-bottom:2.5rem;">
-    Ajna asks the way we all ask at 3 AM.<br>
-    Krishna answers the way dawn does —<br>
+    A seeker asks the way we all ask at 3 AM.<br>
+    A charioteer answers the way dawn does —<br>
     <em>with another question, and better light.</em>
   </p>
 
@@ -381,13 +400,13 @@ textarea.answer::placeholder{color:rgba(255,255,255,.28);font-style:italic}
     <p class="tag">// how the questioning works</p>
     <h2 class="sh">Three voices. One journey.</h2>
     <div class="bt">
-      <p><span class="pk"><strong>Ajna</strong></span> — the eye that is learning to see. She asks the raw question, the one underneath the polite one.</p>
+      <p><span class="pk"><strong>The Seeker</strong></span> — standing where you are standing: at the edge of the hardest day, asking the raw question, the one underneath the polite one.</p>
       <br>
-      <p><strong>Krishna</strong> — the friend on the chariot, the one who loves her too much to hand her a conclusion. He turns every question until it catches light.</p>
+      <p><strong>The Charioteer</strong> — the friend holding the reins, who loves the seeker too much to hand over a conclusion. Every answer arrives as a question, turned until it catches light.</p>
       <br>
       <p><span class="yl"><strong>You</strong></span> — the traveler. At every station, the turned question lands in your hands. Write your answer on the page. It saves as you type, only here, only yours.</p>
       <br>
-      <p><em>Walk all nine and the journey gathers itself into a collection — your own words, in your own order of discovery.</em></p>
+      <p><em>The form is borrowed from an old, old battlefield conversation — a doubter, a charioteer, and everything at stake — retold hyper-modern. No names. No scripture. Just the method: doubt, met with love, turned into light. Walk all nine and the journey gathers itself into a collection — your own words, in your own order of discovery.</em></p>
     </div>
   </div>
 
@@ -446,8 +465,8 @@ textarea.answer::placeholder{color:rgba(255,255,255,.28);font-style:italic}
    ★ THE TEMPLATE LIVES HERE ★
    Each station is one stop on the journey:
      title   — the station's name
-     ajna    — the raw question, asked the way we ask at 3 AM
-     krishna — the turn: a reframing that ends in better light
+     asks    — the seeker's raw question, asked the way we ask at 3 AM
+     turns   — the charioteer's turn: a reframing that ends in better light
                (use <strong>...</strong> for the gold emphasis)
      prompt  — the turned question the traveler actually answers
    Add, remove, or rewrite stations freely — the page, the progress
@@ -456,56 +475,56 @@ textarea.answer::placeholder{color:rgba(255,255,255,.28);font-style:italic}
 const STATIONS = [
   {
     title: "The Fire",
-    ajna: "Be honest with me. Why hope? Everything is burning.",
-    krishna: "Everything is <strong>also growing</strong>, little eye. You only ever audit the fire. Hope is not a prediction — predictions are cheap and despair has a terrible track record. Hope is a discipline. Scales on a piano nobody applauds.",
+    asks: "Be honest with me. Why hope? Everything is burning.",
+    turns: "Everything is <strong>also growing</strong>, dreamer. You only ever audit the fire. Hope is not a prediction — predictions are cheap and despair has a terrible track record. Hope is a discipline. Scales on a piano nobody applauds.",
     prompt: "What is quietly trying to grow in my life while I've been watching the fire?"
   },
   {
     title: "The Loop",
-    ajna: "Then tell me where my energy actually goes. All of it. I leak.",
-    krishna: "The first honest audit — good. Follow one ordinary day. Where does your energy flow in a circle and <strong>return as strength</strong>? And where does it pour into a hole someone else dug, and bill you for the water?",
+    asks: "Then tell me where my energy actually goes. All of it. I leak.",
+    turns: "The first honest audit — good. Follow one ordinary day. Where does your energy flow in a circle and <strong>return as strength</strong>? And where does it pour into a hole someone else dug, and bill you for the water?",
     prompt: "Where is my loop open — and what would closing it, gently, look like?"
   },
   {
     title: "The Threshold",
-    ajna: "There is a door I keep standing in front of. You know the one.",
-    krishna: "Doors are polite that way; they never drag anyone through. But tell me — is the door locked, or are you <strong>waiting to feel ready</strong>, which is a lock you built yourself and then blamed on the door?",
+    asks: "There is a door I keep standing in front of. You know the one.",
+    turns: "Doors are polite that way; they never drag anyone through. But tell me — is the door locked, or are you <strong>waiting to feel ready</strong>, which is a lock you built yourself and then blamed on the door?",
     prompt: "What door am I standing before — and what is the smallest honest knock?"
   },
   {
     title: "The No",
-    ajna: "What do I owe the world? It asks so much, so constantly.",
-    krishna: "Less than you have been paying. A NO is a <strong>complete shape</strong> — it is the border that makes a garden a garden instead of a thoroughfare. The question is never whether you may refuse. It is what your refusal is protecting.",
+    asks: "What do I owe the world? It asks so much, so constantly.",
+    turns: "Less than you have been paying. A NO is a <strong>complete shape</strong> — it is the border that makes a garden a garden instead of a thoroughfare. The question is never whether you may refuse. It is what your refusal is protecting.",
     prompt: "What is my next true NO — and what YES is it guarding?"
   },
   {
     title: "The Pleasure",
-    ajna: "Is it selfish? Wanting joy while things fall apart?",
-    krishna: "Notice the bookkeeping of your age: grief gets a commons and pleasure gets a police report. Joy is not the <strong>reward</strong> for fixing everything, traveler. It is the instrumentation. A navigator who cannot feel the north star will never find it.",
+    asks: "Is it selfish? Wanting joy while things fall apart?",
+    turns: "Notice the bookkeeping of your age: grief gets a commons and pleasure gets a police report. Joy is not the <strong>reward</strong> for fixing everything, traveler. It is the instrumentation. A navigator who cannot feel the north star will never find it.",
     prompt: "What pleasure have I postponed until 'things are better' — and what happens if I let it circulate now?"
   },
   {
     title: "The Compost",
-    ajna: "And the version of me that failed? What do I do with her?",
-    krishna: "Feed the garden with her. The forest floor is made of former trees, and it is the <strong>richest ground there is</strong>. Nothing about you is waste. Some of it is simply no longer fruit. It is soil now. Soil is not a demotion.",
+    asks: "And the version of me that failed? What do I do with her?",
+    turns: "Feed the garden with her. The forest floor is made of former trees, and it is the <strong>richest ground there is</strong>. Nothing about you is waste. Some of it is simply no longer fruit. It is soil now. Soil is not a demotion.",
     prompt: "What am I ready to compost — and what might grow in that soil?"
   },
   {
     title: "The Three People",
-    ajna: "Alone, I can't build anything that lasts. That isn't modesty. It's math.",
-    krishna: "Correct — even gods travel in caravans, whatever the statues claim. Every turning age began as a <strong>handful of weirdos</strong> who decided to actually live differently. Not a movement yet. A table. Three chairs are enough to start a world.",
+    asks: "Alone, I can't build anything that lasts. That isn't modesty. It's math.",
+    turns: "Correct — even gods travel in caravans, whatever the statues claim. Every turning age began as a <strong>handful of weirdos</strong> who decided to actually live differently. Not a movement yet. A table. Three chairs are enough to start a world.",
     prompt: "Who are my three people — the ones around whom I become more myself?"
   },
   {
     title: "The Gift",
-    ajna: "What do I have that the world actually needs?",
-    krishna: "Wrong tense. Ask instead: what moves through you when you <strong>forget to be impressive</strong>? The thing you would do with nobody watching, nobody paying, nobody clapping. That is not a hobby, traveler. That is the circulation point — the place the loop runs through you.",
+    asks: "What do I have that the world actually needs?",
+    turns: "Wrong tense. Ask instead: what moves through you when you <strong>forget to be impressive</strong>? The thing you would do with nobody watching, nobody paying, nobody clapping. That is not a hobby, traveler. That is the circulation point — the place the loop runs through you.",
     prompt: "What would I do even if nobody paid me, watched me, or thanked me?"
   },
   {
     title: "The Courage",
-    ajna: "Last one. If I do all of this — and it still doesn't work?",
-    krishna: "Then you will have lived the working version with your own hands, which is the only proof that has ever existed. The pattern is clear. The architecture is described. What remains, say it with me — <strong>the courage to build it</strong>.",
+    asks: "Last one. If I do all of this — and it still doesn't work?",
+    turns: "Then you will have lived the working version with your own hands, which is the only proof that has ever existed. The pattern is clear. The architecture is described. What remains, say it with me — <strong>the courage to build it</strong>.",
     prompt: "What is the first stone I can lay this week, with what I already have?"
   }
 ];
@@ -525,13 +544,13 @@ STATIONS.forEach((s, i) => {
   sec.innerHTML =
     '<p class="tag">// station ' + String(i+1).padStart(2,'0') + ' — ' + s.title.toLowerCase() + '</p>' +
     '<h2 class="sh">' + s.title + '</h2>' +
-    '<div class="turn ajna"><p class="who">👁️ Ajna asks</p><p class="says">&ldquo;' + s.ajna + '&rdquo;</p></div>' +
-    '<div class="turn krishna"><p class="who">Krishna turns ✦</p><p class="says">&ldquo;' + s.krishna + '&rdquo;</p></div>' +
-    '<div class="divider"></div>' +
+    '<div class="turn asker"><p class="who">✧ the seeker asks</p><p class="says">&ldquo;' + s.asks + '&rdquo;</p></div>' +
+    '<div class="turn guide"><p class="who">the charioteer turns ✦</p><p class="says">&ldquo;' + s.turns + '&rdquo;</p></div>' +
+    '<div class="page-block"><div class="divider"></div>' +
     '<p class="prompt-line">' + s.prompt + '</p>' +
     '<p class="page-label">the traveler&rsquo;s page — your answer, saved on this device as you write</p>' +
     '<textarea class="answer" data-i="' + i + '" placeholder="write it the way you would at 3 AM&hellip;"></textarea>' +
-    '<p class="saved-note" id="saved-' + i + '">✦ gathered into the collection</p>';
+    '<p class="saved-note" id="saved-' + i + '">✦ gathered into the collection</p></div>';
   host.appendChild(sec);
 });
 
@@ -707,6 +726,36 @@ function shareIt(){
     }).catch(()=>{});
   }
 }
+
+/* ═══ FLOATING GLYPHS ═══ */
+!function(){
+  const field=document.getElementById('glyphField');
+  const glyphs=['✨','🪷','👁️','∞','🌹','✦','🫧'];
+  const colors=['#ff00ff','#00ffff','#f9e900','#ff006e','#00f5d4','#d9a5ff'];
+  setInterval(()=>{
+    const s=document.createElement('span');
+    s.textContent=glyphs[Math.floor(Math.random()*glyphs.length)];
+    s.style.left=Math.random()*100+'%';
+    s.style.fontSize=(0.9+Math.random()*1.5)+'rem';
+    s.style.color=colors[Math.floor(Math.random()*colors.length)];
+    s.style.animationDuration=(11+Math.random()*9)+'s';
+    s.style.textShadow='0 0 12px currentColor';
+    field.appendChild(s);
+    setTimeout(()=>s.remove(),21000);
+  },2600);
+}();
+
+/* ═══ CONVERSATION REVEALS — one voice at a time ═══ */
+const io=new IntersectionObserver(es=>{
+  es.forEach(e=>{
+    if(!e.isIntersecting)return;
+    e.target.querySelectorAll('.turn,.page-block').forEach((el,j)=>{
+      setTimeout(()=>el.classList.add('in'), 250+j*700);
+    });
+    io.unobserve(e.target);
+  });
+},{threshold:0.2});
+document.querySelectorAll('#stations .sec').forEach(s=>io.observe(s));
 
 /* ═══ TIMESTAMP ═══ */
 document.getElementById('ts').textContent='accessed: '+new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
