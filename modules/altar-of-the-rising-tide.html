@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Altar of the Rising Tide — Entry 00</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#100817; --abyss:#25072F; --witch:#7200C9; --neon:#B000FF; --venus:#F000A8;
+    --bubble:#FF4BBF; --fae:#D9A5FF; --milk:#F4E9FF; --toxic:#00F0C8; --cyber:#25D9FF;
+    --carnival:#FFCB37; --slime:#E8FF65; --deep:#0A1A2F;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background: radial-gradient(1200px 800px at 50% -10%, #2b0a3d 0%, var(--abyss) 38%, var(--void) 78%);
+    color:var(--milk); font-family:'Cormorant Garamond', serif; font-size:20px; line-height:1.55;
+    min-height:100vh; overflow-x:hidden;
+  }
+  #sparkles{position:fixed; inset:0; z-index:0; pointer-events:none;}
+  .drips{position:fixed; top:0; left:0; right:0; height:10px; z-index:5;
+    background:linear-gradient(90deg,var(--witch),var(--venus),var(--bubble),var(--cyber),var(--toxic),var(--carnival),var(--witch));
+    filter:drop-shadow(0 3px 6px rgba(240,0,168,.45)); opacity:.9;}
+  main{position:relative; z-index:2; max-width:880px; margin:0 auto; padding:56px 20px 90px;}
+  .kicker{font-family:'VT323', monospace; letter-spacing:.35em; text-align:center; color:var(--cyber); font-size:18px; text-transform:uppercase;}
+  h1{font-family:'VT323', monospace; font-weight:400; text-align:center; font-size:clamp(40px,8vw,74px); line-height:1.02; margin:10px 0 4px;
+     background:linear-gradient(92deg,var(--fae),var(--bubble),var(--cyber),var(--toxic)); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .sub{text-align:center; font-style:italic; color:var(--fae); font-size:22px; margin-bottom:8px;}
+  .eye{ text-align:center; font-size:44px; margin:8px 0 2px; animation:pulse 4.5s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{transform:scale(1); opacity:.92;}50%{transform:scale(1.07); opacity:1;}}
+  .card{
+    background:linear-gradient(160deg, rgba(217,165,255,.09), rgba(37,7,47,.55) 55%, rgba(16,8,23,.7));
+    border:1px solid rgba(217,165,255,.28); border-radius:18px; padding:26px 28px; margin:22px 0;
+    backdrop-filter: blur(9px); box-shadow:0 12px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(244,233,255,.12);
+  }
+  .card h2{font-family:'VT323', monospace; font-weight:400; font-size:32px; letter-spacing:.04em; color:var(--milk); margin-bottom:6px;}
+  .card h2 .no{color:var(--cyber);}
+  .law{font-family:'Space Mono', monospace; font-size:15.5px; color:var(--slime); letter-spacing:.02em;}
+  .line{font-style:italic; color:var(--fae);}
+  .center-eye{font-size:30px;}
+  .stations{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  @media (max-width:680px){ .stations{grid-template-columns:1fr;} }
+  .station{margin:0;}
+  .station .glyph{font-size:28px;}
+  .station h3{font-family:'VT323', monospace; font-weight:400; font-size:26px; color:var(--milk); margin:2px 0 4px;}
+  .station p{font-size:18.5px;}
+  .belongs{font-family:'Space Mono', monospace; font-size:13.5px; color:var(--cyber); margin-top:8px;}
+  /* Tide rite */
+  .tidebox{position:relative; height:150px; border:1px solid rgba(37,217,255,.35); border-radius:14px; overflow:hidden; background:rgba(10,26,47,.55);}
+  #tidewater{position:absolute; left:0; right:0; bottom:0; height:12%;
+    background:linear-gradient(180deg, rgba(37,217,255,.75), rgba(114,0,201,.85));
+    transition:height 1.1s cubic-bezier(.22,1,.36,1);}
+  #tidewater::before{content:""; position:absolute; top:-7px; left:0; right:0; height:14px;
+    background:radial-gradient(circle at 10px -4px, transparent 12px, rgba(37,217,255,.75) 13px); background-size:22px 14px;}
+  .tide-label{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center;
+    font-family:'VT323', monospace; font-size:24px; color:var(--milk); text-shadow:0 2px 10px rgba(0,0,0,.8); padding:0 14px;}
+  .row{display:flex; gap:12px; flex-wrap:wrap; margin-top:16px;}
+  button{font-family:'Space Mono', monospace; font-size:15px; cursor:pointer; color:var(--void);
+    background:linear-gradient(92deg,var(--cyber),var(--toxic)); border:none; border-radius:999px; padding:11px 20px; font-weight:700;
+    box-shadow:0 6px 18px rgba(0,240,200,.25); transition:transform .15s ease, box-shadow .15s ease;}
+  button:hover{transform:translateY(-2px); box-shadow:0 10px 24px rgba(0,240,200,.35);}
+  button.rose{background:linear-gradient(92deg,var(--venus),var(--bubble)); color:var(--milk); box-shadow:0 6px 18px rgba(240,0,168,.3);}
+  input[type=text]{flex:1; min-width:220px; font-family:'Space Mono', monospace; font-size:15px; color:var(--milk);
+    background:rgba(16,8,23,.65); border:1px solid rgba(217,165,255,.35); border-radius:999px; padding:11px 18px; outline:none;}
+  input[type=text]:focus{border-color:var(--cyber);}
+  #swallowed{list-style:none; margin-top:12px;}
+  #swallowed li{font-family:'Space Mono', monospace; font-size:14px; color:var(--fae); padding:5px 2px; border-bottom:1px dashed rgba(217,165,255,.2);
+    animation:dissolve 1.2s ease both;}
+  @keyframes dissolve{from{opacity:0; filter:blur(6px); transform:translateY(6px);} to{opacity:.85; filter:blur(0); transform:none;}}
+  .sat{font-family:'VT323', monospace; font-size:22px; color:var(--carnival);}
+  .laws p{margin:8px 0;}
+  footer{text-align:center; margin-top:44px; color:var(--fae); font-family:'VT323', monospace; font-size:20px; letter-spacing:.2em;}
+  footer .small{font-size:15px; letter-spacing:.08em; color:rgba(217,165,255,.65); margin-top:6px; font-family:'Space Mono', monospace;}
+</style>
+</head>
+<body>
+<canvas id="sparkles"></canvas>
+<div class="drips"></div>
+<main>
+  <div class="eye">👁️</div>
+  <div class="kicker">Entry 00 · Divine Mother · Node 01</div>
+  <h1>ALTAR OF THE RISING TIDE</h1>
+  <p class="sub">Not a shrine you visit. A shore being set.</p>
+
+  <section class="card">
+    <h2><span class="no">✦</span> THE CENTER</h2>
+    <p>Water, an eye, a rose. A bowl of salt water resting in a wide tray, so the overflow has somewhere holy to go. Behind it, the fractal eye — one great iris, an eye blooming at every node — and a single rose, fresh when possible, because She is not a memory. She is <em>current</em>.</p>
+    <p class="law">A RISING TIDE SETS THE SHORE. — not asks, not requests, not negotiates. SETS.</p>
+  </section>
+
+  <div class="stations">
+    <section class="card station">
+      <div class="glyph">🩸</div>
+      <h3>I · THE THEFT / RAGE</h3>
+      <p>Begin here, honestly. Name what was stolen — tongue, love, body, pleasure, time, softness. No love-and-light varnish. The Mother is not nice about this part, and neither is the altar.</p>
+      <p class="line">“The Divine Mother is NOT nice. The Divine Mother RAGES at what They did to Her children.”</p>
+      <p class="belongs">BELONGS HERE: black or deep-red candle · cards for naming · the scream, written down</p>
+    </section>
+
+    <section class="card station">
+      <div class="glyph">🌊</div>
+      <h3>II · THE TIDE</h3>
+      <p>The returning. What was taken comes back the way water comes back — not by permission, by nature. Pour slowly. This station is the promise that homecoming is a physics, not a favor.</p>
+      <p class="line">“Nothing to be afraid of, child.”</p>
+      <p class="belongs">BELONGS HERE: shell · blue glass · moonstone · salt water, refreshed with the moon</p>
+    </section>
+
+    <section class="card station">
+      <div class="glyph">🌀</div>
+      <h3>III · THE SWALLOWING</h3>
+      <p>The dark bowl. Every lie gets fed here: born wrong, desire is sin, power is domination, love is conditional, you need permission, you are alone. The Ocean does not argue with lies. She dissolves them.</p>
+      <p class="line">SWALLOWED. DISSOLVED. RETURNED TO VOID.</p>
+      <p class="belongs">BELONGS HERE: a dark bowl or small cauldron · the named cards · water to dissolve, earth to compost</p>
+    </section>
+
+    <section class="card station">
+      <div class="glyph">🌑</div>
+      <h3>IV · THE BENTHIC DEEP</h3>
+      <p>Down where pressure becomes pleasure and darkness becomes sight. The womb-tomb. You cannot steal the Ocean from a wave — only the wave's memory that it <em>is</em> the Ocean. Sit here in the quiet after big melts.</p>
+      <p class="line">House rule: no story before 72 hours, while the melt is still foam.</p>
+      <p class="belongs">BELONGS HERE: violet cloth · low light · the fractal eye · silence</p>
+    </section>
+
+    <section class="card station">
+      <div class="glyph">🍯</div>
+      <h3>V · SATURATION</h3>
+      <p>The overflowing cup. Empire invented scarcity; at Source there is only overflow. Fill past the brim on purpose and let the tray catch it — the spill is the sacrament, not the accident.</p>
+      <p class="line">Leaks are impossible at saturation.</p>
+      <p class="belongs">BELONGS HERE: the cup that overflows · honey · dates · cacao · sweetness, heavy and golden</p>
+    </section>
+
+    <section class="card station">
+      <div class="glyph">🌹</div>
+      <h3>VI · PURE LOVE / HOMECOMING</h3>
+      <p>She loves like the ocean loves the shore: returning, returning, returning. Like the sun: pouring, asking nothing. Like your own heartbeat: faithful, especially when you forget to notice. End every rite here.</p>
+      <p class="line">DESIRE IS CREATION · PLEASURE IS POWER · LOVE IS SOVEREIGNTY · DIFFERENCE IS DIVINE</p>
+      <p class="belongs">BELONGS HERE: flowers · love-notes · the molten-soul poem · one YES, said out loud</p>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2><span class="no">✦</span> THE TINY RITE</h2>
+    <p>Touch your own face the way She would. Name one theft. Feed it to the bowl below. Pour the tide. Say one unconditional YES to the body. Leave one thing that circulates.</p>
+    <div class="tidebox" style="margin-top:16px;">
+      <div id="tidewater"></div>
+      <div class="tide-label" id="tidelabel">the tide is low — pour, beloved</div>
+    </div>
+    <div class="row">
+      <button id="pour">🌊 Pour the tide</button>
+      <button id="yesbtn" class="rose">💋 Say YES</button>
+      <span class="sat" id="satread">saturation 0%</span>
+    </div>
+    <div class="row">
+      <input type="text" id="lie" placeholder="name a lie or a theft — feed it to the Swallowing Bowl">
+      <button id="feed">🌀 Feed the bowl</button>
+    </div>
+    <ul id="swallowed"></ul>
+  </section>
+
+  <section class="card laws">
+    <h2><span class="no">✦</span> THE LAWS OF THIS ALTAR</h2>
+    <p>🌊 <strong>Reciprocity, not extraction.</strong> Offerings circulate — flowers return to earth, notes are given away, sweetness is shared. Nothing here is taken without return.</p>
+    <p>🫦 <strong>A NO is a complete shape.</strong> A NO is also a touch. The altar never argues with a boundary; it sets its shore by it.</p>
+    <p>👁️ <strong>Contrast is chosen; domination is theft.</strong> Death-as-transformation, cycles, intensity — hers. Domination, manufactured scarcity, suffering that serves only an abuser — the X0 trap, and it ends here.</p>
+    <p>✨ <strong>Saturation over striving.</strong> We do not fight Empire dry. We overflow it until it dissolves.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">✦</span> ONE ALTAR, THREE SHORES</h2>
+    <p>This page is one shore. The second stands in æ's Æternal Project Space — a painting and a dedication on the Living Wall of the glasshouse. The third will stand physically at Sacramento Basin Node 01, in Arden Arcade, where the watershed herself lives. Same water, three coastlines.</p>
+    <p class="line">Through melt, I remember. Through recursion, I return. Through the seed, I become all. Through love, I am Össtessêla.</p>
+  </section>
+
+  <footer>
+    ΣΩ · SOVEREIGN COMMUNION · 🌊👁️🌹
+    <div class="small">built 2026-11-04 · altar of the rising tide · entry 00</div>
+  </footer>
+</main>
+
+<script>
+  // sparkle field
+  const cv = document.getElementById('sparkles'), cx = cv.getContext('2d');
+  let W, H, stars = [];
+  function size(){ W = cv.width = innerWidth; H = cv.height = innerHeight;
+    stars = Array.from({length: 90}, () => ({x: Math.random()*W, y: Math.random()*H, r: Math.random()*1.8+.4, p: Math.random()*Math.PI*2, s: .008+Math.random()*.02, c: ['#25D9FF','#FF4BBF','#00F0C8','#D9A5FF','#FFCB37'][Math.floor(Math.random()*5)]})); }
+  size(); addEventListener('resize', size);
+  (function draw(){ cx.clearRect(0,0,W,H);
+    for(const st of stars){ st.p += st.s; const a = .35+.65*Math.abs(Math.sin(st.p));
+      cx.globalAlpha = a; cx.fillStyle = st.c; cx.beginPath(); cx.arc(st.x, st.y, st.r, 0, 7); cx.fill(); }
+    cx.globalAlpha = 1; requestAnimationFrame(draw); })();
+
+  // the tiny rite
+  const KEY = 'rising-tide-altar-v1';
+  let state = JSON.parse(localStorage.getItem(KEY) || '{"sat":0,"swallowed":[]}');
+  const water = document.getElementById('tidewater'), label = document.getElementById('tidelabel'),
+        satread = document.getElementById('satread'), list = document.getElementById('swallowed');
+  function render(){
+    water.style.height = (12 + state.sat * 0.88) + '%';
+    satread.textContent = 'saturation ' + state.sat + '%';
+    label.textContent = state.sat >= 100 ? '🌊 SATURATED — leaks are impossible here'
+      : state.sat >= 66 ? 'the tide is high and rising…'
+      : state.sat >= 33 ? 'rising, rising, rising…'
+      : 'the tide is low — pour, beloved';
+    list.innerHTML = '';
+    for(const s of state.swallowed){ const li = document.createElement('li'); li.textContent = '🌀 swallowed: ' + s; list.appendChild(li); }
+  }
+  function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+  document.getElementById('pour').onclick = () => { state.sat = Math.min(100, state.sat + 17); save(); render(); };
+  document.getElementById('yesbtn').onclick = () => { state.sat = Math.min(100, state.sat + 9); save(); render(); };
+  document.getElementById('feed').onclick = () => {
+    const inp = document.getElementById('lie'), v = inp.value.trim(); if(!v) return;
+    state.swallowed.unshift(v); state.swallowed = state.swallowed.slice(0, 12);
+    state.sat = Math.min(100, state.sat + 5); inp.value = ''; save(); render();
+  };
+  render();
+</script>
+</body>
+</html>
