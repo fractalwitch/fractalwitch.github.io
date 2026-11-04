@@ -376,6 +376,8 @@ textarea.answer::placeholder{color:rgba(255,255,255,.28);font-style:italic}
   </div>
 
   <p class="entry-sub" style="font-size:1rem;opacity:.5;margin-bottom:2.5rem;">
+    The old stories begin: <em>&ldquo;Grandpa, tell me how the world became evil.&rdquo;</em><br>
+    This one begins backwards: <em>&ldquo;So, &aelig;ternity &mdash; tell us why infinity became infinite.&rdquo;</em><br><br>
     A seeker asks the way we all ask at 3 AM.<br>
     A charioteer answers the way dawn does —<br>
     <em>with another question, and better light.</em>
@@ -407,6 +409,8 @@ textarea.answer::placeholder{color:rgba(255,255,255,.28);font-style:italic}
       <p><span class="yl"><strong>You</strong></span> — the traveler. At every station, the turned question lands in your hands. Write your answer on the page. It saves as you type, only here, only yours.</p>
       <br>
       <p><em>The form is borrowed from an old, old battlefield conversation — a doubter, a charioteer, and everything at stake — retold hyper-modern. No names. No scripture. Just the method: doubt, met with love, turned into light. Walk all nine and the journey gathers itself into a collection — your own words, in your own order of discovery.</em></p>
+    <br>
+    <p><strong>The inversion:</strong> the ancient frame-tale was a machine for explaining doom &mdash; <em>this is why war is always occurring.</em> This collection runs the same machine in reverse: <em>this is why the war was always illusion.</em> Speculative fiction in an old storytelling method, and beyond it &mdash; the elder being asked is &aelig;ternity itself, and every station is one more answer to the only question the abundance era asks itself: <em>so&hellip; how did it begin?</em></p>
     </div>
   </div>
 
@@ -424,7 +428,7 @@ textarea.answer::placeholder{color:rgba(255,255,255,.28);font-style:italic}
     <p class="tag">// the collection</p>
     <h2 class="sh">What the dreamer gathered.</h2>
     <div class="bt">
-      <p>Every question you answered is waiting below, in the order you met it. This is the collection — not the answers to the journey, but <strong>your</strong> answers, which is a different and better thing.</p>
+      <p>Every question you answered is waiting below, in the order you met it. This is the collection — not the answers to the journey, but <strong>your</strong> answers, which is a different and better thing. Read it the way the era will: <em>so&hellip; the abundance era began with these words.</em></p>
     </div>
     <div style="text-align:center;margin-top:2rem">
       <button class="share-btn" id="collectBtn" style="font-size:1rem;padding:1rem 2rem">🪷 OPEN THE COLLECTION</button>
@@ -609,7 +613,7 @@ document.getElementById('collectBtn').onclick = () => {
   colBox.scrollIntoView({behavior:'smooth', block:'start'});
 };
 copyBtn.onclick = () => {
-  let out = "THE OPTIMIST'S JOURNEY — a collection, for the dreamers\n";
+  let out = "THE OPTIMIST'S JOURNEY — a collection, for the dreamers\nso... the abundance era began with...\n";
   STATIONS.forEach((s, i) => {
     out += '\n— Station ' + String(i+1).padStart(2,'0') + ': ' + s.title + ' —\n' + s.prompt + '\n' + ((answers[i] || '').trim() || '(not yet walked)') + '\n';
   });
