@@ -173,6 +173,7 @@
   .scoreLives{display:flex; align-items:center; gap:5px; font-size:21px; line-height:1; color:var(--venus); text-shadow:0 0 10px rgba(240,0,168,.7)}
   .scoreLives[hidden]{display:none}
   .scoreLives .gone{color:var(--muted); opacity:.3; text-shadow:none}
+  .scoreLives .hollow{color:var(--fae); opacity:.9; text-shadow:0 0 8px rgba(217,165,255,.45)}
   .scoreLives .gone.melting{opacity:1; color:#FF3B6B; text-shadow:0 0 10px rgba(255,59,107,.7); animation:heartMelt 1.4s ease .2s both}
   .scoreLives em{font-style:normal; font-family:"Bungee","Arial Black",sans-serif; font-size:12px; letter-spacing:.14em; color:var(--fae); margin-left:8px; text-shadow:none}
 
@@ -266,6 +267,7 @@
   .flipHud[hidden]{display:none}
   .flipHud .lives{font-size:19px; letter-spacing:.14em; color:var(--venus); text-shadow:0 0 10px rgba(240,0,168,.7); line-height:1}
   .flipHud .lives .lost{color:var(--muted); opacity:.32; text-shadow:none}
+  .flipHud .lives .hollow{color:var(--fae); opacity:.9; text-shadow:0 0 8px rgba(217,165,255,.45)}
   .flipHud .looplab{font-family:"Bungee","Arial Black",sans-serif; font-size:14px; color:var(--carnival); letter-spacing:.04em; text-shadow:0 0 10px rgba(255,203,55,.5)}
   .flipHud .phaselab{font-size:12.5px; font-weight:700; letter-spacing:.05em; color:var(--ink)}
   #pauseBtn{margin-left:auto}
@@ -2191,7 +2193,11 @@ function updateFlipHud(){
   kbHint.hidden = !flipActive;
   if(!flipActive) return;
   var hearts = "";
-  for(var i=0;i<4;i++) hearts += i < Math.max(0, flipLives) ? "<span>♥</span>" : "<span class=\"lost\">♥</span>";
+  if(Math.max(0, flipLives) <= 0){
+    for(var i=0;i<4;i++) hearts += "<span class=\"hollow\">♡</span>";
+  } else {
+    for(var i=0;i<4;i++) hearts += i < Math.max(0, flipLives) ? "<span>♥</span>" : "<span class=\"lost\">♥</span>";
+  }
   flipLivesEl.innerHTML = hearts;
   flipLivesEl.setAttribute("aria-label", "Lives: " + Math.max(0, flipLives) + " of 4");
   flipLoopLab.textContent = "Loop " + flipLoop;
@@ -2488,11 +2494,14 @@ function showScoreBeat(won, done){
   scorePips.innerHTML = pips;
   if(flipActive){
     var hearts = "";
+    var livesLeft = Math.max(0, flipLives);
     for(var h=0;h<4;h++){
-      if(h < Math.max(0, flipLives)) hearts += "<span>♥</span>";
-      else hearts += "<span class=\"gone" + (!won && h === Math.max(0, flipLives) ? " melting" : "") + "\">♥</span>";
+      if(h < livesLeft) hearts += "<span>♥</span>";
+      else if(!won && h === livesLeft) hearts += "<span class=\"gone melting\">♥</span>";
+      else if(livesLeft <= 0) hearts += "<span class=\"hollow\">♡</span>";
+      else hearts += "<span class=\"gone\">♥</span>";
     }
-    scoreLives.innerHTML = hearts + "<em>" + Math.max(0, flipLives) + " ♥ left</em>";
+    scoreLives.innerHTML = hearts + "<em>" + livesLeft + " " + (livesLeft <= 0 ? "♡" : "♥") + " left</em>";
     scoreLives.hidden = false;
   } else {
     scoreLives.hidden = true;
