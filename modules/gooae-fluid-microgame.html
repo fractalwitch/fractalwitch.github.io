@@ -2495,14 +2495,21 @@ function showScoreBeat(won, done){
   if(flipActive){
     var hearts = "";
     var livesLeft = Math.max(0, flipLives);
+    var finalLoss = !won && livesLeft <= 0;
     for(var h=0;h<4;h++){
       if(h < livesLeft) hearts += "<span>♥</span>";
-      else if(!won && h === livesLeft) hearts += "<span class=\"gone melting\">♥</span>";
+      else if(!won && h === livesLeft && !(finalLoss && reduced)) hearts += "<span class=\"gone melting\">♥</span>";
       else if(livesLeft <= 0) hearts += "<span class=\"hollow\">♡</span>";
       else hearts += "<span class=\"gone\">♥</span>";
     }
     scoreLives.innerHTML = hearts + "<em>" + livesLeft + " " + (livesLeft <= 0 ? "♡" : "♥") + " left</em>";
     scoreLives.hidden = false;
+    if(finalLoss && !reduced){
+      later(function(){
+        var melting = scoreLives.querySelector(".gone.melting");
+        if(melting){ melting.textContent = "♡"; melting.className = "hollow"; }
+      }, 1200);
+    }
   } else {
     scoreLives.hidden = true;
   }
