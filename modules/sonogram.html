@@ -308,9 +308,9 @@
                 ctx.shadowColor = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.8)`;
             }
             ctx.lineWidth = width;
-            ctx.shadowBlur = 20 * glowScale;
+            ctx.shadowBlur = 20 * glowScale * (1 + Math.min(dimensions, 127) / 127 * 0.6);
 
-            const harmonics = Math.min(dimensions, 14);
+            const harmonics = Math.min(dimensions, 16);
             for (let x = 0; x < canvas.width; x += 3) {
                 const normalizedX = x / canvas.width;
                 let y = Math.sin((normalizedX * Math.PI * 2 * frequency) + phase) * amplitude;
@@ -341,10 +341,10 @@
         function drawFractalLayers() {
             const centerY = canvas.height / 2;
             const baseAmplitude = (canvas.height / 8) * ampScale;
-            const layerCount = Math.min(dimensions, 22);
+            const layerCount = Math.min(dimensions, 28);
             for (let layer = 0; layer < layerCount; layer++) {
                 const color = pickColor(layer);
-                const yOffset = centerY + (Math.sin(time * 0.5 + layer) * 50);
+                const yOffset = centerY + (Math.sin(time * 0.5 + layer) * (50 + dimensions * 1.1));
                 const freq = baseFrequency * (layer + 1) * 0.5;
                 const amp = baseAmplitude * (1 - (layer * 0.03));
                 const phase = time + (layer * 0.5);
@@ -365,7 +365,7 @@
         function drawRings() {
             const cx = canvas.width / 2, cy = canvas.height / 2;
             const maxR = Math.min(canvas.width, canvas.height) * 0.46;
-            const ringCount = Math.min(4 + dimensions, 30);
+            const ringCount = Math.min(4 + dimensions, 44);
             for (let ring = 0; ring < ringCount; ring++) {
                 const color = pickColor(ring + 2);
                 const baseR = (ring + 1) / ringCount * maxR;
@@ -398,7 +398,7 @@
         function drawWeb() {
             const cx = canvas.width / 2, cy = canvas.height / 2;
             const maxR = Math.max(canvas.width, canvas.height) * 0.62;
-            const spokes = 10 + Math.min(dimensions * 2, 38);
+            const spokes = 10 + Math.min(dimensions * 2, 60);
             ctx.lineWidth = 1;
             for (let s = 0; s < spokes; s++) {
                 const a = (s / spokes) * Math.PI * 2 + time * 0.03;
@@ -409,7 +409,7 @@
                 ctx.lineTo(cx + Math.cos(a) * maxR, cy + Math.sin(a) * maxR);
                 ctx.stroke();
             }
-            const webRings = 6 + Math.min(dimensions, 16);
+            const webRings = 6 + Math.min(dimensions, 26);
             for (let ring = 1; ring <= webRings; ring++) {
                 const baseR = (ring / webRings) * maxR * 0.92;
                 ctx.beginPath();
@@ -532,7 +532,7 @@
         /* ---------------- particles + bursts ---------------- */
         function drawParticles() {
             const centerY = canvas.height / 2;
-            const numParticles = Math.min(dimensions * 4, 160);
+            const numParticles = Math.min(dimensions * 4, 320);
             for (let i = 0; i < numParticles; i++) {
                 const x = (time * 100 + i * 47) % canvas.width;
                 let color;
@@ -547,7 +547,7 @@
                 ctx.shadowBlur = 15 * glowScale;
                 ctx.shadowColor = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 1)`;
                 ctx.beginPath();
-                ctx.arc(x, y, 3, 0, Math.PI * 2);
+                ctx.arc(x, y, 3 + Math.min(dimensions, 127) * 0.012, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.shadowBlur = 0;
             }
@@ -586,7 +586,8 @@
 
         /* ---------------- main loop ---------------- */
         function animate() {
-            ctx.fillStyle = `rgba(0, 0, 0, ${trailFade})`;
+            const fadeNow = trailFade * (1 - 0.5 * Math.min(dimensions, 127) / 127);
+            ctx.fillStyle = `rgba(0, 0, 0, ${fadeNow})`;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             if (layers.galaxy) drawGalaxy();
