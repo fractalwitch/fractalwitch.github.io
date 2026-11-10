@@ -5,11 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🌈 Hyperdimensional Sonogram 🌈</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             background: #000;
@@ -24,53 +20,55 @@
 
         .sonogram-container {
             width: 95vw;
-            height: 80vh;
+            height: 76vh;
             position: relative;
             border: 3px solid rgba(255, 255, 255, 0.2);
             border-radius: 20px;
             background: radial-gradient(circle at center, #000000 0%, #0a0015 100%);
-            box-shadow: 
+            box-shadow:
                 inset 0 0 50px rgba(138, 43, 226, 0.3),
                 0 0 50px rgba(138, 43, 226, 0.5);
             overflow: hidden;
         }
 
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
+        canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 
         .control-panel {
             position: fixed;
-            bottom: 2rem;
+            bottom: 1.2rem;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 1rem;
+            gap: 0.6rem;
             z-index: 100;
             flex-wrap: wrap;
             justify-content: center;
+            max-width: 96vw;
         }
 
         .control-btn {
             background: rgba(138, 43, 226, 0.3);
             border: 2px solid rgba(138, 43, 226, 0.8);
             color: #fff;
-            padding: 0.8rem 1.5rem;
+            padding: 0.6rem 1.1rem;
             border-radius: 25px;
             cursor: pointer;
             font-family: 'Courier New', monospace;
-            font-size: 1rem;
+            font-size: 0.92rem;
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
             box-shadow: 0 0 20px rgba(138, 43, 226, 0.5);
         }
 
-        .control-btn:hover {
-            background: rgba(138, 43, 226, 0.5);
-            transform: scale(1.1);
-            box-shadow: 0 0 30px rgba(138, 43, 226, 0.8);
+        .control-btn:hover { background: rgba(138, 43, 226, 0.5); transform: scale(1.08); box-shadow: 0 0 30px rgba(138, 43, 226, 0.8); }
+        .control-btn.on { background: rgba(255, 0, 128, 0.45); border-color: rgba(255, 100, 200, 0.95); box-shadow: 0 0 26px rgba(255, 0, 128, 0.65); }
+
+        .control-btn.more {
+            background: linear-gradient(90deg, #ff0080, #b000ff, #25d9ff, #00f0c8, #ff0080);
+            background-size: 300% 300%;
+            animation: gradientShift 3s ease infinite;
+            border-color: rgba(255,255,255,0.85);
+            font-weight: bold;
         }
 
         @keyframes gradientShift {
@@ -78,29 +76,50 @@
             50% { background-position: 100% 50%; }
         }
 
+        .sliders {
+            position: fixed;
+            bottom: 1.2rem;
+            right: 1rem;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            color: rgba(255,255,255,0.85);
+            font-size: 0.8rem;
+            text-shadow: 0 0 8px rgba(138,43,226,0.9);
+        }
+        .sliders label { display: flex; align-items: center; gap: 0.5rem; justify-content: flex-end; }
+        .sliders input[type=range] { width: 110px; accent-color: #ff0080; }
+
         .info-display {
             position: fixed;
-            top: 2rem;
-            left: 2rem;
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 1.2rem;
+            top: 1.4rem;
+            left: 1.6rem;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 1.05rem;
+            line-height: 1.45;
             z-index: 100;
             text-shadow: 0 0 10px rgba(138, 43, 226, 0.8);
+            pointer-events: none;
         }
 
-        .frequency-label {
-            margin-bottom: 0.5rem;
+        .frequency-label { margin-bottom: 0.3rem; }
+
+        #moreflash {
+            position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+            font-size: clamp(3rem, 14vw, 10rem); color: rgba(255,255,255,0.9);
+            text-shadow: 0 0 40px #ff0080, 0 0 90px #25d9ff;
+            z-index: 200; pointer-events: none; opacity: 0; font-weight: bold; letter-spacing: 0.1em;
         }
+        #moreflash.pop { animation: morepop 0.9s ease-out; }
+        @keyframes morepop { 0% { opacity: 0; transform: scale(0.7); } 25% { opacity: 1; } 100% { opacity: 0; transform: scale(1.25); } }
 
         @media (max-width: 768px) {
-            .control-panel {
-                bottom: 1rem;
-                gap: 0.5rem;
-            }
-            .control-btn {
-                padding: 0.6rem 1rem;
-                font-size: 0.9rem;
-            }
+            .control-panel { bottom: 0.7rem; gap: 0.4rem; }
+            .control-btn { padding: 0.5rem 0.8rem; font-size: 0.8rem; }
+            .info-display { font-size: 0.85rem; top: 0.8rem; left: 0.8rem; }
+            .sliders { display: none; }
+            .sonogram-container { height: 70vh; }
         }
     </style>
 </head>
@@ -110,24 +129,45 @@
         <div>Dimensions: <span id="dimensions">3</span></div>
         <div>Frequency: <span id="frequency">1</span> Hz</div>
         <div>Fractalization: <span id="fractal">ACTIVE</span></div>
+        <div>Layers: <span id="layers">waves · particles</span></div>
+        <div>Palette: <span id="palette">spectrum</span></div>
     </div>
 
     <div class="sonogram-container">
         <canvas id="sonogram"></canvas>
     </div>
 
+    <div id="moreflash">MORE</div>
+
     <div class="control-panel">
         <button class="control-btn" onclick="changeDimensions(-1)">➖ DIMENSIONS</button>
         <button class="control-btn" onclick="changeDimensions(1)">➕ DIMENSIONS</button>
         <button class="control-btn" onclick="changeFrequency(-0.5)">🐌 SLOWER</button>
         <button class="control-btn" onclick="changeFrequency(0.5)">⚡ FASTER</button>
-        <button class="control-btn" onclick="toggleRainbow()">🌈 RAINBOW FLOW</button>
-        <button class="control-btn" onclick="toggleUntether()">🌀 UNTETHER</button>
+        <button class="control-btn" id="rainbowBtn" onclick="toggleRainbow()">🌈 RAINBOW FLOW</button>
+        <button class="control-btn" id="untetherBtn" onclick="toggleUntether()">🌀 UNTETHER</button>
+        <button class="control-btn" id="ringsBtn" onclick="toggleLayer('rings', this)">👁️ RINGS</button>
+        <button class="control-btn" id="webBtn" onclick="toggleLayer('web', this)">🕸️ WEB</button>
+        <button class="control-btn" id="galaxyBtn" onclick="toggleLayer('galaxy', this)">🌌 GALAXY</button>
+        <button class="control-btn" id="tideBtn" onclick="toggleLayer('tide', this)">🌊 TIDE</button>
+        <button class="control-btn" id="gooBtn" onclick="toggleLayer('goo', this)">🫧 GOO</button>
+        <button class="control-btn" id="kaleidoBtn" onclick="toggleLayer('kaleido', this)">🔮 MIRROR</button>
+        <button class="control-btn" id="paletteBtn" onclick="togglePalette()">🎨 GOOAE PALETTE</button>
+        <button class="control-btn" id="soundBtn" onclick="toggleSound()">🔇 SOUND</button>
+        <button class="control-btn more" onclick="more()">🌊 MORE 🌊</button>
+        <button class="control-btn" onclick="toggleFullscreen()">⛶ FULL</button>
+    </div>
+
+    <div class="sliders">
+        <label>AMP <input type="range" id="ampSlider" min="40" max="220" value="100"></label>
+        <label>TRAILS <input type="range" id="trailSlider" min="2" max="30" value="10"></label>
+        <label>GLOW <input type="range" id="glowSlider" min="0" max="200" value="100"></label>
     </div>
 
     <script>
         const canvas = document.getElementById('sonogram');
         const ctx = canvas.getContext('2d');
+        const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
         canvas.width = canvas.offsetWidth * 2;
         canvas.height = canvas.offsetHeight * 2;
 
@@ -138,19 +178,81 @@
         let hueOffset = 0;
         let untethered = false;
         let vortexIntensity = 0;
+        let ampScale = 1, trailFade = 0.10, glowScale = 1;
+        let gooaePalette = false;
+
+        const layers = { rings: false, web: false, galaxy: false, tide: false, goo: false, kaleido: false };
+        const LAYER_ORDER = ['rings', 'galaxy', 'web', 'tide', 'goo', 'kaleido'];
+        const LAYER_BTN = { rings: 'ringsBtn', galaxy: 'galaxyBtn', web: 'webBtn', tide: 'tideBtn', goo: 'gooBtn', kaleido: 'kaleidoBtn' };
 
         const colors = [
-            [255, 0, 128],    // hot pink
-            [138, 43, 226],   // purple
-            [0, 255, 255],    // cyan
-            [255, 255, 0],    // yellow
-            [0, 255, 128],    // green
-            [255, 128, 0],    // orange
+            [255, 0, 128], [138, 43, 226], [0, 255, 255],
+            [255, 255, 0], [0, 255, 128], [255, 128, 0]
         ];
+        // GOOAE 12-color cosmology (Style Codex): Witch, Neon, Venus, Bubble, Fae,
+        // Toxic, Cyber, Carnival, Slime + kin
+        const gooaeColors = [
+            [240, 0, 168], [255, 75, 191], [176, 0, 255], [114, 0, 201],
+            [217, 165, 255], [0, 240, 200], [37, 217, 255], [255, 203, 55],
+            [232, 255, 101], [255, 45, 107], [162, 89, 255], [0, 255, 255]
+        ];
+        function palette() { return gooaePalette ? gooaeColors : colors; }
+        function pickColor(i) { const p = palette(); return p[i % p.length]; }
 
+        /* ---------------- stars (galaxy layer) ---------------- */
+        let stars = [];
+        function seedStars() {
+            stars = [];
+            const n = Math.round(canvas.width * canvas.height / 9000);
+            for (let i = 0; i < n; i++) stars.push({
+                x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+                r: Math.random() * 1.8 + 0.4, ph: Math.random() * 6.28, sp: 0.3 + Math.random()
+            });
+        }
+        seedStars();
+
+        /* ---------------- goo blobs ---------------- */
+        let blobs = [];
+        function seedBlobs() {
+            blobs = [];
+            for (let i = 0; i < 8; i++) blobs.push({
+                x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+                r: (90 + Math.random() * 150), vx: (Math.random() - 0.5) * 0.7, vy: (Math.random() - 0.5) * 0.7,
+                ci: i, wob: Math.random() * 6.28
+            });
+        }
+        seedBlobs();
+
+        /* ---------------- pointer stir + bursts ---------------- */
+        let stir = [];   // {x, y, t}
+        let bursts = []; // {x, y, r, ci}
+        canvas.addEventListener('pointermove', (e) => {
+            const r = canvas.getBoundingClientRect();
+            const x = (e.clientX - r.left) / r.width * canvas.width;
+            const y = (e.clientY - r.top) / r.height * canvas.height;
+            stir.push({ x, y, t: time });
+            if (stir.length > 40) stir.shift();
+        }, { passive: true });
+        canvas.addEventListener('pointerdown', (e) => {
+            const r = canvas.getBoundingClientRect();
+            const x = (e.clientX - r.left) / r.width * canvas.width;
+            const y = (e.clientY - r.top) / r.height * canvas.height;
+            bursts.push({ x, y, r: 4, ci: Math.floor(Math.random() * palette().length) });
+        });
+
+        function stirAmount(x, y) {
+            let s = 0;
+            for (const p of stir) {
+                const dx = x - p.x, dy = y - p.y;
+                const d2 = dx * dx + dy * dy;
+                s += Math.exp(-d2 / (260 * 260)) * Math.sin((time - p.t) * 6) * 26;
+            }
+            return s;
+        }
+
+        /* ---------------- wave (original engine, extended) ---------------- */
         function drawWave(yOffset, frequency, amplitude, phase, color, width) {
             ctx.beginPath();
-            
             if (rainbowMode) {
                 const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
                 for (let i = 0; i <= 1; i += 0.1) {
@@ -158,100 +260,57 @@
                     gradient.addColorStop(i, `hsla(${hue}, 100%, 60%, 0.8)`);
                 }
                 ctx.strokeStyle = gradient;
-            } else {
-                ctx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.8)`;
-            }
-            
-            ctx.lineWidth = width;
-            ctx.shadowBlur = 20;
-            
-            if (rainbowMode) {
                 ctx.shadowColor = `hsla(${hueOffset}, 100%, 60%, 0.8)`;
             } else {
+                ctx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.8)`;
                 ctx.shadowColor = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.8)`;
             }
+            ctx.lineWidth = width;
+            ctx.shadowBlur = 20 * glowScale;
 
-            for (let x = 0; x < canvas.width; x += 2) {
+            const harmonics = Math.min(dimensions, 14);
+            for (let x = 0; x < canvas.width; x += 3) {
                 const normalizedX = x / canvas.width;
-                
-                // Primary sine wave
                 let y = Math.sin((normalizedX * Math.PI * 2 * frequency) + phase) * amplitude;
-                
-                // Add fractal harmonics
-                for (let i = 2; i <= dimensions; i++) {
-                    const harmonic = Math.sin((normalizedX * Math.PI * 2 * frequency * i) + (phase * i)) * (amplitude / i);
-                    y += harmonic;
+                for (let i = 2; i <= harmonics; i++) {
+                    y += Math.sin((normalizedX * Math.PI * 2 * frequency * i) + (phase * i)) * (amplitude / i);
                 }
-                
-                // Apply vortex transformation when untethered
+                y += stirAmount(x, yOffset);
+
                 if (untethered && vortexIntensity > 0) {
                     const wavePhase = (normalizedX * Math.PI * 2 * frequency) + phase;
                     const peakness = Math.abs(Math.sin(wavePhase));
-                    
-                    // Create spiral displacement at peaks
                     const spiralAngle = time * 2 + (normalizedX * Math.PI * 4);
                     const spiralRadius = peakness * vortexIntensity * 100;
-                    
                     const wiggleX = Math.cos(spiralAngle + time) * spiralRadius * 0.3;
                     const wiggleY = Math.sin(spiralAngle) * spiralRadius * 0.5;
-                    
                     y += wiggleY;
-                    
-                    // Adjust x position for liquid flow
                     const adjustedX = x + wiggleX;
-                    
-                    if (x === 0) {
-                        ctx.moveTo(adjustedX, y + yOffset);
-                    } else {
-                        ctx.lineTo(adjustedX, y + yOffset);
-                    }
+                    if (x === 0) ctx.moveTo(adjustedX, y + yOffset); else ctx.lineTo(adjustedX, y + yOffset);
                 } else {
                     y += yOffset;
-                    
-                    if (x === 0) {
-                        ctx.moveTo(x, y);
-                    } else {
-                        ctx.lineTo(x, y);
-                    }
+                    if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
                 }
             }
-
             ctx.stroke();
             ctx.shadowBlur = 0;
         }
 
         function drawFractalLayers() {
             const centerY = canvas.height / 2;
-            const baseAmplitude = canvas.height / 8;
-
-            // Draw multiple fractalizing layers
-            for (let layer = 0; layer < dimensions; layer++) {
-                const colorIndex = layer % colors.length;
-                const color = colors[colorIndex];
-                
-                // Offset each layer slightly
+            const baseAmplitude = (canvas.height / 8) * ampScale;
+            const layerCount = Math.min(dimensions, 22);
+            for (let layer = 0; layer < layerCount; layer++) {
+                const color = pickColor(layer);
                 const yOffset = centerY + (Math.sin(time * 0.5 + layer) * 50);
-                
-                // Different frequencies for each layer
                 const freq = baseFrequency * (layer + 1) * 0.5;
-                
-                // Varying amplitudes
-                const amp = baseAmplitude * (1 - (layer * 0.15));
-                
-                // Phase shift for movement
+                const amp = baseAmplitude * (1 - (layer * 0.03));
                 const phase = time + (layer * 0.5);
-                
-                // Width decreases with layers
-                const width = 4 - (layer * 0.5);
-                
-                drawWave(yOffset, freq, amp, phase, color, Math.max(1, width));
-                
-                // Draw reflection
+                const width = Math.max(1, 4 - (layer * 0.15));
+                drawWave(yOffset, freq, amp, phase, color, width);
                 const reflectY = centerY - (yOffset - centerY);
                 drawWave(reflectY, freq, amp * 0.5, phase + Math.PI, color, Math.max(1, width * 0.7));
             }
-
-            // Draw center axis
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
             ctx.lineWidth = 1;
             ctx.beginPath();
@@ -260,41 +319,212 @@
             ctx.stroke();
         }
 
+        /* ---------------- radial sonogram rings ---------------- */
+        function drawRings() {
+            const cx = canvas.width / 2, cy = canvas.height / 2;
+            const maxR = Math.min(canvas.width, canvas.height) * 0.46;
+            const ringCount = Math.min(4 + dimensions, 30);
+            for (let ring = 0; ring < ringCount; ring++) {
+                const color = pickColor(ring + 2);
+                const baseR = (ring + 1) / ringCount * maxR;
+                ctx.beginPath();
+                for (let a = 0; a <= Math.PI * 2 + 0.05; a += 0.06) {
+                    let w = Math.sin(a * (2 + (ring % 5)) * baseFrequency + time * (1 + ring * 0.13));
+                    for (let i = 2; i <= Math.min(dimensions, 8); i++) {
+                        w += Math.sin(a * i * baseFrequency * 1.7 + time * i * 0.6) / i;
+                    }
+                    const r = baseR + w * (10 + dimensions * 0.55) * ampScale * 0.4;
+                    const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+                    if (a === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                }
+                ctx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.5)`;
+                ctx.lineWidth = 1.6;
+                ctx.shadowBlur = 12 * glowScale;
+                ctx.shadowColor = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.8)`;
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+            // the watching center
+            const cc = pickColor(0);
+            ctx.fillStyle = `rgba(${cc[0]}, ${cc[1]}, ${cc[2]}, 0.85)`;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 3 + Math.sin(time * 2) * 1.2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        /* ---------------- spider web ---------------- */
+        function drawWeb() {
+            const cx = canvas.width / 2, cy = canvas.height / 2;
+            const maxR = Math.max(canvas.width, canvas.height) * 0.62;
+            const spokes = 10 + Math.min(dimensions * 2, 38);
+            ctx.lineWidth = 1;
+            for (let s = 0; s < spokes; s++) {
+                const a = (s / spokes) * Math.PI * 2 + time * 0.03;
+                const shimmer = 0.10 + 0.08 * Math.sin(time * 2 + s);
+                ctx.strokeStyle = `rgba(230, 225, 255, ${shimmer.toFixed(3)})`;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(cx + Math.cos(a) * maxR, cy + Math.sin(a) * maxR);
+                ctx.stroke();
+            }
+            const webRings = 6 + Math.min(dimensions, 16);
+            for (let ring = 1; ring <= webRings; ring++) {
+                const baseR = (ring / webRings) * maxR * 0.92;
+                ctx.beginPath();
+                for (let s = 0; s <= spokes; s++) {
+                    const a = (s / spokes) * Math.PI * 2 + time * 0.03;
+                    const sag = Math.sin((s % spokes) * Math.PI) * 0; // anchor points
+                    const mid = 1 - 0.12 * Math.abs(Math.sin((s / spokes) * Math.PI * spokes / 2));
+                    const wob = Math.sin(a * 3 * baseFrequency + time + ring) * (3 + dimensions * 0.2);
+                    const r = baseR * (0.94 + 0.06 * Math.sin(s * 2.7)) + wob;
+                    const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+                    if (s === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                }
+                const shimmer = 0.08 + 0.07 * Math.sin(time * 1.6 + ring * 1.3);
+                ctx.strokeStyle = `rgba(210, 200, 255, ${Math.max(0.03, shimmer).toFixed(3)})`;
+                ctx.stroke();
+            }
+        }
+
+        /* ---------------- galaxy ---------------- */
+        function drawGalaxy() {
+            for (const st of stars) {
+                const tw = 0.3 + 0.7 * Math.abs(Math.sin(time * st.sp + st.ph));
+                ctx.fillStyle = `rgba(240, 238, 255, ${(0.75 * tw).toFixed(3)})`;
+                ctx.beginPath();
+                ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            // slow spiral nebula arms
+            const cx = canvas.width / 2, cy = canvas.height / 2;
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            for (let arm = 0; arm < 3; arm++) {
+                const color = pickColor(arm * 3 + 1);
+                for (let i = 0; i < 26; i++) {
+                    const t = i / 26;
+                    const ang = arm * (Math.PI * 2 / 3) + t * 4.2 + time * 0.05;
+                    const r = t * Math.min(canvas.width, canvas.height) * 0.52;
+                    const x = cx + Math.cos(ang) * r, y = cy + Math.sin(ang) * r * 0.72;
+                    const rad = (14 + t * 60) * (1 + 0.1 * Math.sin(time + i));
+                    const g = ctx.createRadialGradient(x, y, 0, x, y, rad);
+                    g.addColorStop(0, `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.05)`);
+                    g.addColorStop(1, 'rgba(0,0,0,0)');
+                    ctx.fillStyle = g;
+                    ctx.beginPath(); ctx.arc(x, y, rad, 0, Math.PI * 2); ctx.fill();
+                }
+            }
+            ctx.restore();
+        }
+
+        /* ---------------- tide ---------------- */
+        function drawTide() {
+            const level = canvas.height * (0.78 + 0.05 * Math.sin(time * 0.4));
+            const grad = ctx.createLinearGradient(0, level, 0, canvas.height);
+            if (gooaePalette) {
+                grad.addColorStop(0, 'rgba(240, 0, 168, 0.34)');
+                grad.addColorStop(0.5, 'rgba(114, 0, 201, 0.30)');
+                grad.addColorStop(1, 'rgba(37, 217, 255, 0.26)');
+            } else {
+                grad.addColorStop(0, 'rgba(255, 0, 128, 0.32)');
+                grad.addColorStop(0.5, 'rgba(138, 43, 226, 0.30)');
+                grad.addColorStop(1, 'rgba(0, 255, 255, 0.24)');
+            }
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height);
+            for (let x = 0; x <= canvas.width; x += 6) {
+                const nx = x / canvas.width;
+                let y = level + Math.sin(nx * Math.PI * 2 * baseFrequency * 1.5 + time * 1.4) * 16 * ampScale;
+                for (let i = 2; i <= Math.min(dimensions, 6); i++) {
+                    y += Math.sin(nx * Math.PI * 2 * baseFrequency * i + time * i) * (10 / i);
+                }
+                ctx.lineTo(x, y);
+            }
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.closePath();
+            ctx.fillStyle = grad;
+            ctx.fill();
+            // foam line on the surface
+            ctx.beginPath();
+            for (let x = 0; x <= canvas.width; x += 6) {
+                const nx = x / canvas.width;
+                let y = level + Math.sin(nx * Math.PI * 2 * baseFrequency * 1.5 + time * 1.4) * 16 * ampScale;
+                for (let i = 2; i <= Math.min(dimensions, 6); i++) {
+                    y += Math.sin(nx * Math.PI * 2 * baseFrequency * i + time * i) * (10 / i);
+                }
+                if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            }
+            ctx.strokeStyle = 'rgba(255, 240, 250, 0.55)';
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 10 * glowScale;
+            ctx.shadowColor = 'rgba(255,255,255,0.7)';
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
+
+        /* ---------------- goo blobs ---------------- */
+        function drawGoo() {
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            for (const b of blobs) {
+                if (!reduceMotion) {
+                    b.x += b.vx + Math.sin(time * 0.7 + b.wob) * 0.3;
+                    b.y += b.vy + Math.cos(time * 0.6 + b.wob) * 0.3;
+                    if (b.x < -b.r) b.x = canvas.width + b.r; if (b.x > canvas.width + b.r) b.x = -b.r;
+                    if (b.y < -b.r) b.y = canvas.height + b.r; if (b.y > canvas.height + b.r) b.y = -b.r;
+                }
+                const color = rainbowMode
+                    ? hslToRgb(((hueOffset + b.ci * 40) % 360) / 360, 1, 0.6)
+                    : pickColor(b.ci);
+                const pr = b.r * (1 + 0.12 * Math.sin(time * 1.3 + b.wob));
+                const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, pr);
+                g.addColorStop(0, `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.16)`);
+                g.addColorStop(0.7, `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.06)`);
+                g.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = g;
+                ctx.beginPath(); ctx.arc(b.x, b.y, pr, 0, Math.PI * 2); ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        /* ---------------- particles + bursts ---------------- */
         function drawParticles() {
-            // Add particle effects at wave peaks
             const centerY = canvas.height / 2;
-            const numParticles = dimensions * 3;
-            
+            const numParticles = Math.min(dimensions * 4, 160);
             for (let i = 0; i < numParticles; i++) {
-                const x = (time * 100 + i * 50) % canvas.width;
-                
+                const x = (time * 100 + i * 47) % canvas.width;
                 let color;
                 if (rainbowMode) {
                     const hue = (hueOffset + (x / canvas.width) * 360) % 360;
-                    const rgb = hslToRgb(hue / 360, 1, 0.6);
-                    color = rgb;
+                    color = hslToRgb(hue / 360, 1, 0.6);
                 } else {
-                    const colorIndex = Math.floor(time + i) % colors.length;
-                    color = colors[colorIndex];
+                    color = pickColor(Math.floor(time + i));
                 }
-                
-                const y = centerY + Math.sin((x / canvas.width) * Math.PI * 2 * baseFrequency + time) * (canvas.height / 8);
-                
+                const y = centerY + Math.sin((x / canvas.width) * Math.PI * 2 * baseFrequency + time) * (canvas.height / 8) * ampScale + stirAmount(x, centerY);
                 ctx.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.6)`;
-                ctx.shadowBlur = 15;
+                ctx.shadowBlur = 15 * glowScale;
                 ctx.shadowColor = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 1)`;
                 ctx.beginPath();
                 ctx.arc(x, y, 3, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.shadowBlur = 0;
             }
+            // tap bursts
+            for (let i = bursts.length - 1; i >= 0; i--) {
+                const b = bursts[i];
+                b.r += 6;
+                const a = Math.max(0, 0.8 - b.r / 420);
+                if (a <= 0) { bursts.splice(i, 1); continue; }
+                const color = pickColor(b.ci);
+                ctx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${a.toFixed(3)})`;
+                ctx.lineWidth = 2.5;
+                ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.stroke();
+            }
         }
 
         function hslToRgb(h, s, l) {
             let r, g, b;
-            if (s === 0) {
-                r = g = b = l;
-            } else {
+            if (s === 0) { r = g = b = l; } else {
                 const hue2rgb = (p, q, t) => {
                     if (t < 0) t += 1;
                     if (t > 1) t -= 1;
@@ -312,87 +542,175 @@
             return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
         }
 
+        /* ---------------- main loop ---------------- */
         function animate() {
-            // Fade trail effect
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillStyle = `rgba(0, 0, 0, ${trailFade})`;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+            if (layers.galaxy) drawGalaxy();
+            if (layers.goo) drawGoo();
+            if (layers.web) drawWeb();
             drawFractalLayers();
+            if (layers.rings) drawRings();
+            if (layers.tide) drawTide();
             drawParticles();
 
-            time += 0.02 * baseFrequency;
-            
-            // Rotate hue in rainbow mode
-            if (rainbowMode) {
-                hueOffset = (hueOffset + 1) % 360;
-            }
-            
-            // Smoothly transition vortex intensity
-            if (untethered) {
-                vortexIntensity = Math.min(1, vortexIntensity + 0.02);
-            } else {
-                vortexIntensity = Math.max(0, vortexIntensity - 0.05);
+            if (layers.kaleido) {
+                ctx.save();
+                ctx.globalAlpha = 0.30;
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+                ctx.drawImage(canvas, 0, 0);
+                ctx.restore();
             }
 
+            time += 0.02 * baseFrequency;
+            if (rainbowMode) hueOffset = (hueOffset + 1) % 360;
+            if (untethered) vortexIntensity = Math.min(1, vortexIntensity + 0.02);
+            else vortexIntensity = Math.max(0, vortexIntensity - 0.05);
+
+            updateSound();
             requestAnimationFrame(animate);
         }
 
+        /* ---------------- readouts ---------------- */
+        function refreshReadouts() {
+            document.getElementById('dimensions').textContent =
+                dimensions >= 127 ? '127 · THE FULL LATTICE' : dimensions;
+            document.getElementById('frequency').textContent = baseFrequency.toFixed(1);
+            const active = ['waves', 'particles'].concat(LAYER_ORDER.filter(k => layers[k]));
+            document.getElementById('layers').textContent = active.join(' · ');
+            document.getElementById('palette').textContent = gooaePalette ? 'GOOAE cosmology' : 'spectrum';
+        }
+
+        /* ---------------- controls ---------------- */
         function changeDimensions(delta) {
-            dimensions = Math.max(1, Math.min(10, dimensions + delta));
-            document.getElementById('dimensions').textContent = dimensions;
+            dimensions = Math.max(1, Math.min(127, dimensions + delta));
+            refreshReadouts();
         }
 
         function changeFrequency(delta) {
-            baseFrequency = Math.max(0.1, Math.min(10, baseFrequency + delta));
-            document.getElementById('frequency').textContent = baseFrequency.toFixed(1);
+            baseFrequency = Math.max(0.1, Math.min(12, baseFrequency + delta));
+            refreshReadouts();
         }
 
         function toggleRainbow() {
             rainbowMode = !rainbowMode;
-            const btn = event.target;
-            if (rainbowMode) {
-                btn.style.background = 'linear-gradient(90deg, #ff0080, #ff8c00, #40e0d0, #ff0080)';
-                btn.style.backgroundSize = '200% 200%';
-                btn.style.animation = 'gradientShift 2s ease infinite';
-            } else {
-                btn.style.background = 'rgba(138, 43, 226, 0.3)';
-                btn.style.animation = '';
-            }
+            const btn = document.getElementById('rainbowBtn');
+            btn.classList.toggle('on', rainbowMode);
         }
 
         function toggleUntether() {
             untethered = !untethered;
-            const btn = event.target;
-            
+            const btn = document.getElementById('untetherBtn');
             if (untethered) {
                 btn.textContent = '🏠 RETURN HOME';
-                btn.style.background = 'rgba(255, 100, 200, 0.5)';
-                btn.style.borderColor = 'rgba(255, 100, 200, 0.9)';
                 document.getElementById('fractal').textContent = 'VORTEX MODE';
             } else {
                 btn.textContent = '🌀 UNTETHER';
-                btn.style.background = 'rgba(138, 43, 226, 0.3)';
-                btn.style.borderColor = 'rgba(138, 43, 226, 0.8)';
                 document.getElementById('fractal').textContent = 'ACTIVE';
             }
+            btn.classList.toggle('on', untethered);
         }
 
-        // Handle resize
+        function setLayer(k, on) {
+            layers[k] = on;
+            const btn = document.getElementById(LAYER_BTN[k]);
+            if (btn) btn.classList.toggle('on', on);
+            refreshReadouts();
+        }
+        function toggleLayer(k, btn) { setLayer(k, !layers[k]); }
+
+        function togglePalette() {
+            gooaePalette = !gooaePalette;
+            const btn = document.getElementById('paletteBtn');
+            btn.textContent = gooaePalette ? '🎨 SPECTRUM' : '🎨 GOOAE PALETTE';
+            btn.classList.toggle('on', gooaePalette);
+            refreshReadouts();
+        }
+
+        function toggleFullscreen() {
+            if (document.fullscreenElement) document.exitFullscreen();
+            else document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+        }
+
+        let morePresses = 0;
+        function more() {
+            morePresses++;
+            dimensions = Math.min(127, dimensions + 7);
+            baseFrequency = Math.min(12, baseFrequency + 0.3);
+            ampScale = Math.min(2.2, ampScale + 0.12);
+            document.getElementById('ampSlider').value = Math.round(ampScale * 100);
+            // each press wakes another layer, in order, until everything is on
+            for (const k of LAYER_ORDER) {
+                if (!layers[k]) { setLayer(k, true); break; }
+            }
+            if (morePresses >= 3 && !rainbowMode) toggleRainbow();
+            if (morePresses >= 5 && !gooaePalette) togglePalette();
+            const flash = document.getElementById('moreflash');
+            flash.textContent = dimensions >= 127 ? '♾️ MAXIMUM ♾️' : 'MORE';
+            flash.classList.remove('pop'); void flash.offsetWidth; flash.classList.add('pop');
+            refreshReadouts();
+        }
+
+        /* ---------------- sound (sonified hum) ---------------- */
+        let audioCtx = null, osc1 = null, osc2 = null, gainNode = null, soundOn = false;
+        function toggleSound() {
+            const btn = document.getElementById('soundBtn');
+            if (!soundOn) {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    gainNode = audioCtx.createGain();
+                    gainNode.gain.value = 0.0;
+                    osc1 = audioCtx.createOscillator(); osc1.type = 'sine';
+                    osc2 = audioCtx.createOscillator(); osc2.type = 'triangle';
+                    const g2 = audioCtx.createGain(); g2.gain.value = 0.35;
+                    osc1.connect(gainNode); osc2.connect(g2); g2.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+                    osc1.start(); osc2.start();
+                }
+                audioCtx.resume();
+                gainNode.gain.linearRampToValueAtTime(0.06, audioCtx.currentTime + 0.4);
+                soundOn = true;
+                btn.textContent = '🔊 SOUND';
+                btn.classList.add('on');
+            } else {
+                gainNode.gain.linearRampToValueAtTime(0.0, audioCtx.currentTime + 0.3);
+                soundOn = false;
+                btn.textContent = '🔇 SOUND';
+                btn.classList.remove('on');
+            }
+        }
+        function updateSound() {
+            if (!soundOn || !audioCtx) return;
+            const f = 38 + baseFrequency * 26 + dimensions * 0.35;
+            osc1.frequency.setTargetAtTime(f, audioCtx.currentTime, 0.1);
+            osc2.frequency.setTargetAtTime(f * 1.5 + Math.sin(time) * 4, audioCtx.currentTime, 0.1);
+        }
+
+        /* ---------------- sliders ---------------- */
+        document.getElementById('ampSlider').addEventListener('input', (e) => { ampScale = e.target.value / 100; });
+        document.getElementById('trailSlider').addEventListener('input', (e) => { trailFade = e.target.value / 100; });
+        document.getElementById('glowSlider').addEventListener('input', (e) => { glowScale = e.target.value / 100; });
+
+        /* ---------------- resize ---------------- */
         window.addEventListener('resize', () => {
             canvas.width = canvas.offsetWidth * 2;
             canvas.height = canvas.offsetHeight * 2;
+            seedStars(); seedBlobs();
         });
 
-        // Start animation
+        refreshReadouts();
         animate();
 
-        // Auto-chaos mode (subtle)
-        setInterval(() => {
-            if (Math.random() < 0.3) {
-                dimensions = Math.max(1, dimensions + (Math.random() > 0.5 ? 1 : -1));
-                document.getElementById('dimensions').textContent = dimensions;
+        // Auto-chaos mode (subtle) — never unmakes what MORE has made
+        if (!reduceMotion) setInterval(() => {
+            if (Math.random() < 0.25) {
+                dimensions = Math.max(1, Math.min(127, dimensions + (Math.random() > 0.4 ? 1 : -1)));
+                refreshReadouts();
             }
-        }, 3000);
+        }, 4000);
     </script>
 </body>
 </html>
