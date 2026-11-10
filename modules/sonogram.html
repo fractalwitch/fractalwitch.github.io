@@ -114,12 +114,52 @@
         #moreflash.pop { animation: morepop 0.9s ease-out; }
         @keyframes morepop { 0% { opacity: 0; transform: scale(0.7); } 25% { opacity: 1; } 100% { opacity: 0; transform: scale(1.25); } }
 
+        #controlsToggle {
+            display: none;
+            position: fixed;
+            bottom: 0.9rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 120;
+            background: rgba(138, 43, 226, 0.35);
+            border: 2px solid rgba(255, 100, 200, 0.85);
+            color: #fff;
+            padding: 0.55rem 1.2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            letter-spacing: 0.08em;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 22px rgba(255, 0, 128, 0.5);
+        }
+
         @media (max-width: 768px) {
-            .control-panel { bottom: 0.7rem; gap: 0.4rem; }
+            #controlsToggle { display: block; }
+            .control-panel {
+                bottom: 0;
+                left: 0;
+                transform: none;
+                width: 100%;
+                max-width: 100vw;
+                max-height: 52vh;
+                overflow-y: auto;
+                gap: 0.4rem;
+                padding: 0.9rem 0.6rem 4.2rem;
+                background: rgba(12, 4, 28, 0.78);
+                border-top: 2px solid rgba(255, 100, 200, 0.5);
+                backdrop-filter: blur(14px);
+                transition: transform 0.35s ease, opacity 0.35s ease;
+            }
+            .control-panel.collapsed {
+                transform: translateY(105%);
+                opacity: 0;
+                pointer-events: none;
+            }
             .control-btn { padding: 0.5rem 0.8rem; font-size: 0.8rem; }
             .info-display { font-size: 0.85rem; top: 0.8rem; left: 0.8rem; }
             .sliders { display: none; }
-            .sonogram-container { height: 70vh; }
+            .sonogram-container { height: 88vh; }
         }
     </style>
 </head>
@@ -139,11 +179,13 @@
 
     <div id="moreflash">MORE</div>
 
-    <div class="control-panel">
+    <button id="controlsToggle" onclick="toggleControls()">🎛️ CONTROLS ▴</button>
+
+    <div class="control-panel collapsed" id="controlPanel">
         <button class="control-btn" onclick="changeDimensions(-1)">➖ DIMENSIONS</button>
         <button class="control-btn" onclick="changeDimensions(1)">➕ DIMENSIONS</button>
-        <button class="control-btn" onclick="changeFrequency(-0.5)">🐌 SLOWER</button>
-        <button class="control-btn" onclick="changeFrequency(0.5)">⚡ FASTER</button>
+        <button class="control-btn" onclick="changeFrequency(-0.1)">🐌 SLOWER</button>
+        <button class="control-btn" onclick="changeFrequency(0.1)">⚡ FASTER</button>
         <button class="control-btn" id="rainbowBtn" onclick="toggleRainbow()">🌈 RAINBOW FLOW</button>
         <button class="control-btn" id="untetherBtn" onclick="toggleUntether()">🌀 UNTETHER</button>
         <button class="control-btn" id="ringsBtn" onclick="toggleLayer('rings', this)">👁️ RINGS</button>
@@ -591,8 +633,15 @@
         }
 
         function changeFrequency(delta) {
-            baseFrequency = Math.max(0.1, Math.min(12, baseFrequency + delta));
+            baseFrequency = Math.round(Math.max(0.1, Math.min(12, baseFrequency + delta)) * 10) / 10;
             refreshReadouts();
+        }
+
+        function toggleControls() {
+            const panel = document.getElementById('controlPanel');
+            const btn = document.getElementById('controlsToggle');
+            const open = panel.classList.toggle('collapsed') === false;
+            btn.textContent = open ? '🎛️ CONTROLS ▾' : '🎛️ CONTROLS ▴';
         }
 
         function toggleRainbow() {
