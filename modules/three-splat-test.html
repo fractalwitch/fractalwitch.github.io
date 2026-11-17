@@ -246,6 +246,12 @@
       .mode-btn[aria-pressed="true"].plain {
         color: var(--cyan); background: rgba(56,225,248,.10); border-color: rgba(56,225,248,.45);
       }
+      .mode-btn.flood-btn { font-weight: 700; letter-spacing: 0.06em; }
+      .mode-btn[aria-pressed="true"].flood-btn {
+        color: #fff; border-color: rgba(255,255,255,.4);
+        background: linear-gradient(90deg, #f43f5e, #f59e0b 48%, #d946ef);
+        text-shadow: 0 1px 6px rgba(0,0,0,.45);
+      }
 
       /* ---------- sine ripple box ---------- */
       .sine-box {
@@ -298,7 +304,7 @@
     </style>
   </head>
   <body>
-    <div id="stage" aria-label="Interactive splat scene: a goo eye built from soft Gaussian splat billboards. Drag through the goo to stir it, tap it for a ripple, drag the dark margins to spin it. The Symphony and Classic goo toggle switches the inner eye between a spinning rainbow starlight iris and the original iris."></div>
+    <div id="stage" aria-label="Interactive splat scene: a goo eye built from soft Gaussian splat billboards, floating in a celestial flood particle sea. Drag through the goo to stir it, tap it for a ripple, double-tap or press and hold to open a black hole that pulls in splats and particles alike, drag the dark margins to spin it. The Symphony and Classic goo toggle switches the inner eye between a spinning rainbow starlight iris and the original iris. FLOOD mode takes the restraints off: twenty-six thousand particles fill the whole screen with fading trails, additive white-hot burn, fast rainbow hue chaos and violent currents."></div>
     <div class="void-glow" aria-hidden="true"></div>
     <div id="stage-fallback">
       <p>The splat scene could not start on this device.<br />The readout panel below has the details.</p>
@@ -310,11 +316,14 @@
       <span class="chip mono">three@0.187.0 · CDN at runtime</span>
       <span class="spacer"></span>
       <button class="tbtn" id="spinBtn" type="button" aria-pressed="true">Auto-spin: on</button>
-      <div class="mode-toggle" role="group" aria-label="Inner eye mode">
+      <div class="mode-toggle" role="group" aria-label="Eye mode">
         <button class="mode-btn" id="modeSymphonyBtn" type="button" aria-pressed="true">Symphony</button>
         <button class="mode-btn plain" id="modeClassicBtn" type="button" aria-pressed="false">Classic goo</button>
+        <button class="mode-btn flood-btn" id="modeFloodBtn" type="button" aria-pressed="false">FLOOD</button>
       </div>
       <button class="tbtn" id="rippleBtn" type="button">Ripple her</button>
+      <button class="tbtn" id="floodBtn" type="button" aria-pressed="true">Flood sea: on</button>
+      <button class="tbtn" id="holeBtn" type="button">Black hole</button>
       <button class="tbtn" id="resetBtn" type="button">Reset view</button>
       <button class="tbtn" id="reloadBtn" type="button">Reload &amp; re-measure</button>
     </header>
@@ -355,7 +364,7 @@
         <label for="freqSlider">Ripple frequency
           <input type="range" id="freqSlider" min="0.5" max="4" step="0.1" value="2" />
         </label>
-        <p>Tap and button ripples travel through the dabs as this exact sine wave — same frequency, same phase clock, rings spaced speed ÷ frequency apart. <b>Symphony</b> mode spins the inner eye continuously through rainbow hues with twinkling starlight; <b>Classic goo</b> rests her at the original violet–cyan iris and the old single-pulse ripple.</p>
+        <p>Tap and button ripples travel through the dabs as this exact sine wave — same frequency, same phase clock, rings spaced speed ÷ frequency apart. <b>Symphony</b> mode spins the inner eye continuously through rainbow hues with twinkling starlight; <b>Classic goo</b> rests her at the original violet–cyan iris and the old single-pulse ripple. The <b>Flood sea</b> currents 2,600 celestial sparks around her on a flow field, and she sheds motes from the iris — open a <b>black hole</b> (double-tap, press-and-hold, or the toolbar button) and it drinks splats and sparks alike. <b>FLOOD</b> mode takes every restraint off: all 26,000 allocated sparks at once, edge to edge, with fading trails instead of clean redraws, additive blending that burns white where the crowd piles up, full-rainbow hue chaos, and currents several times faster — the eye's dabs go additive too, so she glows inside her own flood. Pixel ratio is capped at 1.5 while FLOOD runs, to feed the extra particles.</p>
       </div>
 
       <div class="fallback-note" id="fallbackNote">
@@ -369,6 +378,8 @@
         <dt>Splats</dt><dd id="metaSplats">—</dd>
         <dt>Touch</dt><dd id="metaTouch">reactive — stir her, tap her</dd>
         <dt>Eye mode</dt><dd id="metaMode">Symphony — spinning rainbow starlight</dd>
+        <dt>Flood sea</dt><dd id="metaFlood">on — 2,600 of 26,000 allocated sparks, shell around her</dd>
+        <dt>Black hole</dt><dd id="metaHole">quiet — double-tap her, hold a press, or use the Black hole button</dd>
         <dt>Ripple wave</dt><dd id="metaWave">sine · 2.0 Hz</dd>
         <dt>Frame rate</dt><dd id="metaFps">—</dd>
         <dt>Status</dt><dd id="metaStatus">booting</dd>
@@ -378,7 +389,7 @@
       </div>
     </section>
 
-    <p class="hint">Drag through the goo to stir it · tap her for a sine ripple · Symphony spins the iris in rainbow starlight</p>
+    <p class="hint">Drag through the goo to stir it · tap for a sine ripple · double-tap or hold for a black hole · FLOOD mode takes the restraints off</p>
 
     <script>
       (function () {
@@ -405,12 +416,17 @@
         var spinBtn = document.getElementById('spinBtn');
         var modeSymphonyBtn = document.getElementById('modeSymphonyBtn');
         var modeClassicBtn = document.getElementById('modeClassicBtn');
+        var modeFloodBtn = document.getElementById('modeFloodBtn');
         var freqSlider = document.getElementById('freqSlider');
         var freqVal = document.getElementById('freqVal');
         var sineCanvas = document.getElementById('sineCanvas');
         var metaMode = document.getElementById('metaMode');
         var metaWave = document.getElementById('metaWave');
         var rippleBtn = document.getElementById('rippleBtn');
+        var floodBtn = document.getElementById('floodBtn');
+        var holeBtn = document.getElementById('holeBtn');
+        var metaFlood = document.getElementById('metaFlood');
+        var metaHole = document.getElementById('metaHole');
         var resetBtn = document.getElementById('resetBtn');
         var reloadBtn = document.getElementById('reloadBtn');
 
@@ -441,25 +457,94 @@
            its original colors and ripples are the old single pulse. */
         var eyeMode = 'symphony';
         var rippleFreq = 2.0;
+        var floodOn = true;
+        /* FLOOD mode state: the sea allocates its full 26,000 sparks
+           once at boot; calm modes only draw the first 2,600 (the
+           fenced shell), FLOOD draws them all, everywhere. */
+        var FLOOD_CALM_N = 2600;
+        var FLOOD_MAX_N = 26000;
+        var floodActiveN = FLOOD_CALM_N;
+        var floodColorsDirty = false;
+        function isFlood() { return eyeMode === 'flood'; }
         function refreshWaveMeta() {
-          if (metaWave) metaWave.textContent = eyeMode === 'symphony'
-            ? 'sine · ' + rippleFreq.toFixed(1) + ' Hz'
-            : 'single pulse (classic)';
+          if (metaWave) metaWave.textContent = eyeMode === 'classic'
+            ? 'single pulse (classic)'
+            : 'sine · ' + rippleFreq.toFixed(1) + ' Hz' + (isFlood() ? ' · FLOOD' : '');
+        }
+        function refreshFloodMeta() {
+          if (metaSplats && built) {
+            metaSplats.textContent = built.splatCount.toLocaleString('en-US') + ' billboards allocated — eye splats + flood sea ('
+              + floodActiveN.toLocaleString('en-US') + ' of ' + FLOOD_MAX_N.toLocaleString('en-US') + ' sparks active)';
+          }
+          if (metaFlood) {
+            if (isFlood()) metaFlood.textContent = 'FLOOD — 26,000 sparks full-screen · trails on · additive burn · hue chaos · pixel ratio capped 1.5';
+            else if (floodOn) metaFlood.textContent = 'on — 2,600 of 26,000 allocated sparks, shell around her';
+            else metaFlood.textContent = 'off — splats only, the sea rests';
+          }
+        }
+        /* Apply / remove the FLOOD restraints-removal: active particle
+           count, additive blending on every eye cloud (dense stacks
+           burn toward white), renderer clearing (off — a fade quad in
+           the render loop lays trails instead), and the pixel-ratio
+           cap that feeds the extra 23,400 sparks. */
+        function applyFloodState() {
+          var flood = isFlood();
+          floodActiveN = flood ? FLOOD_MAX_N : FLOOD_CALM_N;
+          if (flood && !floodOn) {
+            floodOn = true;
+            floodBtn.setAttribute('aria-pressed', 'true');
+            floodBtn.textContent = 'Flood sea: on';
+          }
+          if (built) {
+            for (var bi = 0; bi < built.billboards.length; bi++) {
+              var bb = built.billboards[bi];
+              if (bb.tag === 'flood') {
+                bb.mesh.count = floodActiveN;
+                bb.mesh.visible = floodOn;
+              } else if (threeRef && bb.mesh && bb.mesh.material) {
+                var target = flood ? threeRef.AdditiveBlending : bb.origBlending;
+                if (bb.mesh.material.blending !== target) {
+                  bb.mesh.material.blending = target;
+                  bb.mesh.material.needsUpdate = true;
+                }
+              }
+            }
+          }
+          if (renderer) {
+            renderer.autoClear = !flood;
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, flood ? 1.5 : 2));
+            if (built) resize();
+          }
+          refreshFloodMeta();
         }
         function setEyeMode(mode) {
           eyeMode = mode;
           modeSymphonyBtn.setAttribute('aria-pressed', String(mode === 'symphony'));
           modeClassicBtn.setAttribute('aria-pressed', String(mode === 'classic'));
+          if (modeFloodBtn) modeFloodBtn.setAttribute('aria-pressed', String(mode === 'flood'));
           if (metaMode) metaMode.textContent = mode === 'symphony'
             ? 'Symphony — spinning rainbow starlight'
-            : 'Classic goo — original iris, still';
+            : (mode === 'flood'
+              ? 'FLOOD — unrestrained: full-screen sea, trails, burn, hue chaos'
+              : 'Classic goo — original iris, still');
           refreshWaveMeta();
           if (metaTouch) metaTouch.textContent = mode === 'symphony'
             ? 'symphony — iris spinning, ripples on the sine'
-            : 'classic — stir her, tap her';
+            : (mode === 'flood'
+              ? 'FLOOD — stir her, tap her, open the hole: everything drinks everything'
+              : 'classic — stir her, tap her');
+          applyFloodState();
         }
+        floodBtn.addEventListener('click', function () {
+          floodOn = !floodOn;
+          floodBtn.setAttribute('aria-pressed', String(floodOn));
+          floodBtn.textContent = 'Flood sea: ' + (floodOn ? 'on' : 'off');
+          if (built && built.floodMesh) built.floodMesh.visible = floodOn;
+          refreshFloodMeta();
+        });
         modeSymphonyBtn.addEventListener('click', function () { setEyeMode('symphony'); });
         modeClassicBtn.addEventListener('click', function () { setEyeMode('classic'); });
+        if (modeFloodBtn) modeFloodBtn.addEventListener('click', function () { setEyeMode('flood'); });
         freqSlider.addEventListener('input', function () {
           rippleFreq = parseFloat(freqSlider.value) || 2.0;
           freqVal.textContent = rippleFreq.toFixed(1) + ' Hz';
@@ -572,7 +657,8 @@
               mesh: mesh, positions: positions, scales: scales, count: count,
               home: positions.slice(),
               vel: new Float32Array(count * 3),
-              tag: tag || null, origColors: origColors, baseScales: scales.slice()
+              tag: tag || null, origColors: origColors, baseScales: scales.slice(),
+              origBlending: additive ? THREE.AdditiveBlending : THREE.NormalBlending
             };
             // Iris and starlight clouds remember each dab in polar form,
             // so the symphony spin can orbit their homes around the pupil
@@ -588,6 +674,13 @@
                 entry.jit[k] = Math.random();
                 entry.phase[k] = Math.random();
               }
+            }
+            // Flood-sea particles keep twinkle phases of their own; they
+            // live outside the spring system (see stepFlood).
+            if (tag === 'flood') {
+              entry.phase = new Float32Array(count);
+              entry.jit = new Float32Array(count);
+              for (var f2 = 0; f2 < count; f2++) { entry.phase[f2] = Math.random(); entry.jit[f2] = Math.random(); }
             }
             billboards.push(entry);
             total += count;
@@ -761,6 +854,70 @@
             return [s * Math.cos(th) * r, u * r * 0.8, s * Math.sin(th) * r, c[0], c[1], c[2]];
           }, 0.13, 0.7, 1.3, true);
 
+          /* --- FLOOD: celestial particle sea (the floodvisual marriage) ---
+             Thousands of cheap spark-particles that will ride a slow flow
+             field around the eye. Rendered as the same billboard dabs
+             (tiny, additive) so both render paths agree, but they live
+             OUTSIDE the spring system: stepFlood currents them, the eye
+             sheds fresh motes from the iris, and a black hole drinks
+             them exactly like it drinks splats. --- */
+          /* All 26,000 sparks are allocated ONCE here. The first 2,600
+             start in the calm shell around the eye (the only ones drawn
+             in Symphony/Classic); the rest start spread across a wide
+             flat field that covers the whole frustum, so the moment
+             FLOOD mode draws them the screen is already full, edge to
+             edge — no ring, no negative space. */
+          var FLOOD_N = 26000;
+          var floodMesh = cloud(FLOOD_N, function (i) {
+            if (i >= 2600) {
+              tmp.setHSL(Math.random(), 0.95, 0.62);
+              var c2 = colArr(tmp);
+              return [(Math.random() * 2 - 1) * 6.3, (Math.random() * 2 - 1) * 5.3, (Math.random() * 2 - 1) * 1.9 - 0.2, c2[0], c2[1], c2[2]];
+            }
+            var u = Math.random() * 2 - 1;
+            var th = Math.random() * Math.PI * 2;
+            var s = Math.sqrt(1 - u * u);
+            var r = 2.3 + Math.pow(Math.random(), 0.8) * 2.3;
+            var pick = Math.random();
+            if (pick < 0.42) tmp.copy(CYAN);
+            else if (pick < 0.68) tmp.copy(VIOLET_L);
+            else if (pick < 0.86) tmp.copy(MAGENTA);
+            else tmp.copy(WHITE);
+            tmp.lerp(WHITE, Math.random() * 0.15);
+            var c = colArr(tmp);
+            return [s * Math.cos(th) * r, u * r * 0.78, s * Math.sin(th) * r, c[0], c[1], c[2]];
+          }, 0.085, 0.85, 1.25, true, 'flood');
+          floodMesh.count = 2600; // calm draw count; FLOOD raises it to 26,000
+
+          /* --- black hole visuals: a small dark core with a hungry
+                 magenta glow, parked in group space, lit only while a
+                 hole is open (the render loop drives it). --- */
+          var holeCore = new THREE.Mesh(
+            new THREE.SphereGeometry(0.20, 24, 18),
+            new THREE.MeshBasicMaterial({ color: 0x000000 })
+          );
+          holeCore.visible = false;
+          group.add(holeCore);
+          var holeGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+            map: tex, color: 0xf472d0, transparent: true, opacity: 0,
+            blending: THREE.AdditiveBlending, depthWrite: false
+          }));
+          holeGlow.scale.set(1.5, 1.5, 1);
+          group.add(holeGlow);
+
+          /* --- FLOOD trails: a fullscreen fade quad on its own ortho
+                 scene. In FLOOD mode the render loop draws this (void
+                 color at low opacity) INSTEAD of clearing, so each frame
+                 fades the last one — particles smear into liquid ribbons.
+                 In calm modes it is never drawn and clearing is normal. --- */
+          var fadeScene = new THREE.Scene();
+          var fadeCam = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1);
+          var fadeQuad = new THREE.Mesh(
+            new THREE.PlaneGeometry(2, 2),
+            new THREE.MeshBasicMaterial({ color: 0x060310, transparent: true, opacity: 0.18, depthTest: false, depthWrite: false })
+          );
+          fadeScene.add(fadeQuad);
+
           /* --- halo glow: one big soft sprite behind the eye --- */
           var glow = new THREE.Sprite(new THREE.SpriteMaterial({
             map: tex, color: 0x8b5cf6, transparent: true, opacity: 0.10,
@@ -773,6 +930,9 @@
           return {
             scene: scene, camera: camera, group: group, pupil: pupil, glow: glow,
             splatCount: total, billboards: billboards,
+            floodMesh: floodMesh, floodCount: FLOOD_N,
+            fadeScene: fadeScene, fadeCam: fadeCam,
+            holeCore: holeCore, holeGlow: holeGlow,
             bbQuat: new THREE.Quaternion(), bbMat: new THREE.Matrix4()
           };
         }
@@ -795,6 +955,13 @@
         var stirLast = null, stirLastTime = 0;
         var hoverLocal = { x: 0, y: 0, z: 0, valid: false };
         var ripples = []; // {x, y, z, start (wall s), strength}
+        /* Black hole state: one hole at a time, in group-local space.
+           While open it pulls BOTH systems — splats on their springs
+           stretch toward it and slosh back; flood sparks pour in, get
+           drunk at the core, and respawn at the sea's outer rim. */
+        var hole = { x: 0, y: 0, z: 0, start: 0, until: 0 };
+        var lastTap = { time: 0, x: 0, y: 0 };
+        var holdTimer = null;
         var pupilPulse = 0;
         var lastPX = 0, lastPY = 0;
         var _ray = null, _plane = null, _ndc = null, _hit = null, _camDir = null, _gPos = null;
@@ -834,10 +1001,28 @@
           ripples.push({ x: p.x, y: p.y, z: p.z, start: performance.now() / 1000, strength: strength || 1 });
           if (ripples.length > 4) ripples.shift();
           pupilPulse = 1;
-          if (metaTouch) metaTouch.textContent = eyeMode === 'symphony' ? 'sine ripple — watch her settle' : 'ripple — watch her settle';
+          if (metaTouch) metaTouch.textContent = eyeMode !== 'classic' ? 'sine ripple — watch her settle' : 'ripple — watch her settle';
         }
         if (rippleBtn) rippleBtn.addEventListener('click', function () {
           triggerRipple({ x: 0, y: 0.1, z: 0.6 }, 1.15);
+        });
+        function triggerHole(p, dur) {
+          var now = performance.now() / 1000;
+          hole.x = p.x; hole.y = p.y; hole.z = p.z;
+          hole.start = now; hole.until = now + (dur || 2.4);
+          pupilPulse = 1;
+          if (metaHole) metaHole.textContent = 'open — pulling splats + sparks in';
+          if (metaTouch) metaTouch.textContent = 'black hole — the flood and the dabs pour in…';
+        }
+        function holeEnv(wallNow) {
+          if (wallNow >= hole.until || hole.until <= hole.start) return 0;
+          var age = wallNow - hole.start;
+          var rampIn = Math.min(1, age / 0.25);
+          var rampOut = Math.min(1, (hole.until - wallNow) / 0.6);
+          return Math.max(0, Math.min(rampIn, rampOut));
+        }
+        if (holeBtn) holeBtn.addEventListener('click', function () {
+          triggerHole({ x: 0, y: 0.1, z: 0.7 }, 2.6);
         });
 
         resetBtn.addEventListener('click', function () { userRotY = 0; userRotX = 0; velY = 0; velX = 0; });
@@ -863,6 +1048,14 @@
             stirVel.x = 0; stirVel.y = 0; stirVel.z = 0;
             stirLast = p; stirLastTime = performance.now();
             if (metaTouch) metaTouch.textContent = 'stirring — dabs scattering…';
+            // Press-and-hold on the goo opens a black hole right there.
+            if (holdTimer) clearTimeout(holdTimer);
+            holdTimer = setTimeout(function () {
+              holdTimer = null;
+              if (activeMode === 'stir' && stirLocal.valid) {
+                triggerHole({ x: stirLocal.x, y: stirLocal.y, z: stirLocal.z }, 2.8);
+              }
+            }, 550);
           } else {
             activeMode = 'orbit'; dragging = true;
             stage.classList.add('dragging');
@@ -881,6 +1074,9 @@
             return;
           }
           if (activeMode === 'stir' && e.pointerId === primaryId && pointersDown.size === 1) {
+            if (holdTimer && downInfo && Math.hypot(e.clientX - downInfo.x, e.clientY - downInfo.y) > 20) {
+              clearTimeout(holdTimer); holdTimer = null;
+            }
             var p2 = localPoint(e.clientX, e.clientY);
             if (p2) {
               var now = performance.now();
@@ -908,6 +1104,7 @@
           }
         });
         function endDrag(e) {
+          if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
           var wasStir = activeMode === 'stir' && e.pointerId === primaryId;
           pointersDown.delete(e.pointerId);
           if (wasStir && downInfo) {
@@ -915,7 +1112,18 @@
             var moved = Math.hypot(e.clientX - downInfo.x, e.clientY - downInfo.y);
             if (dur < 300 && moved < 14) {
               var tp = localPoint(e.clientX, e.clientY) || downInfo.local;
-              if (tp) triggerRipple(tp, 1);
+              if (tp) {
+                var nowTap = performance.now();
+                // A second quick tap in the same spot is not a ripple —
+                // it's the floodvisual tap: open a black hole there.
+                if (nowTap - lastTap.time < 380 && Math.hypot(tp.x - lastTap.x, tp.y - lastTap.y) < 0.9) {
+                  triggerHole(tp, 2.6);
+                  lastTap.time = 0;
+                } else {
+                  triggerRipple(tp, 1);
+                  lastTap.time = nowTap; lastTap.x = tp.x; lastTap.y = tp.y;
+                }
+              }
             } else if (metaTouch) {
               metaTouch.textContent = 'released — springs pulling her back together';
             }
@@ -946,15 +1154,18 @@
           var sSpeed = Math.sqrt(svx * svx + svy * svy);
           var R = 1.15, R2 = R * R;
           var hovOn = hoverLocal.valid && !activeMode;
+          var hEnv = holeEnv(wallNow);
+          var hOn = hEnv > 0.001;
           // Pre-resolve ripples into flat params for the inner loop.
           var rp = [];
           for (var ri = ripples.length - 1; ri >= 0; ri--) {
             var age = wallNow - ripples[ri].start;
             if (age > 1.7) { ripples.splice(ri, 1); continue; }
-            rp.push({ x: ripples[ri].x, y: ripples[ri].y, z: ripples[ri].z, rad: age * 3.4, fade: Math.exp(-age * 1.7) * ripples[ri].strength, sine: eyeMode === 'symphony', freq: rippleFreq, age: age });
+            rp.push({ x: ripples[ri].x, y: ripples[ri].y, z: ripples[ri].z, rad: age * 3.4, fade: Math.exp(-age * 1.7) * ripples[ri].strength, sine: eyeMode !== 'classic', freq: rippleFreq, age: age });
           }
           for (var bi = 0; bi < built.billboards.length; bi++) {
             var bb = built.billboards[bi];
+            if (bb.tag === 'flood') continue; // the sea runs on stepFlood
             var pos = bb.positions, home = bb.home, vel = bb.vel, n = bb.count;
             for (var i = 0; i < n; i++) {
               var j = i * 3;
@@ -987,6 +1198,21 @@
                   ax += (hx / hd) * hf; ay += (hy / hd) * hf; az += (hz / hd) * hf;
                 }
               }
+              if (hOn) {
+                // The hole pulls dabs off their springs: a radial drink
+                // plus a tangential swirl, depth at reduced weight like
+                // the stir (the hole sits on the eye's centre plane).
+                var gx = hole.x - px, gy = hole.y - py, gz = hole.z - pz;
+                var gd2 = gx * gx + gy * gy + gz * gz * 0.35;
+                if (gd2 < 10.2) {
+                  var gd = Math.sqrt(gd2) || 0.001;
+                  var gf = 1 - gd / 3.2; gf = gf * gf * hEnv;
+                  var pull = gf * 30;
+                  ax += (gx / gd) * pull; ay += (gy / gd) * pull; az += (gz / gd) * pull * 0.6;
+                  var gswirl = gf * 13;
+                  ax += (-gy / gd) * gswirl; ay += (gx / gd) * gswirl;
+                }
+              }
               for (var q = 0; q < rp.length; q++) {
                 var rdx = px - rp[q].x, rdy = py - rp[q].y;
                 var rd = Math.sqrt(rdx * rdx + rdy * rdy) || 0.001;
@@ -1015,6 +1241,119 @@
           // velocity off so a held-still finger stops shoving.
           stirVel.x *= 0.90; stirVel.y *= 0.90; stirVel.z *= 0.90;
           pupilPulse *= Math.pow(0.25, dt);
+        }
+
+        /* ---- flood sea physics: flow-field currents + the hole ----
+           Particles ride a slow pseudo-curl field — sines of position
+           and time, the floodvisual recipe — held in a shell around the
+           eye so the sea frames her instead of swallowing her. The same
+           hole that pulls splats pulls sparks harder: sparks reaching
+           the core are drunk and respawn at the sea's outer rim. A
+           steady trickle respawns at the iris instead — splats shedding
+           particles, the eye breathing motes off her face. */
+        var shedTick = 0;
+        function stepFlood(dt, t, wallNow) {
+          if (!built || !floodOn || dt <= 0) return;
+          var bb = null;
+          for (var bi = 0; bi < built.billboards.length; bi++) {
+            if (built.billboards[bi].tag === 'flood') { bb = built.billboards[bi]; break; }
+          }
+          if (!bb) return;
+          var floodMode = isFlood();
+          var pos = bb.positions, vel = bb.vel, n = floodMode ? bb.count : FLOOD_CALM_N;
+          var hEnv = holeEnv(wallNow), hOn = hEnv > 0.001;
+          // Leaving FLOOD: hand the calm sparks their original colors back.
+          if (!floodMode && floodColorsDirty && bb.mesh.instanceColor) {
+            var oc = bb.mesh.instanceColor.array;
+            for (var oi = 0; oi < FLOOD_CALM_N * 3; oi++) oc[oi] = bb.origColors[oi];
+            bb.mesh.instanceColor.needsUpdate = true;
+            floodColorsDirty = false;
+          }
+          var ft = floodMode ? t * 2.4 : t; // the flood's clock runs hot
+          var colArrF = (floodMode && bb.mesh.instanceColor) ? bb.mesh.instanceColor.array : null;
+          if (colArrF) floodColorsDirty = true;
+          shedTick++;
+          for (var i = 0; i < n; i++) {
+            var j = i * 3;
+            if (!floodMode && i % 977 === (shedTick % 977) && Math.random() < 0.5) {
+              var sa = Math.random() * Math.PI * 2;
+              pos[j] = Math.cos(sa) * 1.05; pos[j + 1] = Math.sin(sa) * 1.05; pos[j + 2] = 1.15 + Math.random() * 0.25;
+              vel[j] = Math.cos(sa) * 0.35; vel[j + 1] = Math.sin(sa) * 0.35; vel[j + 2] = 0.25;
+            }
+            var px = pos[j], py = pos[j + 1], pz = pos[j + 2];
+            var vx = vel[j], vy = vel[j + 1], vz = vel[j + 2];
+            var fx, fy, fz, ax, ay, az;
+            if (floodMode) {
+              // Violent currents: higher-frequency field, ~4x the force,
+              // a third of the damping, plus a turbulent cross-term.
+              fx = Math.sin(py * 1.35 + ft * 0.85) + Math.cos(pz * 1.1 - ft * 0.7) + Math.sin((px + py) * 0.9 + ft * 1.3) * 0.7;
+              fy = Math.sin(pz * 1.25 - ft * 0.8) + Math.cos(px * 1.3 + ft * 0.6) + Math.cos((py - pz) * 1.1 - ft * 1.1) * 0.7;
+              fz = Math.sin(px * 1.1 + ft * 0.7) + Math.cos(py * 1.2 - ft * 0.9);
+              ax = fx * 2.4 - vx * 0.38;
+              ay = fy * 2.4 - vy * 0.38;
+              az = fz * 1.4 - vz * 0.38;
+              // No shell, no exclusion zone around the eye — the field IS
+              // the screen. Soft walls only at the frustum-filling rect.
+              if (px < -6.5) ax += (-6.5 - px) * 3.2; else if (px > 6.5) ax -= (px - 6.5) * 3.2;
+              if (py < -5.5) ay += (-5.5 - py) * 3.2; else if (py > 5.5) ay -= (py - 5.5) * 3.2;
+              if (pz < -2.3) az += (-2.3 - pz) * 2.4; else if (pz > 2.7) az -= (pz - 2.7) * 2.4;
+            } else {
+              fx = Math.sin(py * 0.85 + t * 0.34) + Math.cos(pz * 0.7 - t * 0.26);
+              fy = Math.sin(pz * 0.8 - t * 0.30) + Math.cos(px * 0.85 + t * 0.21);
+              fz = Math.sin(px * 0.7 + t * 0.25) + Math.cos(py * 0.8 - t * 0.32);
+              ax = fx * 0.55 - vx * 0.55;
+              ay = fy * 0.55 - vy * 0.55;
+              az = fz * 0.55 - vz * 0.55;
+              var rr = Math.sqrt(px * px + py * py + pz * pz) || 0.001;
+              if (rr < 2.05) {
+                var pushOut = (2.05 - rr) * 2.4;
+                ax += (px / rr) * pushOut; ay += (py / rr) * pushOut; az += (pz / rr) * pushOut;
+              } else if (rr > 5.1) {
+                var pullIn = (rr - 5.1) * 1.6;
+                ax -= (px / rr) * pullIn; ay -= (py / rr) * pullIn; az -= (pz / rr) * pullIn;
+              }
+            }
+            if (hOn) {
+              var gx = hole.x - px, gy = hole.y - py, gz = hole.z - pz;
+              var gd = Math.sqrt(gx * gx + gy * gy + gz * gz) || 0.001;
+              var hRad = floodMode ? 7.0 : 4.4; // in FLOOD the hole reaches the whole screen
+              var gf = Math.max(0, 1 - gd / hRad); gf = gf * gf * hEnv;
+              var pull = gf * (floodMode ? 72 : 46);
+              ax += (gx / gd) * pull; ay += (gy / gd) * pull; az += (gz / gd) * pull;
+              var gsw = gf * (floodMode ? 30 : 20);
+              ax += (-gy / gd) * gsw; ay += (gx / gd) * gsw;
+              if (gd < 0.30) {
+                if (floodMode) {
+                  px = (Math.random() * 2 - 1) * 6.3; py = (Math.random() * 2 - 1) * 5.3; pz = (Math.random() * 2 - 1) * 1.9 - 0.2;
+                } else {
+                  var ua = Math.random() * 2 - 1, th = Math.random() * Math.PI * 2, sq = Math.sqrt(1 - ua * ua);
+                  var nr = 4.4 + Math.random() * 0.7;
+                  px = sq * Math.cos(th) * nr; py = ua * nr * 0.78; pz = sq * Math.sin(th) * nr;
+                }
+                vx = 0; vy = 0; vz = 0;
+              }
+            }
+            vx += ax * dt; vy += ay * dt; vz += az * dt;
+            var sp = Math.sqrt(vx * vx + vy * vy + vz * vz);
+            var maxSp = floodMode ? (hOn ? 11 : 7.5) : (hOn ? 6.5 : 1.5);
+            if (sp > maxSp) { var sc = maxSp / sp; vx *= sc; vy *= sc; vz *= sc; }
+            pos[j] = px + vx * dt; pos[j + 1] = py + vy * dt; pos[j + 2] = pz + vz * dt;
+            vel[j] = vx; vel[j + 1] = vy; vel[j + 2] = vz;
+            if (floodMode) {
+              bb.scales[i] = bb.baseScales[i] * (0.85 + 0.8 * (0.5 + 0.5 * Math.sin(t * 5.5 + bb.phase[i] * 6.2832)));
+              if (colArrF) {
+                // Hue chaos: every spark cycles the full rainbow on its
+                // own phase, fast, at brightness above 1 — additive
+                // stacking in the dense core burns toward white.
+                var rgbF = hslRgb(t * 0.30 + bb.phase[i] + px * 0.03 + py * 0.02, 1.0, 0.60);
+                var brightF = 1.45 + 0.85 * (0.5 + 0.5 * Math.sin(t * 6.0 + bb.phase[i] * 12.566));
+                colArrF[j] = rgbF[0] * brightF; colArrF[j + 1] = rgbF[1] * brightF; colArrF[j + 2] = rgbF[2] * brightF;
+              }
+            } else {
+              bb.scales[i] = bb.baseScales[i] * (0.72 + 0.5 * (0.5 + 0.5 * Math.sin(t * 2.2 + bb.phase[i] * 6.2832)));
+            }
+          }
+          if (colArrF) bb.mesh.instanceColor.needsUpdate = true;
         }
 
         /* ---- symphony: spinning rainbow starlight iris ----
@@ -1069,12 +1408,12 @@
         }
         function updateSymphony(t, dt) {
           if (!built) return;
-          if (eyeMode !== 'symphony') {
+          if (eyeMode === 'classic') {
             if (!classicRestored) restoreClassic();
             return;
           }
           classicRestored = false;
-          var spinSpeed = reducedMotion ? 0.12 : 0.45;
+          var spinSpeed = reducedMotion ? 0.12 : (isFlood() ? 0.75 : 0.45);
           spinAngle += dt * spinSpeed;
           starAngle += dt * spinSpeed * 1.35;
           applySpinHomes();
@@ -1118,7 +1457,7 @@
           sineCtx.strokeStyle = 'rgba(255,255,255,0.14)';
           sineCtx.lineWidth = 1;
           sineCtx.beginPath(); sineCtx.moveTo(0, mid); sineCtx.lineTo(W, mid); sineCtx.stroke();
-          if (eyeMode === 'symphony') {
+          if (eyeMode !== 'classic') {
             var grad = sineCtx.createLinearGradient(0, 0, W, 0);
             grad.addColorStop(0, '#f87171'); grad.addColorStop(0.2, '#fbbf24');
             grad.addColorStop(0.4, '#a3e635'); grad.addColorStop(0.6, '#38e1f8');
@@ -1181,6 +1520,7 @@
             lastFrame = nowMs;
             updateSymphony(t, dt);
             stepPhysics(dt, nowMs / 1000);
+            stepFlood(dt, t, nowMs / 1000);
 
             if (!dragging && activeMode !== 'stir') {
               userRotY += velY; userRotX += velX;
@@ -1195,9 +1535,28 @@
             var pulse = pupilPulse;
             // In Symphony mode the pupil also breathes on the ripple's
             // sine — same frequency, same clock as the wave in the panel.
-            var sinePulse = eyeMode === 'symphony' ? Math.sin(2 * Math.PI * rippleFreq * t) * 0.018 : 0;
+            var sinePulse = eyeMode !== 'classic' ? Math.sin(2 * Math.PI * rippleFreq * t) * 0.018 : 0;
             built.pupil.scale.set(1 + pulse * 0.10 + sinePulse, 1 + pulse * 0.10 + sinePulse, 0.42 + Math.sin(t * 0.85) * 0.012 + pulse * 0.05);
             if (built.glow) built.glow.position.set(built.group.position.x, built.group.position.y, -2.2);
+
+            // Black hole visuals follow the hole state: dark core +
+            // magenta hunger-glow, swelling with the same envelope the
+            // physics feels. When it closes, the readout says so.
+            var hEnvNow = holeEnv(nowMs / 1000);
+            if (built.holeCore) {
+              built.holeCore.visible = hEnvNow > 0.001;
+              built.holeCore.position.set(hole.x, hole.y, hole.z);
+              built.holeCore.scale.setScalar(0.7 + hEnvNow * 0.6 + Math.sin(t * 9) * 0.06);
+            }
+            if (built.holeGlow) {
+              built.holeGlow.position.set(hole.x, hole.y, hole.z);
+              built.holeGlow.material.opacity = hEnvNow * 0.55;
+              var hgs = 1.1 + hEnvNow * 0.9 + Math.sin(t * 7) * 0.08;
+              built.holeGlow.scale.set(hgs, hgs, 1);
+            }
+            if (hEnvNow <= 0.001 && metaHole && metaHole.textContent.indexOf('open') === 0) {
+              metaHole.textContent = 'closed — she settles, the sea refills';
+            }
 
             // Billboard every splat quad toward the camera: each quad's
             // local orientation cancels the group's rotation and adopts
@@ -1209,7 +1568,10 @@
               var bb = built.billboards[bi];
               var arr = bb.mesh.instanceMatrix.array;
               var bp = bb.positions, bs = bb.scales;
-              for (var ii = 0; ii < bb.count; ii++) {
+              // The flood sea only writes matrices for its ACTIVE count
+              // (2,600 calm / 26,000 FLOOD) — the rest stay parked.
+              var drawN = bb.tag === 'flood' ? bb.mesh.count : bb.count;
+              for (var ii = 0; ii < drawN; ii++) {
                 var s = bs[ii], o = ii * 16, j = ii * 3;
                 arr[o]      = be[0] * s; arr[o + 1]  = be[1] * s; arr[o + 2]  = be[2] * s;  arr[o + 3]  = 0;
                 arr[o + 4]  = be[4] * s; arr[o + 5]  = be[5] * s; arr[o + 6]  = be[6] * s;  arr[o + 7]  = 0;
@@ -1219,7 +1581,19 @@
               bb.mesh.instanceMatrix.needsUpdate = true;
             }
 
-            renderer.render(built.scene, built.camera);
+            if (isFlood() && built.fadeScene) {
+              // FLOOD trails: never fully clear. Lay the translucent
+              // void fade quad over last frame, clear only depth, then
+              // draw the new frame on top — motion smears into ribbons
+              // and dense stacks keep burning brighter.
+              renderer.autoClear = false;
+              renderer.render(built.fadeScene, built.fadeCam);
+              if (renderer.clearDepth) renderer.clearDepth();
+              renderer.render(built.scene, built.camera);
+            } else {
+              renderer.autoClear = true;
+              renderer.render(built.scene, built.camera);
+            }
             drawSine(t);
 
             if (window.__bootFirstFrameMs === null) {
@@ -1325,7 +1699,7 @@
 
           setStatus('building splat scene…');
           built = buildScene(THREE);
-          metaSplats.textContent = built.splatCount.toLocaleString('en-US') + ' Gaussian splat billboards';
+          applyFloodState(); // syncs the calm 2,600 draw count + readout rows
 
           renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
           stage.appendChild(renderer.domElement);
