@@ -1,0 +1,1344 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" href="data:," />
+    <title>Three.js r187 Test Portal</title>
+    <script>
+      // Startup clock: performance.timeOrigin is navigation start, so a
+      // performance.now() reading IS "ms since page start". We stamp the
+      // moment this document began parsing, then stamp the first frame.
+      window.__bootParseMs = performance.now();
+      window.__bootFirstFrameMs = null;
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --void: #060310;
+        --glass: rgba(17, 11, 32, 0.68);
+        --glass-strong: rgba(13, 8, 26, 0.82);
+        --line: rgba(255, 255, 255, 0.10);
+        --line-bright: rgba(255, 255, 255, 0.18);
+        --ink: #f2eefc;
+        --ink-dim: #b7aed6;
+        --ink-faint: #8d84ad;
+        --violet: #a78bfa;
+        --magenta: #f472d0;
+        --cyan: #38e1f8;
+        --ok: #5eead4;
+        --warn: #fbbf24;
+        --radius: 14px;
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        background: var(--void);
+        color: var(--ink);
+        font-family: "Outfit", system-ui, -apple-system, "Segoe UI", sans-serif;
+        overflow: hidden;
+      }
+      button { min-height: 2.25rem; }
+
+      /* ---------- stage ---------- */
+      #stage {
+        position: fixed;
+        inset: 0;
+        cursor: grab;
+        touch-action: none;
+      }
+      #stage.dragging { cursor: grabbing; }
+      #stage canvas { display: block; width: 100%; height: 100%; }
+      .void-glow {
+        position: fixed; inset: 0; pointer-events: none;
+        background:
+          radial-gradient(52rem 34rem at 50% 42%, rgba(124, 58, 237, 0.13), transparent 62%),
+          radial-gradient(30rem 22rem at 78% 78%, rgba(34, 211, 238, 0.05), transparent 65%),
+          radial-gradient(26rem 20rem at 16% 82%, rgba(217, 70, 239, 0.05), transparent 65%);
+      }
+      #stage-fallback {
+        position: fixed; inset: 0; display: none;
+        align-items: center; justify-content: center; text-align: center;
+        padding: 1.5rem; color: var(--ink-dim); font-size: 0.95rem; line-height: 1.55;
+      }
+
+      /* ---------- toolbar chrome ---------- */
+      .toolbar {
+        position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+        display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+        padding: calc(0.6rem + env(safe-area-inset-top)) 0.75rem 0.6rem;
+        pointer-events: none;
+      }
+      .toolbar > * { pointer-events: auto; }
+      .chip {
+        display: inline-flex; align-items: center; gap: 0.45rem;
+        background: var(--glass);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 0.42rem 0.8rem;
+        font-size: 0.78rem; font-weight: 600; letter-spacing: 0.02em;
+        backdrop-filter: blur(14px) saturate(1.3);
+        -webkit-backdrop-filter: blur(14px) saturate(1.3);
+        white-space: nowrap;
+      }
+      .chip .dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--warn); flex: none; }
+      .chip.test { color: #ffd9a8; border-color: rgba(251, 191, 36, 0.35); }
+      .chip.test .dot { background: var(--warn); box-shadow: 0 0 8px rgba(251,191,36,.8); }
+      .chip.path .dot { background: var(--ink-faint); }
+      .chip.path.webgpu { color: #c9f7ff; border-color: rgba(56, 225, 248, 0.4); }
+      .chip.path.webgpu .dot { background: var(--cyan); box-shadow: 0 0 8px rgba(56,225,248,.9); }
+      .chip.path.webgl { color: #ffe9bd; border-color: rgba(251, 191, 36, 0.45); }
+      .chip.path.webgl .dot { background: var(--warn); box-shadow: 0 0 8px rgba(251,191,36,.9); }
+      .chip.path.failed { color: #fecdd3; border-color: rgba(244, 114, 182, 0.45); }
+      .chip.path.failed .dot { background: var(--magenta); }
+      .chip.mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-weight: 400; color: var(--ink-dim); }
+      .toolbar .spacer { flex: 1 1 auto; }
+      .tbtn {
+        appearance: none; cursor: pointer;
+        background: var(--glass); color: var(--ink);
+        border: 1px solid var(--line); border-radius: 999px;
+        padding: 0.42rem 0.9rem;
+        font: 600 0.78rem "Outfit", system-ui, sans-serif; letter-spacing: 0.02em;
+        backdrop-filter: blur(14px) saturate(1.3);
+        -webkit-backdrop-filter: blur(14px) saturate(1.3);
+        transition: border-color .15s ease, background .15s ease;
+      }
+      .tbtn:hover { border-color: var(--line-bright); background: var(--glass-strong); }
+      .tbtn:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+      .tbtn[aria-pressed="true"] { color: var(--cyan); border-color: rgba(56,225,248,.45); }
+
+      /* ---------- readout panel ---------- */
+      .panel {
+        position: fixed; z-index: 10;
+        left: 0.75rem; bottom: calc(0.75rem + env(safe-area-inset-bottom));
+        width: min(24.5rem, calc(100vw - 1.5rem));
+        max-height: calc(100dvh - 6.5rem);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(167, 139, 250, 0.45) transparent;
+        background: var(--glass);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        backdrop-filter: blur(16px) saturate(1.35);
+        -webkit-backdrop-filter: blur(16px) saturate(1.35);
+        box-shadow: 0 18px 50px rgba(0,0,0,.5);
+        padding: 0.9rem 1rem 0.8rem;
+      }
+      .panel::-webkit-scrollbar { width: 5px; }
+      .panel::-webkit-scrollbar-thumb { background: rgba(167, 139, 250, 0.45); border-radius: 99px; }
+      .panel-toggle {
+        appearance: none; cursor: pointer; float: right;
+        background: rgba(56, 225, 248, 0.08); color: var(--cyan);
+        border: 1px solid rgba(56, 225, 248, 0.35); border-radius: 999px;
+        padding: 0.28rem 0.7rem; min-height: 2rem;
+        font: 600 0.7rem "Outfit", system-ui, sans-serif; letter-spacing: 0.02em;
+        margin: 0 0 0.4rem 0.6rem;
+      }
+      .panel-toggle:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+      .panel.collapsed { overflow-y: visible; }
+      .panel.collapsed .panel-body { display: none; }
+      .panel h1 {
+        margin: 0 0 0.15rem; font-size: 0.92rem; font-weight: 700; letter-spacing: 0.01em;
+        display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;
+      }
+      .panel h1 .sub { font-size: 0.72rem; font-weight: 500; color: var(--ink-faint); }
+      .panel .lede { margin: 0 0 0.7rem; font-size: 0.78rem; line-height: 1.45; color: var(--ink-dim); }
+
+      .live-row {
+        display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap;
+        border: 1px solid rgba(56, 225, 248, 0.28);
+        background: rgba(56, 225, 248, 0.06);
+        border-radius: 10px; padding: 0.55rem 0.7rem 0.5rem;
+      }
+      .live-row .tag {
+        font: 700 0.62rem "JetBrains Mono", monospace; letter-spacing: 0.14em;
+        color: var(--cyan); text-transform: uppercase;
+      }
+      .live-row .value {
+        font: 700 1.55rem/1 "JetBrains Mono", ui-monospace, monospace; color: #fff;
+      }
+      .live-row .value small { font-size: 0.8rem; font-weight: 400; color: var(--ink-dim); }
+      .live-row .delta { font: 600 0.72rem "JetBrains Mono", monospace; color: var(--ink-dim); }
+      .live-row .delta b { color: var(--ok); font-weight: 700; }
+      .live-row .delta b.slower { color: var(--warn); }
+
+      .ref-table { width: 100%; border-collapse: collapse; margin-top: 0.65rem; }
+      .ref-table caption {
+        text-align: left; caption-side: top;
+        font: 700 0.62rem "JetBrains Mono", monospace; letter-spacing: 0.14em;
+        color: var(--ink-faint); text-transform: uppercase; padding-bottom: 0.3rem;
+      }
+      .ref-table th, .ref-table td {
+        padding: 0.32rem 0.2rem; font-size: 0.8rem; text-align: left;
+        border-top: 1px solid rgba(255,255,255,.06);
+      }
+      .ref-table td.num {
+        font-family: "JetBrains Mono", ui-monospace, monospace; text-align: right;
+        color: var(--ink); white-space: nowrap;
+      }
+      .ref-table th { font-weight: 500; color: var(--ink-dim); }
+      .ref-table tr.live td, .ref-table tr.live th { color: #dffaff; }
+      .ref-table tr.live td.num { color: #fff; font-weight: 700; }
+      .src {
+        display: inline-block; font: 600 0.6rem "JetBrains Mono", monospace;
+        letter-spacing: 0.08em; text-transform: uppercase;
+        border: 1px solid var(--line); border-radius: 4px; padding: 0.08rem 0.32rem;
+        color: var(--ink-faint); vertical-align: 0.08em; margin-left: 0.35rem; white-space: nowrap;
+      }
+      .src.live-src { color: var(--cyan); border-color: rgba(56,225,248,.4); }
+
+      .meta {
+        margin-top: 0.65rem; padding-top: 0.6rem;
+        border-top: 1px solid rgba(255,255,255,.07);
+        display: grid; grid-template-columns: auto 1fr; gap: 0.22rem 0.8rem;
+        font-size: 0.74rem;
+      }
+      .meta dt { color: var(--ink-faint); font-weight: 500; }
+      .meta dd { margin: 0; color: var(--ink-dim); font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.72rem; overflow-wrap: anywhere; }
+      .meta dd strong { color: var(--ink); font-weight: 600; }
+
+      .honest { margin: 0.6rem 0 0; font-size: 0.7rem; line-height: 1.5; color: var(--ink-faint); }
+      .honest b { color: var(--ink-dim); font-weight: 600; }
+
+      .fallback-note {
+        display: none; margin-top: 0.65rem;
+        border: 1px solid rgba(251,191,36,.4); background: rgba(251,191,36,.07);
+        border-radius: 10px; padding: 0.55rem 0.7rem;
+        font-size: 0.76rem; line-height: 1.5; color: #ffe9bd;
+      }
+      .fallback-note.show { display: block; }
+
+      .hint {
+        position: fixed; z-index: 9; right: 0.9rem;
+        bottom: calc(0.9rem + env(safe-area-inset-bottom));
+        font-size: 0.72rem; color: var(--ink-faint);
+        background: rgba(10, 6, 22, 0.45); border: 1px solid rgba(255,255,255,.06);
+        padding: 0.35rem 0.65rem; border-radius: 999px;
+        backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+        pointer-events: none;
+      }
+      /* ---------- mode toggle ---------- */
+      .mode-toggle {
+        display: inline-flex; gap: 0.15rem; padding: 0.2rem;
+        background: var(--glass); border: 1px solid var(--line); border-radius: 999px;
+        backdrop-filter: blur(14px) saturate(1.3);
+        -webkit-backdrop-filter: blur(14px) saturate(1.3);
+      }
+      .mode-btn {
+        appearance: none; cursor: pointer; border: 1px solid transparent; border-radius: 999px;
+        background: transparent; color: var(--ink-dim);
+        padding: 0.22rem 0.7rem; min-height: 1.9rem;
+        font: 600 0.74rem "Outfit", system-ui, sans-serif; letter-spacing: 0.02em;
+        white-space: nowrap;
+      }
+      .mode-btn:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+      .mode-btn[aria-pressed="true"] {
+        color: #0b0618; border-color: rgba(255,255,255,.25);
+        background: linear-gradient(90deg, #7df3ff, #a78bfa 45%, #f472d0);
+      }
+      .mode-btn[aria-pressed="true"].plain {
+        color: var(--cyan); background: rgba(56,225,248,.10); border-color: rgba(56,225,248,.45);
+      }
+
+      /* ---------- sine ripple box ---------- */
+      .sine-box {
+        margin-top: 0.65rem; border: 1px solid rgba(167,139,250,.30);
+        background: rgba(124,58,237,.07); border-radius: 10px;
+        padding: 0.55rem 0.7rem 0.6rem;
+      }
+      .sine-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
+      .sine-head .t {
+        font: 700 0.62rem "JetBrains Mono", monospace; letter-spacing: 0.14em;
+        text-transform: uppercase; color: var(--violet);
+      }
+      .sine-head .f { font: 700 0.85rem "JetBrains Mono", monospace; color: #fff; white-space: nowrap; }
+      #sineCanvas { display: block; width: 100%; height: 52px; margin: 0.3rem 0 0.1rem; }
+      .sine-box label {
+        display: flex; align-items: center; gap: 0.6rem;
+        font-size: 0.74rem; color: var(--ink-dim); margin-top: 0.25rem;
+      }
+      .sine-box input[type="range"] { flex: 1 1 auto; accent-color: var(--magenta); min-height: 1.6rem; min-width: 0; }
+      .sine-box p { margin: 0.35rem 0 0; font-size: 0.7rem; line-height: 1.5; color: var(--ink-faint); }
+      .sine-box p b { color: var(--ink-dim); font-weight: 600; }
+
+      @media (max-width: 44rem) {
+        .hint { display: none; }
+        .panel {
+          padding: 0.75rem 0.85rem 0.7rem;
+          left: 0.6rem; right: 0.6rem; width: auto;
+          bottom: calc(0.6rem + env(safe-area-inset-bottom));
+          /* Cap the sheet at just over half the screen so the goo eye
+             stays visible above it; the rest scrolls inside the panel. */
+          max-height: 54dvh;
+        }
+        .live-row .value { font-size: 1.3rem; }
+        .chip.mono { display: none; }
+        .toolbar { padding-left: 0.6rem; padding-right: 0.6rem; }
+      }
+      /* Short screens (landscape phones): narrow side sheet, goo shifts right. */
+      @media (max-height: 32rem) {
+        .panel {
+          width: min(21rem, 58vw);
+          max-height: calc(100dvh - 5.25rem);
+        }
+        .panel .lede { display: none; }
+        .toolbar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+        .toolbar::-webkit-scrollbar { display: none; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .tbtn { transition: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage" aria-label="Interactive splat scene: a goo eye built from soft Gaussian splat billboards. Drag through the goo to stir it, tap it for a ripple, drag the dark margins to spin it. The Symphony and Classic goo toggle switches the inner eye between a spinning rainbow starlight iris and the original iris."></div>
+    <div class="void-glow" aria-hidden="true"></div>
+    <div id="stage-fallback">
+      <p>The splat scene could not start on this device.<br />The readout panel below has the details.</p>
+    </div>
+
+    <header class="toolbar">
+      <span class="chip test"><span class="dot"></span>TEST PORTAL — STAGED FOR REVIEW</span>
+      <span class="chip path" id="pathChip"><span class="dot"></span><span id="pathLabel">Starting renderer…</span></span>
+      <span class="chip mono">three@0.187.0 · CDN at runtime</span>
+      <span class="spacer"></span>
+      <button class="tbtn" id="spinBtn" type="button" aria-pressed="true">Auto-spin: on</button>
+      <div class="mode-toggle" role="group" aria-label="Inner eye mode">
+        <button class="mode-btn" id="modeSymphonyBtn" type="button" aria-pressed="true">Symphony</button>
+        <button class="mode-btn plain" id="modeClassicBtn" type="button" aria-pressed="false">Classic goo</button>
+      </div>
+      <button class="tbtn" id="rippleBtn" type="button">Ripple her</button>
+      <button class="tbtn" id="resetBtn" type="button">Reset view</button>
+      <button class="tbtn" id="reloadBtn" type="button">Reload &amp; re-measure</button>
+    </header>
+
+    <section class="panel" id="panel" aria-label="Startup timing readout">
+      <button class="panel-toggle" id="panelToggle" type="button" aria-expanded="true" aria-controls="panelBody">Hide readout</button>
+      <h1>Startup timing <span class="sub">goo splat scene · three.js r187</span></h1>
+      <div class="panel-body" id="panelBody">
+      <p class="lede">Staged test only — <strong>no live portal has changed.</strong> This page loads three.js r187 from the public CDN, builds the splat scene, and times itself.</p>
+
+      <div class="live-row">
+        <span class="tag">Live · this device</span>
+        <span class="value" id="liveValue">measuring…</span>
+        <span class="delta" id="liveDelta"></span>
+      </div>
+
+      <table class="ref-table">
+        <caption>Startup time — page start → first rendered frame</caption>
+        <tbody>
+          <tr class="live">
+            <th scope="row">This load<span class="src live-src">measured here</span></th>
+            <td class="num" id="rowLive">—</td>
+          </tr>
+          <tr>
+            <th scope="row">three r187<span class="src">published reference</span></th>
+            <td class="num">227.8 ms</td>
+          </tr>
+          <tr>
+            <th scope="row">three r186<span class="src">published reference</span></th>
+            <td class="num">1,399.8 ms</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="sine-box">
+        <div class="sine-head"><span class="t">Ripple · sine wave</span><span class="f" id="freqVal">2.0 Hz</span></div>
+        <canvas id="sineCanvas" width="640" height="104" role="img" aria-label="Live sine wave drawn at the current ripple frequency, phase-locked to the ripples in the goo"></canvas>
+        <label for="freqSlider">Ripple frequency
+          <input type="range" id="freqSlider" min="0.5" max="4" step="0.1" value="2" />
+        </label>
+        <p>Tap and button ripples travel through the dabs as this exact sine wave — same frequency, same phase clock, rings spaced speed ÷ frequency apart. <b>Symphony</b> mode spins the inner eye continuously through rainbow hues with twinkling starlight; <b>Classic goo</b> rests her at the original violet–cyan iris and the old single-pulse ripple.</p>
+      </div>
+
+      <div class="fallback-note" id="fallbackNote">
+        <strong>WebGPU is not available here</strong> — this browser or device did not offer it, so the scene is running on the <strong>WebGL fallback</strong> instead. The splats are the same; only the rendering path changed.
+      </div>
+
+      <dl class="meta">
+        <dt>Render path</dt><dd id="metaPath"><strong>detecting…</strong></dd>
+        <dt>Backend</dt><dd id="metaBackend">—</dd>
+        <dt>GPU adapter</dt><dd id="metaAdapter">—</dd>
+        <dt>Splats</dt><dd id="metaSplats">—</dd>
+        <dt>Touch</dt><dd id="metaTouch">reactive — stir her, tap her</dd>
+        <dt>Eye mode</dt><dd id="metaMode">Symphony — spinning rainbow starlight</dd>
+        <dt>Ripple wave</dt><dd id="metaWave">sine · 2.0 Hz</dd>
+        <dt>Frame rate</dt><dd id="metaFps">—</dd>
+        <dt>Status</dt><dd id="metaStatus">booting</dd>
+      </dl>
+
+      <p class="honest"><b>How to read this:</b> the cyan figure is measured live in this browser, on this device, on this load — navigation start to the first frame this scene actually renders, CDN fetch included. The r186 / r187 figures are <b>published reference numbers</b>, not measured here; hardware and network differ, so compare shapes, not decimals.</p>
+      </div>
+    </section>
+
+    <p class="hint">Drag through the goo to stir it · tap her for a sine ripple · Symphony spins the iris in rainbow starlight</p>
+
+    <script>
+      (function () {
+        'use strict';
+
+        var CDN_WEBGPU = 'https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.webgpu.js';
+        var CDN_WEBGL  = 'https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js';
+        var REF_R187 = 227.8;
+
+        var stage = document.getElementById('stage');
+        var pathChip = document.getElementById('pathChip');
+        var pathLabel = document.getElementById('pathLabel');
+        var liveValue = document.getElementById('liveValue');
+        var liveDelta = document.getElementById('liveDelta');
+        var rowLive = document.getElementById('rowLive');
+        var fallbackNote = document.getElementById('fallbackNote');
+        var metaPath = document.getElementById('metaPath');
+        var metaBackend = document.getElementById('metaBackend');
+        var metaAdapter = document.getElementById('metaAdapter');
+        var metaSplats = document.getElementById('metaSplats');
+        var metaTouch = document.getElementById('metaTouch');
+        var metaFps = document.getElementById('metaFps');
+        var metaStatus = document.getElementById('metaStatus');
+        var spinBtn = document.getElementById('spinBtn');
+        var modeSymphonyBtn = document.getElementById('modeSymphonyBtn');
+        var modeClassicBtn = document.getElementById('modeClassicBtn');
+        var freqSlider = document.getElementById('freqSlider');
+        var freqVal = document.getElementById('freqVal');
+        var sineCanvas = document.getElementById('sineCanvas');
+        var metaMode = document.getElementById('metaMode');
+        var metaWave = document.getElementById('metaWave');
+        var rippleBtn = document.getElementById('rippleBtn');
+        var resetBtn = document.getElementById('resetBtn');
+        var reloadBtn = document.getElementById('reloadBtn');
+
+        var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var autoSpin = !reducedMotion;
+
+        function fmt(ms) {
+          return ms.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' ms';
+        }
+        function setStatus(t) { metaStatus.textContent = t; }
+        function setPathChip(kind, text) {
+          pathChip.className = 'chip path ' + kind;
+          pathLabel.textContent = text;
+        }
+
+        spinBtn.setAttribute('aria-pressed', String(autoSpin));
+        spinBtn.textContent = 'Auto-spin: ' + (autoSpin ? 'on' : 'off');
+        spinBtn.addEventListener('click', function () {
+          autoSpin = !autoSpin;
+          spinBtn.setAttribute('aria-pressed', String(autoSpin));
+          spinBtn.textContent = 'Auto-spin: ' + (autoSpin ? 'on' : 'off');
+        });
+
+        /* ---------------- eye mode + sine ripple frequency ----------------
+           Symphony: the inner eye (iris clouds + starlight) spins
+           continuously, cycling rainbow hues, and ripples travel as a
+           true sine wave at rippleFreq. Classic goo: the iris rests at
+           its original colors and ripples are the old single pulse. */
+        var eyeMode = 'symphony';
+        var rippleFreq = 2.0;
+        function refreshWaveMeta() {
+          if (metaWave) metaWave.textContent = eyeMode === 'symphony'
+            ? 'sine · ' + rippleFreq.toFixed(1) + ' Hz'
+            : 'single pulse (classic)';
+        }
+        function setEyeMode(mode) {
+          eyeMode = mode;
+          modeSymphonyBtn.setAttribute('aria-pressed', String(mode === 'symphony'));
+          modeClassicBtn.setAttribute('aria-pressed', String(mode === 'classic'));
+          if (metaMode) metaMode.textContent = mode === 'symphony'
+            ? 'Symphony — spinning rainbow starlight'
+            : 'Classic goo — original iris, still';
+          refreshWaveMeta();
+          if (metaTouch) metaTouch.textContent = mode === 'symphony'
+            ? 'symphony — iris spinning, ripples on the sine'
+            : 'classic — stir her, tap her';
+        }
+        modeSymphonyBtn.addEventListener('click', function () { setEyeMode('symphony'); });
+        modeClassicBtn.addEventListener('click', function () { setEyeMode('classic'); });
+        freqSlider.addEventListener('input', function () {
+          rippleFreq = parseFloat(freqSlider.value) || 2.0;
+          freqVal.textContent = rippleFreq.toFixed(1) + ' Hz';
+          refreshWaveMeta();
+        });
+        reloadBtn.addEventListener('click', function () { window.location.reload(); });
+
+        /* ---------------- readout panel collapse ---------------- */
+        var panel = document.getElementById('panel');
+        var panelToggle = document.getElementById('panelToggle');
+        function setPanelCollapsed(collapsed) {
+          panel.classList.toggle('collapsed', collapsed);
+          panelToggle.setAttribute('aria-expanded', String(!collapsed));
+          panelToggle.textContent = collapsed ? 'Show readout' : 'Hide readout';
+          if (!collapsed) panel.scrollTop = 0;
+          layoutGroup();
+        }
+        panelToggle.addEventListener('click', function () {
+          setPanelCollapsed(!panel.classList.contains('collapsed'));
+        });
+        // On short landscape phone screens, start collapsed so the goo
+        // eye is the first thing seen; the readout is one tap away.
+        if (window.innerHeight < 480 && window.innerWidth > window.innerHeight) {
+          setPanelCollapsed(true);
+        }
+
+        /* ---------------- splat texture: soft Gaussian disc ---------------- */
+        function makeSplatTexture() {
+          var s = 128, c = document.createElement('canvas');
+          c.width = c.height = s;
+          var ctx = c.getContext('2d');
+          var g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+          // Firmer dab: a near-solid heart that falls off fast, so each
+          // splat reads as its own visible blob instead of a soft haze.
+          g.addColorStop(0.0, 'rgba(255,255,255,1)');
+          g.addColorStop(0.34, 'rgba(255,255,255,0.96)');
+          g.addColorStop(0.58, 'rgba(255,255,255,0.55)');
+          g.addColorStop(0.82, 'rgba(255,255,255,0.14)');
+          g.addColorStop(1.0, 'rgba(255,255,255,0)');
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, s, s);
+          return c;
+        }
+
+        function gauss() {
+          var u = 0, v = 0;
+          while (!u) u = Math.random();
+          while (!v) v = Math.random();
+          return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+        }
+        function lerp(a, b, t) { return a + (b - a) * t; }
+
+        /* ---------------- scene construction ---------------- */
+        function buildScene(THREE) {
+          var scene = new THREE.Scene();
+          scene.background = new THREE.Color(0x060310);
+
+          var camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+          camera.position.set(0, 0.15, 7.0);
+
+          var tex = new THREE.CanvasTexture(makeSplatTexture());
+          var group = new THREE.Group();
+          scene.add(group);
+
+          var VIOLET = new THREE.Color(0x7c3aed);
+          var VIOLET_L = new THREE.Color(0xa78bfa);
+          var MAGENTA = new THREE.Color(0xd946ef);
+          var PINK = new THREE.Color(0xf472d0);
+          var CYAN = new THREE.Color(0x22d3ee);
+          var CYAN_L = new THREE.Color(0x7df3ff);
+          var WHITE = new THREE.Color(0xffffff);
+          var tmp = new THREE.Color();
+          var colTmp = new THREE.Color();
+          var total = 0;
+          var quadGeo = new THREE.PlaneGeometry(1, 1);
+          var billboards = [];
+
+          function cloud(count, fill, size, opacity, intensity, additive, tag) {
+            var boost = (intensity == null ? 1.0 : intensity);
+            var positions = new Float32Array(count * 3);
+            var scales = new Float32Array(count);
+            var origColors = new Float32Array(count * 3);
+            // Splats are instanced camera-facing quads, NOT THREE.Points:
+            // r187's backends size point sprites inconsistently — nearly
+            // invisible on the WebGL backend, screen-filling smears on
+            // WebGPU — while instanced quads render identically on both.
+            // The render loop billboards every quad toward the camera.
+            // Body clouds use NORMAL blending: overlapping dabs stack into
+            // a pointillist crowd with visible individual blobs, instead of
+            // additive-blending into a smooth glowing wash. Only sparkle /
+            // mote clouds opt into additive.
+            var mat = new THREE.MeshBasicMaterial({
+              map: tex, transparent: true, opacity: opacity, depthWrite: false,
+              blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending,
+              side: THREE.DoubleSide
+            });
+            var mesh = new THREE.InstancedMesh(quadGeo, mat, count);
+            mesh.frustumCulled = false;
+            mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+            for (var i = 0; i < count; i++) {
+              var p = fill(i);
+              positions[i * 3] = p[0]; positions[i * 3 + 1] = p[1]; positions[i * 3 + 2] = p[2];
+              scales[i] = size * (0.78 + Math.random() * 0.5);
+              origColors[i * 3] = p[3] * boost; origColors[i * 3 + 1] = p[4] * boost; origColors[i * 3 + 2] = p[5] * boost;
+              mesh.setColorAt(i, colTmp.setRGB(p[3] * boost, p[4] * boost, p[5] * boost));
+            }
+            if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+            group.add(mesh);
+            var entry = {
+              mesh: mesh, positions: positions, scales: scales, count: count,
+              home: positions.slice(),
+              vel: new Float32Array(count * 3),
+              tag: tag || null, origColors: origColors, baseScales: scales.slice()
+            };
+            // Iris and starlight clouds remember each dab in polar form,
+            // so the symphony spin can orbit their homes around the pupil
+            // and the rainbow can be laid out as a spiral of hue.
+            if (tag === 'iris' || tag === 'star') {
+              entry.polarR = new Float32Array(count);
+              entry.polarA = new Float32Array(count);
+              entry.jit = new Float32Array(count);
+              entry.phase = new Float32Array(count);
+              for (var k = 0; k < count; k++) {
+                entry.polarR[k] = Math.hypot(positions[k * 3], positions[k * 3 + 1]);
+                entry.polarA[k] = Math.atan2(positions[k * 3 + 1], positions[k * 3]);
+                entry.jit[k] = Math.random();
+                entry.phase[k] = Math.random();
+              }
+            }
+            billboards.push(entry);
+            total += count;
+            return mesh;
+          }
+          function colArr(c) { return [c.r, c.g, c.b]; }
+
+          /* --- goo membrane: wobbled, squashed blob, shell + volume --- */
+          function membranePoint(shellBias) {
+            var u = Math.random() * 2 - 1;
+            var th = Math.random() * Math.PI * 2;
+            var s = Math.sqrt(1 - u * u);
+            var dx = s * Math.cos(th), dy = u, dz = s * Math.sin(th);
+            var wobble = 1 + 0.085 * Math.sin(5 * dy + 2 * dx) + 0.06 * Math.sin(4 * dz - 3 * dy) + 0.045 * Math.sin(7 * dx + 5 * dz);
+            var r = 1.58 * wobble * (shellBias ? (0.88 + Math.random() * 0.16) : Math.pow(Math.random(), 0.6));
+            var x = dx * r + gauss() * 0.05;
+            var y = dy * r * 0.92 + gauss() * 0.05;
+            var z = dz * r + gauss() * 0.05;
+            var t = Math.min(1, Math.max(0, (dy + 1) / 2 + (Math.random() - 0.5) * 0.3));
+            tmp.copy(VIOLET).lerp(MAGENTA, t);
+            if (Math.random() < 0.16) tmp.lerp(VIOLET_L, 0.55);
+            if (Math.random() < 0.07) tmp.lerp(CYAN, 0.5);
+            var c = colArr(tmp);
+            return [x, y, z, c[0], c[1], c[2]];
+          }
+          /* --- the body is ONLY splats now — no solid mesh, no gradient
+                 dome. Thousands of firm little dabs crowd together into
+                 the form; at the silhouette they thin out and dissolve
+                 into individual blobs, like the reference splat look. --- */
+
+          /* flat dark backing, well inside the splat shell: it stops
+             back-side dabs shining through and muddying the front, but
+             being one flat near-black violet (and smaller than the shell)
+             it never reads as a smooth colored surface itself. */
+          var backing = new THREE.Mesh(
+            new THREE.SphereGeometry(1.24, 32, 24),
+            new THREE.MeshBasicMaterial({ color: 0x150830 })
+          );
+          backing.scale.set(1, 0.92, 1);
+          group.add(backing);
+
+          cloud(3400, function () { return membranePoint(false); }, 0.34, 0.95, 1.0); // dense interior crowd
+          cloud(2600, function () { return membranePoint(true); }, 0.30, 0.98, 1.0);  // defined shell of dabs
+          cloud(700, function () { return membranePoint(true); }, 0.17, 0.9, 1.0);    // fine grain over the shell
+
+          /* --- dissolving edge: stray dabs escaping the silhouette --- */
+          cloud(420, function () {
+            var u = Math.random() * 2 - 1;
+            var th = Math.random() * Math.PI * 2;
+            var s = Math.sqrt(1 - u * u);
+            var r = 1.58 * (1.04 + Math.random() * 0.22);
+            var x = s * Math.cos(th) * r + gauss() * 0.07;
+            var y = u * r * 0.92 + gauss() * 0.07;
+            var z = s * Math.sin(th) * r * 0.55 + gauss() * 0.07;
+            var t = Math.min(1, Math.max(0, (u + 1) / 2));
+            tmp.copy(VIOLET).lerp(MAGENTA, t);
+            if (Math.random() < 0.2) tmp.lerp(VIOLET_L, 0.5);
+            var c = colArr(tmp);
+            return [x, y, z, c[0], c[1], c[2]];
+          }, 0.15, 0.75, 1.0);
+
+          /* --- iris: domed disc of splats over the cap --- */
+          var IRIS_Z = 1.30;
+          cloud(2400, function () {
+            var a = Math.random() * Math.PI * 2;
+            var rr = Math.sqrt(Math.random()) * 0.80;
+            if (rr < 0.315) rr = 0.315 + Math.random() * 0.05; // leave the pupil hollow
+            var x = Math.cos(a) * rr, y = Math.sin(a) * rr;
+            var z = Math.sqrt(Math.max(0.04, 1.315 * 1.315 - rr * rr)) + 0.045 + gauss() * 0.02;
+            var t = rr / 0.8;
+            if (t < 0.45) tmp.copy(CYAN).lerp(VIOLET_L, t / 0.45);
+            else tmp.copy(VIOLET_L).lerp(MAGENTA, (t - 0.45) / 0.55);
+            if (Math.random() < 0.10) tmp.lerp(CYAN_L, 0.5);
+            var c = colArr(tmp);
+            return [x, y, z, c[0], c[1], c[2]];
+          }, 0.27, 1.0, 1.0, false, 'iris');
+
+          /* --- iris fine grain: smaller bright dabs stippled on top --- */
+          cloud(1100, function () {
+            var a = Math.random() * Math.PI * 2;
+            var rr = Math.sqrt(Math.random()) * 0.80;
+            if (rr < 0.315) rr = 0.315 + Math.random() * 0.05;
+            var x = Math.cos(a) * rr, y = Math.sin(a) * rr;
+            var z = Math.sqrt(Math.max(0.04, 1.315 * 1.315 - rr * rr)) + 0.075 + gauss() * 0.015;
+            var t = rr / 0.8;
+            if (t < 0.45) tmp.copy(CYAN_L).lerp(VIOLET_L, t / 0.45);
+            else tmp.copy(VIOLET_L).lerp(PINK, (t - 0.45) / 0.55);
+            var c = colArr(tmp);
+            return [x, y, z, c[0], c[1], c[2]];
+          }, 0.13, 0.95, 1.0, false, 'iris');
+
+          /* --- bright limbal ring around the iris edge --- */
+          cloud(280, function () {
+            var a = Math.random() * Math.PI * 2;
+            var rr = 0.80 + gauss() * 0.015;
+            var x = Math.cos(a) * rr, y = Math.sin(a) * rr;
+            var z = 1.05 + gauss() * 0.02;
+            tmp.copy(PINK).lerp(WHITE, 0.25 + Math.random() * 0.3);
+            var c = colArr(tmp);
+            return [x, y, z, c[0], c[1], c[2]];
+          }, 0.14, 0.95, 1.0, false, 'iris');
+
+          /* --- pupil rim sparkle ring --- */
+          cloud(140, function () {
+            var a = Math.random() * Math.PI * 2;
+            var rr = 0.315 + gauss() * 0.012;
+            var x = Math.cos(a) * rr, y = Math.sin(a) * rr;
+            var z = 1.29 + gauss() * 0.015;
+            tmp.copy(MAGENTA).lerp(CYAN_L, Math.random() * 0.5);
+            var c = colArr(tmp);
+            return [x, y, z, c[0], c[1], c[2]];
+          }, 0.11, 0.95, 1.0, false, 'iris');
+
+          /* --- pupil: a matte dark disc the splats cannot fill --- */
+          var pupil = new THREE.Mesh(
+            new THREE.SphereGeometry(0.315, 40, 28),
+            new THREE.MeshBasicMaterial({ color: 0x030008 })
+          );
+          pupil.scale.set(1, 1, 0.42);
+          pupil.position.set(0, 0, 1.28);
+          group.add(pupil);
+
+          /* --- eye highlight --- */
+          cloud(46, function () {
+            var x = -0.34 + gauss() * 0.05, y = 0.40 + gauss() * 0.05;
+            var z = 1.24 + Math.random() * 0.02;
+            tmp.copy(WHITE).lerp(CYAN_L, 0.25);
+            var c = colArr(tmp);
+            return [x, y, z, c[0], c[1], c[2]];
+          }, 0.10, 1.0, 1.6, true);
+
+          /* --- starlight: tiny bright stars scattered through the iris.
+                 In Symphony mode they twinkle, cycle rainbow hues, and
+                 ride a slightly faster spin than the iris beneath them,
+                 so the inner eye reads as layered, moving starlight. --- */
+          cloud(360, function () {
+            var a = Math.random() * Math.PI * 2;
+            var rr = 0.34 + Math.pow(Math.random(), 0.7) * 0.45;
+            if (Math.random() < 0.14) rr = 0.80 + Math.random() * 0.03;
+            var x = Math.cos(a) * rr, y = Math.sin(a) * rr;
+            var z = Math.sqrt(Math.max(0.04, 1.315 * 1.315 - rr * rr)) + 0.10 + Math.random() * 0.03;
+            tmp.copy(WHITE).lerp(Math.random() < 0.5 ? CYAN_L : PINK, 0.35);
+            var c = colArr(tmp);
+            return [x, y, z, c[0], c[1], c[2]];
+          }, 0.075, 1.0, 1.5, true, 'star');
+
+          /* --- goo tendrils: five curling drips off the underside --- */
+          var tendrilBases = [-0.95, -0.48, 0.02, 0.5, 0.92];
+          cloud(880, function (i) {
+            var ti = i % tendrilBases.length;
+            var t = Math.pow(Math.random(), 0.8);
+            var baseX = tendrilBases[ti];
+            var len = 0.75 + ((ti * 37) % 10) / 14;
+            var x = baseX * (1 - t * 0.25) + Math.sin(t * 4.2 + ti * 1.7) * 0.16 * t + gauss() * (0.05 + t * 0.03);
+            var y = -1.28 - t * len + gauss() * 0.04;
+            var z = Math.cos(t * 3.4 + ti) * 0.13 * t + gauss() * 0.05;
+            tmp.copy(MAGENTA).lerp(VIOLET, t);
+            if (Math.random() < 0.12) tmp.lerp(PINK, 0.6);
+            var c = colArr(tmp);
+            return [x, y, z, c[0], c[1], c[2]];
+          }, 0.30, 0.95, 1.0);
+
+          /* --- drifting halo motes --- */
+          cloud(360, function () {
+            var u = Math.random() * 2 - 1;
+            var th = Math.random() * Math.PI * 2;
+            var s = Math.sqrt(1 - u * u);
+            var r = 2.25 + Math.random() * 1.15;
+            tmp.copy(Math.random() < 0.5 ? CYAN : VIOLET_L).lerp(WHITE, 0.1);
+            var c = colArr(tmp);
+            return [s * Math.cos(th) * r, u * r * 0.8, s * Math.sin(th) * r, c[0], c[1], c[2]];
+          }, 0.13, 0.7, 1.3, true);
+
+          /* --- halo glow: one big soft sprite behind the eye --- */
+          var glow = new THREE.Sprite(new THREE.SpriteMaterial({
+            map: tex, color: 0x8b5cf6, transparent: true, opacity: 0.10,
+            blending: THREE.AdditiveBlending, depthWrite: false
+          }));
+          glow.scale.set(5.4, 5.4, 1);
+          glow.position.set(0, 0, -2.2);
+          scene.add(glow);
+
+          return {
+            scene: scene, camera: camera, group: group, pupil: pupil, glow: glow,
+            splatCount: total, billboards: billboards,
+            bbQuat: new THREE.Quaternion(), bbMat: new THREE.Matrix4()
+          };
+        }
+
+        /* ---------------- renderer boot ---------------- */
+        var built = null, renderer = null, rafId = 0, threeRef = null;
+        var userRotY = 0, userRotX = 0, velY = 0, velX = 0;
+        var dragging = false;
+
+        /* ---- reactive goo state ----
+           Every splat has a home (in its billboard entry), a current
+           position and a velocity. Springs pull dabs home; pointer
+           forces stir them; taps launch expanding ripples. */
+        var pointersDown = new Map();
+        var activeMode = null; // 'stir' | 'orbit'
+        var primaryId = null;
+        var downInfo = null;   // {time, x, y, local}
+        var stirLocal = { x: 0, y: 0, z: 0, valid: false };
+        var stirVel = { x: 0, y: 0, z: 0 };
+        var stirLast = null, stirLastTime = 0;
+        var hoverLocal = { x: 0, y: 0, z: 0, valid: false };
+        var ripples = []; // {x, y, z, start (wall s), strength}
+        var pupilPulse = 0;
+        var lastPX = 0, lastPY = 0;
+        var _ray = null, _plane = null, _ndc = null, _hit = null, _camDir = null, _gPos = null;
+
+        function ensureTemps() {
+          if (_ray || !threeRef) return;
+          _ray = new threeRef.Raycaster();
+          _plane = new threeRef.Plane();
+          _ndc = new threeRef.Vector2();
+          _hit = new threeRef.Vector3();
+          _camDir = new threeRef.Vector3();
+          _gPos = new threeRef.Vector3();
+        }
+        // Screen point -> goo-group local point, on the plane through
+        // the eye's centre that faces the camera. Null if unavailable.
+        function localPoint(clientX, clientY) {
+          if (!built || !threeRef) return null;
+          ensureTemps();
+          if (!_ray) return null;
+          var r = stage.getBoundingClientRect();
+          if (!r.width || !r.height) return null;
+          _ndc.set(((clientX - r.left) / r.width) * 2 - 1, -(((clientY - r.top) / r.height) * 2 - 1));
+          _ray.setFromCamera(_ndc, built.camera);
+          built.camera.getWorldDirection(_camDir);
+          built.group.getWorldPosition(_gPos);
+          _plane.setFromNormalAndCoplanarPoint(_camDir, _gPos);
+          if (!_ray.ray.intersectPlane(_plane, _hit)) return null;
+          var p = built.group.worldToLocal(_hit.clone());
+          return { x: p.x, y: p.y, z: p.z };
+        }
+        function hitsGoo(p) {
+          if (!p) return false;
+          var ex = p.x / 1.95, ey = (p.y + 0.25) / 2.35;
+          return (ex * ex + ey * ey) < 1;
+        }
+        function triggerRipple(p, strength) {
+          ripples.push({ x: p.x, y: p.y, z: p.z, start: performance.now() / 1000, strength: strength || 1 });
+          if (ripples.length > 4) ripples.shift();
+          pupilPulse = 1;
+          if (metaTouch) metaTouch.textContent = eyeMode === 'symphony' ? 'sine ripple — watch her settle' : 'ripple — watch her settle';
+        }
+        if (rippleBtn) rippleBtn.addEventListener('click', function () {
+          triggerRipple({ x: 0, y: 0.1, z: 0.6 }, 1.15);
+        });
+
+        resetBtn.addEventListener('click', function () { userRotY = 0; userRotX = 0; velY = 0; velX = 0; });
+
+        stage.addEventListener('pointerdown', function (e) {
+          pointersDown.set(e.pointerId, { x: e.clientX, y: e.clientY });
+          try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+          if (pointersDown.size >= 2) {
+            // Two fingers always orbit — stirring needs a solo finger.
+            activeMode = 'orbit'; dragging = true;
+            stirLocal.valid = false;
+            lastPX = e.clientX; lastPY = e.clientY;
+            stage.classList.add('dragging');
+            return;
+          }
+          primaryId = e.pointerId;
+          lastPX = e.clientX; lastPY = e.clientY;
+          var p = localPoint(e.clientX, e.clientY);
+          downInfo = { time: performance.now(), x: e.clientX, y: e.clientY, local: p };
+          if (hitsGoo(p)) {
+            activeMode = 'stir'; dragging = false;
+            stirLocal.x = p.x; stirLocal.y = p.y; stirLocal.z = p.z; stirLocal.valid = true;
+            stirVel.x = 0; stirVel.y = 0; stirVel.z = 0;
+            stirLast = p; stirLastTime = performance.now();
+            if (metaTouch) metaTouch.textContent = 'stirring — dabs scattering…';
+          } else {
+            activeMode = 'orbit'; dragging = true;
+            stage.classList.add('dragging');
+          }
+        });
+        stage.addEventListener('pointermove', function (e) {
+          var rec = pointersDown.get(e.pointerId);
+          if (rec) { rec.x = e.clientX; rec.y = e.clientY; }
+          if (!pointersDown.has(e.pointerId)) {
+            // Hover (mouse, no button): nearby dabs wake and lean away.
+            if (e.pointerType === 'mouse') {
+              var hp = localPoint(e.clientX, e.clientY);
+              if (hp && hitsGoo(hp)) { hoverLocal.x = hp.x; hoverLocal.y = hp.y; hoverLocal.z = hp.z; hoverLocal.valid = true; }
+              else hoverLocal.valid = false;
+            }
+            return;
+          }
+          if (activeMode === 'stir' && e.pointerId === primaryId && pointersDown.size === 1) {
+            var p2 = localPoint(e.clientX, e.clientY);
+            if (p2) {
+              var now = performance.now();
+              var dt = Math.max(8, now - stirLastTime) / 1000;
+              if (stirLast) {
+                var ivx = (p2.x - stirLast.x) / dt, ivy = (p2.y - stirLast.y) / dt, ivz = (p2.z - stirLast.z) / dt;
+                // Smooth the finger velocity so the goo feels thick, not twitchy.
+                stirVel.x = stirVel.x * 0.45 + ivx * 0.55;
+                stirVel.y = stirVel.y * 0.45 + ivy * 0.55;
+                stirVel.z = stirVel.z * 0.45 + ivz * 0.55;
+              }
+              stirLast = p2; stirLastTime = now;
+              stirLocal.x = p2.x; stirLocal.y = p2.y; stirLocal.z = p2.z; stirLocal.valid = true;
+            }
+            lastPX = e.clientX; lastPY = e.clientY;
+            return;
+          }
+          if (activeMode === 'orbit') {
+            var dx = e.clientX - lastPX, dy = e.clientY - lastPY;
+            lastPX = e.clientX; lastPY = e.clientY;
+            var f = pointersDown.size >= 2 ? 0.5 : 1;
+            velY = dx * 0.005 * f; velX = dy * 0.005 * f;
+            userRotY += velY; userRotX += velX;
+            userRotX = Math.max(-1.1, Math.min(1.1, userRotX));
+          }
+        });
+        function endDrag(e) {
+          var wasStir = activeMode === 'stir' && e.pointerId === primaryId;
+          pointersDown.delete(e.pointerId);
+          if (wasStir && downInfo) {
+            var dur = performance.now() - downInfo.time;
+            var moved = Math.hypot(e.clientX - downInfo.x, e.clientY - downInfo.y);
+            if (dur < 300 && moved < 14) {
+              var tp = localPoint(e.clientX, e.clientY) || downInfo.local;
+              if (tp) triggerRipple(tp, 1);
+            } else if (metaTouch) {
+              metaTouch.textContent = 'released — springs pulling her back together';
+            }
+          }
+          if (pointersDown.size === 0) {
+            activeMode = null; primaryId = null; downInfo = null;
+            dragging = false; stirLocal.valid = false;
+            stirVel.x = 0; stirVel.y = 0; stirVel.z = 0;
+            stage.classList.remove('dragging');
+          } else {
+            lastPX = e.clientX; lastPY = e.clientY;
+          }
+        }
+        stage.addEventListener('pointerup', endDrag);
+        stage.addEventListener('pointercancel', endDrag);
+        stage.addEventListener('pointerleave', function () { hoverLocal.valid = false; });
+
+        /* Per-splat spring physics: home-spring + damping, stir forces
+           (drag along the finger + swirl around it + a soft push), a
+           gentle hover wake, and expanding tap ripples. Runs in group
+           local space, so it works at any spin angle, on both backends
+           (it only ever writes the positions the billboard pass reads). */
+        function stepPhysics(dt, wallNow) {
+          if (!built || dt <= 0) return;
+          var K = 34, DAMP = 6.5;
+          var stirOn = stirLocal.valid && activeMode === 'stir';
+          var svx = stirVel.x, svy = stirVel.y, svz = stirVel.z;
+          var sSpeed = Math.sqrt(svx * svx + svy * svy);
+          var R = 1.15, R2 = R * R;
+          var hovOn = hoverLocal.valid && !activeMode;
+          // Pre-resolve ripples into flat params for the inner loop.
+          var rp = [];
+          for (var ri = ripples.length - 1; ri >= 0; ri--) {
+            var age = wallNow - ripples[ri].start;
+            if (age > 1.7) { ripples.splice(ri, 1); continue; }
+            rp.push({ x: ripples[ri].x, y: ripples[ri].y, z: ripples[ri].z, rad: age * 3.4, fade: Math.exp(-age * 1.7) * ripples[ri].strength, sine: eyeMode === 'symphony', freq: rippleFreq, age: age });
+          }
+          for (var bi = 0; bi < built.billboards.length; bi++) {
+            var bb = built.billboards[bi];
+            var pos = bb.positions, home = bb.home, vel = bb.vel, n = bb.count;
+            for (var i = 0; i < n; i++) {
+              var j = i * 3;
+              var px = pos[j], py = pos[j + 1], pz = pos[j + 2];
+              var vx = vel[j], vy = vel[j + 1], vz = vel[j + 2];
+              var ax = (home[j] - px) * K - vx * DAMP;
+              var ay = (home[j + 1] - py) * K - vy * DAMP;
+              var az = (home[j + 2] - pz) * K - vz * DAMP;
+              if (stirOn) {
+                var dx = px - stirLocal.x, dy = py - stirLocal.y, dz = pz - stirLocal.z;
+                // Pointer sits on the eye's centre plane, so depth counts
+                // at reduced weight — otherwise the front face (z ≈ +1.3)
+                // would sit outside the stir radius and never move.
+                var d2 = dx * dx + dy * dy + dz * dz * 0.2;
+                if (d2 < R2) {
+                  var d = Math.sqrt(d2) || 0.001;
+                  var fall = 1 - d / R; fall = fall * fall;
+                  ax += svx * fall * 16; ay += svy * fall * 16; az += svz * fall * 10;
+                  var swirl = fall * Math.min(sSpeed, 7) * 5.5;
+                  ax += (-dy / d) * swirl; ay += (dx / d) * swirl;
+                  var push = fall * 7;
+                  ax += (dx / d) * push; ay += (dy / d) * push; az += (dz / d) * push * 0.5;
+                }
+              } else if (hovOn) {
+                var hx = px - hoverLocal.x, hy = py - hoverLocal.y, hz = pz - hoverLocal.z;
+                var hd2 = hx * hx + hy * hy + hz * hz * 0.2;
+                if (hd2 < 0.36) {
+                  var hd = Math.sqrt(hd2) || 0.001;
+                  var hf = 1 - hd / 0.6; hf = hf * hf * 5;
+                  ax += (hx / hd) * hf; ay += (hy / hd) * hf; az += (hz / hd) * hf;
+                }
+              }
+              for (var q = 0; q < rp.length; q++) {
+                var rdx = px - rp[q].x, rdy = py - rp[q].y;
+                var rd = Math.sqrt(rdx * rdx + rdy * rdy) || 0.001;
+                var wave;
+                if (rp[q].sine) {
+                  // True sine wave train at the set frequency: phase
+                  // 2πf·(age − dist/speed), so successive rings sit
+                  // speed/frequency apart — the exact wave drawn in the
+                  // readout panel, phase-locked to the same clock.
+                  var behind = rp[q].rad - rd;
+                  if (behind < 0) continue;
+                  var env = Math.exp(-behind * 0.85) * rp[q].fade;
+                  wave = Math.sin(6.2831853 * rp[q].freq * (rp[q].age - rd / 3.4)) * env * 30;
+                } else {
+                  var off = rd - rp[q].rad;
+                  wave = Math.exp(-(off * off) / 0.18) * rp[q].fade * 34;
+                }
+                ax += (rdx / rd) * wave; ay += (rdy / rd) * wave; az += wave * 0.35;
+              }
+              vx += ax * dt; vy += ay * dt; vz += az * dt;
+              pos[j] = px + vx * dt; pos[j + 1] = py + vy * dt; pos[j + 2] = pz + vz * dt;
+              vel[j] = vx; vel[j + 1] = vy; vel[j + 2] = vz;
+            }
+          }
+          // The finger keeps moving even between move events; bleed its
+          // velocity off so a held-still finger stops shoving.
+          stirVel.x *= 0.90; stirVel.y *= 0.90; stirVel.z *= 0.90;
+          pupilPulse *= Math.pow(0.25, dt);
+        }
+
+        /* ---- symphony: spinning rainbow starlight iris ----
+           The iris dabs' homes orbit the pupil continuously (the springs
+           chase the moving homes, so the spin composes with stirring and
+           ripples instead of fighting them), their colors cycle the full
+           rainbow as a spiral laid out by angle + radius, and the star
+           layer twinkles on its own phases while spinning a touch faster. */
+        var spinAngle = 0, starAngle = 0, classicRestored = true;
+        var _rgb = [0, 0, 0];
+        function hslRgb(h, s, l) {
+          h = ((h % 1) + 1) % 1;
+          var c = (1 - Math.abs(2 * l - 1)) * s;
+          var x = c * (1 - Math.abs(((h * 6) % 2) - 1));
+          var m = l - c / 2, r = 0, g = 0, b = 0;
+          if (h < 1 / 6) { r = c; g = x; }
+          else if (h < 2 / 6) { r = x; g = c; }
+          else if (h < 3 / 6) { g = c; b = x; }
+          else if (h < 4 / 6) { g = x; b = c; }
+          else if (h < 5 / 6) { r = x; b = c; }
+          else { r = c; b = x; }
+          _rgb[0] = r + m; _rgb[1] = g + m; _rgb[2] = b + m;
+          return _rgb;
+        }
+        function applySpinHomes() {
+          for (var bi = 0; bi < built.billboards.length; bi++) {
+            var bb = built.billboards[bi];
+            if (!bb.polarR) continue;
+            var off = bb.tag === 'star' ? starAngle : spinAngle;
+            for (var i = 0; i < bb.count; i++) {
+              var a = bb.polarA[i] + off, r = bb.polarR[i];
+              bb.home[i * 3] = Math.cos(a) * r;
+              bb.home[i * 3 + 1] = Math.sin(a) * r;
+            }
+          }
+        }
+        function restoreClassic() {
+          spinAngle = 0; starAngle = 0;
+          applySpinHomes();
+          for (var bi = 0; bi < built.billboards.length; bi++) {
+            var bb = built.billboards[bi];
+            if (!bb.polarR) continue;
+            if (bb.mesh.instanceColor) {
+              var ca = bb.mesh.instanceColor.array;
+              for (var i = 0; i < bb.count * 3; i++) ca[i] = bb.origColors[i];
+              bb.mesh.instanceColor.needsUpdate = true;
+            }
+            for (var s = 0; s < bb.count; s++) bb.scales[s] = bb.baseScales[s];
+            if (bb.tag === 'star') bb.mesh.material.opacity = 0.35;
+          }
+          classicRestored = true;
+        }
+        function updateSymphony(t, dt) {
+          if (!built) return;
+          if (eyeMode !== 'symphony') {
+            if (!classicRestored) restoreClassic();
+            return;
+          }
+          classicRestored = false;
+          var spinSpeed = reducedMotion ? 0.12 : 0.45;
+          spinAngle += dt * spinSpeed;
+          starAngle += dt * spinSpeed * 1.35;
+          applySpinHomes();
+          for (var bi = 0; bi < built.billboards.length; bi++) {
+            var bb = built.billboards[bi];
+            if (!bb.polarR || !bb.mesh.instanceColor) continue;
+            var ca = bb.mesh.instanceColor.array;
+            if (bb.tag === 'star') bb.mesh.material.opacity = 1.0;
+            for (var i = 0; i < bb.count; i++) {
+              var hue = t * 0.045 + bb.polarA[i] / (Math.PI * 2) + bb.polarR[i] * 0.55 + bb.jit[i] * 0.05;
+              var j = i * 3;
+              if (bb.tag === 'star') {
+                var tw = 0.5 + 0.5 * Math.sin(t * 3.4 + bb.phase[i] * 6.2832);
+                var rgbS = hslRgb(hue, 0.9, 0.72);
+                var bright = 0.45 + 1.15 * tw;
+                ca[j]     = (rgbS[0] * 0.45 + 0.55) * bright;
+                ca[j + 1] = (rgbS[1] * 0.45 + 0.55) * bright;
+                ca[j + 2] = (rgbS[2] * 0.45 + 0.55) * bright;
+                bb.scales[i] = bb.baseScales[i] * (0.7 + 0.55 * tw);
+              } else {
+                var shimmer = 0.60 + 0.10 * Math.sin(t * 2.0 + bb.jit[i] * 6.2832);
+                var rgbI = hslRgb(hue, 0.85, shimmer);
+                ca[j] = rgbI[0]; ca[j + 1] = rgbI[1]; ca[j + 2] = rgbI[2];
+              }
+            }
+            bb.mesh.instanceColor.needsUpdate = true;
+          }
+        }
+
+        /* ---- sine visualizer: the same wave the ripples ride ----
+           Drawn from the same clock (t, seconds since loop start) and
+           the same rippleFreq the physics uses, so the curve in the
+           panel and the rings in the goo stay phase-locked. */
+        var sineCtx = sineCanvas ? sineCanvas.getContext('2d') : null;
+        function drawSine(t) {
+          if (!sineCtx) return;
+          var W = sineCanvas.width, H = sineCanvas.height;
+          var mid = H / 2, amp = H * 0.36, winSec = 1.6;
+          var omega = 2 * Math.PI * rippleFreq;
+          sineCtx.clearRect(0, 0, W, H);
+          sineCtx.strokeStyle = 'rgba(255,255,255,0.14)';
+          sineCtx.lineWidth = 1;
+          sineCtx.beginPath(); sineCtx.moveTo(0, mid); sineCtx.lineTo(W, mid); sineCtx.stroke();
+          if (eyeMode === 'symphony') {
+            var grad = sineCtx.createLinearGradient(0, 0, W, 0);
+            grad.addColorStop(0, '#f87171'); grad.addColorStop(0.2, '#fbbf24');
+            grad.addColorStop(0.4, '#a3e635'); grad.addColorStop(0.6, '#38e1f8');
+            grad.addColorStop(0.8, '#a78bfa'); grad.addColorStop(1, '#f472d0');
+            sineCtx.strokeStyle = grad;
+          } else {
+            sineCtx.strokeStyle = 'rgba(167,139,250,0.75)';
+          }
+          sineCtx.lineWidth = 3;
+          sineCtx.beginPath();
+          for (var x = 0; x <= W; x += 4) {
+            // Newest sample at the right edge; history trails left, so
+            // the wave visibly travels the way the ripple rings do.
+            var phase = omega * (t - (1 - x / W) * winSec);
+            var y = mid - Math.sin(phase) * amp;
+            if (x === 0) sineCtx.moveTo(x, y); else sineCtx.lineTo(x, y);
+          }
+          sineCtx.stroke();
+        }
+
+        function layoutGroup() {
+          if (!built) return;
+          var w = stage.clientWidth, h = stage.clientHeight;
+          // Keep the goo in the open part of the screen: the readout sheet
+          // covers the bottom in portrait and the left in short landscape.
+          // With the readout hidden, the eye takes the center of the stage.
+          if (panel.classList.contains('collapsed')) built.group.position.set(0, 0, 0);
+          else if (w / h < 1) built.group.position.set(0, 0.85, 0);
+          else if (h < 520) built.group.position.set(1.2, 0.1, 0);
+          else built.group.position.set(0, 0, 0);
+        }
+
+        function resize() {
+          if (!renderer || !built) return;
+          var w = stage.clientWidth, h = stage.clientHeight;
+          built.camera.aspect = w / h;
+          // Fit the WHOLE eye — body plus tendrils, ~3.9 wide × ~4.5 tall —
+          // at any aspect. On a narrow portrait screen the fixed camera
+          // used to crop the eye into one huge smooth-looking disc; now
+          // the camera pulls back until the full splat form is in frame.
+          var tanHalf = Math.tan((42 * Math.PI / 180) / 2);
+          var distH = 4.5 / (2 * tanHalf);
+          var distW = 3.9 / (2 * tanHalf * built.camera.aspect);
+          built.camera.position.z = Math.max(distH, distW) * 1.08;
+          built.camera.updateProjectionMatrix();
+          renderer.setSize(w, h);
+          layoutGroup();
+        }
+        window.addEventListener('resize', resize);
+
+        function startLoop() {
+          var frames = 0, fpsTime = performance.now();
+          var clockStart = performance.now();
+          var lastFrame = performance.now();
+          function frame() {
+            rafId = requestAnimationFrame(frame);
+            var nowMs = performance.now();
+            var t = (nowMs - clockStart) / 1000;
+            var dt = Math.min(0.033, Math.max(0.001, (nowMs - lastFrame) / 1000));
+            lastFrame = nowMs;
+            updateSymphony(t, dt);
+            stepPhysics(dt, nowMs / 1000);
+
+            if (!dragging && activeMode !== 'stir') {
+              userRotY += velY; userRotX += velX;
+              velY *= 0.94; velX *= 0.94;
+              userRotX = Math.max(-1.1, Math.min(1.1, userRotX));
+            }
+            var sway = autoSpin ? Math.sin(t * 0.16) * 0.38 : 0;
+            var breathe = 1 + Math.sin(t * 0.85) * 0.035;
+            built.group.rotation.y = userRotY + sway;
+            built.group.rotation.x = userRotX + (autoSpin ? Math.sin(t * 0.11) * 0.07 : 0);
+            built.group.scale.setScalar(breathe);
+            var pulse = pupilPulse;
+            // In Symphony mode the pupil also breathes on the ripple's
+            // sine — same frequency, same clock as the wave in the panel.
+            var sinePulse = eyeMode === 'symphony' ? Math.sin(2 * Math.PI * rippleFreq * t) * 0.018 : 0;
+            built.pupil.scale.set(1 + pulse * 0.10 + sinePulse, 1 + pulse * 0.10 + sinePulse, 0.42 + Math.sin(t * 0.85) * 0.012 + pulse * 0.05);
+            if (built.glow) built.glow.position.set(built.group.position.x, built.group.position.y, -2.2);
+
+            // Billboard every splat quad toward the camera: each quad's
+            // local orientation cancels the group's rotation and adopts
+            // the camera's, so the dabs stay round and face-on — reading
+            // as individual blobs — at any spin angle, on both backends.
+            var bq = built.bbQuat.copy(built.group.quaternion).invert().multiply(built.camera.quaternion);
+            var be = built.bbMat.makeRotationFromQuaternion(bq).elements;
+            for (var bi = 0; bi < built.billboards.length; bi++) {
+              var bb = built.billboards[bi];
+              var arr = bb.mesh.instanceMatrix.array;
+              var bp = bb.positions, bs = bb.scales;
+              for (var ii = 0; ii < bb.count; ii++) {
+                var s = bs[ii], o = ii * 16, j = ii * 3;
+                arr[o]      = be[0] * s; arr[o + 1]  = be[1] * s; arr[o + 2]  = be[2] * s;  arr[o + 3]  = 0;
+                arr[o + 4]  = be[4] * s; arr[o + 5]  = be[5] * s; arr[o + 6]  = be[6] * s;  arr[o + 7]  = 0;
+                arr[o + 8]  = be[8] * s; arr[o + 9]  = be[9] * s; arr[o + 10] = be[10] * s; arr[o + 11] = 0;
+                arr[o + 12] = bp[j];     arr[o + 13] = bp[j + 1]; arr[o + 14] = bp[j + 2];  arr[o + 15] = 1;
+              }
+              bb.mesh.instanceMatrix.needsUpdate = true;
+            }
+
+            renderer.render(built.scene, built.camera);
+            drawSine(t);
+
+            if (window.__bootFirstFrameMs === null) {
+              // This callback runs after the first render() above was
+              // submitted — stamp it as the first rendered frame.
+              window.__bootFirstFrameMs = performance.now();
+              var ms = window.__bootFirstFrameMs;
+              liveValue.innerHTML = fmt(ms).replace(' ms', '') + ' <small>ms</small>';
+              rowLive.textContent = fmt(ms);
+              var ratio = ms / REF_R187;
+              var diff = ms - REF_R187;
+              var cls = diff <= 0 ? '' : 'slower';
+              var word = diff <= 0 ? 'faster than' : 'slower than';
+              liveDelta.innerHTML = '<b class="' + cls + '">' + ratio.toFixed(2) + '×</b> the r187 reference (' + word + ' by ' + fmt(Math.abs(diff)).replace(' ms', '') + ' ms)';
+              setStatus('live — first frame rendered');
+            }
+
+            frames++;
+            var now = performance.now();
+            if (now - fpsTime >= 500) {
+              metaFps.textContent = Math.round(frames * 1000 / (now - fpsTime)) + ' fps';
+              frames = 0; fpsTime = now;
+            }
+          }
+          rafId = requestAnimationFrame(frame);
+        }
+
+        function failBoot(msg) {
+          setPathChip('failed', 'Renderer failed to start');
+          metaPath.innerHTML = '<strong>none</strong>';
+          metaBackend.textContent = '—';
+          setStatus('failed');
+          liveValue.textContent = 'not measured';
+          document.getElementById('stage-fallback').style.display = 'flex';
+          var p = document.querySelector('#stage-fallback p');
+          if (p && msg) p.innerHTML = 'The splat scene could not start.<br />' + msg;
+        }
+
+        async function boot() {
+          var THREE = null, pathKind = '', backendName = '';
+
+          setStatus('fetching three r187 from CDN…');
+
+          /* --- try the WebGPU path first --- */
+          var webgpuOK = false;
+          if ('gpu' in navigator) {
+            try {
+              var adapter = null;
+              try { adapter = await navigator.gpu.requestAdapter(); } catch (e) { adapter = null; }
+              if (adapter) {
+                var info = adapter.info || {};
+                var bits = [info.vendor, info.architecture, info.device].filter(Boolean).join(' · ');
+                metaAdapter.textContent = bits || 'adapter present (details withheld by browser)';
+              } else {
+                metaAdapter.textContent = 'no adapter returned';
+              }
+              THREE = await import(CDN_WEBGPU);
+              threeRef = THREE;
+              setStatus('initialising WebGPU renderer…');
+              renderer = new THREE.WebGPURenderer({ antialias: true, powerPreference: 'high-performance' });
+              await renderer.init();
+              var backend = renderer.backend || {};
+              if (backend.isWebGPUBackend) {
+                webgpuOK = true; pathKind = 'webgpu'; backendName = 'WebGPU backend';
+              } else if (backend.isWebGLBackend) {
+                pathKind = 'webgl'; backendName = 'WebGL backend (WebGPURenderer fallback)';
+              } else {
+                pathKind = 'webgpu'; backendName = 'WebGPU renderer (backend unreported)';
+                webgpuOK = true;
+              }
+            } catch (err) {
+              renderer = null; THREE = null; pathKind = '';
+            }
+          } else {
+            metaAdapter.textContent = 'navigator.gpu not present in this browser';
+          }
+
+          /* --- WebGL fallback: plain three module + WebGLRenderer --- */
+          if (!renderer) {
+            try {
+              setStatus('WebGPU unavailable — starting WebGL fallback…');
+              THREE = await import(CDN_WEBGL);
+              threeRef = THREE;
+              renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+              pathKind = 'webgl'; backendName = 'WebGL renderer';
+              if (metaAdapter.textContent === '—') metaAdapter.textContent = 'n/a on the WebGL path';
+            } catch (err) {
+              failBoot('three.js r187 could not be loaded from the CDN, and no renderer could start.');
+              return;
+            }
+          }
+
+          if (pathKind === 'webgpu') {
+            setPathChip('webgpu', 'WebGPU path active');
+            metaPath.innerHTML = '<strong>WebGPU</strong> — three r187 WebGPURenderer';
+            metaBackend.textContent = backendName;
+          } else {
+            setPathChip('webgl', 'WebGL fallback active — WebGPU unavailable');
+            metaPath.innerHTML = '<strong>WebGL (fallback)</strong> — WebGPU unavailable on this device/browser';
+            metaBackend.textContent = backendName;
+            fallbackNote.classList.add('show');
+          }
+
+          setStatus('building splat scene…');
+          built = buildScene(THREE);
+          metaSplats.textContent = built.splatCount.toLocaleString('en-US') + ' Gaussian splat billboards';
+
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+          stage.appendChild(renderer.domElement);
+          resize();
+          startLoop();
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', boot);
+        } else {
+          boot();
+        }
+      })();
+    </script>
+  </body>
+</html>
