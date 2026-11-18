@@ -479,7 +479,9 @@
         position: fixed;
         right: max(1.1rem, env(safe-area-inset-right));
         bottom: max(1.1rem, env(safe-area-inset-bottom));
-        z-index: 40;
+        /* the deck sits LOW in the stack at every width — see the
+           go-behind rule below: photographs always pass over it */
+        z-index: 2;
         display: flex;
         align-items: stretch;
         border: 1.5px solid var(--ink);
@@ -551,23 +553,28 @@
         opacity: 1;
         transform: translateY(0);
       }
+      /* The deck slips behind every photograph on the page — at
+         EVERY width, no exceptions. It stays visible and tappable
+         over the open field (headings, gaps, captions) but a
+         photograph scrolling through its corner passes over it
+         instead of being covered by it. That holds for both photo
+         surfaces — the walk's frames, where the photo button itself
+         outranks the deck (not the frame's empty padding), and the
+         Index window, whose panes are photographs too, so the whole
+         window outranks the deck as it passes. While a photo is over
+         the corner that part of the deck is covered and untappable
+         until it scrolls past; everywhere else it stays reachable.
+         This rule used to live inside the max-width:720px block
+         only — and Chrome's desktop mode on a phone reports a wide
+         viewport, so the block stopped matching, the deck climbed
+         back to the top of the stack, and the buttons showed over
+         the photos again. Width is the wrong gate for this law:
+         it now applies unconditionally. */
+      .frame button.photobtn { position: relative; z-index: 3; }
+      .window { position: relative; z-index: 3; }
+      .pane { z-index: 1; }
       @media (max-width: 720px) {
         .secnav-label { display: none; }
-        /* On mobile the deck slips behind every photograph on the
-           page: it stays visible and tappable over the open field
-           (headings, gaps, captions) but a photograph scrolling
-           through its corner passes over it instead of being covered
-           by it. That holds for both photo surfaces — the walk's
-           frames, where the photo button itself outranks the deck
-           (not the frame's empty padding), and the Index window,
-           whose panes are photographs too, so the whole window
-           outranks the deck as it passes. While a photo is over the
-           corner that part of the deck is covered and untappable
-           until it scrolls past; everywhere else it stays reachable. */
-        .secnav { z-index: 2; }
-        .frame button.photobtn { position: relative; z-index: 3; }
-        .window { position: relative; z-index: 3; }
-        .pane { z-index: 1; }
       }
       @media (prefers-reduced-motion: reduce) {
         .secnav-btn, .secnav-label { transition: none; }
