@@ -33,7 +33,26 @@
       }
 
       * { box-sizing: border-box; }
-      html { scroll-behavior: smooth; }
+      html {
+        scroll-behavior: smooth;
+        /* soft lock: a guided ease-in, photo to photo, held
+           DURING the scroll — never a pull-back. While a scroll
+           is still moving and beginning to slow (wheel, momentum,
+           or a finger still on the glass), it is guided forward
+           in to rest with the next photograph centred in the
+           viewport, centred on the photo itself (its own size,
+           not the frame's top margin), so frames feel shifted
+           between rather than pasted on one flat pane. It never
+           waits for the scroll to stop and then snaps back, never
+           reverses against the direction of travel, never springs
+           and never overshoots. The lock is driven by the script
+           at the end of the body, not CSS snap: its pull adapts
+           to how far apart neighbouring photo centres sit — far
+           apart, a tighter lock; centres crowded close together,
+           a looser, more fluid guide that stays a little sticky
+           for the centres. It never hard-locks, never traps, and
+           free scrolling past headings and captions is untouched. */
+      }
       body {
         margin: 0;
         background: var(--field);
@@ -75,7 +94,21 @@
       .portal {
         padding: clamp(1rem, 4vh, 2.5rem) 1.25rem clamp(3.5rem, 9vh, 6rem);
         text-align: center;
+        transition: opacity 650ms ease, transform 650ms ease;
       }
+      /* the gate: while the gate is closed the gallery below the
+         index is not in the page at all — not visible, not
+         scrollable, not reachable. Stepping through a pane or the
+         doorway fades the index away and reveals it; the index
+         only fades back when the page is scrolled all the way up,
+         which closes the gate again. (The is-gated class is added
+         by the gate script, so without scripts the walk simply
+         reads top to bottom as before.) */
+      body.is-gated main,
+      body.is-gated .closing { display: none; }
+      body.is-gated .secnav { display: none; }
+      .portal.is-faded { opacity: 0; transform: translateY(-10px); pointer-events: none; }
+      .portal.is-hidden { display: none; }
       .portal .numeral {
         font-family: ui-sans-system, -apple-system, "Helvetica Neue", Arial, sans-serif;
         font-size: 0.72rem;
@@ -199,15 +232,117 @@
         line-height: 1.6;
         color: var(--ink-faint);
       }
+
+      /* ---------- the doorway — one rectangular origami pane ---------- */
+      .doorway-btn {
+        --paper: #f4f1e9;
+        --paper-shade: #e2dccd;
+        --paper-ink: #22312d;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        max-width: 68rem;
+        margin: 1.6rem auto 0;
+        padding: 1.15rem 2.6rem;
+        border: 1.5px solid var(--paper-ink);
+        border-radius: 0;
+        background:
+          linear-gradient(155deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 42%),
+          linear-gradient(160deg, var(--paper) 0%, var(--paper-shade) 100%);
+        color: var(--paper-ink);
+        font-family: inherit;
+        font-size: clamp(1.08rem, 2.6vw, 1.32rem);
+        letter-spacing: 0.02em;
+        line-height: 1.25;
+        cursor: pointer;
+        box-shadow: 4px 4px 0 rgba(24, 38, 34, 0.28), var(--frame-shadow);
+        overflow: hidden;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+      }
+      /* origami creases across the paper */
+      .doorway-btn::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+          linear-gradient(24deg, transparent calc(50% - 1px), rgba(34, 49, 45, 0.14) 50%, transparent calc(50% + 1px)),
+          linear-gradient(-58deg, transparent calc(72% - 1px), rgba(34, 49, 45, 0.1) 72%, transparent calc(72% + 1px)),
+          linear-gradient(96deg, transparent calc(26% - 1px), rgba(255, 255, 255, 0.5) 26%, transparent calc(26% + 1px));
+      }
+      /* the folded-down corner, top right */
+      .doorway-btn::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 1.5rem;
+        height: 1.5rem;
+        pointer-events: none;
+        background: linear-gradient(225deg, var(--field) 0 49%, rgba(24, 38, 34, 0.22) 50%, #fdfbf5 56%, var(--paper-shade) 100%);
+        box-shadow: -2px 2px 4px rgba(24, 38, 34, 0.18);
+        z-index: 1;
+      }
+      .doorway-btn .doorway-text { position: relative; z-index: 2; }
+      .doorway-btn .doorway-arrow {
+        position: relative;
+        z-index: 2;
+        margin-left: 0.8rem;
+        font-family: ui-sans-system, -apple-system, "Helvetica Neue", Arial, sans-serif;
+        font-size: 0.95em;
+        transition: transform 180ms ease;
+      }
+      .doorway-btn:hover {
+        transform: translate(-1px, -1px);
+        box-shadow: 5px 5px 0 rgba(24, 38, 34, 0.3), var(--frame-shadow);
+      }
+      .doorway-btn:hover .doorway-arrow { transform: translateX(4px); }
+      .doorway-btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 rgba(24, 38, 34, 0.3); }
+      .doorway-btn:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+      @media (prefers-reduced-motion: reduce) {
+        .portal, .doorway-btn, .doorway-btn .doorway-arrow { transition: none; }
+        .doorway-btn:hover { transform: none; }
+      }
       @media (max-width: 980px) {
         .pane-count { display: none; }
       }
       @media (max-width: 720px) {
+        /* shrink the whole gate so all eight panes fit the phone
+           screen at once: compact opening and index headings, and
+           a window sized to the viewport height instead of fixed
+           rem rows (the old 4 × 10.5rem rows ran off the bottom). */
+        .opening { padding: 2.9rem 1.25rem 1.6rem; }
+        .opening h1 { font-size: 2.5rem; }
+        .opening .lede { margin-top: 1rem; font-size: 1.02rem; }
+        .opening .rule { margin-top: 1.7rem; }
+        .portal { padding: 0.6rem 0.9rem 2.4rem; }
+        .portal .numeral { margin-bottom: 0.6rem; }
+        .portal h2 { font-size: 1.5rem; }
+        .portal .intro { margin-top: 0.55rem; font-size: 0.94rem; line-height: 1.55; }
+        .window {
+          margin-top: 1.3rem;
+          padding: 0.55rem;
+          padding-bottom: 0;
+        }
         .window-grid {
           grid-template-columns: repeat(2, 1fr);
-          grid-template-rows: repeat(4, 10.5rem);
+          grid-template-rows: repeat(4, minmax(0, 1fr));
+          height: min(56dvh, 30rem);
+          gap: 0.55rem;
         }
-        .pane-name { white-space: normal; }
+        .pane-name { white-space: normal; font-size: 0.96rem; }
+        .pane-label { padding: 1.1rem 0.6rem 0.45rem; gap: 0.4rem; }
+        .pane-lattice {
+          background-image:
+            repeating-linear-gradient(45deg, transparent 0 18px, rgba(255, 255, 255, 0.62) 18px, rgba(255, 255, 255, 0.62) 20px),
+            repeating-linear-gradient(-45deg, transparent 0 18px, rgba(255, 255, 255, 0.62) 18px, rgba(255, 255, 255, 0.62) 20px);
+        }
+        .window-sill { margin: 0.55rem -0.55rem 0; }
+        .portal .note { margin-top: 1.05rem; font-size: 0.9rem; }
+        .doorway-btn { margin-top: 1.1rem; padding: 0.95rem 2rem; font-size: 1.08rem; }
       }
       @media (prefers-reduced-motion: reduce) {
         .pane img, .pane-lattice { transition: none; }
@@ -254,6 +389,9 @@
         margin: 0 auto;
         padding: clamp(1.6rem, 5vh, 3.4rem) 1.25rem;
         max-width: 62rem;
+        /* the soft lock's resting places are the photographs
+           themselves — the script centres each photo in the viewport
+           based on the photo's own rendered size */
       }
       .frame.portrait { max-width: 44rem; }
       .frame.wide { max-width: 78rem; }
@@ -326,6 +464,113 @@
         font-size: clamp(1.15rem, 3vw, 1.5rem);
         line-height: 1.7;
         color: var(--ink-soft);
+      }
+      /* the way back in — the doorway pane again, at the very end
+         of the walk, above the closing line */
+      .closing .doorway-btn { margin: 0 auto clamp(3rem, 8vh, 4.5rem); }
+      .back-inside-btn .doorway-arrow { margin-left: 0; margin-right: 0.8rem; }
+      .back-inside-btn:hover .doorway-arrow { transform: translateX(-4px); }
+
+      /* ---------- tape-deck section skip — one connected box, bottom right ---------- */
+      .secnav {
+        --nav-box: #f4f1e9;
+        --nav-box-hover: #22312d;
+        --nav-box-hover-ink: #f4f1e9;
+        position: fixed;
+        right: max(1.1rem, env(safe-area-inset-right));
+        bottom: max(1.1rem, env(safe-area-inset-bottom));
+        z-index: 40;
+        display: flex;
+        align-items: stretch;
+        border: 1.5px solid var(--ink);
+        background: var(--nav-box);
+        box-shadow: 3.2px 3.2px 0 rgba(24, 38, 34, 0.28);
+      }
+      @media (prefers-color-scheme: dark) {
+        .secnav {
+          --nav-box: #202c2a;
+          --nav-box-hover: #d9e4df;
+          --nav-box-hover-ink: #202c2a;
+          box-shadow: 3.2px 3.2px 0 rgba(0, 0, 0, 0.5);
+        }
+      }
+      .secnav-btn {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.48rem;
+        height: 2.2rem;
+        min-height: 2.2rem;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: var(--ink);
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: opacity 200ms ease, background 150ms ease, color 150ms ease;
+      }
+      .secnav-btn + .secnav-btn { border-left: 1.5px solid var(--ink); }
+      .secnav-btn svg {
+        width: 1.08rem;
+        height: 1.08rem;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2.1;
+        stroke-linecap: square;
+        stroke-linejoin: miter;
+        pointer-events: none;
+      }
+      .secnav-btn:hover { background: var(--nav-box-hover); color: var(--nav-box-hover-ink); }
+      .secnav-btn:active { background: var(--nav-box-hover); color: var(--nav-box-hover-ink); }
+      .secnav-btn:focus-visible { outline: 2px solid var(--ink-soft); outline-offset: 3px; }
+      .secnav-btn.is-disabled { opacity: 0.28; cursor: default; }
+      .secnav-btn.is-disabled:hover { background: transparent; color: var(--ink); }
+      .secnav-label {
+        position: absolute;
+        right: -1.5px;
+        bottom: calc(100% + 0.7rem);
+        transform: translateY(4px);
+        padding: 0.34rem 0.7rem;
+        border-radius: 0;
+        background: var(--nav-box);
+        border: 1.5px solid var(--ink);
+        font-family: ui-sans-system, -apple-system, "Helvetica Neue", Arial, sans-serif;
+        font-size: 0.66rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 200ms ease, transform 200ms ease;
+      }
+      .secnav-btn:hover .secnav-label,
+      .secnav-btn:focus-visible .secnav-label {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      @media (max-width: 720px) {
+        .secnav-label { display: none; }
+        /* On mobile the deck slips behind every photograph on the
+           page: it stays visible and tappable over the open field
+           (headings, gaps, captions) but a photograph scrolling
+           through its corner passes over it instead of being covered
+           by it. That holds for both photo surfaces — the walk's
+           frames, where the photo button itself outranks the deck
+           (not the frame's empty padding), and the Index window,
+           whose panes are photographs too, so the whole window
+           outranks the deck as it passes. While a photo is over the
+           corner that part of the deck is covered and untappable
+           until it scrolls past; everywhere else it stays reachable. */
+        .secnav { z-index: 2; }
+        .frame button.photobtn { position: relative; z-index: 3; }
+        .window { position: relative; z-index: 3; }
+        .pane { z-index: 1; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .secnav-btn, .secnav-label { transition: none; }
       }
 
       /* ---------- full-screen viewer ---------- */
@@ -412,10 +657,10 @@
       <div class="rule" aria-hidden="true"></div>
     </header>
 
-    <section class="portal" aria-label="Index — the eight sections of the walk">
+    <section class="portal" id="portal" aria-label="Index — the eight sections of the walk">
       <p class="numeral">The Index</p>
       <h2>Eight rooms, seen through one window</h2>
-      <p class="intro">Each pane looks into a room of the walk. Step through one to start there — or keep scrolling, and take the walk whole.</p>
+      <p class="intro">Each pane looks into a room of the walk. Step through one to start there — or walk thru the doorway, and take the walk whole.</p>
 
       <div class="window">
         <div class="window-grid">
@@ -462,10 +707,13 @@
         </div>
         <div class="window-sill" aria-hidden="true"></div>
       </div>
+      <button class="doorway-btn" id="doorwayBtn" type="button" aria-label="Walk thru the doorway — enter the walk from the beginning">
+        <span class="doorway-text">Walk Thru The Doorway</span><span class="doorway-arrow" aria-hidden="true">&#8594;</span>
+      </button>
       <p class="note">Every frame, behind the glass.</p>
     </section>
 
-    <main>
+    <main id="gallery">
       <!-- MOVEMENT I — OCEAN -->
       <section id="ocean" aria-label="Movement I — Ocean">
         <div class="movement">
@@ -1016,8 +1264,23 @@
     </main>
 
     <footer class="closing">
+      <button class="doorway-btn back-inside-btn" id="walkBackBtn" type="button" aria-label="Walk back inside — return to the index">
+        <span class="doorway-arrow" aria-hidden="true">&#8592;</span><span class="doorway-text">Walk Back Inside</span>
+      </button>
       <p>it&rsquo;s not the location. it never was. the membrane is wherever you&rsquo;re standing.</p>
     </footer>
+
+    <!-- tape-deck section skip — connected sideways arrows, bottom right -->
+    <nav class="secnav" aria-label="Jump between sections">
+      <button class="secnav-btn secnav-prev" id="secUp" type="button" aria-label="Previous section">
+        <span class="secnav-label" id="secUpLabel" aria-hidden="true"></span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5l-7 7 7 7M19 5l-7 7 7 7" /></svg>
+      </button>
+      <button class="secnav-btn secnav-next" id="secDown" type="button" aria-label="Next section">
+        <span class="secnav-label" id="secDownLabel" aria-hidden="true"></span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l7 7-7 7M12 5l7 7-7 7" /></svg>
+      </button>
+    </nav>
 
     <!-- full-screen viewer -->
     <div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-label="Full-screen photograph">
@@ -1094,6 +1357,639 @@
           var dx = e.changedTouches[0].clientX - tx;
           if (Math.abs(dx) > 48) render(current + (dx < 0 ? 1 : -1));
           tx = null;
+        }, { passive: true });
+      })();
+    </script>
+
+    <script>
+      /* tape-deck skip — back / forward stop to stop: opening, index, each movement, the close */
+      (function () {
+        var stops = [];
+        function addStop(el, name) { if (el) stops.push({ el: el, name: name }); }
+        addStop(document.querySelector(".opening"), "Opening");
+        addStop(document.querySelector(".portal"), "The Index");
+        Array.prototype.forEach.call(document.querySelectorAll("main section[id]"), function (s) {
+          var h = s.querySelector("h2");
+          stops.push({ el: s, name: h ? h.textContent : s.id });
+        });
+        addStop(document.querySelector(".closing"), "The Close");
+
+        var upBtn = document.getElementById("secUp");
+        var downBtn = document.getElementById("secDown");
+        var upLabel = document.getElementById("secUpLabel");
+        var downLabel = document.getElementById("secDownLabel");
+        var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+        function topOf(stop) {
+          return stop.el.getBoundingClientRect().top + window.pageYOffset;
+        }
+        /* the stop just above the current scroll position, and the first one below it */
+        function targets() {
+          var y = window.pageYOffset;
+          var up = null, down = null;
+          for (var i = 0; i < stops.length; i++) {
+            var t = topOf(stops[i]);
+            if (t < y - 8) up = stops[i];
+            if (t > y + 8 && !down) down = stops[i];
+          }
+          return { up: up, down: down };
+        }
+        function setBtn(btn, label, stop, dir) {
+          if (stop) {
+            btn.disabled = false;
+            btn.classList.remove("is-disabled");
+            label.textContent = stop.name;
+            btn.setAttribute("aria-label", (dir === "up" ? "Back to " : "On to ") + stop.name);
+          } else {
+            btn.disabled = true;
+            btn.classList.add("is-disabled");
+            label.textContent = dir === "up" ? "The beginning" : "The end";
+            btn.setAttribute("aria-label", dir === "up" ? "At the beginning of the walk" : "At the end of the walk");
+          }
+        }
+        function refresh() {
+          var t = targets();
+          setBtn(upBtn, upLabel, t.up, "up");
+          setBtn(downBtn, downLabel, t.down, "down");
+        }
+        /* a programmatic jump OWNS the scroll until it ARRIVES,
+           and it drives itself: window.walkSmoothTo (shared with
+           the gate script below) runs the glide frame by frame
+           instead of handing it to the browser's native smooth
+           scroll. The native glide was the failure that sent
+           every pane tap to Ocean: on the phone it could be
+           abandoned mid-journey — the page simply stopped at the
+           first room the glide passed — while every guard around
+           it reported success. A driven glide cannot be abandoned:
+           each frame sets the position outright (with the CSS
+           smooth scroll switched off, so no step is re-tweened
+           into a second, competing animation), the target is
+           recomputed from live layout every frame, and the last
+           frame sets the position exactly on the target. While
+           it travels, the body carries is-jumping and the soft
+           lock stands aside for the whole journey. The glide
+           ends when it arrives; when the reader takes the scroll
+           back with a touch or a wheel turn it stops where it
+           is (takeover never drags the reader onwards); and a
+           failsafe lands it outright if frames ever stall. */
+        var activeGlideCancel = null;
+        window.walkSmoothTo = function (targetYAt, instant) {
+          if (activeGlideCancel) activeGlideCancel();
+          var docEl = document.documentElement;
+          var startY = window.pageYOffset;
+          var dist = Math.abs(targetYAt() - startY);
+          var duration = instant || dist < 2 ? 0 : Math.min(1600, Math.max(380, dist * 0.32));
+          var startT = null;
+          var finished = false;
+          var rafId = null;
+          var failsafe = null;
+          document.body.classList.add("is-jumping");
+          docEl.style.scrollBehavior = "auto";
+          function cleanup() {
+            window.removeEventListener("touchstart", takeover);
+            window.removeEventListener("wheel", takeover);
+            if (rafId !== null) window.cancelAnimationFrame(rafId);
+            if (failsafe) window.clearTimeout(failsafe);
+            if (activeGlideCancel === cancel) activeGlideCancel = null;
+          }
+          function finish(arrived) {
+            if (finished) return;
+            finished = true;
+            cleanup();
+            if (arrived) window.scrollTo(0, targetYAt());
+            docEl.style.scrollBehavior = "";
+            document.body.classList.remove("is-jumping");
+            window.dispatchEvent(new Event("walk-jump-end"));
+          }
+          function takeover() { finish(false); }
+          function cancel() {
+            if (finished) return;
+            finished = true;
+            cleanup();
+            docEl.style.scrollBehavior = "";
+            document.body.classList.remove("is-jumping");
+          }
+          activeGlideCancel = cancel;
+          window.addEventListener("touchstart", takeover, { passive: true });
+          window.addEventListener("wheel", takeover, { passive: true });
+          failsafe = window.setTimeout(function () { finish(true); }, duration + 5000);
+          if (!duration) { finish(true); return cancel; }
+          function frame(now) {
+            if (finished) return;
+            if (startT === null) startT = now;
+            var p = Math.min(1, (now - startT) / duration);
+            var e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+            window.scrollTo(0, startY + (targetYAt() - startY) * e);
+            if (p >= 1) finish(true);
+            else rafId = window.requestAnimationFrame(frame);
+          }
+          rafId = window.requestAnimationFrame(frame);
+          return cancel;
+        };
+        function go(dir) {
+          var t = targets();
+          var stop = dir === "up" ? t.up : t.down;
+          if (!stop) return;
+          var el = stop.el;
+          /* sections land with their scroll margin (1.5rem) at
+             the top of the viewport, as scrollIntoView did */
+          var margin = el.tagName === "SECTION" && el.id ? 24 : 0;
+          window.walkSmoothTo(function () {
+            return el.getBoundingClientRect().top + window.pageYOffset - margin;
+          }, reduceMotion.matches);
+        }
+        upBtn.addEventListener("click", function () { go("up"); });
+        downBtn.addEventListener("click", function () { go("down"); });
+
+        var ticking = false;
+        window.addEventListener("scroll", function () {
+          if (ticking) return;
+          ticking = true;
+          requestAnimationFrame(function () { refresh(); ticking = false; });
+        }, { passive: true });
+        window.addEventListener("resize", refresh);
+        refresh();
+      })();
+    </script>
+
+    <script>
+      /* soft lock — a guided ease-in to centre frame, held DURING
+         the scroll itself, and never, ever a pull-back.
+         The law (hers): ease in, yum. Pull back? No. No free
+         scroll followed by a BAM snap, no spring, no reversal,
+         no correction after the fact. If the walk locks at all,
+         the guidance lives inside the scroll — wheel, momentum
+         and touch, finger still down included — so the material
+         effect is held throughout instead of being applied
+         afterwards to a scroll that was let go free.
+         How this build honours it, with no exceptions:
+           · FORWARD ONLY, enforced in code, not just intended.
+             A guide may only ever travel in the direction the
+             reader is already moving, toward a photo centre that
+             lies AHEAD in that direction. startGuide itself
+             refuses any target whose direction differs from the
+             current direction of travel, and every step of a
+             guide is clamped so it can only move further in
+             that same direction and can never pass its centre.
+             There is no branch — moving, slowing, or stopped —
+             that scrolls the page backwards. None.
+           · NO AFTER-THE-FACT SETTLE. There is deliberately no
+             second, separate settling step at all. A guide can only begin
+             while the scroll is still travelling (a scroll event
+             within the last fifth of a second and velocity in
+             the easing zone). If a scroll comes to rest off a
+             centre, it stays where it stopped. The page never
+             waits for silence and then reaches for a centre
+             behind — or ahead of — where the reader landed.
+           · It engages mid-scroll, not after a silence. A rAF
+             loop watches velocity continuously — during wheel
+             scrolling, during momentum, and during a touch whose
+             finger is slowing on the glass — and as the motion
+             eases down through the guide zone the guide takes
+             over from the motion already happening, early enough
+             that the reader feels guided in, not grabbed after.
+           · The takeover does not brake or spring. The guide's
+             curve is a cubic Hermite whose starting slope is
+             matched to the scroll's current velocity and whose
+             ending slope is zero: it begins moving at exactly
+             the speed the scroll was already moving, then eases
+             in — gathering nothing, jolting nothing — and
+             softens to rest precisely on the centre. Monotonic,
+             no overshoot, no bounce past the centre and back.
+           · Held during touch and wheel, not cancelled by them.
+             A finger still on the glass or a wheel still turning
+             IN the guide's direction does not cancel it — the
+             guide is checked on touchmove and wheel frames
+             themselves. Only a genuine reversal of intent
+             (finger or wheel pushing the opposite way, or a key
+             press) cancels a guide, and cancelling never moves
+             the page backwards either: it just lets go.
+           · No double animation. The page's CSS smooth-scroll
+             is switched off for the guide's own per-frame steps
+             (each step lands instantly), so the browser cannot
+             re-tween every step into the laggy, springy lag
+             that made the old lock feel like a rubber band.
+           · Centred on the photo itself: the resting place is
+             where the photo's own centre meets the viewport's
+             centre, whatever the photo's size.
+           · Distance still sets the tension: a photo far from
+             its neighbours gets a wide capture and a firmer,
+             shorter guide; centres crowded close together (a
+             run of landscapes) get a narrow capture and a
+             longer, gentler guide — fluid, with just a little
+             stick as each centre passes.
+           · It stands aside for the WHOLE of a tape-deck /
+             index / doorway jump, not for a fixed window after
+             the tap: while a jump is travelling the body carries
+             an is-jumping class (set by the jump scripts, lifted
+             only when the jump arrives, is taken over by the
+             reader, or hits a long failsafe), and blocked()
+             honours it. A fixed window was the bug: the gate's
+             fade ate most of it, a long glide outlasted the
+             rest, and the lock met the glide mid-journey over
+             the first photos it passed — Ocean's — and its own
+             steps cancelled the glide, so every pane landed in
+             Ocean. When a jump ends it announces itself, and
+             the lock forgets the glide's motion entirely, so it
+             never guides on the jump's tail either.
+           · It also stands aside while the viewer is open,
+             while the gate is closed, and entirely for
+             reduced-motion settings. */
+      (function () {
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+        var frames = Array.prototype.slice.call(document.querySelectorAll(".frame"));
+        if (!frames.length) return;
+        var viewer = document.getElementById("viewer");
+        var docEl = document.documentElement;
+
+        var guide = null; /* { from, to, start, duration, v0, dir, lastY } */
+        var rafId = null;
+
+        /* scroll velocity, px per ms, signed — smoothed so a
+           single jittery event cannot fake a fling or a stop */
+        var lastY = window.pageYOffset;
+        var lastT = performance.now();
+        var lastMoveAt = 0; /* last NON-guide scroll movement */
+        var velocity = 0;
+        var lastDir = 0; /* current direction of travel: -1 up, +1 down */
+        var touching = false;
+        var lastTouchY = null;
+        var ownScroll = false; /* true for the step our guide moves */
+        var suppressUntil = 0;
+
+        function photoCenterY(frame) {
+          var img = frame.querySelector("img");
+          var r = img.getBoundingClientRect();
+          return r.top + window.pageYOffset + r.height / 2;
+        }
+
+        function strengthFor(centers, i, vh) {
+          var spacing = Infinity;
+          if (i > 0) spacing = Math.min(spacing, centers[i] - centers[i - 1]);
+          if (i < centers.length - 1) spacing = Math.min(spacing, centers[i + 1] - centers[i]);
+          if (!isFinite(spacing)) spacing = vh * 1.5;
+          var ratio = spacing / vh;
+          var s = (ratio - 0.65) / (1.15 - 0.65);
+          return Math.max(0, Math.min(1, s));
+        }
+
+        function endGuide() {
+          guide = null;
+          docEl.style.scrollBehavior = "";
+        }
+        function cancelGuide() { if (guide) endGuide(); }
+
+        function startGuide(targetY, strength) {
+          var startY = window.pageYOffset;
+          var D = targetY - startY;
+          if (Math.abs(D) < 2) return;
+          /* THE NO-PULL-BACK GUARD, at the single door every
+             guide must pass through: if the target is not ahead
+             in the reader's current direction of travel, there
+             is no guide. No caller can talk its way past this. */
+          if (lastDir === 0 || Math.sign(D) !== lastDir) return;
+          /* blend only with motion already heading toward the
+             target; anything else starts from rest */
+          var v = velocity;
+          if (!v || Math.sign(v) !== Math.sign(D)) v = 0;
+          var duration = 540 + (1 - strength) * 340 + Math.min(280, Math.abs(D) * 0.7);
+          if (Math.abs(v) > 0.05) {
+            /* long enough that starting at the scroll's own
+               speed still lands softly — never a hurried snap */
+            var tByVel = (Math.abs(D) / Math.abs(v)) * 1.5;
+            duration = Math.max(duration, Math.min(1200, Math.max(480, tByVel)));
+          }
+          duration = Math.min(1250, duration);
+          /* normalised starting slope for the Hermite curve:
+             f'(0) = v0 (the scroll's current speed, in units of
+             the whole journey per duration), f'(1) = 0 */
+          var v0 = v ? (v * duration) / D : 0;
+          v0 = Math.max(0, Math.min(1.6, v0));
+          guide = { from: startY, to: targetY, start: null, duration: duration, v0: v0, dir: Math.sign(D), lastY: startY };
+          /* per-frame steps must land instantly — the CSS
+             scroll-behavior would otherwise tween each step and
+             the guide would lag and spring */
+          docEl.style.scrollBehavior = "auto";
+        }
+
+        function stepGuide(now) {
+          if (guide.start === null) guide.start = now;
+          var p = Math.min(1, (now - guide.start) / guide.duration);
+          var v0 = guide.v0;
+          /* cubic Hermite: f(0)=0, f(1)=1, f'(0)=v0, f'(1)=0 —
+             starts at the scroll's own speed, eases in to rest,
+             monotonic for 0 <= v0 <= 1.6, never overshoots */
+          var a = v0 - 2, b = 3 - 2 * v0;
+          var f = ((a * p + b) * p + v0) * p;
+          var y = guide.from + (guide.to - guide.from) * f;
+          /* monotonic clamp: a step may only move further in
+             the guide's own direction, and never past the
+             centre — so even a stray frame can never read as
+             a pull-back or a spring past the mark */
+          if (guide.dir > 0) y = Math.max(guide.lastY, Math.min(guide.to, y));
+          else y = Math.min(guide.lastY, Math.max(guide.to, y));
+          guide.lastY = y;
+          ownScroll = true;
+          window.scrollTo(0, y);
+          ownScroll = false;
+          if (p >= 1) endGuide();
+        }
+
+        function blocked() {
+          if (document.body.classList.contains("is-gated")) return true;
+          if (document.body.classList.contains("is-jumping")) return true;
+          if (Date.now() < suppressUntil) return true;
+          if (viewer && viewer.classList.contains("open")) return true;
+          if (document.body.style.overflow === "hidden") return true;
+          return false;
+        }
+
+        function tryGuide(now) {
+          if (guide || blocked()) return;
+          /* DURING the scroll only. If the page has not moved
+             (outside the guide itself) in the last fifth of a
+             second, the scroll is over — and a finished scroll
+             is never corrected. No hold, no settle, no snap. */
+          if (now - lastMoveAt > 200) return;
+          if (lastDir === 0) return;
+          var vAbs = Math.abs(velocity);
+          /* engage while the motion is easing, early enough to
+             feel guided: the ceiling is the speed at which a
+             scroll is clearly beginning to soften. Above it the
+             reader is travelling; the loop keeps watching every
+             frame, so the guide meets the scroll on its way
+             down — still moving, never after a stop. A finger
+             still on the glass gets a lower ceiling, because a
+             held finger is already guiding the page itself. */
+          var ceiling = touching ? 1.05 : 1.55;
+          if (vAbs > ceiling) return;
+          /* the motion must agree with its own direction */
+          if (vAbs > 0.02 && Math.sign(velocity) !== lastDir) return;
+
+          var vh = window.innerHeight;
+          var mid = window.pageYOffset + vh / 2;
+          var centers = frames.map(photoCenterY);
+          var best = -1, bestDist = Infinity, bestStrength = 0;
+          for (var i = 0; i < centers.length; i++) {
+            var delta = centers[i] - mid; /* + = centre ahead below, - = ahead above */
+            /* FORWARD ONLY: only a centre ahead in the current
+               direction of travel can ever be chosen. A centre
+               behind the line of travel is not considered, at
+               any speed, at any distance, ever. */
+            if (Math.sign(delta) !== lastDir) continue;
+            var ad = Math.abs(delta);
+            var strength = strengthFor(centers, i, vh);
+            var capture = vh * (0.20 + 0.30 * strength);
+            if (ad > capture) continue;
+            if (ad < bestDist) { bestDist = ad; best = i; bestStrength = strength; }
+          }
+          if (best < 0 || bestDist < 2) return;
+          startGuide(centers[best] - vh / 2, bestStrength);
+        }
+
+        function loop(now) {
+          rafId = null;
+          if (guide) {
+            if (blocked()) cancelGuide();
+            else stepGuide(now);
+          } else {
+            /* velocity decays when the page stops moving, so a
+               resting page reads as resting */
+            if (now - lastT > 40) {
+              velocity *= 0.85;
+              if (Math.abs(velocity) < 0.01) velocity = 0;
+            }
+            tryGuide(now);
+          }
+          if (guide || touching || Math.abs(velocity) > 0.01 || now - lastMoveAt < 300) {
+            rafId = requestAnimationFrame(loop);
+          }
+        }
+        function kick() {
+          if (rafId === null) rafId = requestAnimationFrame(loop);
+        }
+
+        window.addEventListener("scroll", function () {
+          var now = performance.now();
+          var y = window.pageYOffset;
+          if (!ownScroll && y !== lastY) {
+            var dt = now - lastT;
+            if (dt > 0) {
+              var inst = (y - lastY) / dt;
+              velocity = velocity * 0.6 + inst * 0.4;
+              if (Math.abs(inst) > 0.02) lastDir = Math.sign(inst);
+            }
+            lastMoveAt = now;
+          }
+          lastY = y;
+          lastT = now;
+          /* engage during the scroll itself — every frame of
+             it, not after a silence */
+          kick();
+        }, { passive: true });
+
+        window.addEventListener("touchstart", function (e) {
+          touching = true;
+          lastTouchY = e.touches.length ? e.touches[0].clientY : null;
+          kick();
+        }, { passive: true });
+        window.addEventListener("touchmove", function (e) {
+          /* the guide is checked DURING the touch itself, so a
+             slowing finger meets it mid-gesture, finger still
+             down. A drag in the guide's own direction never
+             cancels it — that is the material effect being
+             held. Only a finger that reverses against the
+             guide lets it go, and letting go moves nothing. */
+          if (e.touches.length) {
+            var cy = e.touches[0].clientY;
+            if (guide && lastTouchY !== null) {
+              var fingerDy = cy - lastTouchY;
+              /* finger moving down scrolls the page up, and
+                 vice versa: the page direction a drag asks for */
+              var dragDir = fingerDy > 3 ? -1 : (fingerDy < -3 ? 1 : 0);
+              if (dragDir !== 0 && dragDir !== guide.dir) cancelGuide();
+            }
+            lastTouchY = cy;
+          }
+          kick();
+        }, { passive: true });
+        window.addEventListener("touchend", function () {
+          touching = false;
+          lastTouchY = null;
+          /* momentum is part of the same scroll — the loop is
+             already running, with no post-stop delay */
+          kick();
+        }, { passive: true });
+        window.addEventListener("touchcancel", function () {
+          touching = false;
+          lastTouchY = null;
+        }, { passive: true });
+
+        /* a wheel turning IN the guide's direction is the scroll
+           itself — it never cancels the guide it is feeding.
+           Only a wheel pushing the opposite way (a genuine
+           reversal of intent) or a key press lets it go. */
+        window.addEventListener("wheel", function (e) {
+          if (guide && e.deltaY && Math.sign(e.deltaY) !== guide.dir) cancelGuide();
+          kick();
+        }, { passive: true });
+        window.addEventListener("keydown", function () {
+          if (guide) cancelGuide();
+        });
+
+        /* a programmatic jump announces its end (see the gate
+           and tape-deck scripts): forget the glide's motion
+           entirely, so the lock treats the reader as settled
+           where the jump landed and never guides on its tail */
+        window.addEventListener("walk-jump-end", function () {
+          cancelGuide();
+          velocity = 0;
+          lastDir = 0;
+          lastMoveAt = 0;
+        });
+
+        /* the tape-deck skip and the index panes make their own
+           jumps — the lock stands aside while they land */
+        Array.prototype.forEach.call(
+          document.querySelectorAll(".secnav-btn, .pane, .doorway-btn"),
+          function (el) {
+            el.addEventListener("click", function () {
+              suppressUntil = Date.now() + 1400;
+              cancelGuide();
+            });
+          }
+        );
+      })();
+    </script>
+
+    <script>
+      /* the doorway gate — the index stands between the opening and
+         the gallery. On load the gate is closed: the gallery is out
+         of the page entirely, so no amount of scrolling reaches it.
+         Stepping through a pane, or through the doorway button,
+         fades the index away, reveals the gallery, and glides to
+         the chosen room (the doorway starts the walk at Ocean).
+         The index only comes back when the page is scrolled all
+         the way up: returning to the very top fades it back in and
+         closes the gate again, so re-entering always takes a step
+         through a pane or the doorway. */
+      (function () {
+        var body = document.body;
+        var portal = document.getElementById("portal");
+        var doorwayBtn = document.getElementById("doorwayBtn");
+        if (!portal) return;
+
+        var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+        var FADE_MS = 650;
+
+        var gateOpen = false;
+        var transitioning = false;
+        /* the gate only re-arms after an entry has actually carried
+           the reader down the page — otherwise the scroll listener
+           would close it again in the same moment it opens, while
+           the reader is still at the top waiting for the glide */
+        var hasLeftTop = false;
+
+        /* close the gate on load (scripts run before the reader
+           can scroll; without scripts nothing is gated) */
+        body.classList.add("is-gated");
+
+        /* a jump through the gate is driven by window.walkSmoothTo
+           (see the tape-deck script): the glide sets the scroll
+           position itself, every frame, and lands exactly on the
+           chosen room. It no longer trusts the browser's native
+           smooth scroll, which on the phone was abandoning the
+           journey partway and leaving every pane's reader in
+           Ocean, the first room the glide passed. While the glide
+           travels, the body carries is-jumping, so the soft lock
+           stands aside for the whole journey, and walk-jump-end
+           makes it forget the glide's motion and never guide on
+           its tail. */
+        var glideCancel = null;
+        function endJump() { if (glideCancel) glideCancel(); }
+
+        function enterWalk(targetId) {
+          if (transitioning || gateOpen) return;
+          transitioning = true;
+          hasLeftTop = false;
+          portal.classList.add("is-faded");
+          window.setTimeout(function () {
+            body.classList.remove("is-gated");
+            portal.classList.add("is-hidden");
+            portal.classList.remove("is-faded");
+            gateOpen = true;
+            transitioning = false;
+            var target = targetId ? document.querySelector(targetId) : null;
+            if (!target) target = document.querySelector("main section[id]");
+            if (target) {
+              /* sections land with their scroll margin (1.5rem)
+                 at the top of the viewport */
+              glideCancel = window.walkSmoothTo(function () {
+                return target.getBoundingClientRect().top + window.pageYOffset - 24;
+              }, reduceMotion.matches);
+              /* if the target sits close enough to the top that the
+                 glide barely moves (Ocean, just below the opening),
+                 the reader may never cross the re-arm threshold —
+                 arm the gate anyway once the glide has had its time */
+              window.setTimeout(function () { hasLeftTop = true; }, reduceMotion.matches ? 60 : 1100);
+            }
+          }, reduceMotion.matches ? 0 : FADE_MS);
+        }
+
+        function closeGate() {
+          if (transitioning || !gateOpen) return;
+          endJump();
+          transitioning = true;
+          hasLeftTop = false;
+          /* bring the index back at the top and take the gallery
+             out of the page again, then fade the index in */
+          body.classList.add("is-gated");
+          portal.classList.remove("is-hidden");
+          portal.classList.add("is-faded");
+          /* force a reflow so the fade-in transition runs */
+          void portal.offsetWidth;
+          window.requestAnimationFrame(function () {
+            portal.classList.remove("is-faded");
+          });
+          window.setTimeout(function () {
+            gateOpen = false;
+            transitioning = false;
+            window.scrollTo(0, 0);
+          }, reduceMotion.matches ? 0 : FADE_MS);
+        }
+
+        Array.prototype.forEach.call(portal.querySelectorAll(".pane"), function (pane) {
+          pane.addEventListener("click", function (e) {
+            e.preventDefault();
+            enterWalk(pane.getAttribute("href"));
+          });
+        });
+        if (doorwayBtn) {
+          doorwayBtn.addEventListener("click", function () { enterWalk("#ocean"); });
+        }
+
+        /* walk back inside — the button at the very end of the
+           walk. Gliding all the way back up is what returns the
+           reader to the threshold: the scroll listener below
+           closes the gate and fades the index back in as the
+           page reaches the very top. */
+        var walkBackBtn = document.getElementById("walkBackBtn");
+        if (walkBackBtn) {
+          walkBackBtn.addEventListener("click", function () {
+            /* the long glide home owns the scroll the whole way
+               up, like every other jump — the lock stands aside
+               until the page reaches the very top, where the
+               scroll listener below closes the gate */
+            glideCancel = window.walkSmoothTo(function () { return 0; }, reduceMotion.matches);
+          });
+        }
+
+        window.addEventListener("scroll", function () {
+          if (!gateOpen || transitioning) return;
+          var y = window.pageYOffset;
+          if (y > 80) hasLeftTop = true;
+          else if (y <= 4 && hasLeftTop) closeGate();
         }, { passive: true });
       })();
     </script>
