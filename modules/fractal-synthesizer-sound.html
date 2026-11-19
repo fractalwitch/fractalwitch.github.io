@@ -236,6 +236,21 @@
       }
       .toggle[aria-pressed="true"]{background:rgba(139,92,246,.35);border-color:var(--line-hot);}
       .toggle[aria-pressed="true"]::after{left:25px;background:var(--magenta);box-shadow:0 0 10px rgba(255,79,216,.7);}
+      .freeze-btn{
+        border-radius:999px;border:1px solid rgba(103,232,249,.55);cursor:pointer;
+        background:rgba(34,211,238,.10);color:var(--cyan-soft);
+        font-family:"Space Mono",monospace;font-size:.66rem;font-weight:700;letter-spacing:.1em;
+        padding:8px 12px;min-height:2.2rem;white-space:nowrap;transition:background .15s,color .15s,border-color .15s;
+      }
+      .freeze-btn:hover{background:rgba(34,211,238,.22);color:#fff;}
+      .freeze-btn.frozen{background:rgba(34,211,238,.32);border-color:var(--cyan);color:#fff;box-shadow:0 0 14px rgba(34,211,238,.45);}
+      .fx.frozen-card{border-color:rgba(34,211,238,.55);}
+      .mini-btn{
+        border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.3);cursor:pointer;
+        font-family:"Space Mono",monospace;font-size:.66rem;font-weight:700;letter-spacing:.1em;
+        padding:8px 10px;min-height:2.2rem;color:var(--ink-dim);text-align:left;width:100%;
+      }
+      .mini-btn:hover{color:var(--ink);border-color:var(--line-hot);}
 
       /* ---------- signal readouts ---------- */
       .signal-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
@@ -367,7 +382,7 @@
         <div class="status-cluster">
           <span class="chip"><span class="dot" id="liveDot"></span><b id="liveText">STOPPED</b></span>
           <span class="chip">ROOT <b id="rootChip">A</b></span>
-          <span class="chip">DEPTH <b id="depthChip">4</b></span>
+          <span class="chip">DEPTH <b id="depthChip">2</b></span>
         </div>
       </header>
 
@@ -380,14 +395,14 @@
           </div>
           <div class="transport-controls">
             <div class="ctl">
-              <label for="tempo">Tempo — <span class="val" id="tempoVal">104 BPM</span></label>
-              <input type="range" id="tempo" min="60" max="160" step="1" value="104" />
+              <label for="tempo">Tempo — <span class="val" id="tempoVal">84 BPM</span></label>
+              <input type="range" id="tempo" min="60" max="160" step="1" value="84" />
             </div>
             <div class="ctl">
               <label>Recursion depth</label>
               <div class="depth-row">
                 <button class="step-btn" id="depthDown" type="button" aria-label="Decrease depth">−</button>
-                <span class="depth-read" id="depthRead">4</span>
+                <span class="depth-read" id="depthRead">2</span>
                 <button class="step-btn" id="depthUp" type="button" aria-label="Increase depth">+</button>
                 <span class="depth-sub">levels<br/>1 – 5</span>
               </div>
@@ -395,9 +410,9 @@
             <div class="ctl">
               <label for="scaleSel">Scale</label>
               <select id="scaleSel">
-                <option value="pentatonic">Minor pentatonic</option>
+                <option value="pentatonic" selected>Minor pentatonic</option>
                 <option value="harmonic">Harmonic minor</option>
-                <option value="lydian" selected>Lydian</option>
+                <option value="lydian">Lydian</option>
                 <option value="dorian">Dorian</option>
                 <option value="chromatic">Chromatic</option>
               </select>
@@ -486,18 +501,18 @@
         </div>
         <div class="drum-controls">
           <div class="ctl">
-            <label for="swing">Swing — <span class="val" id="swingVal">12%</span></label>
-            <input type="range" id="swing" min="0" max="50" value="12" />
+            <label for="swing">Swing — <span class="val" id="swingVal">8%</span></label>
+            <input type="range" id="swing" min="0" max="50" value="8" />
           </div>
           <div class="ctl">
-            <label for="drumVol">Drum level — <span class="val" id="drumVolVal">90%</span></label>
-            <input type="range" id="drumVol" min="0" max="100" value="90" />
+            <label for="drumVol">Drum level — <span class="val" id="drumVolVal">50%</span></label>
+            <input type="range" id="drumVol" min="0" max="100" value="50" />
           </div>
           <div class="ctl">
             <label>Drum recursion depth</label>
             <div class="depth-row">
               <button class="step-btn" id="drumDepthDown" type="button" aria-label="Decrease drum depth">−</button>
-              <span class="depth-read" id="drumDepthRead">2</span>
+              <span class="depth-read" id="drumDepthRead">1</span>
               <button class="step-btn" id="drumDepthUp" type="button" aria-label="Increase drum depth">+</button>
               <span class="depth-sub">levels<br/>1 – 3</span>
             </div>
@@ -509,7 +524,7 @@
           <div class="ctl">
             <label>Drum echo send</label>
             <div class="echo-toggle-row">
-              <button class="toggle" type="button" id="drumEchoToggle" aria-pressed="true" aria-label="Toggle drum echo send"></button>
+              <button class="toggle" type="button" id="drumEchoToggle" aria-pressed="false" aria-label="Toggle drum echo send"></button>
               <span class="depth-sub">drums into the<br/>echo / shimmer chain</span>
             </div>
           </div>
@@ -526,27 +541,28 @@
         </div>
         <div class="bass-controls">
           <div class="ctl">
-            <label for="bassLevel">Bass level — <span class="val" id="bassLevelVal">75%</span></label>
-            <input type="range" id="bassLevel" min="0" max="100" value="75" />
+            <label for="bassLevel">Bass level — <span class="val" id="bassLevelVal">45%</span></label>
+            <input type="range" id="bassLevel" min="0" max="100" value="45" />
           </div>
           <div class="ctl">
             <label for="bassWave">Voice</label>
             <select id="bassWave">
-              <option value="sawtooth" selected>Saw</option>
+              <option value="triangle" selected>Triangle</option>
+              <option value="sawtooth">Saw</option>
               <option value="square">Square</option>
             </select>
           </div>
           <div class="ctl">
-            <label for="bassFilter">Filter — <span class="val" id="bassFilterVal">268 Hz</span></label>
-            <input type="range" id="bassFilter" min="0" max="100" value="50" />
+            <label for="bassFilter">Filter — <span class="val" id="bassFilterVal">171 Hz</span></label>
+            <input type="range" id="bassFilter" min="0" max="100" value="35" />
           </div>
           <div class="ctl">
-            <label for="bassMotion">Motion — <span class="val" id="bassMotionVal">30%</span></label>
-            <input type="range" id="bassMotion" min="0" max="100" value="30" />
+            <label for="bassMotion">Motion — <span class="val" id="bassMotionVal">20%</span></label>
+            <input type="range" id="bassMotion" min="0" max="100" value="20" />
           </div>
           <div class="ctl">
-            <label for="bassGrit">Grit — <span class="val" id="bassGritVal">20%</span></label>
-            <input type="range" id="bassGrit" min="0" max="100" value="20" />
+            <label for="bassGrit">Grit — <span class="val" id="bassGritVal">0%</span></label>
+            <input type="range" id="bassGrit" min="0" max="100" value="0" />
           </div>
           <div class="ctl">
             <label>Sub level · ×2 slow, octave down</label>
@@ -566,7 +582,7 @@
           <p class="panel-hint">Whole patches — motif, depth, layers, effects, tempo, all at once</p>
         </div>
         <div class="preset-grid" id="presetGrid"></div>
-        <p class="now-playing" id="nowPlaying">Patch: <b>Venus Fold</b> — hand-tuned starting point. Press play.</p>
+        <p class="now-playing" id="nowPlaying">Patch: <b>First Taste</b> — the gentle starting point. Press play.</p>
       </section>
 
       <!-- MIXER -->
@@ -589,12 +605,12 @@
             <div class="fx-head"><span class="fx-name">ECHO</span><button class="toggle" type="button" data-fx="echo" aria-pressed="true" aria-label="Toggle echo"></button></div>
             <p class="fx-desc">Feedback delay synced to the tempo. The feedback <em>is</em> temporal recursion — echoes of echoes of echoes.</p>
             <div class="fx-body">
-              <label>Feedback / amount <span class="val" id="echoVal">55%</span></label>
-              <input type="range" id="echoAmt" min="0" max="100" value="55" />
+              <label>Feedback / amount <span class="val" id="echoVal">25%</span></label>
+              <input type="range" id="echoAmt" min="0" max="100" value="25" />
             </div>
           </div>
           <div class="fx" id="fxShimmer">
-            <div class="fx-head"><span class="fx-name">SHIMMER</span><button class="toggle" type="button" data-fx="shimmer" aria-pressed="true" aria-label="Toggle shimmer"></button></div>
+            <div class="fx-head"><span class="fx-name">SHIMMER</span><button class="toggle" type="button" data-fx="shimmer" aria-pressed="false" aria-label="Toggle shimmer"></button></div>
             <p class="fx-desc">An octave-up ghost of every note, fed back into the echo — sparkly trails that climb as they repeat.</p>
             <div class="fx-body">
               <label>Sparkle amount <span class="val" id="shimmerVal">40%</span></label>
@@ -605,18 +621,18 @@
             <div class="fx-head"><span class="fx-name">REVERB</span><button class="toggle" type="button" data-fx="reverb" aria-pressed="true" aria-label="Toggle reverb"></button></div>
             <p class="fx-desc">Convolution space with a generated impulse — a hall that was synthesized, never recorded.</p>
             <div class="fx-body">
-              <label>Space amount <span class="val" id="reverbVal">45%</span></label>
-              <input type="range" id="reverbAmt" min="0" max="100" value="45" />
+              <label>Space amount <span class="val" id="reverbVal">30%</span></label>
+              <input type="range" id="reverbAmt" min="0" max="100" value="30" />
             </div>
           </div>
           <div class="fx" id="fxFilter">
             <div class="fx-head"><span class="fx-name">FILTER</span><button class="toggle" type="button" data-fx="filter" aria-pressed="true" aria-label="Toggle filter"></button></div>
             <p class="fx-desc">Master lowpass. Close it down for underwater depths; open it and add resonance for a singing edge.</p>
             <div class="fx-body">
-              <label>Cutoff <span class="val" id="cutoffVal">9.0 kHz</span></label>
-              <input type="range" id="cutoff" min="0" max="100" value="82" />
-              <label>Resonance <span class="val" id="resoVal">4.0</span></label>
-              <input type="range" id="reso" min="0" max="100" value="22" />
+              <label>Cutoff <span class="val" id="cutoffVal">4.2 kHz</span></label>
+              <input type="range" id="cutoff" min="0" max="100" value="70" />
+              <label>Resonance <span class="val" id="resoVal">3.0</span></label>
+              <input type="range" id="reso" min="0" max="100" value="15" />
             </div>
           </div>
           <div class="fx" id="fxCrush">
@@ -625,6 +641,59 @@
             <div class="fx-body">
               <label>Grit amount <span class="val" id="crushVal">30%</span></label>
               <input type="range" id="crushAmt" min="0" max="100" value="30" />
+            </div>
+          </div>
+          <div class="fx" id="fxFold">
+            <div class="fx-head"><span class="fx-name">FOLD</span><button class="toggle" type="button" data-fx="fold" aria-pressed="false" aria-label="Toggle fold"></button></div>
+            <p class="fx-desc">Foldback waveshaping before the filter — instead of clipping, the waveform folds over itself, again and again. Saturation with actual folds in it.</p>
+            <div class="fx-body">
+              <label>Drive · fold amount <span class="val" id="foldDriveVal">30%</span></label>
+              <input type="range" id="foldDrive" min="0" max="100" value="30" />
+              <label>Mix <span class="val" id="foldMixVal">55%</span></label>
+              <input type="range" id="foldMix" min="0" max="100" value="55" />
+            </div>
+          </div>
+          <div class="fx" id="fxKaleido">
+            <div class="fx-head"><span class="fx-name">KALEIDO DELAY</span><button class="toggle" type="button" data-fx="kaleido" aria-pressed="true" aria-label="Toggle kaleido delay"></button></div>
+            <p class="fx-desc">A multi-tap echo whose repeats are spaced geometrically — each tap lands ×1.618 after the last, quieter each time. The echo itself is self-similar.</p>
+            <div class="fx-body">
+              <label>Mix <span class="val" id="kaleidoMixVal">15%</span></label>
+              <input type="range" id="kaleidoMix" min="0" max="100" value="15" />
+              <label>Taps <span class="val" id="kaleidoTapsVal">2</span></label>
+              <input type="range" id="kaleidoTaps" min="1" max="8" step="1" value="2" />
+              <label>Feedback <span class="val" id="kaleidoFbVal">15%</span></label>
+              <input type="range" id="kaleidoFb" min="0" max="100" value="15" />
+            </div>
+          </div>
+          <div class="fx" id="fxFreeze">
+            <div class="fx-head"><span class="fx-name">MELT FREEZE</span><button class="freeze-btn" type="button" id="freezeBtn" aria-pressed="false" aria-label="Freeze the current sound into a held drone">FREEZE</button></div>
+            <p class="fx-desc">Grab the moment that is sounding right now and hold it as a smooth, crossfaded granular drone underneath everything. Press again to release it.</p>
+            <div class="fx-body">
+              <label>Level <span class="val" id="freezeLevelVal">60%</span></label>
+              <input type="range" id="freezeLevel" min="0" max="100" value="60" />
+            </div>
+          </div>
+          <div class="fx" id="fxShepard">
+            <div class="fx-head"><span class="fx-name">SHEPARD SPIRAL</span><button class="toggle" type="button" data-fx="shepard" aria-pressed="false" aria-label="Toggle shepard spiral"></button></div>
+            <p class="fx-desc">A generated endless riser — a bank of octave tones gliding forever, gains shaped so the climb never arrives. A spiral staircase for pitch.</p>
+            <div class="fx-body">
+              <label>Mix <span class="val" id="shepardMixVal">30%</span></label>
+              <input type="range" id="shepardMix" min="0" max="100" value="30" />
+              <label>Rate <span class="val" id="shepardRateVal">30%</span></label>
+              <input type="range" id="shepardRate" min="0" max="100" value="30" />
+              <button class="mini-btn" type="button" id="shepardDirBtn" aria-pressed="false">DIRECTION · RISE ↑</button>
+            </div>
+          </div>
+          <div class="fx" id="fxGranular">
+            <div class="fx-head"><span class="fx-name">GRANULAR SHATTER</span><button class="toggle" type="button" data-fx="granular" aria-pressed="false" aria-label="Toggle granular shatter"></button></div>
+            <p class="fx-desc">The live sound, fractaled at the millisecond level — tiny slices captured and re-scattered as grains, pitch and position shimmering.</p>
+            <div class="fx-body">
+              <label>Mix <span class="val" id="granMixVal">35%</span></label>
+              <input type="range" id="granMix" min="0" max="100" value="35" />
+              <label>Density <span class="val" id="granDensityVal">33/s</span></label>
+              <input type="range" id="granDensity" min="0" max="100" value="40" />
+              <label>Grain size <span class="val" id="granSizeVal">97 ms</span></label>
+              <input type="range" id="granSize" min="0" max="100" value="35" />
             </div>
           </div>
         </div>
@@ -663,36 +732,41 @@ var WAVE_LABEL = { sine:"Sine", triangle:"Triangle", sawtooth:"Saw", square:"Squ
 /* ---------- state ---------- */
 var state = {
   playing: false,
-  bpm: 104,
-  depth: 4,
-  scale: "lydian",
+  bpm: 84,
+  depth: 2,
+  scale: "pentatonic",
   interval: 7,
   rootPad: 0,
   motif: [],            /* {deg:int, muted:bool} x8 */
   layers: [],           /* {wave, vol:0..1, muted} x5 */
   fx: {
-    echo:    { on: true,  amt: 0.55 },
-    shimmer: { on: true,  amt: 0.40 },
-    reverb:  { on: true,  amt: 0.45 },
-    filter:  { on: true,  cutoff: 0.82, reso: 0.22 },
-    crush:   { on: false, amt: 0.30 }
+    echo:    { on: true,  amt: 0.25 },
+    shimmer: { on: false, amt: 0.40 },
+    reverb:  { on: true,  amt: 0.30 },
+    filter:  { on: true,  cutoff: 0.70, reso: 0.15 },
+    crush:   { on: false, amt: 0.30 },
+    kaleido: { on: true,  mix: 0.15, taps: 2, fb: 0.15 },
+    freeze:  { on: false, level: 0.60 },
+    shepard: { on: false, mix: 0.30, rate: 0.30, dir: 1 },
+    granular:{ on: false, mix: 0.35, density: 0.40, size: 0.35 },
+    fold:    { on: false, drive: 0.30, mix: 0.55 }
   },
-  patchName: "Venus Fold",
+  patchName: "First Taste",
   drums: null,   /* filled below — pattern, depth, swing, vol, echo */
   bass: null     /* filled below — level, wave, sub, filter, motion, grit */
 };
 
 function defaultLayers() {
   return [
-    { wave: "triangle", vol: 0.85, muted: false },
-    { wave: "sine",     vol: 0.62, muted: false },
+    { wave: "triangle", vol: 0.70, muted: false },
+    { wave: "sine",     vol: 0.45, muted: false },
     { wave: "sine",     vol: 0.48, muted: false },
     { wave: "sine",     vol: 0.34, muted: false },
     { wave: "sine",     vol: 0.24, muted: false }
   ];
 }
 state.layers = defaultLayers();
-state.motif = [0,2,4,3,5,4,2,1].map(function(d){ return { deg:d, muted:false }; });
+state.motif = [0,2,1,3,2,1,0,0].map(function(d, i){ return { deg:d, muted: i === 7 }; });
 
 /* ---------- drums + bass state ---------- */
 function pat16(idxs){
@@ -702,18 +776,18 @@ function pat16(idxs){
 }
 state.drums = {
   pattern: {
-    kick:  pat16([0, 8, 10]),
-    snare: pat16([4, 12]),
+    kick:  pat16([0, 8]),
+    snare: pat16([]),
     hat:   pat16([2, 6, 10, 14]),
     pop:   pat16([6, 14])
   },
-  depth: 2,
+  depth: 1,
   levelMuted: [false, false, false],
-  swing: 0.12,
-  vol: 0.9,
-  echoOn: true
+  swing: 0.08,
+  vol: 0.5,
+  echoOn: false
 };
-state.bass = { level: 0.75, wave: "sawtooth", subOn: true, filter: 0.5, motion: 0.3, grit: 0.2 };
+state.bass = { level: 0.45, wave: "triangle", subOn: true, filter: 0.35, motion: 0.2, grit: 0 };
 
 /* ---------- pitch helpers ---------- */
 function scaleArr(){ return SCALES[state.scale]; }
@@ -748,6 +822,14 @@ var layerGains = [];
 var noiseBuf = null;
 var masterAnalyser = null;
 var layerAnalysers = [];
+
+/* ---------- new-rack engine state ---------- */
+var PHI = 1.6180339887;
+var kaleidoTapNodes = [];
+var capBuf = null, capPos = 0, capFilled = 0;   /* shared live-capture ring (freeze + granular) */
+var freezeBuf = null, freezeTimer = null;
+var granBuf = null, granTimer = null, granLastRefresh = 0;
+var shepOscs = [], shepGains = [], shepPhase = 0, shepTimer = null, shepLastT = 0;
 
 function buildAudio(){
   AC = new (window.AudioContext || window.webkitAudioContext)();
@@ -791,13 +873,75 @@ function buildAudio(){
   N.verb.connect(N.verbWet);
   N.verbWet.connect(N.limiter);
 
-  /* main chain */
-  N.masterIn.connect(N.filter);
+  /* FOLD — foldback waveshaper inserted before the filter */
+  N.foldShaper = AC.createWaveShaper(); N.foldShaper.oversample = "4x";
+  N.foldDry = AC.createGain();
+  N.foldWet = AC.createGain();
+
+  /* KALEIDO DELAY — geometric multi-tap echo send */
+  N.kaleidoIn = AC.createGain(); N.kaleidoIn.gain.value = 1;
+  N.kaleidoWet = AC.createGain(); N.kaleidoWet.gain.value = 0;
+  N.kaleidoFb = AC.createGain(); N.kaleidoFb.gain.value = 0;
+  N.kaleidoWet.connect(N.kaleidoFb);
+  N.kaleidoFb.connect(N.kaleidoIn);
+  N.kaleidoWet.connect(N.limiter);
+  kaleidoTapNodes = [];
+  buildKaleidoTaps();
+
+  /* MELT FREEZE + GRANULAR SHATTER output buses */
+  N.freezeEnv = AC.createGain(); N.freezeEnv.gain.value = 0;
+  N.freezeGain = AC.createGain(); N.freezeGain.gain.value = 0.6;
+  N.freezeEnv.connect(N.freezeGain);
+  N.freezeGain.connect(N.limiter);
+  N.granGain = AC.createGain(); N.granGain.gain.value = 0;
+  N.granGain.connect(N.limiter);
+
+  /* SHEPARD SPIRAL — generated bank of octave gliding tones */
+  N.shepGain = AC.createGain(); N.shepGain.gain.value = 0;
+  N.shepGain.connect(N.limiter);
+  shepOscs = []; shepGains = [];
+  for (var shi = 0; shi < 6; shi++){
+    var shOsc = AC.createOscillator(); shOsc.type = "sine"; shOsc.frequency.value = 110;
+    var shGain = AC.createGain(); shGain.gain.value = 0;
+    shOsc.connect(shGain); shGain.connect(N.shepGain);
+    shOsc.start();
+    shepOscs.push(shOsc); shepGains.push(shGain);
+  }
+  startShepardTimer();
+  startGranTimer();
+
+  /* live-capture ring — taps the master output; MELT FREEZE snapshots it
+     and GRANULAR SHATTER re-scatters its most recent slices */
+  capBuf = new Float32Array(Math.floor(AC.sampleRate * 3));
+  capPos = 0; capFilled = 0;
+  N.capTap = AC.createGain(); N.capTap.gain.value = 1;
+  N.capProc = AC.createScriptProcessor(4096, 1, 1);
+  N.capProc.onaudioprocess = function(ev){
+    var inp = ev.inputBuffer.getChannelData(0);
+    var outp = ev.outputBuffer.getChannelData(0);
+    for (var ci = 0; ci < inp.length; ci++){
+      capBuf[capPos] = inp[ci];
+      capPos = (capPos + 1) % capBuf.length;
+      outp[ci] = 0;
+    }
+    capFilled = Math.min(capFilled + inp.length, capBuf.length);
+  };
+  N.masterOut.connect(N.capTap);
+  N.capTap.connect(N.capProc);
+  N.capProc.connect(AC.destination);
+
+  /* main chain — FOLD sits before the filter */
+  N.masterIn.connect(N.foldDry);
+  N.foldDry.connect(N.filter);
+  N.masterIn.connect(N.foldShaper);
+  N.foldShaper.connect(N.foldWet);
+  N.foldWet.connect(N.filter);
   N.filter.connect(N.crush);
   N.crush.connect(N.dry);
   N.dry.connect(N.limiter);
   N.crush.connect(N.echoIn);
   N.crush.connect(N.verbIn);
+  N.crush.connect(N.kaleidoIn);
   N.limiter.connect(N.masterOut);
 
   /* master analyser: the signal readouts tap the bus here */
@@ -886,6 +1030,143 @@ function crushCurve(amt){
 
 function cutoffHz(v){ return 180 * Math.pow(16000 / 180, v); }
 
+/* ---------- FOLD — true foldback: the waveform wraps over itself
+   instead of clipping. drive 0 is the identity curve. ---------- */
+function foldCurve(drive){
+  var n = 1024, curve = new Float32Array(n);
+  var k = 1 + drive * 9;
+  for (var i = 0; i < n; i++){
+    var x = (i / (n - 1)) * 2 - 1;
+    var v = x * k;
+    var y = ((v + 1) % 4 + 4) % 4;
+    if (y > 2) y = 4 - y;
+    curve[i] = y - 1;
+  }
+  return curve;
+}
+
+/* ---------- KALEIDO DELAY — taps at base × φ^i, gains decaying ---------- */
+function kaleidoBase(){ return (60 / state.bpm) * 0.375; }
+function buildKaleidoTaps(){
+  if (!AC || !N.kaleidoIn) return;
+  kaleidoTapNodes.forEach(function(tn){
+    try { tn.delay.disconnect(); tn.gain.disconnect(); } catch (e) {}
+  });
+  kaleidoTapNodes = [];
+  for (var i = 0; i < state.fx.kaleido.taps; i++){
+    var d = AC.createDelay(6.0);
+    d.delayTime.value = Math.min(5.5, kaleidoBase() * Math.pow(PHI, i));
+    var g = AC.createGain();
+    g.gain.value = Math.pow(0.7, i);
+    N.kaleidoIn.connect(d);
+    d.connect(g);
+    g.connect(N.kaleidoWet);
+    kaleidoTapNodes.push({ delay: d, gain: g });
+  }
+}
+function syncKaleidoTimes(){
+  if (!AC) return;
+  kaleidoTapNodes.forEach(function(tn, i){
+    tn.delay.delayTime.setTargetAtTime(Math.min(5.5, kaleidoBase() * Math.pow(PHI, i)), AC.currentTime, 0.03);
+  });
+}
+
+/* ---------- shared capture helpers (freeze + granular) ---------- */
+function capSnapshot(seconds){
+  if (!AC || !capBuf || capFilled < AC.sampleRate * 0.1) return null;
+  var len = Math.min(capFilled, Math.floor(AC.sampleRate * seconds));
+  var buf = AC.createBuffer(1, len, AC.sampleRate);
+  var d = buf.getChannelData(0);
+  var start = ((capPos - len) % capBuf.length + capBuf.length) % capBuf.length;
+  for (var i = 0; i < len; i++) d[i] = capBuf[(start + i) % capBuf.length];
+  return buf;
+}
+function playGrain(buffer, offset, dur, rate, dest, peak){
+  if (!AC || !buffer || !dest) return;
+  var t = AC.currentTime + 0.01;
+  var src = AC.createBufferSource();
+  src.buffer = buffer;
+  src.playbackRate.value = rate;
+  var g = AC.createGain();
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(peak, t + dur * 0.35);
+  g.gain.linearRampToValueAtTime(0, t + dur);
+  src.connect(g);
+  g.connect(dest);
+  var maxOff = Math.max(0, buffer.duration - dur / rate - 0.05);
+  src.start(t, Math.min(Math.max(0, offset), maxOff), dur / rate + 0.05);
+}
+
+/* ---------- MELT FREEZE — hold the captured moment as a drone bed ---------- */
+function startFreeze(){
+  if (!AC || freezeTimer) return;
+  freezeBuf = capSnapshot(2.2);
+  N.freezeEnv.gain.setTargetAtTime(1, AC.currentTime, 0.15);
+  freezeTimer = setInterval(function(){
+    if (!AC || !state.fx.freeze.on || !N.freezeEnv) return;
+    if (!freezeBuf) freezeBuf = capSnapshot(2.2); /* armed before anything sounded: grab the first moment that does */
+    if (!freezeBuf) return;
+    var off = Math.random() * Math.max(0.1, freezeBuf.duration - 0.6);
+    playGrain(freezeBuf, off, 0.55, 0.97 + Math.random() * 0.06, N.freezeEnv, 0.5);
+  }, 130);
+}
+function stopFreeze(){
+  if (freezeTimer){ clearInterval(freezeTimer); freezeTimer = null; }
+  freezeBuf = null;
+  if (AC && N.freezeEnv) N.freezeEnv.gain.setTargetAtTime(0, AC.currentTime, 0.12);
+}
+
+/* ---------- GRANULAR SHATTER — re-scatter the last second as grains ---------- */
+function startGranTimer(){
+  if (granTimer) return;
+  granTimer = setInterval(function(){
+    if (!AC || !state.playing || !state.fx.granular.on || !N.granGain) return;
+    var now = performance.now();
+    if (!granBuf || now - granLastRefresh > 220){
+      var nb = capSnapshot(0.9);
+      if (nb){ granBuf = nb; granLastRefresh = now; }
+    }
+    if (!granBuf) return;
+    var gr = state.fx.granular;
+    var density = 2 + gr.density * 78; /* grains per second */
+    var count = density * 0.05;
+    var nGr = Math.floor(count) + (Math.random() < (count % 1) ? 1 : 0);
+    var sizeSec = 0.015 + gr.size * 0.235;
+    var peak = 0.34 / Math.sqrt(Math.max(1, density / 9));
+    for (var gi = 0; gi < nGr; gi++){
+      var off = Math.random() * Math.max(0.05, granBuf.duration - 0.3);
+      var rate = 0.6 + Math.random() * 1.3;
+      playGrain(granBuf, off, sizeSec * (0.7 + Math.random() * 0.7), rate, N.granGain, peak);
+    }
+  }, 50);
+}
+
+/* ---------- SHEPARD SPIRAL — octave bank, bell-shaped gains, endless glide ---------- */
+function startShepardTimer(){
+  if (shepTimer) return;
+  shepLastT = performance.now();
+  shepTimer = setInterval(function(){
+    if (!AC || !shepOscs.length) return;
+    var now = performance.now();
+    var dt = Math.min(0.2, (now - shepLastT) / 1000);
+    shepLastT = now;
+    if (state.playing && state.fx.shepard.on){
+      var rate = 0.03 + state.fx.shepard.rate * 0.55; /* octaves per second */
+      shepPhase = (shepPhase + state.fx.shepard.dir * rate * dt) % 1;
+      if (shepPhase < 0) shepPhase += 1;
+    }
+    var t = AC.currentTime;
+    for (var i = 0; i < shepOscs.length; i++){
+      var pmod = (i + shepPhase) % 6;
+      var freq = 55 * Math.pow(2, pmod);
+      var bell = Math.sin(Math.PI * pmod / 6);
+      bell = bell * bell;
+      shepOscs[i].frequency.setTargetAtTime(freq, t, 0.03);
+      shepGains[i].gain.setTargetAtTime(bell * 0.14, t, 0.03);
+    }
+  }, 45);
+}
+
 function applyFx(){
   if (!AC) return;
   var t = AC.currentTime;
@@ -902,10 +1183,28 @@ function applyFx(){
   N.filter.Q.setTargetAtTime(f.on ? 0.4 + f.reso * 17 : 0.4, t, 0.03);
   /* crush */
   N.crush.curve = crushCurve(state.fx.crush.on ? state.fx.crush.amt : 0);
+  /* fold — before the filter */
+  var fo = state.fx.fold;
+  N.foldShaper.curve = foldCurve(fo.on ? fo.drive : 0);
+  N.foldWet.gain.setTargetAtTime(fo.on ? fo.mix : 0, t, 0.03);
+  N.foldDry.gain.setTargetAtTime(fo.on ? 1 - fo.mix * 0.85 : 1, t, 0.03);
+  /* kaleido delay */
+  var kd = state.fx.kaleido;
+  if (kaleidoTapNodes.length !== kd.taps) buildKaleidoTaps();
+  N.kaleidoWet.gain.setTargetAtTime(kd.on ? kd.mix * 0.85 : 0, t, 0.03);
+  N.kaleidoFb.gain.setTargetAtTime(kd.on ? kd.fb * 0.72 : 0, t, 0.03);
+  /* melt freeze */
+  N.freezeGain.gain.setTargetAtTime(state.fx.freeze.level, t, 0.03);
+  if (state.fx.freeze.on) startFreeze(); else stopFreeze();
+  /* shepard spiral */
+  N.shepGain.gain.setTargetAtTime(state.fx.shepard.on ? state.fx.shepard.mix * 0.9 : 0, t, 0.05);
+  /* granular shatter */
+  N.granGain.gain.setTargetAtTime(state.fx.granular.on ? state.fx.granular.mix * 0.9 : 0, t, 0.03);
 }
 function applyTempo(){
   if (!AC) return;
   N.echoDelay.delayTime.setTargetAtTime((60 / state.bpm) * 0.75, AC.currentTime, 0.03);
+  syncKaleidoTimes();
 }
 function applyDrums(){
   if (!AC) return;
@@ -1439,6 +1738,12 @@ function stopAudio(){
   if (schedTimer){ clearInterval(schedTimer); schedTimer = null; }
   visualQueue.length = 0;
   if (AC){
+    /* stop the new-rack engines before the context closes */
+    if (freezeTimer){ clearInterval(freezeTimer); freezeTimer = null; }
+    if (granTimer){ clearInterval(granTimer); granTimer = null; }
+    if (shepTimer){ clearInterval(shepTimer); shepTimer = null; }
+    freezeBuf = null; granBuf = null;
+    shepOscs = []; shepGains = []; kaleidoTapNodes = [];
     /* close and rebuild next time: guarantees a clean, silent stop */
     var old = AC; AC = null; N = {}; layerGains = [];
     masterAnalyser = null; layerAnalysers = [];
@@ -1663,6 +1968,36 @@ function syncFxUI(){
   $("resoVal").textContent = (0.4 + state.fx.filter.reso * 17).toFixed(1);
   $("crushAmt").value = Math.round(state.fx.crush.amt * 100);
   $("crushVal").textContent = Math.round(state.fx.crush.amt * 100) + "%";
+  /* new rack */
+  $("foldDrive").value = Math.round(state.fx.fold.drive * 100);
+  $("foldDriveVal").textContent = Math.round(state.fx.fold.drive * 100) + "%";
+  $("foldMix").value = Math.round(state.fx.fold.mix * 100);
+  $("foldMixVal").textContent = Math.round(state.fx.fold.mix * 100) + "%";
+  $("kaleidoMix").value = Math.round(state.fx.kaleido.mix * 100);
+  $("kaleidoMixVal").textContent = Math.round(state.fx.kaleido.mix * 100) + "%";
+  $("kaleidoTaps").value = state.fx.kaleido.taps;
+  $("kaleidoTapsVal").textContent = state.fx.kaleido.taps;
+  $("kaleidoFb").value = Math.round(state.fx.kaleido.fb * 100);
+  $("kaleidoFbVal").textContent = Math.round(state.fx.kaleido.fb * 100) + "%";
+  $("freezeLevel").value = Math.round(state.fx.freeze.level * 100);
+  $("freezeLevelVal").textContent = Math.round(state.fx.freeze.level * 100) + "%";
+  var fzb = $("freezeBtn");
+  fzb.setAttribute("aria-pressed", state.fx.freeze.on ? "true" : "false");
+  fzb.textContent = state.fx.freeze.on ? "FROZEN — TAP TO RELEASE" : "FREEZE";
+  fzb.classList.toggle("frozen", state.fx.freeze.on);
+  $("fxFreeze").classList.toggle("frozen-card", state.fx.freeze.on);
+  $("shepardMix").value = Math.round(state.fx.shepard.mix * 100);
+  $("shepardMixVal").textContent = Math.round(state.fx.shepard.mix * 100) + "%";
+  $("shepardRate").value = Math.round(state.fx.shepard.rate * 100);
+  $("shepardRateVal").textContent = Math.round(state.fx.shepard.rate * 100) + "%";
+  $("shepardDirBtn").textContent = state.fx.shepard.dir >= 0 ? "DIRECTION · RISE ↑" : "DIRECTION · FALL ↓";
+  $("shepardDirBtn").setAttribute("aria-pressed", state.fx.shepard.dir < 0 ? "true" : "false");
+  $("granMix").value = Math.round(state.fx.granular.mix * 100);
+  $("granMixVal").textContent = Math.round(state.fx.granular.mix * 100) + "%";
+  $("granDensity").value = Math.round(state.fx.granular.density * 100);
+  $("granDensityVal").textContent = Math.round(2 + state.fx.granular.density * 78) + "/s";
+  $("granSize").value = Math.round(state.fx.granular.size * 100);
+  $("granSizeVal").textContent = Math.round(15 + state.fx.granular.size * 235) + " ms";
 }
 document.querySelectorAll(".toggle").forEach(function(t){
   t.addEventListener("click", function(){
@@ -1678,6 +2013,25 @@ $("reverbAmt").addEventListener("input", function(e){ state.fx.reverb.amt = e.ta
 $("cutoff").addEventListener("input", function(e){ state.fx.filter.cutoff = e.target.value/100; syncFxUI(); applyFx(); });
 $("reso").addEventListener("input", function(e){ state.fx.filter.reso = e.target.value/100; syncFxUI(); applyFx(); });
 $("crushAmt").addEventListener("input", function(e){ state.fx.crush.amt = e.target.value/100; syncFxUI(); applyFx(); });
+$("foldDrive").addEventListener("input", function(e){ state.fx.fold.drive = e.target.value/100; syncFxUI(); applyFx(); });
+$("foldMix").addEventListener("input", function(e){ state.fx.fold.mix = e.target.value/100; syncFxUI(); applyFx(); });
+$("kaleidoMix").addEventListener("input", function(e){ state.fx.kaleido.mix = e.target.value/100; syncFxUI(); applyFx(); });
+$("kaleidoTaps").addEventListener("input", function(e){ state.fx.kaleido.taps = parseInt(e.target.value, 10); syncFxUI(); applyFx(); });
+$("kaleidoFb").addEventListener("input", function(e){ state.fx.kaleido.fb = e.target.value/100; syncFxUI(); applyFx(); });
+$("freezeLevel").addEventListener("input", function(e){ state.fx.freeze.level = e.target.value/100; syncFxUI(); applyFx(); });
+$("freezeBtn").addEventListener("click", function(){
+  state.fx.freeze.on = !state.fx.freeze.on;
+  syncFxUI(); applyFx(); markCustom();
+});
+$("shepardMix").addEventListener("input", function(e){ state.fx.shepard.mix = e.target.value/100; syncFxUI(); applyFx(); });
+$("shepardRate").addEventListener("input", function(e){ state.fx.shepard.rate = e.target.value/100; syncFxUI(); });
+$("shepardDirBtn").addEventListener("click", function(){
+  state.fx.shepard.dir = state.fx.shepard.dir >= 0 ? -1 : 1;
+  syncFxUI(); markCustom();
+});
+$("granMix").addEventListener("input", function(e){ state.fx.granular.mix = e.target.value/100; syncFxUI(); applyFx(); });
+$("granDensity").addEventListener("input", function(e){ state.fx.granular.density = e.target.value/100; syncFxUI(); });
+$("granSize").addEventListener("input", function(e){ state.fx.granular.size = e.target.value/100; syncFxUI(); });
 
 /* ---------- drum machine UI ---------- */
 var DRUM_VOICE_LABEL = { kick: "KICK", snare: "SNARE", hat: "HAT", pop: "POP" };
@@ -1854,45 +2208,61 @@ $("bassSubToggle").addEventListener("click", function(){
 function L(wave, vol){ return { wave: wave, vol: vol, muted: false }; }
 function FX(eo,ea, so,sa, ro,ra, fo,fc,fr, co,ca){
   return { echo:{on:eo,amt:ea}, shimmer:{on:so,amt:sa}, reverb:{on:ro,amt:ra},
-           filter:{on:fo,cutoff:fc,reso:fr}, crush:{on:co,amt:ca} };
+           filter:{on:fo,cutoff:fc,reso:fr}, crush:{on:co,amt:ca},
+           kaleido:{on:false,mix:.35,taps:4,fb:.35}, freeze:{on:false,level:.6},
+           shepard:{on:false,mix:.3,rate:.3,dir:1}, granular:{on:false,mix:.35,density:.4,size:.35},
+           fold:{on:false,drive:.4,mix:.6} };
 }
 var PRESETS = [
+  { name:"First Taste", scale:"pentatonic", bpm:84, depth:2, interval:7, root:0,
+    motif:[0,2,1,3,2,1,0,0], muted:[7],
+    layers:[L("triangle",.70),L("sine",.45),L("sine",.48),L("sine",.34),L("sine",.24)],
+    fx: FX(true,.25, false,.4, true,.3, true,.7,.15, false,.3),
+    drums:{ depth:1, vol:.5, swing:.08, echo:false, kick:[0,8], snare:[], hat:[2,6,10,14], pop:[6,14] },
+    bass:{ level:.45, wave:"triangle", sub:true, filter:.35, motion:.2, grit:0 },
+    fxNew:{ kaleido:{on:true, mix:.15, taps:2, fb:.15}, fold:{on:false, drive:.3, mix:.55} } },
   { name:"Saturation Bloom", scale:"pentatonic", bpm:98, depth:5, interval:7, root:0,
     motif:[0,2,4,6,7,5,3,2], muted:[],
     layers:[L("sawtooth",.8),L("triangle",.6),L("sine",.45),L("sine",.3),L("sine",.22)],
     fx: FX(true,.65, true,.55, true,.6, true,.9,.3, true,.18),
     drums:{ depth:2, vol:.95, kick:[0,4,8,12], snare:[4,12], hat:[0,2,4,6,8,10,12,14], pop:[7,14] },
-    bass:{ level:.85, wave:"sawtooth", sub:true, filter:.55, motion:.25, grit:.3 } },
+    bass:{ level:.85, wave:"sawtooth", sub:true, filter:.55, motion:.25, grit:.3 },
+    fxNew:{ fold:{on:true, drive:.35, mix:.5} } },
   { name:"127 Deep", scale:"harmonic", bpm:72, depth:5, interval:-12, root:2,
     motif:[0,1,3,2,4,3,1,0], muted:[5],
     layers:[L("sine",.85),L("sine",.6),L("triangle",.4),L("sine",.3),L("sine",.2)],
     fx: FX(true,.8, true,.25, true,.75, true,.45,.35, false,.3),
     drums:{ depth:3, vol:.85, kick:[0,7,8], snare:[4,12], hat:[2,6,10,14], pop:[3,11] },
-    bass:{ level:.8, wave:"square", sub:true, filter:.28, motion:.45, grit:.05 } },
+    bass:{ level:.8, wave:"square", sub:true, filter:.28, motion:.45, grit:.05 },
+    fxNew:{ kaleido:{on:true, mix:.4, taps:5, fb:.45}, freeze:{level:.7} } },
   { name:"Venus Fold", scale:"lydian", bpm:104, depth:4, interval:7, root:0,
     motif:[0,2,4,3,5,4,2,1], muted:[],
     layers:[L("triangle",.85),L("sine",.62),L("sine",.48),L("sine",.34),L("sine",.24)],
     fx: FX(true,.55, true,.4, true,.45, true,.82,.22, false,.3),
     drums:{ depth:2, vol:.9, kick:[0,8,10], snare:[4,12], hat:[2,6,10,14], pop:[6,14] },
-    bass:{ level:.75, wave:"sawtooth", sub:true, filter:.5, motion:.3, grit:.2 } },
+    bass:{ level:.75, wave:"sawtooth", sub:true, filter:.5, motion:.3, grit:.2 },
+    fxNew:{ fold:{on:true, drive:.3, mix:.55}, kaleido:{on:true, mix:.25, taps:3, fb:.3} } },
   { name:"GOOAE Prime", scale:"chromatic", bpm:128, depth:5, interval:12, root:0,
     motif:[0,3,7,10,12,10,7,4], muted:[],
     layers:[L("square",.7),L("sawtooth",.55),L("square",.4),L("sawtooth",.3),L("sine",.2)],
     fx: FX(true,.5, true,.65, true,.35, true,.95,.55, true,.45),
     drums:{ depth:3, vol:1, kick:[0,4,8,12], snare:[4,12,15], hat:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15], pop:[2,5,9,13] },
-    bass:{ level:.9, wave:"square", sub:true, filter:.8, motion:.2, grit:.55 } },
+    bass:{ level:.9, wave:"square", sub:true, filter:.8, motion:.2, grit:.55 },
+    fxNew:{ fold:{on:true, drive:.7, mix:.7}, granular:{on:true, mix:.4, density:.55, size:.3} } },
   { name:"Still Water", scale:"dorian", bpm:66, depth:3, interval:5, root:3,
     motif:[0,2,1,3,2,0,1,2], muted:[4],
     layers:[L("sine",.8),L("sine",.55),L("sine",.4),L("sine",.3),L("sine",.2)],
     fx: FX(true,.3, false,.2, true,.8, true,.6,.1, false,.2),
     drums:{ depth:1, vol:.4, kick:[], snare:[], hat:[], pop:[0,8] },
-    bass:{ level:.5, wave:"sawtooth", sub:true, filter:.22, motion:.6, grit:0 } },
+    bass:{ level:.5, wave:"sawtooth", sub:true, filter:.22, motion:.6, grit:0 },
+    fxNew:{ kaleido:{on:true, mix:.2, taps:3, fb:.25}, freeze:{level:.55} } },
   { name:"Meltwave", scale:"pentatonic", bpm:86, depth:4, interval:4, root:1,
     motif:[4,3,2,1,0,1,2,3], muted:[6],
     layers:[L("triangle",.8),L("triangle",.6),L("sine",.45),L("sine",.3),L("sine",.2)],
     fx: FX(true,.7, true,.3, true,.5, true,.55,.4, true,.35),
     drums:{ depth:2, vol:.9, kick:[0,6,8,14], snare:[4,12], hat:[0,2,4,6,8,10,12,14], pop:[3,10] },
-    bass:{ level:.8, wave:"sawtooth", sub:true, filter:.45, motion:.7, grit:.35 } }
+    bass:{ level:.8, wave:"sawtooth", sub:true, filter:.45, motion:.7, grit:.35 },
+    fxNew:{ kaleido:{on:true, mix:.45, taps:4, fb:.5}, shepard:{on:true, mix:.22, rate:.2, dir:1} } }
 ];
 
 var presetGrid = $("presetGrid");
@@ -1919,7 +2289,11 @@ function setNowPlaying(){
   var b = document.createElement("b");
   b.textContent = state.patchName;
   np.appendChild(b);
-  np.appendChild(document.createTextNode(" — " + describePatch()));
+  if (state.patchName === "First Taste"){
+    np.appendChild(document.createTextNode(" — the gentle starting point. Press play."));
+  } else {
+    np.appendChild(document.createTextNode(" — " + describePatch()));
+  }
   presetBtns.forEach(function(btn, i){ btn.classList.toggle("sel", PRESETS[i].name === state.patchName); });
 }
 function markCustom(){
@@ -1937,6 +2311,24 @@ function applyPatch(p, name){
   state.layers = p.layers.map(function(l){ return { wave:l.wave, vol:l.vol, muted:!!l.muted }; });
   while (state.layers.length < 5) state.layers.push(L("sine", 0.2));
   state.fx = JSON.parse(JSON.stringify(p.fx));
+  /* new-rack effects: a preset's fxNew block sets them where fitting;
+     freeze is a live capture, so a patch may set its level but never arm it */
+  var FX_NEW_DEFAULTS = {
+    kaleido: { on:false, mix:0.35, taps:4, fb:0.35 },
+    freeze:  { on:false, level:0.6 },
+    shepard: { on:false, mix:0.3, rate:0.3, dir:1 },
+    granular:{ on:false, mix:0.35, density:0.4, size:0.35 },
+    fold:    { on:false, drive:0.4, mix:0.6 }
+  };
+  Object.keys(FX_NEW_DEFAULTS).forEach(function(k){
+    if (!state.fx[k]) state.fx[k] = JSON.parse(JSON.stringify(FX_NEW_DEFAULTS[k]));
+  });
+  if (p.fxNew){
+    Object.keys(p.fxNew).forEach(function(k){
+      if (state.fx[k]) Object.assign(state.fx[k], p.fxNew[k]);
+    });
+  }
+  state.fx.freeze.on = false;
   if (p.drums){
     state.drums.pattern = {
       kick:  pat16(p.drums.kick || []),
@@ -1946,6 +2338,8 @@ function applyPatch(p, name){
     };
     state.drums.depth = p.drums.depth || 2;
     if (typeof p.drums.vol === "number") state.drums.vol = p.drums.vol;
+    if (typeof p.drums.swing === "number") state.drums.swing = p.drums.swing;
+    if (typeof p.drums.echo === "boolean") state.drums.echoOn = p.drums.echo;
     state.drums.levelMuted = [false, false, false];
   }
   if (p.bass){
@@ -2011,6 +2405,13 @@ function mutate(){
            Math.random()<0.85, rnd(.3,.85),
            true, rnd(.35,1), rnd(0,.6),
            Math.random()<0.4,  rnd(.15,.5)),
+    fxNew: {
+      kaleido: { on: Math.random() < 0.3, mix: rnd(.2,.5), taps: 3 + Math.floor(Math.random() * 4), fb: rnd(.2,.55) },
+      freeze: { on: false, level: rnd(.4,.85) },
+      shepard: { on: Math.random() < 0.18, mix: rnd(.15,.35), rate: rnd(.1,.5), dir: Math.random() < 0.5 ? 1 : -1 },
+      granular: { on: Math.random() < 0.22, mix: rnd(.2,.45), density: rnd(.25,.7), size: rnd(.15,.6) },
+      fold: { on: Math.random() < 0.38, drive: rnd(.2,.65), mix: rnd(.35,.75) }
+    },
     drums: { depth: 1 + Math.floor(Math.random() * 3), vol: rnd(.7, 1),
              kick: dPat.kick, snare: dPat.snare, hat: dPat.hat, pop: dPat.pop },
     bass: { level: rnd(.55,.95), wave: pick(["sawtooth","square"]), sub: Math.random() < 0.75,
@@ -2078,7 +2479,12 @@ function serializeShareState(){
       s:  [state.fx.shimmer.on ? 1 : 0, Math.round(state.fx.shimmer.amt * 100)],
       r:  [state.fx.reverb.on ? 1 : 0, Math.round(state.fx.reverb.amt * 100)],
       fl: [state.fx.filter.on ? 1 : 0, Math.round(state.fx.filter.cutoff * 100), Math.round(state.fx.filter.reso * 100)],
-      c:  [state.fx.crush.on ? 1 : 0, Math.round(state.fx.crush.amt * 100)]
+      c:  [state.fx.crush.on ? 1 : 0, Math.round(state.fx.crush.amt * 100)],
+      kd: [state.fx.kaleido.on ? 1 : 0, Math.round(state.fx.kaleido.mix * 100), state.fx.kaleido.taps, Math.round(state.fx.kaleido.fb * 100)],
+      fz: [state.fx.freeze.on ? 1 : 0, Math.round(state.fx.freeze.level * 100)],
+      sh: [state.fx.shepard.on ? 1 : 0, Math.round(state.fx.shepard.mix * 100), Math.round(state.fx.shepard.rate * 100), state.fx.shepard.dir],
+      gr: [state.fx.granular.on ? 1 : 0, Math.round(state.fx.granular.mix * 100), Math.round(state.fx.granular.density * 100), Math.round(state.fx.granular.size * 100)],
+      fo: [state.fx.fold.on ? 1 : 0, Math.round(state.fx.fold.drive * 100), Math.round(state.fx.fold.mix * 100)]
     },
     dr: {
       p: [
@@ -2165,6 +2571,39 @@ function applyDecodedShareState(o){
           state.fx[key].amt = shareClampNum(arr[1], 0, 100, state.fx[key].amt * 100) / 100;
         }
       });
+      /* new rack — absent from older links, which load exactly as before */
+      var kdA = o.f.kd;
+      if (Array.isArray(kdA) && kdA.length >= 4){
+        state.fx.kaleido.on = (kdA[0] === 1 || kdA[0] === true);
+        state.fx.kaleido.mix = shareClampNum(kdA[1], 0, 100, 35) / 100;
+        state.fx.kaleido.taps = shareClampInt(kdA[2], 1, 8, 4);
+        state.fx.kaleido.fb = shareClampNum(kdA[3], 0, 100, 35) / 100;
+      }
+      var fzA = o.f.fz;
+      if (Array.isArray(fzA) && fzA.length >= 2){
+        state.fx.freeze.on = (fzA[0] === 1 || fzA[0] === true);
+        state.fx.freeze.level = shareClampNum(fzA[1], 0, 100, 60) / 100;
+      }
+      var shA = o.f.sh;
+      if (Array.isArray(shA) && shA.length >= 3){
+        state.fx.shepard.on = (shA[0] === 1 || shA[0] === true);
+        state.fx.shepard.mix = shareClampNum(shA[1], 0, 100, 30) / 100;
+        state.fx.shepard.rate = shareClampNum(shA[2], 0, 100, 30) / 100;
+        if (shA.length >= 4) state.fx.shepard.dir = (Number(shA[3]) < 0) ? -1 : 1;
+      }
+      var grA = o.f.gr;
+      if (Array.isArray(grA) && grA.length >= 4){
+        state.fx.granular.on = (grA[0] === 1 || grA[0] === true);
+        state.fx.granular.mix = shareClampNum(grA[1], 0, 100, 35) / 100;
+        state.fx.granular.density = shareClampNum(grA[2], 0, 100, 40) / 100;
+        state.fx.granular.size = shareClampNum(grA[3], 0, 100, 35) / 100;
+      }
+      var foA = o.f.fo;
+      if (Array.isArray(foA) && foA.length >= 3){
+        state.fx.fold.on = (foA[0] === 1 || foA[0] === true);
+        state.fx.fold.drive = shareClampNum(foA[1], 0, 100, 40) / 100;
+        state.fx.fold.mix = shareClampNum(foA[2], 0, 100, 60) / 100;
+      }
     }
     /* drums */
     if (o.dr && typeof o.dr === "object"){
@@ -2187,7 +2626,7 @@ function applyDecodedShareState(o){
     /* fractal bass */
     if (Array.isArray(o.ba) && o.ba.length >= 6){
       state.bass.level  = shareClampNum(o.ba[0], 0, 100, state.bass.level * 100) / 100;
-      if (o.ba[1] === "sawtooth" || o.ba[1] === "square") state.bass.wave = o.ba[1];
+      if (o.ba[1] === "sawtooth" || o.ba[1] === "square" || o.ba[1] === "triangle") state.bass.wave = o.ba[1];
       state.bass.subOn  = (o.ba[2] === 1 || o.ba[2] === true);
       state.bass.filter = shareClampNum(o.ba[3], 0, 100, state.bass.filter * 100) / 100;
       state.bass.motion = shareClampNum(o.ba[4], 0, 100, state.bass.motion * 100) / 100;
