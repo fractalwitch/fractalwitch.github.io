@@ -101,6 +101,15 @@
                    radial-gradient(circle at 50% 55%, #ff4fd8, #c026d3 55%, #701a75);
         box-shadow:0 0 0 5px rgba(255,79,216,.16), 0 14px 34px rgba(192,38,211,.5), inset 0 -8px 18px rgba(0,0,0,.35);
       }
+      .play-col{display:flex;flex-direction:column;align-items:center;gap:10px;flex:none;}
+      #shareBtn{
+        border-radius:999px;border:1px solid rgba(34,211,238,.55);cursor:pointer;
+        background:rgba(34,211,238,.12);color:var(--cyan-soft);
+        font-family:"Space Mono",monospace;font-size:.72rem;font-weight:700;letter-spacing:.1em;
+        padding:9px 14px;min-height:2.5rem;white-space:nowrap;transition:background .15s, color .15s, border-color .15s;
+      }
+      #shareBtn:hover{background:rgba(34,211,238,.24);color:#fff;}
+      #shareBtn.copied{background:rgba(52,211,153,.22);border-color:rgba(52,211,153,.7);color:#a7f3d0;}
       .transport-controls{flex:1 1 300px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;}
       .ctl label{display:block;font-family:"Space Mono",monospace;font-size:.68rem;letter-spacing:.18em;color:var(--ink-faint);margin-bottom:7px;text-transform:uppercase;}
       .ctl .val{color:var(--magenta);font-weight:700;}
@@ -365,7 +374,10 @@
       <!-- TRANSPORT -->
       <section class="panel" aria-label="Transport">
         <div class="transport">
-          <button id="playBtn" type="button" aria-pressed="false">▶ PLAY</button>
+          <div class="play-col">
+            <button id="playBtn" type="button" aria-pressed="false">▶ PLAY</button>
+            <button id="shareBtn" type="button" aria-label="Copy a shareable link encoding the current settings">SHARE · COPY LINK</button>
+          </div>
           <div class="transport-controls">
             <div class="ctl">
               <label for="tempo">Tempo — <span class="val" id="tempoVal">104 BPM</span></label>
@@ -1901,8 +1913,14 @@ function describePatch(){
   return SCALE_NAMES[state.scale] + " · depth " + state.depth + " · " + state.bpm + " BPM · root " + noteName(extSemi(state.rootPad));
 }
 function setNowPlaying(){
-  $("nowPlaying").innerHTML = "Patch: <b>" + state.patchName + "</b> — " + describePatch();
-  presetBtns.forEach(function(b, i){ b.classList.toggle("sel", PRESETS[i].name === state.patchName); });
+  var np = $("nowPlaying");
+  np.textContent = "";
+  np.appendChild(document.createTextNode("Patch: "));
+  var b = document.createElement("b");
+  b.textContent = state.patchName;
+  np.appendChild(b);
+  np.appendChild(document.createTextNode(" — " + describePatch()));
+  presetBtns.forEach(function(btn, i){ btn.classList.toggle("sel", PRESETS[i].name === state.patchName); });
 }
 function markCustom(){
   if (state.patchName !== "Custom" && state.patchName !== "Mutation"){
@@ -2017,6 +2035,279 @@ document.addEventListener("keydown", function(e){
   if (idx >= 0) setRoot(idx, true);
 });
 
+/* ============================================================
+   SHAREABLE URL STATE — the full instrument setup encoded as
+   compact JSON -> base64url in the URL hash (#s=...).
+   Live hash: any change rewrites the hash in place via
+   history.replaceState (no reload, no history spam), so the
+   address bar always holds the current song.
+   Load: a valid hash is decoded and applied BEFORE first
+   render; a malformed or partial hash is ignored gracefully.
+   ============================================================ */
+function shareClampNum(v, min, max, fallback){
+  var n = (typeof v === "string") ? parseFloat(v) : v;
+  if (typeof n !== "number" || !isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
+function shareClampInt(v, min, max, fallback){
+  return Math.round(shareClampNum(v, min, max, fallback));
+}
+function shareMaskFromPattern(arr){
+  var m = 0;
+  for (var i = 0; i < 16; i++) if (arr && arr[i]) m |= (1 << i);
+  return m;
+}
+function sharePatternFromMask(m){
+  var a = [];
+  var n = shareClampInt(m, 0, 65535, 0);
+  for (var i = 0; i < 16; i++) a.push(!!(n & (1 << i)));
+  return a;
+}
+function serializeShareState(){
+  return {
+    v: 1,
+    b: state.bpm,
+    d: state.depth,
+    s: state.scale,
+    i: state.interval,
+    r: state.rootPad,
+    m: state.motif.map(function(st){ return [st.deg, st.muted ? 1 : 0]; }),
+    l: state.layers.map(function(l){ return [l.wave, Math.round(l.vol * 100), l.muted ? 1 : 0]; }),
+    f: {
+      e:  [state.fx.echo.on ? 1 : 0, Math.round(state.fx.echo.amt * 100)],
+      s:  [state.fx.shimmer.on ? 1 : 0, Math.round(state.fx.shimmer.amt * 100)],
+      r:  [state.fx.reverb.on ? 1 : 0, Math.round(state.fx.reverb.amt * 100)],
+      fl: [state.fx.filter.on ? 1 : 0, Math.round(state.fx.filter.cutoff * 100), Math.round(state.fx.filter.reso * 100)],
+      c:  [state.fx.crush.on ? 1 : 0, Math.round(state.fx.crush.amt * 100)]
+    },
+    dr: {
+      p: [
+        shareMaskFromPattern(state.drums.pattern.kick),
+        shareMaskFromPattern(state.drums.pattern.snare),
+        shareMaskFromPattern(state.drums.pattern.hat),
+        shareMaskFromPattern(state.drums.pattern.pop)
+      ],
+      d: state.drums.depth,
+      m: state.drums.levelMuted.map(function(x){ return x ? 1 : 0; }),
+      sw: Math.round(state.drums.swing * 100),
+      v: Math.round(state.drums.vol * 100),
+      e: state.drums.echoOn ? 1 : 0
+    },
+    ba: [
+      Math.round(state.bass.level * 100), state.bass.wave, state.bass.subOn ? 1 : 0,
+      Math.round(state.bass.filter * 100), Math.round(state.bass.motion * 100), Math.round(state.bass.grit * 100)
+    ],
+    pn: state.patchName
+  };
+}
+function encodeShareState(){
+  var json = JSON.stringify(serializeShareState());
+  var bytes = new TextEncoder().encode(json);
+  var bin = "";
+  for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function decodeShareString(str){
+  var b64 = String(str).replace(/-/g, "+").replace(/_/g, "/");
+  while (b64.length % 4) b64 += "=";
+  var bin = atob(b64);
+  var bytes = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  var json = new TextDecoder().decode(bytes);
+  return JSON.parse(json);
+}
+function applyDecodedShareState(o){
+  if (!o || typeof o !== "object" || Array.isArray(o)) return false;
+  try {
+    /* core */
+    if (typeof o.s === "string" && SCALES[o.s]) state.scale = o.s;
+    if (o.b != null) state.bpm = shareClampInt(o.b, 60, 160, state.bpm);
+    if (o.d != null) state.depth = shareClampInt(o.d, 1, 5, state.depth);
+    if (o.i != null && [7, 12, 5, 4, -12].indexOf(Number(o.i)) >= 0) state.interval = Number(o.i);
+    if (o.r != null) state.rootPad = shareClampInt(o.r, 0, 7, state.rootPad);
+    /* seed motif — pitches clamped to the (possibly new) scale */
+    if (Array.isArray(o.m) && o.m.length === 8){
+      var md = maxDeg();
+      var motifOk = true;
+      var newMotif = o.m.map(function(entry){
+        if (!Array.isArray(entry) || entry.length < 1) { motifOk = false; return { deg: 0, muted: false }; }
+        return {
+          deg: shareClampInt(entry[0], 0, md, 0),
+          muted: entry[1] === 1 || entry[1] === true
+        };
+      });
+      if (motifOk) state.motif = newMotif;
+    }
+    /* per-layer mixer */
+    if (Array.isArray(o.l) && o.l.length){
+      for (var lv = 0; lv < Math.min(5, o.l.length); lv++){
+        var le = o.l[lv];
+        if (!Array.isArray(le) || le.length < 2) continue;
+        if (WAVE_LIST.indexOf(le[0]) >= 0) state.layers[lv].wave = le[0];
+        state.layers[lv].vol = shareClampNum(le[1], 0, 100, state.layers[lv].vol * 100) / 100;
+        if (le.length > 2) state.layers[lv].muted = (le[2] === 1 || le[2] === true);
+      }
+    }
+    /* effects */
+    if (o.f && typeof o.f === "object"){
+      var fxMap = [
+        ["e", "echo", false], ["s", "shimmer", false], ["r", "reverb", false],
+        ["fl", "filter", true], ["c", "crush", false]
+      ];
+      fxMap.forEach(function(cfg){
+        var arr = o.f[cfg[0]], key = cfg[1];
+        if (!Array.isArray(arr) || arr.length < 2) return;
+        state.fx[key].on = (arr[0] === 1 || arr[0] === true);
+        if (key === "filter"){
+          state.fx.filter.cutoff = shareClampNum(arr[1], 0, 100, state.fx.filter.cutoff * 100) / 100;
+          if (arr.length > 2) state.fx.filter.reso = shareClampNum(arr[2], 0, 100, state.fx.filter.reso * 100) / 100;
+        } else {
+          state.fx[key].amt = shareClampNum(arr[1], 0, 100, state.fx[key].amt * 100) / 100;
+        }
+      });
+    }
+    /* drums */
+    if (o.dr && typeof o.dr === "object"){
+      if (Array.isArray(o.dr.p) && o.dr.p.length === 4){
+        state.drums.pattern = {
+          kick:  sharePatternFromMask(o.dr.p[0]),
+          snare: sharePatternFromMask(o.dr.p[1]),
+          hat:   sharePatternFromMask(o.dr.p[2]),
+          pop:   sharePatternFromMask(o.dr.p[3])
+        };
+      }
+      if (o.dr.d != null) state.drums.depth = shareClampInt(o.dr.d, 1, 3, state.drums.depth);
+      if (Array.isArray(o.dr.m) && o.dr.m.length === 3){
+        state.drums.levelMuted = o.dr.m.map(function(x){ return x === 1 || x === true; });
+      }
+      if (o.dr.sw != null) state.drums.swing = shareClampNum(o.dr.sw, 0, 50, state.drums.swing * 100) / 100;
+      if (o.dr.v != null) state.drums.vol = shareClampNum(o.dr.v, 0, 100, state.drums.vol * 100) / 100;
+      if (o.dr.e != null) state.drums.echoOn = (o.dr.e === 1 || o.dr.e === true);
+    }
+    /* fractal bass */
+    if (Array.isArray(o.ba) && o.ba.length >= 6){
+      state.bass.level  = shareClampNum(o.ba[0], 0, 100, state.bass.level * 100) / 100;
+      if (o.ba[1] === "sawtooth" || o.ba[1] === "square") state.bass.wave = o.ba[1];
+      state.bass.subOn  = (o.ba[2] === 1 || o.ba[2] === true);
+      state.bass.filter = shareClampNum(o.ba[3], 0, 100, state.bass.filter * 100) / 100;
+      state.bass.motion = shareClampNum(o.ba[4], 0, 100, state.bass.motion * 100) / 100;
+      state.bass.grit   = shareClampNum(o.ba[5], 0, 100, state.bass.grit * 100) / 100;
+    }
+    /* patch label — only names this instrument itself uses are honoured
+       from a link; anything else becomes the fixed "Shared Link" label,
+       so a crafted link can never inject its own text into the page */
+    var allowedNames = PRESETS.map(function(p){ return p.name; }).concat(["Custom", "Mutation", "Shared Link"]);
+    if (typeof o.pn === "string" && allowedNames.indexOf(o.pn) >= 0){
+      state.patchName = o.pn;
+    } else {
+      state.patchName = "Shared Link";
+    }
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+function loadShareStateFromHash(){
+  try {
+    var hash = window.location.hash || "";
+    var match = hash.match(/[#&]s=([A-Za-z0-9\-_]+)/);
+    if (!match) return false;
+    var decoded = decodeShareString(match[1]);
+    return applyDecodedShareState(decoded);
+  } catch (err) {
+    return false;
+  }
+}
+/* decode + apply BEFORE the first render below */
+var loadedFromLink = loadShareStateFromHash();
+
+function syncTransportFromState(){
+  $("tempo").value = state.bpm;
+  $("tempoVal").textContent = state.bpm + " BPM";
+  $("scaleSel").value = state.scale;
+  $("intervalSel").value = String(state.interval);
+}
+function refreshShareUI(){
+  syncTransportFromState();
+  syncMotif(); syncPads(); syncMixer(); syncFxUI(); syncDepth();
+  syncDrums(); syncBass();
+  applyFx(); applyTempo(); applyDrums(); applyBass();
+  setNowPlaying();
+}
+
+/* ---------- live hash ---------- */
+var lastShareEncoded = null;
+var shareHashTimer = null;
+function writeShareHash(){
+  try {
+    var enc = encodeShareState();
+    if (enc === lastShareEncoded) return;
+    lastShareEncoded = enc;
+    history.replaceState(null, "", "#s=" + enc);
+  } catch (err) { /* hash update is best-effort; the song still plays */ }
+}
+function scheduleShareHash(){
+  if (shareHashTimer) clearTimeout(shareHashTimer);
+  shareHashTimer = setTimeout(function(){ shareHashTimer = null; writeShareHash(); }, 120);
+}
+document.addEventListener("input", scheduleShareHash, true);
+document.addEventListener("change", scheduleShareHash, true);
+document.addEventListener("click", function(){ setTimeout(scheduleShareHash, 60); }, true);
+/* sliders that only fire input (mixer vols, fx amounts, swing…) and any
+   state path that skips an event are still caught by this watcher */
+setInterval(writeShareHash, 400);
+/* pasting a different shared link into an already-open page loads it too */
+window.addEventListener("hashchange", function(){
+  if (loadShareStateFromHash()) refreshShareUI();
+  lastShareEncoded = null;
+  writeShareHash();
+});
+
+/* ---------- copy link button ---------- */
+var shareBtn = $("shareBtn");
+var shareBtnTimer = null;
+function shareBtnFeedback(ok){
+  if (!shareBtn) return;
+  shareBtn.textContent = ok ? "LINK COPIED ✓" : "COPY FAILED — USE ADDRESS BAR";
+  shareBtn.classList.toggle("copied", ok);
+  if (shareBtnTimer) clearTimeout(shareBtnTimer);
+  shareBtnTimer = setTimeout(function(){
+    shareBtn.textContent = "SHARE · COPY LINK";
+    shareBtn.classList.remove("copied");
+    shareBtnTimer = null;
+  }, 1500);
+}
+function fallbackCopyText(text){
+  return new Promise(function(resolve){
+    try {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed"; ta.style.top = "-9999px"; ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select(); ta.setSelectionRange(0, ta.value.length);
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+      document.body.removeChild(ta);
+      resolve(ok);
+    } catch (e) { resolve(false); }
+  });
+}
+if (shareBtn){
+  shareBtn.addEventListener("click", function(){
+    writeShareHash();
+    var url = window.location.href;
+    var done = function(ok){ shareBtnFeedback(ok); };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(function(){ done(true); }, function(){
+        fallbackCopyText(url).then(done);
+      });
+    } else {
+      fallbackCopyText(url).then(done);
+    }
+  });
+}
+
 /* ---------- init ---------- */
 buildMotif();
 buildNest();
@@ -2028,6 +2319,11 @@ syncBass();
 syncFxUI();
 syncDepth();
 setNowPlaying();
+syncTransportFromState();
+if (loadedFromLink) refreshShareUI();
+/* the address bar always holds the current song, even before the first tweak */
+lastShareEncoded = null;
+writeShareHash();
 </script>
 </body>
 </body>
