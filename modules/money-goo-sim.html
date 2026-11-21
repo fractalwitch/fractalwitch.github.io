@@ -1,0 +1,2857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>THE GREAT MONETARY HALLUCINATION: Navier-Stokes Liquidity &amp; Heartbeat-Burner Sim</title>
+  <style>
+    :root {
+      --bg-obsidian: #06070d;
+      --glass-bg: rgba(10, 13, 25, 0.78);
+      --glass-border: rgba(148, 163, 184, 0.18);
+      --cyan-digit: #00f5d4;
+      --cyan-deep: #00bbf9;
+      --amber-heart: #ff9e00;
+      --coral-burn: #ff4d6d;
+      --purple-swamp: #9d4edd;
+      --gold-soliton: #fde047;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-obsidian);
+      font-family: var(--font-sans);
+      color: #e2e8f0;
+      user-select: none;
+    }
+
+    #simCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      display: block;
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    .glass-panel {
+      background: var(--glass-bg);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+
+    .mono {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Top HUD Header with 44px left-padding so mobile top-left close buttons never collide */
+    #topHud {
+      position: fixed;
+      top: 8px;
+      left: 8px;
+      right: 8px;
+      z-index: 20;
+      border-radius: 16px;
+      padding: 8px 12px 8px 44px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      pointer-events: auto;
+    }
+
+    @media (min-width: 1024px) {
+      #topHud {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 14px 8px 44px;
+      }
+    }
+
+    .hud-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 14px;
+    }
+
+    .title-block {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-right: 10px;
+      border-right: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--cyan-digit);
+      box-shadow: 0 0 10px var(--cyan-digit);
+      flex-shrink: 0;
+      animation: pulseDot 2s infinite ease-in-out;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 0.7; transform: scale(0.95); }
+      50% { opacity: 1; transform: scale(1.15); }
+    }
+
+    .title-main {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      color: #ffffff;
+      line-height: 1.1;
+    }
+
+    .title-sub {
+      font-size: 9px;
+      color: #94a3b8;
+      letter-spacing: 0.04em;
+      margin-top: 2px;
+    }
+
+    .stat-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #94a3b8;
+      font-weight: 600;
+    }
+
+    .stat-val {
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .val-amber {
+      color: var(--amber-heart);
+      text-shadow: 0 0 8px rgba(255, 158, 0, 0.35);
+    }
+
+    .val-cyan {
+      color: var(--cyan-digit);
+      text-shadow: 0 0 8px rgba(0, 245, 212, 0.35);
+    }
+
+    .val-purple {
+      color: #d8b4fe;
+    }
+
+    .val-gold {
+      color: var(--gold-soliton);
+      text-shadow: 0 0 8px rgba(253, 224, 71, 0.35);
+    }
+
+    .capture-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-left: 10px;
+      border-left: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .div-badge {
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 5px;
+      background: rgba(16, 185, 129, 0.16);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+
+    .div-badge.high {
+      background: rgba(168, 85, 247, 0.22);
+      color: #e9d5ff;
+      border-color: rgba(192, 132, 252, 0.45);
+    }
+
+    #sparklineCanvas {
+      border-radius: 7px;
+      background: rgba(4, 6, 14, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+    }
+
+    /* Controls Bar */
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-hud {
+      border-radius: 10px;
+      padding: 5px 9px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #e2e8f0;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-hud:hover {
+      background: rgba(30, 41, 59, 0.92);
+      border-color: rgba(148, 163, 184, 0.42);
+    }
+
+    .btn-hud:active {
+      transform: scale(0.96);
+    }
+
+    .btn-shockwave {
+      background: linear-gradient(135deg, rgba(255, 77, 109, 0.28), rgba(123, 44, 191, 0.32));
+      border-color: rgba(255, 158, 0, 0.55);
+      color: #fef3c7;
+      box-shadow: 0 0 14px rgba(255, 77, 109, 0.25);
+    }
+
+    .btn-shockwave:hover {
+      border-color: #fde047;
+      box-shadow: 0 0 20px rgba(255, 158, 0, 0.45);
+    }
+
+    .preset-group {
+      display: inline-flex;
+      background: rgba(4, 6, 14, 0.78);
+      border-radius: 10px;
+      padding: 2px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+    }
+
+    .preset-btn {
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 4px 7px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .preset-btn.active {
+      background: rgba(0, 245, 212, 0.18);
+      color: #a5f3fc;
+      box-shadow: inset 0 0 0 1px rgba(0, 245, 212, 0.45);
+    }
+
+    .btn-toggle-on {
+      background: rgba(0, 245, 212, 0.18);
+      border-color: rgba(0, 245, 212, 0.55);
+      color: #a5f3fc;
+    }
+
+    .btn-guide {
+      background: rgba(0, 187, 249, 0.18);
+      border-color: rgba(0, 245, 212, 0.45);
+      color: #cffafe;
+    }
+
+    /* Toast Banner */
+    #eventBanner {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 25;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+      border-radius: 999px;
+      padding: 6px 14px;
+      border: 1px solid rgba(253, 224, 71, 0.55);
+      box-shadow: 0 0 24px rgba(253, 224, 71, 0.28);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      white-space: nowrap;
+      max-width: 92vw;
+    }
+
+    #eventBannerText {
+      font-size: 11px;
+      font-weight: 700;
+      color: #fef08a;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Bottom Tool Dock */
+    #bottomDock {
+      position: fixed;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      width: 96vw;
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      pointer-events: none;
+    }
+
+    #toolHintPill {
+      pointer-events: auto;
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-size: 11px;
+      color: #cbd5e1;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .dock-bar {
+      pointer-events: auto;
+      border-radius: 16px;
+      padding: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .tool-btn {
+      flex: 1 1 auto;
+      min-width: 0;
+      border-radius: 12px;
+      padding: 8px 8px;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      background: rgba(15, 23, 42, 0.65);
+      color: #cbd5e1;
+      font-size: 11.5px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      cursor: pointer;
+      transition: all 0.16s ease;
+      white-space: nowrap;
+    }
+
+    .tool-btn:hover {
+      background: rgba(30, 41, 59, 0.88);
+      color: #ffffff;
+    }
+
+    .tool-btn.active[data-tool="stir"] {
+      background: rgba(0, 245, 212, 0.18);
+      border-color: rgba(0, 245, 212, 0.75);
+      color: #ffffff;
+      box-shadow: 0 0 18px rgba(0, 245, 212, 0.26);
+    }
+
+    .tool-btn.active[data-tool="dam"] {
+      background: rgba(255, 0, 85, 0.2);
+      border-color: rgba(255, 0, 85, 0.78);
+      color: #ffffff;
+      box-shadow: 0 0 18px rgba(255, 0, 85, 0.28);
+    }
+
+    .tool-btn.active[data-tool="billboard"] {
+      background: rgba(255, 0, 127, 0.2);
+      border-color: rgba(255, 209, 102, 0.8);
+      color: #ffffff;
+      box-shadow: 0 0 18px rgba(255, 0, 127, 0.28);
+    }
+
+    .tool-btn.active[data-tool="soliton"] {
+      background: rgba(168, 85, 247, 0.24);
+      border-color: rgba(253, 224, 71, 0.85);
+      color: #ffffff;
+      box-shadow: 0 0 20px rgba(253, 224, 71, 0.3);
+    }
+
+    .kbd-hint {
+      font-size: 9.5px;
+      padding: 1px 4px;
+      border-radius: 4px;
+      background: rgba(30, 41, 59, 0.9);
+      color: #94a3b8;
+      display: none;
+    }
+
+    @media (min-width: 640px) {
+      .kbd-hint { display: inline-block; }
+      .tool-btn { padding: 8px 12px; font-size: 12px; }
+    }
+
+    .btn-clear-mini {
+      flex: 0 0 auto;
+      border-radius: 12px;
+      padding: 8px 9px;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      background: rgba(127, 29, 29, 0.25);
+      color: #fca5a5;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-clear-mini:hover {
+      background: rgba(153, 27, 27, 0.45);
+      border-color: rgba(248, 113, 113, 0.65);
+    }
+
+    /* Field Guide Modal */
+    #guideModal {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(4, 6, 13, 0.82);
+      backdrop-filter: blur(8px);
+    }
+
+    #guideModal.open {
+      display: flex;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 640px;
+      max-height: 85vh;
+      overflow-y: auto;
+      border-radius: 22px;
+      padding: 20px;
+      border: 1px solid rgba(0, 245, 212, 0.35);
+      box-shadow: 0 0 50px rgba(0, 245, 212, 0.16);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+    }
+
+    .modal-body {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-size: 13px;
+      line-height: 1.55;
+      color: #cbd5e1;
+    }
+
+    .guide-box {
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.68);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+    }
+
+    .guide-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    @media (min-width: 600px) {
+      .guide-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .btn-primary-cyan {
+      border: none;
+      border-radius: 12px;
+      padding: 9px 16px;
+      background: var(--cyan-digit);
+      color: #040711;
+      font-weight: 800;
+      font-size: 12px;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(0, 245, 212, 0.4);
+    }
+  </style>
+</head>
+<body>
+  <!-- Full-Viewport High-DPI Canvas -->
+  <canvas id="simCanvas"></canvas>
+
+  <!-- Compact Top HUD -->
+  <header id="topHud" class="glass-panel">
+    <div class="hud-row">
+      <div class="title-block">
+        <span class="live-dot"></span>
+        <div>
+          <div class="title-main">THE GREAT MONETARY HALLUCINATION</div>
+          <div class="title-sub mono">NAVIER-STOKES LIQUIDITY &amp; HEARTBEAT-BURNER</div>
+        </div>
+      </div>
+
+      <div class="stat-group">
+        <span class="stat-label">Heartbeats Burned</span>
+        <span id="statHeartbeats" class="stat-val val-amber mono">0 ♥</span>
+      </div>
+
+      <div class="stat-group">
+        <span class="stat-label">Hallucinated Digits</span>
+        <span id="statDigits" class="stat-val val-cyan mono">$0</span>
+      </div>
+
+      <div class="capture-box">
+        <div class="stat-group">
+          <div style="display:flex;align-items:center;gap:5px;">
+            <span class="stat-label">Capture vs Flow</span>
+            <span id="statDivergence" class="div-badge mono">∇·Θ = 0.00</span>
+          </div>
+          <div style="display:flex;align-items:baseline;gap:6px;">
+            <span id="statCapturePct" class="stat-val val-purple mono">0.0%</span>
+            <span id="statFlowPct" class="mono" style="font-size:10.5px;color:#6ee7b7;">Flow 100%</span>
+          </div>
+        </div>
+        <canvas id="sparklineCanvas" width="76" height="28"></canvas>
+      </div>
+
+      <div class="stat-group">
+        <span class="stat-label">Max Soliton Υ</span>
+        <span id="statUpsilon" class="stat-val val-gold mono">Υ 1.00</span>
+      </div>
+    </div>
+
+    <div class="controls-row">
+      <button id="btnShockwave" class="btn-hud btn-shockwave" title="Trigger central vortex + liquidity surge (Space)">
+        <span>⚡</span>
+        <span>Tick 40 Shockwave</span>
+      </button>
+
+      <div class="preset-group">
+        <button class="preset-btn active" data-preset="metropolis">Metropolis</button>
+        <button class="preset-btn" data-preset="swamp">Capture Swamp</button>
+        <button class="preset-btn" data-preset="utopia">Soliton Utopia</button>
+      </div>
+
+      <button id="btnVectors" class="btn-hud" title="Toggle Navier-Stokes velocity arrows">🧭 Vectors</button>
+      <button id="btnAudio" class="btn-hud" title="Toggle generative Web Audio synth">🔇 Synth</button>
+      <button id="btnGuide" class="btn-hud btn-guide">📖 Field Guide</button>
+    </div>
+  </header>
+
+  <!-- Event Notification Pill -->
+  <div id="eventBanner" class="glass-panel">
+    <span id="eventBannerIcon">🌀</span>
+    <span id="eventBannerText" class="mono">SOLITON EGO COLLAPSE</span>
+  </div>
+
+  <!-- Bottom Interactive Chaos & Anti-Capture Dock -->
+  <footer id="bottomDock">
+    <div id="toolHintPill" class="glass-panel">
+      <strong style="color:#00f5d4;">Stir Current:</strong> Drag anywhere to inject swirling cyan liquidity &amp; velocity wakes.
+    </div>
+
+    <div class="dock-bar glass-panel">
+      <button class="tool-btn active" data-tool="stir">
+        <span>🌊</span>
+        <span>Stir Current</span>
+        <kbd class="kbd-hint mono">1</kbd>
+      </button>
+
+      <button class="tool-btn" data-tool="dam">
+        <span>🧱</span>
+        <span>Scarcity Dam</span>
+        <kbd class="kbd-hint mono">2</kbd>
+      </button>
+
+      <button class="tool-btn" data-tool="billboard">
+        <span>💎</span>
+        <span>Luxury Billboard</span>
+        <kbd class="kbd-hint mono">3</kbd>
+      </button>
+
+      <button class="tool-btn" data-tool="soliton">
+        <span>🌀</span>
+        <span>Soliton Portal</span>
+        <kbd class="kbd-hint mono">4</kbd>
+      </button>
+
+      <button id="btnClearPlaced" class="btn-clear-mini" title="Remove placed dams, billboards &amp; portals">
+        ✕ Clear
+      </button>
+    </div>
+  </footer>
+
+  <!-- Field Guide Modal -->
+  <div id="guideModal">
+    <div class="modal-card glass-panel">
+      <div class="modal-header">
+        <div>
+          <div class="mono" style="font-size:10px;color:#00f5d4;letter-spacing:0.08em;">FIELD GUIDE // ONTO-FLOW-SOLITON</div>
+          <h2 style="font-size:18px;font-weight:800;color:#fff;margin-top:2px;">The Great Monetary Hallucination</h2>
+          <p style="font-size:12px;color:#94a3b8;margin-top:2px;">
+            An Eulerian fluid &amp; bioluminescent swarm simulation of imaginary digits vs. finite heartbeats.
+          </p>
+        </div>
+        <button id="btnCloseGuide" class="btn-hud" style="padding:6px 10px;">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="guide-box">
+          <strong style="color:#fbbf24;">♥ Finite Heartbeats vs. Imaginary Cyan Digits</strong>
+          <p style="margin-top:4px;">
+            Primates cruise continuously through a 2D Navier-Stokes velocity field, burning warm amber/coral <strong>Heartbeats</strong> to chase shimmering <strong>Cyan Digits</strong>. Primates who hoard huge stacks become <strong>Dragon Hoarders</strong>—wearing oversized cold-cyan halos that slow them down to ~55% speed and spike anxiety burn.
+          </p>
+        </div>
+
+        <div class="guide-grid">
+          <div class="guide-box" style="border-color:rgba(245,158,11,0.35);">
+            <strong style="color:#fbbf24;font-size:12px;">🏠 Drywall Boxes</strong>
+            <p style="font-size:11.5px;color:#94a3b8;margin-top:4px;">
+              30-Yr Mortgage enclosures with open doorways; primates enter to pay escrow, turning liquidity into purple capture haze before exiting.
+            </p>
+          </div>
+          <div class="guide-box" style="border-color:rgba(0,245,212,0.35);">
+            <strong style="color:#5eead4;font-size:12px;">🏢 Fluorescent Cubicles</strong>
+            <p style="font-size:11.5px;color:#94a3b8;margin-top:4px;">
+              Translucent cyan-violet grids that snap primates into orthogonal rows, minting fresh <code>$</code> digits while steadily draining heartbeats.
+            </p>
+          </div>
+          <div class="guide-box" style="border-color:rgba(192,132,252,0.35);">
+            <strong style="color:#d8b4fe;font-size:12px;">☕ Espresso Towers</strong>
+            <p style="font-size:11.5px;color:#94a3b8;margin-top:4px;">
+              Pulsing gold spires firing shock-rings that double nearby primates' speed and heartbeat burn rate with bright spark bursts.
+            </p>
+          </div>
+        </div>
+
+        <div class="guide-box" style="border-color:rgba(253,224,71,0.35);">
+          <strong style="color:#fde047;">🌀 Soliton Portals (∇·Θ = 0) &amp; Sisterlock Filaments</strong>
+          <p style="margin-top:4px;">
+            7-layered rotating Motzkin hexagonal portals tunnel through Scarcity Dams, transmute stagnant dark-purple <strong>Capture Swamps</strong> into iridescent swirling eddies, link to neighbor portals via golden sinusoidal <strong>Sisterlock Filaments (Δθ = 2πΥ)</strong>, and execute <code>executeEgoCollapse()</code> shock-rings when saturated, compounding <strong>Υ × 1.5</strong>.
+          </p>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(148,163,184,0.18);display:flex;justify-content:space-between;align-items:center;">
+        <span class="mono" style="font-size:11px;color:#94a3b8;">Keys: [1–4] Tools • [Space] Shockwave</span>
+        <button id="btnResumeModal" class="btn-primary-cyan">Enter Arena</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      // =========================================================================
+      // 1. GENERATIVE WEB AUDIO SYNTHESIZER (Zero external audio dependencies)
+      // =========================================================================
+      class SolitonAudio {
+        constructor() {
+          this.ctx = null;
+          this.enabled = false;
+          this.droneGain = null;
+          this.filter = null;
+        }
+
+        toggle() {
+          if (!this.enabled) {
+            this.init();
+            if (this.ctx && this.ctx.state === 'suspended') {
+              this.ctx.resume();
+            }
+            this.enabled = true;
+            if (this.droneGain && this.ctx) {
+              this.droneGain.gain.setTargetAtTime(0.075, this.ctx.currentTime, 0.35);
+            }
+          } else {
+            this.enabled = false;
+            if (this.droneGain && this.ctx) {
+              this.droneGain.gain.setTargetAtTime(0.0001, this.ctx.currentTime, 0.2);
+            }
+          }
+          return this.enabled;
+        }
+
+        init() {
+          if (this.ctx) return;
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return;
+
+          this.ctx = new AudioCtx();
+          this.filter = this.ctx.createBiquadFilter();
+          this.filter.type = 'lowpass';
+          this.filter.frequency.value = 280;
+          this.filter.Q.value = 2.5;
+
+          this.droneGain = this.ctx.createGain();
+          this.droneGain.gain.value = 0.0001;
+
+          const osc1 = this.ctx.createOscillator();
+          osc1.type = 'sawtooth';
+          osc1.frequency.value = 55.0; // A1
+
+          const osc2 = this.ctx.createOscillator();
+          osc2.type = 'triangle';
+          osc2.frequency.value = 82.41; // E2
+
+          const lfo = this.ctx.createOscillator();
+          lfo.type = 'sine';
+          lfo.frequency.value = 0.16;
+          const lfoGain = this.ctx.createGain();
+          lfoGain.gain.value = 60;
+          lfo.connect(lfoGain);
+          lfoGain.connect(this.filter.frequency);
+
+          osc1.connect(this.filter);
+          osc2.connect(this.filter);
+          this.filter.connect(this.droneGain);
+          this.droneGain.connect(this.ctx.destination);
+
+          osc1.start();
+          osc2.start();
+          lfo.start();
+        }
+
+        updateAtmosphere(captureRatio, flowRatio) {
+          if (!this.enabled || !this.ctx || !this.filter) return;
+          const freq = 150 + flowRatio * 340 - captureRatio * 60;
+          this.filter.frequency.setTargetAtTime(Math.max(110, freq), this.ctx.currentTime, 0.2);
+        }
+
+        playCollapseChime(upsilon = 1.0) {
+          if (!this.enabled || !this.ctx) return;
+          const now = this.ctx.currentTime;
+          const notes = [293.66, 369.99, 440.0, 554.37, 659.25, 880.0];
+          const scale = Math.min(1.45, 0.94 + upsilon * 0.07);
+
+          notes.forEach((f, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = idx % 2 === 0 ? 'sine' : 'triangle';
+            osc.frequency.setValueAtTime(f * scale, now + idx * 0.05);
+
+            gain.gain.setValueAtTime(0.0001, now + idx * 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.05 / (1 + idx * 0.18), now + idx * 0.05 + 0.025);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.05 + 1.25);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + idx * 0.05);
+            osc.stop(now + idx * 0.05 + 1.3);
+          });
+        }
+
+        playEspressoPulse() {
+          if (!this.enabled || !this.ctx) return;
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(587.33, now);
+          osc.frequency.exponentialRampToValueAtTime(880.0, now + 0.18);
+
+          gain.gain.setValueAtTime(0.025, now);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.24);
+        }
+
+        playShockwave() {
+          if (!this.enabled || !this.ctx) return;
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(165, now);
+          osc.frequency.exponentialRampToValueAtTime(38, now + 0.75);
+
+          const lp = this.ctx.createBiquadFilter();
+          lp.type = 'lowpass';
+          lp.frequency.setValueAtTime(600, now);
+          lp.frequency.exponentialRampToValueAtTime(90, now + 0.75);
+
+          gain.gain.setValueAtTime(0.14, now);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.8);
+
+          osc.connect(lp);
+          lp.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.82);
+        }
+      }
+
+      // =========================================================================
+      // 2. 2D EULERIAN NAVIER-STOKES SOLVER (Non-Sticky Walls + Convective Swirl)
+      // =========================================================================
+      class EulerianFluid {
+        constructor(cols, rows) {
+          this.resize(cols, rows);
+        }
+
+        resize(cols, rows) {
+          this.cols = cols;
+          this.rows = rows;
+          this.size = cols * rows;
+
+          this.u = new Float32Array(this.size);
+          this.v = new Float32Array(this.size);
+          this.u0 = new Float32Array(this.size);
+          this.v0 = new Float32Array(this.size);
+
+          this.p = new Float32Array(this.size);
+          this.div = new Float32Array(this.size);
+          this.curl = new Float32Array(this.size);
+
+          // Coupled Scalar Fields
+          this.digits = new Float32Array(this.size);     // Electric-Cyan Liquidity
+          this.digits0 = new Float32Array(this.size);
+          this.capture = new Float32Array(this.size);    // Dark-Purple Capture Stagnation
+          this.capture0 = new Float32Array(this.size);
+          this.coherence = new Float32Array(this.size);  // Iridescent Soliton Coherence
+          this.coherence0 = new Float32Array(this.size);
+
+          this.obstacle = new Uint8Array(this.size);
+
+          this.offscreen = document.createElement('canvas');
+          this.offscreen.width = cols;
+          this.offscreen.height = rows;
+          this.offCtx = this.offscreen.getContext('2d');
+          this.imgData = this.offCtx.createImageData(cols, rows);
+          this.pixels32 = new Uint32Array(this.imgData.data.buffer);
+        }
+
+        clearFields() {
+          this.u.fill(0);
+          this.v.fill(0);
+          this.digits.fill(0);
+          this.capture.fill(0);
+          this.coherence.fill(0);
+        }
+
+        addVelocity(gx, gy, du, dv, radius = 2.5) {
+          const r2 = radius * radius;
+          const x0 = Math.max(1, Math.floor(gx - radius));
+          const x1 = Math.min(this.cols - 2, Math.ceil(gx + radius));
+          const y0 = Math.max(1, Math.floor(gy - radius));
+          const y1 = Math.min(this.rows - 2, Math.ceil(gy + radius));
+
+          for (let y = y0; y <= y1; y++) {
+            const dy = y - gy;
+            for (let x = x0; x <= x1; x++) {
+              const dx = x - gx;
+              const d2 = dx * dx + dy * dy;
+              if (d2 <= r2) {
+                const i = y * this.cols + x;
+                if (this.obstacle[i]) continue;
+                const w = Math.exp(-d2 / (r2 * 0.55 + 0.1));
+                this.u[i] += du * w;
+                this.v[i] += dv * w;
+              }
+            }
+          }
+        }
+
+        addScalar(field, gx, gy, amount, radius = 2.5) {
+          const r2 = radius * radius;
+          const x0 = Math.max(1, Math.floor(gx - radius));
+          const x1 = Math.min(this.cols - 2, Math.ceil(gx + radius));
+          const y0 = Math.max(1, Math.floor(gy - radius));
+          const y1 = Math.min(this.rows - 2, Math.ceil(gy + radius));
+
+          for (let y = y0; y <= y1; y++) {
+            const dy = y - gy;
+            for (let x = x0; x <= x1; x++) {
+              const dx = x - gx;
+              const d2 = dx * dx + dy * dy;
+              if (d2 <= r2) {
+                const i = y * this.cols + x;
+                if (this.obstacle[i]) continue;
+                const w = Math.exp(-d2 / (r2 * 0.55 + 0.1));
+                field[i] = Math.min(2.6, Math.max(0, field[i] + amount * w));
+              }
+            }
+          }
+        }
+
+        // Non-sticky boundary enforcement: reflect normal velocities inward so boundary layers never trap particles
+        enforceBoundaries() {
+          const cols = this.cols;
+          const rows = this.rows;
+          const u = this.u;
+          const v = this.v;
+          const obs = this.obstacle;
+
+          for (let x = 0; x < cols; x++) {
+            // Top wall reflects downward
+            v[x] = Math.abs(v[x]) + 0.25;
+            u[x] = u[cols + x] * 0.9;
+            // Bottom wall reflects upward
+            const bot = (rows - 1) * cols + x;
+            const aboveBot = (rows - 2) * cols + x;
+            v[bot] = -Math.abs(v[bot]) - 0.25;
+            u[bot] = u[aboveBot] * 0.9;
+          }
+
+          for (let y = 0; y < rows; y++) {
+            // Left wall reflects rightward
+            const left = y * cols;
+            u[left] = Math.abs(u[left]) + 0.25;
+            v[left] = v[left + 1] * 0.9;
+            // Right wall reflects leftward
+            const right = y * cols + (cols - 1);
+            u[right] = -Math.abs(u[right]) - 0.25;
+            v[right] = v[right - 1] * 0.9;
+          }
+
+          for (let y = 1; y < rows - 1; y++) {
+            for (let x = 1; x < cols - 1; x++) {
+              const i = y * cols + x;
+              if (obs[i]) {
+                u[i] = 0;
+                v[i] = 0;
+              }
+            }
+          }
+        }
+
+        // Continuous ambient convective circulation so the fluid never stalls anywhere
+        injectAmbientConvection(time, dt) {
+          const cols = this.cols;
+          const rows = this.rows;
+          const u = this.u;
+          const v = this.v;
+          const obs = this.obstacle;
+
+          for (let y = 2; y < rows - 2; y++) {
+            const ny = y / rows;
+            for (let x = 2; x < cols - 2; x++) {
+              const i = y * cols + x;
+              if (obs[i]) continue;
+              const nx = x / cols;
+
+              // Multi-vortex streamfunction curl for organic swirling currents
+              const psiX = Math.cos(ny * Math.PI * 2.0 + time * 0.45) * 0.65 +
+                           Math.sin((nx + ny) * Math.PI * 3.0 - time * 0.35) * 0.35;
+              const psiY = -Math.cos(nx * Math.PI * 2.0 - time * 0.40) * 0.65 +
+                           Math.cos((nx - ny) * Math.PI * 3.0 + time * 0.30) * 0.35;
+
+              u[i] += psiX * dt * 2.2;
+              v[i] += psiY * dt * 2.2;
+            }
+          }
+        }
+
+        diffuse(field, field0, diff, dt) {
+          const cols = this.cols;
+          const rows = this.rows;
+          const obs = this.obstacle;
+          const a = dt * diff * 4.0;
+          if (a <= 0.0001) {
+            field.set(field0);
+            return;
+          }
+          const inv = 1 / (1 + 4 * a);
+          for (let k = 0; k < 4; k++) {
+            for (let y = 1; y < rows - 1; y++) {
+              for (let x = 1; x < cols - 1; x++) {
+                const i = y * cols + x;
+                if (obs[i]) {
+                  field[i] = 0;
+                  continue;
+                }
+                const sL = obs[i - 1] ? field[i] : field[i - 1];
+                const sR = obs[i + 1] ? field[i] : field[i + 1];
+                const sT = obs[i - cols] ? field[i] : field[i - cols];
+                const sB = obs[i + cols] ? field[i] : field[i + cols];
+                field[i] = (field0[i] + a * (sL + sR + sT + sB)) * inv;
+              }
+            }
+          }
+        }
+
+        applyVorticityConfinement(dt, strength = 1.8) {
+          const cols = this.cols;
+          const rows = this.rows;
+          const u = this.u;
+          const v = this.v;
+          const curl = this.curl;
+
+          for (let y = 1; y < rows - 1; y++) {
+            for (let x = 1; x < cols - 1; x++) {
+              const i = y * cols + x;
+              curl[i] = (v[i + 1] - v[i - 1] - (u[i + cols] - u[i - cols])) * 0.5;
+            }
+          }
+
+          for (let y = 2; y < rows - 2; y++) {
+            for (let x = 2; x < cols - 2; x++) {
+              const i = y * cols + x;
+              if (this.obstacle[i]) continue;
+              const dwdx = (Math.abs(curl[i + 1]) - Math.abs(curl[i - 1])) * 0.5;
+              const dwdy = (Math.abs(curl[i + cols]) - Math.abs(curl[i - cols])) * 0.5;
+              const len = Math.hypot(dwdx, dwdy) + 1e-5;
+              u[i] += (dwdy / len) * curl[i] * strength * dt;
+              v[i] -= (dwdx / len) * curl[i] * strength * dt;
+            }
+          }
+        }
+
+        project(iterations = 14) {
+          const cols = this.cols;
+          const rows = this.rows;
+          const u = this.u;
+          const v = this.v;
+          const p = this.p;
+          const div = this.div;
+          const obs = this.obstacle;
+
+          for (let y = 1; y < rows - 1; y++) {
+            for (let x = 1; x < cols - 1; x++) {
+              const i = y * cols + x;
+              if (obs[i]) {
+                div[i] = 0;
+                p[i] = 0;
+                continue;
+              }
+              const uR = obs[i + 1] ? 0 : u[i + 1];
+              const uL = obs[i - 1] ? 0 : u[i - 1];
+              const vB = obs[i + cols] ? 0 : v[i + cols];
+              const vT = obs[i - cols] ? 0 : v[i - cols];
+              div[i] = -0.5 * (uR - uL + vB - vT);
+              p[i] = 0;
+            }
+          }
+
+          for (let k = 0; k < iterations; k++) {
+            for (let y = 1; y < rows - 1; y++) {
+              for (let x = 1; x < cols - 1; x++) {
+                const i = y * cols + x;
+                if (obs[i]) continue;
+                let sumP = 0;
+                let count = 0;
+                if (!obs[i - 1]) { sumP += p[i - 1]; count++; }
+                if (!obs[i + 1]) { sumP += p[i + 1]; count++; }
+                if (!obs[i - cols]) { sumP += p[i - cols]; count++; }
+                if (!obs[i + cols]) { sumP += p[i + cols]; count++; }
+                if (count > 0) p[i] = (div[i] + sumP) / count;
+              }
+            }
+          }
+
+          for (let y = 1; y < rows - 1; y++) {
+            for (let x = 1; x < cols - 1; x++) {
+              const i = y * cols + x;
+              if (obs[i]) continue;
+              const pR = obs[i + 1] ? p[i] : p[i + 1];
+              const pL = obs[i - 1] ? p[i] : p[i - 1];
+              const pB = obs[i + cols] ? p[i] : p[i + cols];
+              const pT = obs[i - cols] ? p[i] : p[i - cols];
+              u[i] -= 0.5 * (pR - pL);
+              v[i] -= 0.5 * (pB - pT);
+
+              // Clamp velocity for stability
+              if (u[i] > 16) u[i] = 16;
+              else if (u[i] < -16) u[i] = -16;
+              if (v[i] > 16) v[i] = 16;
+              else if (v[i] < -16) v[i] = -16;
+            }
+          }
+
+          this.enforceBoundaries();
+        }
+
+        advect(field, field0, velU, velV, dt, dissipation) {
+          const cols = this.cols;
+          const rows = this.rows;
+          const obs = this.obstacle;
+          const maxX = cols - 1.5;
+          const maxY = rows - 1.5;
+
+          for (let y = 1; y < rows - 1; y++) {
+            for (let x = 1; x < cols - 1; x++) {
+              const i = y * cols + x;
+              if (obs[i]) {
+                field[i] = 0;
+                continue;
+              }
+              let sx = x - dt * velU[i];
+              let sy = y - dt * velV[i];
+              if (sx < 0.5) sx = 0.5;
+              else if (sx > maxX) sx = maxX;
+              if (sy < 0.5) sy = 0.5;
+              else if (sy > maxY) sy = maxY;
+
+              const x0 = sx | 0;
+              const x1 = x0 + 1;
+              const y0 = sy | 0;
+              const y1 = y0 + 1;
+
+              const s1 = sx - x0;
+              const s0 = 1 - s1;
+              const t1 = sy - y0;
+              const t0 = 1 - t1;
+
+              const i00 = y0 * cols + x0;
+              const i10 = y0 * cols + x1;
+              const i01 = y1 * cols + x0;
+              const i11 = y1 * cols + x1;
+
+              field[i] =
+                (s0 * (t0 * field0[i00] + t1 * field0[i01]) +
+                 s1 * (t0 * field0[i10] + t1 * field0[i11])) * dissipation;
+            }
+          }
+        }
+
+        step(simTime, dt) {
+          const fluidDt = dt * 18;
+          this.injectAmbientConvection(simTime, dt);
+          this.enforceBoundaries();
+          this.applyVorticityConfinement(fluidDt, 1.75);
+          this.project(12);
+
+          // Velocity diffusion + advection
+          this.u0.set(this.u);
+          this.v0.set(this.v);
+          this.diffuse(this.u, this.u0, 0.004, fluidDt);
+          this.diffuse(this.v, this.v0, 0.004, fluidDt);
+
+          this.u0.set(this.u);
+          this.v0.set(this.v);
+          this.advect(this.u, this.u0, this.u0, this.v0, fluidDt, 0.994);
+          this.advect(this.v, this.v0, this.u0, this.v0, fluidDt, 0.994);
+          this.project(12);
+
+          // Scalar diffusion & advection
+          this.digits0.set(this.digits);
+          this.diffuse(this.digits, this.digits0, 0.008, fluidDt);
+          this.digits0.set(this.digits);
+          this.advect(this.digits, this.digits0, this.u, this.v, fluidDt, 0.992);
+
+          this.capture0.set(this.capture);
+          this.advect(this.capture, this.capture0, this.u, this.v, fluidDt * 0.5, 0.994);
+
+          this.coherence0.set(this.coherence);
+          this.diffuse(this.coherence, this.coherence0, 0.01, fluidDt);
+          this.coherence0.set(this.coherence);
+          this.advect(this.coherence, this.coherence0, this.u, this.v, fluidDt * 1.15, 0.991);
+
+          // Stagnation -> Capture Swamp & Soliton Coherence Cleansing
+          const cols = this.cols;
+          const rows = this.rows;
+          let sumDigits = 0;
+          let sumCapture = 0;
+          let sumCoherence = 0;
+          let sumDiv = 0;
+          let count = 0;
+
+          for (let y = 1; y < rows - 1; y++) {
+            for (let x = 1; x < cols - 1; x++) {
+              const i = y * cols + x;
+              if (this.obstacle[i]) continue;
+              count++;
+
+              const spd = Math.hypot(this.u[i], this.v[i]);
+              const nearBarrier =
+                this.obstacle[i - 1] || this.obstacle[i + 1] ||
+                this.obstacle[i - cols] || this.obstacle[i + cols];
+
+              if (this.digits[i] > 0.06 && (spd < 0.9 || nearBarrier)) {
+                const rate = nearBarrier ? 0.022 : 0.006;
+                const curdle = Math.min(this.digits[i], rate * (1 - Math.min(1, spd / 1.1)));
+                this.digits[i] -= curdle * 0.65;
+                this.capture[i] = Math.min(2.4, this.capture[i] + curdle * 1.3);
+              }
+
+              if (this.coherence[i] > 0.04) {
+                const cleanse = Math.min(this.capture[i], this.coherence[i] * 0.075);
+                this.capture[i] -= cleanse;
+                this.digits[i] = Math.min(2.3, this.digits[i] + cleanse * 0.75);
+              }
+
+              sumDigits += this.digits[i];
+              sumCapture += this.capture[i];
+              sumCoherence += this.coherence[i];
+              sumDiv += Math.abs(this.div[i]);
+            }
+          }
+
+          return {
+            sumDigits,
+            sumCapture,
+            sumCoherence,
+            avgDiv: count > 0 ? sumDiv / count : 0
+          };
+        }
+
+        sampleAt(normX, normY) {
+          const gx = Math.max(1, Math.min(this.cols - 2, normX * (this.cols - 1)));
+          const gy = Math.max(1, Math.min(this.rows - 2, normY * (this.rows - 1)));
+          const x0 = gx | 0;
+          const y0 = gy | 0;
+          const x1 = x0 + 1;
+          const y1 = y0 + 1;
+          const sx = gx - x0;
+          const sy = gy - y0;
+
+          const i00 = y0 * this.cols + x0;
+          const i10 = y0 * this.cols + x1;
+          const i01 = y1 * this.cols + x0;
+          const i11 = y1 * this.cols + x1;
+
+          const bilerp = (arr) =>
+            (1 - sx) * ((1 - sy) * arr[i00] + sy * arr[i01]) +
+            sx * ((1 - sy) * arr[i10] + sy * arr[i11]);
+
+          // Also compute cyan digit spatial gradient so primates steer toward liquidity plumes
+          const gradX = (this.digits[i10] - this.digits[i00] + this.digits[i11] - this.digits[i01]) * 0.5;
+          const gradY = (this.digits[i01] - this.digits[i00] + this.digits[i11] - this.digits[i10]) * 0.5;
+
+          return {
+            u: bilerp(this.u),
+            v: bilerp(this.v),
+            digits: bilerp(this.digits),
+            capture: bilerp(this.capture),
+            coherence: bilerp(this.coherence),
+            gradX,
+            gradY,
+            blocked: this.obstacle[Math.round(gy) * this.cols + Math.round(gx)] === 1
+          };
+        }
+
+        renderToOffscreen(time) {
+          const cols = this.cols;
+          const rows = this.rows;
+          const pix = this.pixels32;
+          const digits = this.digits;
+          const capture = this.capture;
+          const coherence = this.coherence;
+          const u = this.u;
+          const v = this.v;
+          const obs = this.obstacle;
+
+          for (let y = 0; y < rows; y++) {
+            for (let x = 0; x < cols; x++) {
+              const i = y * cols + x;
+              if (obs[i]) {
+                pix[i] = (255 << 24) | (24 << 16) | (10 << 8) | 28;
+                continue;
+              }
+
+              const d = Math.min(1.6, digits[i]);
+              const cap = Math.min(1.8, capture[i]);
+              const coh = Math.min(1.8, coherence[i]);
+              const spd = Math.min(4.0, Math.hypot(u[i], v[i]));
+
+              // Deep obsidian void (#06070d -> R:6, G:7, B:13)
+              let r = 6;
+              let g = 7;
+              let b = 13;
+
+              // Dark-Purple Capture Stagnation
+              if (cap > 0.015) {
+                const ripple = 0.86 + 0.14 * Math.sin(x * 0.45 + y * 0.45 - time * 2.5 + cap * 3.8);
+                const cVal = Math.min(1.25, cap * 0.88) * ripple;
+                r += cVal * 124;
+                g += cVal * 26;
+                b += cVal * 182;
+              }
+
+              // Electric-Cyan Liquidity
+              if (d > 0.012) {
+                const shimmer = 0.88 + 0.12 * Math.sin(x * 0.55 - y * 0.35 + time * 4.5);
+                const dVal = Math.min(1.3, d * 0.96) * shimmer;
+                r += dVal * (14 + spd * 14);
+                g += dVal * (212 + spd * 12);
+                b += dVal * 242;
+              }
+
+              // Iridescent Soliton Coherence
+              if (coh > 0.012) {
+                const phase = time * 2.6 + x * 0.15 + y * 0.15 + spd * 0.8;
+                const iridR = 0.5 + 0.5 * Math.sin(phase);
+                const iridG = 0.5 + 0.5 * Math.sin(phase + 2.094);
+                const iridB = 0.5 + 0.5 * Math.sin(phase + 4.188);
+                const sVal = Math.min(1.3, coh * 0.98);
+                r += sVal * (82 + iridR * 173);
+                g += sVal * (150 + iridG * 105);
+                b += sVal * (125 + iridB * 130);
+              }
+
+              const R = r > 255 ? 255 : r | 0;
+              const G = g > 255 ? 255 : g | 0;
+              const B = b > 255 ? 255 : b | 0;
+              pix[i] = (255 << 24) | (B << 16) | (G << 8) | R;
+            }
+          }
+
+          this.offCtx.putImageData(this.imgData, 0, 0);
+        }
+      }
+
+      // =========================================================================
+      // 3. SAFE PLAYABLE ARENA BOUNDS & COORDINATE HELPERS
+      // =========================================================================
+      const canvas = document.getElementById('simCanvas');
+      const ctx = canvas.getContext('2d', { alpha: false });
+      const sparkCanvas = document.getElementById('sparklineCanvas');
+      const sparkCtx = sparkCanvas.getContext('2d');
+      const topHudEl = document.getElementById('topHud');
+      const bottomDockEl = document.getElementById('bottomDock');
+      const eventBannerEl = document.getElementById('eventBanner');
+
+      const audio = new SolitonAudio();
+
+      let width = window.innerWidth;
+      let height = window.innerHeight;
+      let dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+      // Dynamic safe bounds computed from actual HUD & Dock heights so NOTHING hides behind UI!
+      const safe = {
+        left: 12,
+        right: width - 12,
+        top: 120,
+        bottom: height - 96,
+        w: Math.max(100, width - 24),
+        h: Math.max(100, height - 216)
+      };
+
+      function updateSafeBounds() {
+        const hudRect = topHudEl.getBoundingClientRect();
+        const dockRect = bottomDockEl.getBoundingClientRect();
+
+        safe.left = 12;
+        safe.right = Math.max(120, width - 12);
+        safe.top = Math.min(height * 0.45, Math.max(64, hudRect.bottom + 8));
+        safe.bottom = Math.max(safe.top + 140, dockRect.top - 8);
+        safe.w = Math.max(80, safe.right - safe.left);
+        safe.h = Math.max(120, safe.bottom - safe.top);
+
+        // Position toast banner cleanly just inside topSafe
+        eventBannerEl.style.top = `${safe.top + 8}px`;
+      }
+
+      // Arena normalized (0..1) <-> Screen pixels
+      const toScreenX = (nx) => safe.left + nx * safe.w;
+      const toScreenY = (ny) => safe.top + ny * safe.h;
+      const toNormX = (sx) => Math.max(0.01, Math.min(0.99, (sx - safe.left) / safe.w));
+      const toNormY = (sy) => Math.max(0.01, Math.min(0.99, (sy - safe.top) / safe.h));
+
+      const GRID_COLS = 112;
+      let gridRows = 96;
+      const fluid = new EulerianFluid(GRID_COLS, gridRows);
+
+      // =========================================================================
+      // 4. WORLD ENTITIES & ENERGETIC SWARM STATE
+      // =========================================================================
+      let activeTool = 'stir';
+      let activePreset = 'metropolis';
+      let showVectors = false;
+      let simTime = 0;
+      let totalHeartbeatsBurned = 0;
+      let totalHallucinatedDigits = 0;
+
+      const historyCapture = new Float32Array(76);
+      const historyFlow = new Float32Array(76);
+      let historyTimer = 0;
+
+      let drywallBoxes = [];
+      let espressoTowers = [];
+      let cubicles = [];
+      let scarcityDams = [];
+      let luxuryBillboards = [];
+      let solitonPortals = [];
+      let shockRings = [];
+
+      // Primate Swarm (2,000 energetic particles with continuous self-propelled foraging)
+      const PRIMATE_COUNT = 2000;
+      const pX = new Float32Array(PRIMATE_COUNT);         // Screen X inside [safe.left, safe.right]
+      const pY = new Float32Array(PRIMATE_COUNT);         // Screen Y inside [safe.top, safe.bottom]
+      const pPrevX = new Float32Array(PRIMATE_COUNT);
+      const pPrevY = new Float32Array(PRIMATE_COUNT);
+      const pVx = new Float32Array(PRIMATE_COUNT);        // Pixels / sec
+      const pVy = new Float32Array(PRIMATE_COUNT);        // Pixels / sec
+      const pBaseSpeed = new Float32Array(PRIMATE_COUNT); // 70 - 130 px/s
+      const pHeading = new Float32Array(PRIMATE_COUNT);   // Continuous steering angle
+      const pHeart = new Float32Array(PRIMATE_COUNT);     // 0 - 100
+      const pDigits = new Float32Array(PRIMATE_COUNT);    // Accumulated $
+      const pCaffeine = new Float32Array(PRIMATE_COUNT);  // Remaining boost sec
+      const pSeed = new Float32Array(PRIMATE_COUNT);
+
+      // Warm Ember-Sparks
+      const MAX_EMBERS = 1400;
+      const eX = new Float32Array(MAX_EMBERS);
+      const eY = new Float32Array(MAX_EMBERS);
+      const eVx = new Float32Array(MAX_EMBERS);
+      const eVy = new Float32Array(MAX_EMBERS);
+      const eLife = new Float32Array(MAX_EMBERS);
+      const eHue = new Float32Array(MAX_EMBERS);
+      let emberCursor = 0;
+
+      const ghostRings = [];
+
+      function spawnEmber(sx, sy, stressRatio = 0) {
+        const i = emberCursor;
+        emberCursor = (emberCursor + 1) % MAX_EMBERS;
+        eX[i] = sx + (Math.random() - 0.5) * 4;
+        eY[i] = sy + (Math.random() - 0.5) * 4;
+        eVx[i] = (Math.random() - 0.5) * 26;
+        eVy[i] = -18 - Math.random() * 34;
+        eLife[i] = 0.45 + Math.random() * 0.5;
+        eHue[i] = 38 - stressRatio * 26 + (Math.random() - 0.5) * 8;
+      }
+
+      function initPrimate(i, respawn = false) {
+        const margin = 20;
+        if (respawn) {
+          // Respawn along an inward-jetting perimeter point so primates immediately enter active flow
+          const side = (Math.random() * 4) | 0;
+          if (side === 0) {
+            pX[i] = safe.left + margin + Math.random() * (safe.w - margin * 2);
+            pY[i] = safe.top + margin;
+            pHeading[i] = Math.PI * 0.5 + (Math.random() - 0.5) * 1.1;
+          } else if (side === 1) {
+            pX[i] = safe.left + margin + Math.random() * (safe.w - margin * 2);
+            pY[i] = safe.bottom - margin;
+            pHeading[i] = -Math.PI * 0.5 + (Math.random() - 0.5) * 1.1;
+          } else if (side === 2) {
+            pX[i] = safe.left + margin;
+            pY[i] = safe.top + margin + Math.random() * (safe.h - margin * 2);
+            pHeading[i] = (Math.random() - 0.5) * 1.1;
+          } else {
+            pX[i] = safe.right - margin;
+            pY[i] = safe.top + margin + Math.random() * (safe.h - margin * 2);
+            pHeading[i] = Math.PI + (Math.random() - 0.5) * 1.1;
+          }
+        } else {
+          pX[i] = safe.left + margin + Math.random() * Math.max(20, safe.w - margin * 2);
+          pY[i] = safe.top + margin + Math.random() * Math.max(20, safe.h - margin * 2);
+          pHeading[i] = Math.random() * Math.PI * 2;
+        }
+
+        pBaseSpeed[i] = 72 + Math.random() * 58; // 72 - 130 px/s continuous foraging speed!
+        pVx[i] = Math.cos(pHeading[i]) * pBaseSpeed[i];
+        pVy[i] = Math.sin(pHeading[i]) * pBaseSpeed[i];
+        pPrevX[i] = pX[i] - pVx[i] * 0.025;
+        pPrevY[i] = pY[i] - pVy[i] * 0.025;
+        pHeart[i] = respawn ? 100 : (30 + Math.random() * 70);
+        pDigits[i] = Math.random() * 14;
+        pCaffeine[i] = 0;
+        pSeed[i] = Math.random() * 100;
+      }
+
+      // =========================================================================
+      // 5. RESPONSIVE LANDMARK LAYOUTS (>= 48px Clearance From All Arena Edges!)
+      // =========================================================================
+      function rebuildObstacleGrid() {
+        const cols = fluid.cols;
+        const rows = fluid.rows;
+        const obs = fluid.obstacle;
+        obs.fill(0);
+
+        // 1. Drywall Boxes (walls with wide bottom doorway)
+        drywallBoxes.forEach((box) => {
+          const x0 = Math.max(2, Math.floor(box.x * cols));
+          const y0 = Math.max(2, Math.floor(box.y * rows));
+          const x1 = Math.min(cols - 3, Math.ceil((box.x + box.w) * cols));
+          const y1 = Math.min(rows - 3, Math.ceil((box.y + box.h) * rows));
+          const doorStart = Math.floor(x0 + (x1 - x0) * 0.34);
+          const doorEnd = Math.ceil(x0 + (x1 - x0) * 0.66);
+
+          for (let x = x0; x <= x1; x++) {
+            obs[y0 * cols + x] = 1;
+            if (x < doorStart || x > doorEnd) obs[y1 * cols + x] = 1;
+          }
+          for (let y = y0; y <= y1; y++) {
+            obs[y * cols + x0] = 1;
+            obs[y * cols + x1] = 1;
+          }
+        });
+
+        // 2. Scarcity Dams
+        scarcityDams.forEach((dam) => {
+          const gx1 = dam.x1 * cols;
+          const gy1 = dam.y1 * rows;
+          const gx2 = dam.x2 * cols;
+          const gy2 = dam.y2 * rows;
+          const steps = Math.max(1, Math.ceil(Math.hypot(gx2 - gx1, gy2 - gy1) * 2));
+          for (let s = 0; s <= steps; s++) {
+            const t = s / steps;
+            const cx = Math.round(gx1 + (gx2 - gx1) * t);
+            const cy = Math.round(gy1 + (gy2 - gy1) * t);
+            for (let oy = -1; oy <= 1; oy++) {
+              for (let ox = -1; ox <= 1; ox++) {
+                if (ox * ox + oy * oy <= 1) {
+                  const nx = cx + ox;
+                  const ny = cy + oy;
+                  if (nx > 1 && nx < cols - 2 && ny > 1 && ny < rows - 2) {
+                    obs[ny * cols + nx] = 1;
+                  }
+                }
+              }
+            }
+          }
+        });
+
+        // 3. Soliton Portals tunnel right through obstacles at their core
+        solitonPortals.forEach((sp) => {
+          const cx = Math.round(sp.x * cols);
+          const cy = Math.round(sp.y * rows);
+          const clearR = Math.min(8, Math.round(3 + sp.upsilon * 1.1));
+          for (let oy = -clearR; oy <= clearR; oy++) {
+            for (let ox = -clearR; ox <= clearR; ox++) {
+              if (ox * ox + oy * oy <= clearR * clearR) {
+                const nx = cx + ox;
+                const ny = cy + oy;
+                if (nx > 1 && nx < cols - 2 && ny > 1 && ny < rows - 2) {
+                  obs[ny * cols + nx] = 0;
+                }
+              }
+            }
+          }
+        });
+      }
+
+      // Enforces >= 48px clearance around all playable edges so particles never wedge in narrow gutters
+      function enforceBuildingMargins() {
+        const minEdgePx = 50;
+        const padX = Math.min(0.22, minEdgePx / Math.max(120, safe.w));
+        const padY = Math.min(0.18, minEdgePx / Math.max(140, safe.h));
+
+        const clampBox = (b) => {
+          b.w = Math.min(b.w, 1 - padX * 2.4);
+          b.h = Math.min(b.h, 1 - padY * 2.4);
+          b.x = Math.max(padX, Math.min(1 - padX - b.w, b.x));
+          b.y = Math.max(padY, Math.min(1 - padY - b.h, b.y));
+        };
+
+        drywallBoxes.forEach(clampBox);
+        cubicles.forEach(clampBox);
+        espressoTowers.forEach((tw) => {
+          tw.x = Math.max(padX + 0.03, Math.min(1 - padX - 0.03, tw.x));
+          tw.y = Math.max(padY + 0.03, Math.min(1 - padY - 0.03, tw.y));
+        });
+      }
+
+      const LUXURY_LOGOS = ['$$', 'VV', 'XX', 'ΩΩ', 'LV-00'];
+
+      function loadPreset(name) {
+        activePreset = name;
+        fluid.clearFields();
+        scarcityDams = [];
+        luxuryBillboards = [];
+        solitonPortals = [];
+        shockRings = [];
+
+        if (name === 'metropolis') {
+          drywallBoxes = [
+            { x: 0.14, y: 0.12, w: 0.22, h: 0.20, label: '30-YR MORTGAGE #01', escrow: 1240 },
+            { x: 0.64, y: 0.66, w: 0.22, h: 0.20, label: '30-YR MORTGAGE #02', escrow: 1890 }
+          ];
+          espressoTowers = [
+            { x: 0.48, y: 0.16, timer: 0.6, label: 'ESPRESSO TOWER' }
+          ];
+          cubicles = [
+            { x: 0.14, y: 0.62, w: 0.24, h: 0.22, cols: 4, rows: 3, label: 'FLUORESCENT CUBICLES' },
+            { x: 0.62, y: 0.16, w: 0.24, h: 0.22, cols: 4, rows: 3, label: 'Q4 SYNERGY PODS' }
+          ];
+          scarcityDams = [
+            { x1: 0.44, y1: 0.34, x2: 0.56, y2: 0.34 }
+          ];
+          luxuryBillboards = [
+            { x: 0.50, y: 0.72, logo: '$$', digitsCollected: 4200, pulsePhase: 0 }
+          ];
+          solitonPortals = [
+            { x: 0.50, y: 0.49, upsilon: 1.0, mythicCharge: 0.45, recursionDepth: 2, phase: 0, collapseFlash: 0 }
+          ];
+        } else if (name === 'swamp') {
+          drywallBoxes = [
+            { x: 0.14, y: 0.12, w: 0.22, h: 0.19, label: '30-YR MORTGAGE #01', escrow: 4400 },
+            { x: 0.64, y: 0.68, w: 0.22, h: 0.19, label: '30-YR MORTGAGE #02', escrow: 6200 }
+          ];
+          espressoTowers = [
+            { x: 0.50, y: 0.15, timer: 0.3, label: 'ESPRESSO TOWER' }
+          ];
+          cubicles = [
+            { x: 0.37, y: 0.72, w: 0.26, h: 0.16, cols: 5, rows: 2, label: 'OVERTIME CUBICLES' }
+          ];
+          scarcityDams = [
+            { x1: 0.30, y1: 0.33, x2: 0.70, y2: 0.33 },
+            { x1: 0.30, y1: 0.57, x2: 0.70, y2: 0.57 }
+          ];
+          luxuryBillboards = [
+            { x: 0.38, y: 0.45, logo: '$$', digitsCollected: 12800, pulsePhase: 0 },
+            { x: 0.62, y: 0.45, logo: 'ΩΩ', digitsCollected: 15400, pulsePhase: 1.5 }
+          ];
+          solitonPortals = [];
+        } else if (name === 'utopia') {
+          drywallBoxes = [
+            { x: 0.14, y: 0.38, w: 0.18, h: 0.20, label: 'OPEN CO-OP', escrow: 0 }
+          ];
+          espressoTowers = [
+            { x: 0.80, y: 0.48, timer: 0.8, label: 'ESPRESSO TOWER' }
+          ];
+          cubicles = [
+            { x: 0.38, y: 0.12, w: 0.24, h: 0.14, cols: 4, rows: 2, label: 'CREATIVE COMMONS' }
+          ];
+          scarcityDams = [];
+          luxuryBillboards = [];
+          solitonPortals = [
+            { x: 0.36, y: 0.48, upsilon: 1.5, mythicCharge: 0.5, recursionDepth: 3, phase: 0.2, collapseFlash: 0 },
+            { x: 0.52, y: 0.64, upsilon: 1.5, mythicCharge: 0.7, recursionDepth: 4, phase: 1.4, collapseFlash: 0 },
+            { x: 0.66, y: 0.45, upsilon: 1.5, mythicCharge: 0.4, recursionDepth: 2, phase: 2.6, collapseFlash: 0 }
+          ];
+        }
+
+        enforceBuildingMargins();
+        rebuildObstacleGrid();
+
+        // Seed swirling cyan liquidity & pre-warm 22 fluid steps so frame 1 is alive and moving!
+        for (let k = 0; k < 18; k++) {
+          const rx = 0.18 + Math.random() * 0.64;
+          const ry = 0.18 + Math.random() * 0.64;
+          const ang = (k / 18) * Math.PI * 2;
+          fluid.addVelocity(rx * fluid.cols, ry * fluid.rows, Math.cos(ang) * 6.5, Math.sin(ang) * 6.5, 6);
+          fluid.addScalar(fluid.digits, rx * fluid.cols, ry * fluid.rows, 1.35, 6);
+          if (name === 'swamp') {
+            fluid.addScalar(fluid.capture, rx * fluid.cols, ry * fluid.rows, 1.3, 6);
+          }
+        }
+
+        for (let w = 0; w < 22; w++) {
+          fluid.step(w * 0.016, 0.016);
+        }
+
+        for (let i = 0; i < PRIMATE_COUNT; i++) {
+          initPrimate(i, false);
+        }
+      }
+
+      // =========================================================================
+      // 6. EVENT TOASTS, EGO COLLAPSE & TICK 40 SHOCKWAVE
+      // =========================================================================
+      let bannerTimer = null;
+      function showEventBanner(icon, text) {
+        document.getElementById('eventBannerIcon').textContent = icon;
+        document.getElementById('eventBannerText').textContent = text;
+        eventBannerEl.style.opacity = '1';
+        clearTimeout(bannerTimer);
+        bannerTimer = setTimeout(() => {
+          eventBannerEl.style.opacity = '0';
+        }, 2600);
+      }
+
+      function executeSolitonEgoCollapse(sp) {
+        sp.recursionDepth = 0;
+        sp.upsilon = Math.min(6.5, sp.upsilon * 1.5);
+        sp.mythicCharge = 0.25;
+        sp.collapseFlash = 1.0;
+
+        rebuildObstacleGrid();
+
+        const gx = sp.x * fluid.cols;
+        const gy = sp.y * fluid.rows;
+        const blastR = Math.min(18, 6 + sp.upsilon * 2.4);
+
+        fluid.addScalar(fluid.coherence, gx, gy, 2.3, blastR);
+        fluid.addScalar(fluid.digits, gx, gy, 1.5, blastR * 0.85);
+
+        const rInt = Math.ceil(blastR);
+        for (let oy = -rInt; oy <= rInt; oy++) {
+          for (let ox = -rInt; ox <= rInt; ox++) {
+            const d = Math.hypot(ox, oy);
+            if (d > 0.5 && d <= blastR) {
+              const nx = Math.round(gx + ox);
+              const ny = Math.round(gy + oy);
+              if (nx > 1 && nx < fluid.cols - 2 && ny > 1 && ny < fluid.rows - 2) {
+                const i = ny * fluid.cols + nx;
+                const tx = -oy / d;
+                const ty = ox / d;
+                const rx = ox / d;
+                const ry = oy / d;
+                const mag = (1 - d / blastR) * (5.5 + sp.upsilon * 1.6);
+                fluid.u[i] += (tx * 0.85 + rx * 0.35) * mag;
+                fluid.v[i] += (ty * 0.85 + ry * 0.35) * mag;
+              }
+            }
+          }
+        }
+
+        shockRings.push({
+          sx: toScreenX(sp.x),
+          sy: toScreenY(sp.y),
+          r: 10,
+          maxR: Math.min(safe.w, safe.h) * (0.22 + sp.upsilon * 0.04),
+          color: '#fde047',
+          alpha: 0.95
+        });
+
+        audio.playCollapseChime(sp.upsilon);
+        showEventBanner('🌀', `executeEgoCollapse() → Soliton Υ compounded to ${sp.upsilon.toFixed(2)}`);
+      }
+
+      // Generates strong rotational + radial vortex forces so particles whip into dramatic center spirals
+      function triggerTick40Shockwave() {
+        const cx = 0.5;
+        const cy = 0.5;
+        const gx = cx * fluid.cols;
+        const gy = cy * fluid.rows;
+
+        fluid.addScalar(fluid.digits, gx, gy, 2.5, 16);
+        fluid.addScalar(fluid.coherence, gx, gy, 1.8, 12);
+
+        const maxGridR = Math.min(fluid.cols, fluid.rows) * 0.45;
+        for (let y = 2; y < fluid.rows - 2; y++) {
+          for (let x = 2; x < fluid.cols - 2; x++) {
+            const dx = x - gx;
+            const dy = y - gy;
+            const d = Math.hypot(dx, dy);
+            if (d > 0.5 && d < maxGridR) {
+              const i = y * fluid.cols + x;
+              if (fluid.obstacle[i]) continue;
+              const falloff = 1 - d / maxGridR;
+              const rx = dx / d;
+              const ry = dy / d;
+              const tx = -ry; // Strong counter-clockwise rotational swirl!
+              const ty = rx;
+              fluid.u[i] += (tx * 12.0 + rx * 4.5) * falloff;
+              fluid.v[i] += (ty * 12.0 + ry * 4.5) * falloff;
+            }
+          }
+        }
+
+        const scx = toScreenX(cx);
+        const scy = toScreenY(cy);
+        const maxPxR = Math.min(safe.w, safe.h) * 0.48;
+
+        for (let i = 0; i < PRIMATE_COUNT; i++) {
+          const dx = pX[i] - scx;
+          const dy = pY[i] - scy;
+          const d = Math.hypot(dx, dy) + 0.1;
+          if (d < maxPxR) {
+            const falloff = 1 - d / maxPxR;
+            const rx = dx / d;
+            const ry = dy / d;
+            const tx = -ry;
+            const ty = rx;
+            // Whip primates into a dramatic central spiral instead of flattening against outer walls
+            pVx[i] += (tx * 240 + rx * 65) * falloff;
+            pVy[i] += (ty * 240 + ry * 65) * falloff;
+            pHeading[i] = Math.atan2(pVy[i], pVx[i]);
+          }
+        }
+
+        shockRings.push({
+          sx: scx,
+          sy: scy,
+          r: 12,
+          maxR: maxPxR,
+          color: '#ff9e00',
+          alpha: 1.0
+        });
+
+        audio.playShockwave();
+
+        if (solitonPortals.length > 0) {
+          solitonPortals.forEach((sp) => executeSolitonEgoCollapse(sp));
+          showEventBanner('⚡', 'TICK 40 SHOCKWAVE — CENTRAL VORTEX & SOLITON REBIRTH!');
+        } else {
+          showEventBanner('⚡', 'TICK 40 SHOCKWAVE — LIQUIDITY SURGE & SWARM VORTEX!');
+        }
+      }
+
+      // =========================================================================
+      // 7. POINTER & TOUCH INTERACTION (Full Drag Support, touch-action: none)
+      // =========================================================================
+      let isPointerDown = false;
+      let lastNorm = { x: 0.5, y: 0.5 };
+      let damStart = null;
+      let pointerScreen = { x: -100, y: -100 };
+
+      function onPointerDown(e) {
+        if (e.target !== canvas) return;
+        const pt = e.touches ? e.touches[0] : e;
+        const sx = pt.clientX;
+        const sy = pt.clientY;
+        const nx = toNormX(sx);
+        const ny = toNormY(sy);
+
+        isPointerDown = true;
+        lastNorm = { x: nx, y: ny };
+        pointerScreen = { x: sx, y: sy };
+
+        if (activeTool === 'stir') {
+          const gx = nx * fluid.cols;
+          const gy = ny * fluid.rows;
+          fluid.addScalar(fluid.digits, gx, gy, 1.6, 3.6);
+          const ang = Math.random() * Math.PI * 2;
+          fluid.addVelocity(gx, gy, Math.cos(ang) * 6, Math.sin(ang) * 6, 3.5);
+        } else if (activeTool === 'dam') {
+          damStart = { x: nx, y: ny };
+        } else if (activeTool === 'billboard') {
+          const logo = LUXURY_LOGOS[luxuryBillboards.length % LUXURY_LOGOS.length];
+          luxuryBillboards.push({
+            x: nx,
+            y: ny,
+            logo,
+            digitsCollected: 450,
+            pulsePhase: 0
+          });
+          shockRings.push({ sx, sy, r: 8, maxR: 85, color: '#ff007f', alpha: 0.9 });
+        } else if (activeTool === 'soliton') {
+          solitonPortals.push({
+            x: nx,
+            y: ny,
+            upsilon: 1.0,
+            mythicCharge: 0.35,
+            recursionDepth: 1,
+            phase: 0,
+            collapseFlash: 0.75
+          });
+          rebuildObstacleGrid();
+          fluid.addScalar(fluid.coherence, nx * fluid.cols, ny * fluid.rows, 1.9, 5.5);
+          shockRings.push({ sx, sy, r: 10, maxR: 100, color: '#00f5d4', alpha: 0.95 });
+          audio.playCollapseChime(1.0);
+        }
+      }
+
+      function onPointerMove(e) {
+        const pt = e.touches ? e.touches[0] : e;
+        const sx = pt.clientX;
+        const sy = pt.clientY;
+        const nx = toNormX(sx);
+        const ny = toNormY(sy);
+        pointerScreen = { x: sx, y: sy };
+
+        if (!isPointerDown) return;
+
+        if (activeTool === 'stir') {
+          const du = (nx - lastNorm.x) * fluid.cols * 2.8;
+          const dv = (ny - lastNorm.y) * fluid.rows * 2.8;
+          const gx = nx * fluid.cols;
+          const gy = ny * fluid.rows;
+          fluid.addVelocity(gx, gy, du, dv, 3.6);
+          fluid.addScalar(fluid.digits, gx, gy, 1.05, 3.2);
+        }
+
+        lastNorm = { x: nx, y: ny };
+      }
+
+      function onPointerUp() {
+        if (isPointerDown && activeTool === 'dam' && damStart) {
+          const nx = toNormX(pointerScreen.x);
+          const ny = toNormY(pointerScreen.y);
+          const dist = Math.hypot(nx - damStart.x, ny - damStart.y);
+          if (dist < 0.02) {
+            scarcityDams.push({
+              x1: Math.max(0.05, damStart.x - 0.07),
+              y1: damStart.y,
+              x2: Math.min(0.95, damStart.x + 0.07),
+              y2: damStart.y
+            });
+          } else {
+            scarcityDams.push({
+              x1: damStart.x,
+              y1: damStart.y,
+              x2: nx,
+              y2: ny
+            });
+          }
+          rebuildObstacleGrid();
+        }
+        isPointerDown = false;
+        damStart = null;
+      }
+
+      canvas.addEventListener('mousedown', onPointerDown);
+      window.addEventListener('mousemove', onPointerMove);
+      window.addEventListener('mouseup', onPointerUp);
+
+      canvas.addEventListener('touchstart', (e) => {
+        if (e.target === canvas) e.preventDefault();
+        onPointerDown(e);
+      }, { passive: false });
+      canvas.addEventListener('touchmove', (e) => {
+        if (e.target === canvas) e.preventDefault();
+        onPointerMove(e);
+      }, { passive: false });
+      window.addEventListener('touchend', onPointerUp);
+
+      // =========================================================================
+      // 8. SIMULATION UPDATE (Landmarks, Solitons, Fluid, Energetic Primates)
+      // =========================================================================
+      function updateSimulation(dt) {
+        simTime += dt;
+
+        // 1. Fluorescent Cubicles mint fresh Cyan Digits into the fluid
+        cubicles.forEach((cub) => {
+          const rx = cub.x + Math.random() * cub.w;
+          const ry = cub.y + Math.random() * cub.h;
+          fluid.addScalar(fluid.digits, rx * fluid.cols, ry * fluid.rows, 0.42, 2.5);
+          fluid.addVelocity(rx * fluid.cols, ry * fluid.rows, 0.8, 0.25, 2.5);
+        });
+
+        // 2. Espresso Towers periodically emit pulsing gold shock-rings
+        espressoTowers.forEach((tw) => {
+          tw.timer += dt;
+          if (tw.timer >= 2.0) {
+            tw.timer = 0;
+            const gx = tw.x * fluid.cols;
+            const gy = tw.y * fluid.rows;
+            for (let a = 0; a < 14; a++) {
+              const ang = (a / 14) * Math.PI * 2;
+              fluid.addVelocity(
+                gx + Math.cos(ang) * 2,
+                gy + Math.sin(ang) * 2,
+                Math.cos(ang) * 6.5,
+                Math.sin(ang) * 6.5,
+                2.8
+              );
+            }
+            shockRings.push({
+              sx: toScreenX(tw.x),
+              sy: toScreenY(tw.y),
+              r: 8,
+              maxR: Math.min(safe.w, safe.h) * 0.18,
+              color: '#fbbf24',
+              alpha: 0.9
+            });
+            audio.playEspressoPulse();
+          }
+        });
+
+        // 3. Luxury Billboards radiate status shockwaves & swirl local currents
+        luxuryBillboards.forEach((bb) => {
+          bb.pulsePhase += dt * 3.4;
+          const gx = bb.x * fluid.cols;
+          const gy = bb.y * fluid.rows;
+          fluid.addScalar(fluid.capture, gx, gy, 0.05, 2.8);
+          if (bb.pulsePhase >= Math.PI * 2) {
+            bb.pulsePhase -= Math.PI * 2;
+            shockRings.push({
+              sx: toScreenX(bb.x),
+              sy: toScreenY(bb.y),
+              r: 14,
+              maxR: 72,
+              color: '#ff007f',
+              alpha: 0.65
+            });
+          }
+        });
+
+        // 4. Soliton Portals circulate iridescent eddies & trigger executeEgoCollapse()
+        let maxUpsilon = 1.0;
+        solitonPortals.forEach((sp) => {
+          sp.phase += dt * (2.4 + sp.upsilon * 0.45);
+          if (sp.collapseFlash > 0) sp.collapseFlash = Math.max(0, sp.collapseFlash - dt * 1.4);
+          if (sp.upsilon > maxUpsilon) maxUpsilon = sp.upsilon;
+
+          const gx = sp.x * fluid.cols;
+          const gy = sp.y * fluid.rows;
+          const radCells = Math.min(13, 3.8 + sp.upsilon * 1.4);
+
+          const localSample = fluid.sampleAt(sp.x, sp.y);
+          sp.mythicCharge += dt * (0.045 + localSample.capture * 0.25);
+          sp.recursionDepth = Math.min(7, 1 + Math.floor(sp.mythicCharge * 5));
+
+          const rInt = Math.ceil(radCells);
+          for (let oy = -rInt; oy <= rInt; oy++) {
+            for (let ox = -rInt; ox <= rInt; ox++) {
+              const d = Math.hypot(ox, oy);
+              if (d > 0.3 && d <= radCells) {
+                const nx = Math.round(gx + ox);
+                const ny = Math.round(gy + oy);
+                if (nx > 1 && nx < fluid.cols - 2 && ny > 1 && ny < fluid.rows - 2) {
+                  const i = ny * fluid.cols + nx;
+                  if (fluid.obstacle[i]) continue;
+                  const tx = -oy / d;
+                  const ty = ox / d;
+                  const strength = (1 - d / radCells) * (1.4 + sp.upsilon * 0.4);
+                  fluid.u[i] += tx * strength * dt * 15;
+                  fluid.v[i] += ty * strength * dt * 15;
+                  fluid.coherence[i] = Math.min(2.4, fluid.coherence[i] + (1 - d / radCells) * 0.16);
+                }
+              }
+            }
+          }
+
+          if (sp.mythicCharge >= 1.35) {
+            executeSolitonEgoCollapse(sp);
+          }
+        });
+
+        // 5. Step 2D Eulerian Navier-Stokes Solver
+        const fluidStats = fluid.step(simTime, dt);
+
+        // 6. Update 2,000 Energetic Primates (Continuous Foraging + Fluid Advection + Elastic Walls)
+        let circulatingDigits = 0;
+        const wallPad = 5;
+        const minX = safe.left + wallPad;
+        const maxX = safe.right - wallPad;
+        const minY = safe.top + wallPad;
+        const maxY = safe.bottom - wallPad;
+
+        for (let i = 0; i < PRIMATE_COUNT; i++) {
+          let sx = pX[i];
+          let sy = pY[i];
+          pPrevX[i] = sx;
+          pPrevY[i] = sy;
+
+          let vx = pVx[i];
+          let vy = pVy[i];
+          let heading = pHeading[i];
+          let heart = pHeart[i];
+          let digits = pDigits[i];
+          let caff = Math.max(0, pCaffeine[i] - dt);
+          const baseSpd = pBaseSpeed[i];
+          const seed = pSeed[i];
+
+          const nx = (sx - safe.left) / safe.w;
+          const ny = (sy - safe.top) / safe.h;
+          const sample = fluid.sampleAt(nx, ny);
+
+          // Continuous self-propelled foraging steering + cyan digit gradient attraction
+          heading += Math.sin(simTime * 2.4 + seed) * 2.6 * dt;
+          if (Math.hypot(sample.gradX, sample.gradY) > 0.02) {
+            const targetAng = Math.atan2(sample.gradY, sample.gradX);
+            const diff = Math.atan2(Math.sin(targetAng - heading), Math.cos(targetAng - heading));
+            heading += diff * 3.2 * dt;
+          }
+
+          // Combine self-propelled foraging velocity + fluid advection wake
+          const propVx = Math.cos(heading) * baseSpd;
+          const propVy = Math.sin(heading) * baseSpd;
+          const advVx = sample.u * 26.0;
+          const advVy = sample.v * 26.0;
+
+          vx = vx * 0.84 + (propVx + advVx) * 0.16;
+          vy = vy * 0.84 + (propVy + advVy) * 0.16;
+
+          // Collect Cyan Digits from liquid currents
+          if (sample.digits > 0.06) {
+            digits += sample.digits * dt * 6.5;
+          }
+
+          let burnMult = 1.0;
+          let speedMult = 1.0;
+
+          // A. Drywall Boxes (30-Yr Mortgage Enclosures)
+          for (let b = 0; b < drywallBoxes.length; b++) {
+            const box = drywallBoxes[b];
+            if (nx > box.x && nx < box.x + box.w && ny > box.y && ny < box.y + box.h) {
+              burnMult += 0.65;
+              const rent = Math.min(digits, dt * 3.8);
+              digits -= rent;
+              box.escrow += rent;
+              // Guide primates gently toward bottom doorway exit so they pay escrow & leave!
+              const exitX = toScreenX(box.x + box.w * 0.5);
+              const exitY = toScreenY(box.y + box.h + 0.04);
+              vx += (exitX - sx) * 1.1 * dt;
+              vy += (exitY - sy) * 1.1 * dt;
+              fluid.addScalar(fluid.capture, nx * fluid.cols, ny * fluid.rows, dt * 0.45, 1.5);
+            }
+          }
+
+          // B. Espresso Towers (2x speed & 2x heartbeat burn)
+          for (let t = 0; t < espressoTowers.length; t++) {
+            const tw = espressoTowers[t];
+            const distPx = Math.hypot(sx - toScreenX(tw.x), sy - toScreenY(tw.y));
+            if (distPx < 54) {
+              caff = 2.6;
+            }
+          }
+          if (caff > 0) {
+            speedMult *= 1.85;
+            burnMult += 1.0;
+          }
+
+          // C. Fluorescent Cubicles (Orthogonal lane alignment + digit minting + heartbeat drain)
+          for (let c = 0; c < cubicles.length; c++) {
+            const cub = cubicles[c];
+            if (nx > cub.x && nx < cub.x + cub.w && ny > cub.y && ny < cub.y + cub.h) {
+              burnMult += 0.85;
+              digits += dt * 8.5;
+              const rowIdx = Math.floor(((ny - cub.y) / cub.h) * cub.rows);
+              const laneSy = toScreenY(cub.y + ((rowIdx + 0.5) / cub.rows) * cub.h);
+              vy += (laneSy - sy) * 5.0 * dt;
+              const dir = rowIdx % 2 === 0 ? 1 : -1;
+              vx += (dir * baseSpd * 0.9 - vx) * 3.5 * dt;
+              fluid.addScalar(fluid.capture, nx * fluid.cols, ny * fluid.rows, dt * 0.25, 1.4);
+            }
+          }
+
+          // D. Luxury Billboards (Magnetic orbital queues + digit extraction + 3x burn)
+          for (let l = 0; l < luxuryBillboards.length; l++) {
+            const bb = luxuryBillboards[l];
+            const bbx = toScreenX(bb.x);
+            const bby = toScreenY(bb.y);
+            const dx = bbx - sx;
+            const dy = bby - sy;
+            const dist = Math.hypot(dx, dy) + 0.1;
+            const orbitRadius = 115;
+            if (dist < orbitRadius) {
+              const pull = 1 - dist / orbitRadius;
+              const rx = dx / dist;
+              const ry = dy / dist;
+              const tx = -ry;
+              const ty = rx;
+              vx += (rx * 135 + tx * 210) * pull * dt * 4.5;
+              vy += (ry * 135 + ty * 210) * pull * dt * 4.5;
+              burnMult += 2.0; // 3x burn
+              const tribute = Math.min(digits, dt * 9.5);
+              digits -= tribute;
+              bb.digitsCollected += tribute;
+            }
+          }
+
+          // E. Soliton Portals (Orbital swirl + heartbeat renewal + hoarder relief)
+          for (let s = 0; s < solitonPortals.length; s++) {
+            const sp = solitonPortals[s];
+            const spx = toScreenX(sp.x);
+            const spy = toScreenY(sp.y);
+            const dx = spx - sx;
+            const dy = spy - sy;
+            const dist = Math.hypot(dx, dy) + 0.1;
+            const swirlR = 95 + sp.upsilon * 18;
+            if (dist < swirlR) {
+              const w = 1 - dist / swirlR;
+              const tx = -dy / dist;
+              const ty = dx / dist;
+              vx += tx * 195 * w * dt * 3.8;
+              vy += ty * 195 * w * dt * 3.8;
+              heart = Math.min(100, heart + dt * 9.0 * w);
+            }
+          }
+
+          // F. Dragon Hoarder Penalty: CAPPED so rich primates still cruise at >= 55% base speed!
+          const hoarderExcess = Math.max(0, digits - 35);
+          const hoarderRatio = Math.min(1.0, hoarderExcess / 90);
+          if (hoarderRatio > 0) {
+            speedMult *= (1.0 - hoarderRatio * 0.45); // Never slower than 55% base speed!
+            burnMult += hoarderRatio * 0.9;
+          }
+
+          // Enforce minimum cruising speed floor so no primate ever stalls!
+          const curSpd = Math.hypot(vx, vy);
+          const minCruise = baseSpd * 0.55 * speedMult;
+          if (curSpd < minCruise) {
+            const scale = minCruise / Math.max(1, curSpd);
+            vx *= scale;
+            vy *= scale;
+          }
+
+          // Advance position
+          let nextX = sx + vx * speedMult * dt;
+          let nextY = sy + vy * speedMult * dt;
+
+          // Obstacle bounce (Drywall walls & Scarcity Dams)
+          const nextNx = (nextX - safe.left) / safe.w;
+          const nextNy = (nextY - safe.top) / safe.h;
+          const nextCell = fluid.sampleAt(nextNx, nextNy);
+          if (nextCell.blocked) {
+            vx = -vx * 0.85 + (Math.random() - 0.5) * 40;
+            vy = -vy * 0.85 + (Math.random() - 0.5) * 40;
+            heading = Math.atan2(vy, vx);
+          } else {
+            sx = nextX;
+            sy = nextY;
+          }
+
+          // CRITICAL FIX: Elastic inward wall reflection with >= 45 px/s inward kick + tangential drift!
+          if (sx <= minX) {
+            sx = minX + 1;
+            vx = Math.abs(vx) + 45;
+            vy += (Math.random() - 0.5) * 55;
+            heading = Math.atan2(vy, vx);
+          } else if (sx >= maxX) {
+            sx = maxX - 1;
+            vx = -Math.abs(vx) - 45;
+            vy += (Math.random() - 0.5) * 55;
+            heading = Math.atan2(vy, vx);
+          }
+
+          if (sy <= minY) {
+            sy = minY + 1;
+            vy = Math.abs(vy) + 45;
+            vx += (Math.random() - 0.5) * 55;
+            heading = Math.atan2(vy, vx);
+          } else if (sy >= maxY) {
+            sy = maxY - 1;
+            vy = -Math.abs(vy) - 45;
+            vx += (Math.random() - 0.5) * 55;
+            heading = Math.atan2(vy, vx);
+          }
+
+          // Burn finite heartbeats & emit warm ember sparks
+          const burned = dt * 2.05 * burnMult;
+          heart -= burned;
+          totalHeartbeatsBurned += burned;
+
+          if (Math.random() < burned * 0.38) {
+            spawnEmber(sx, sy, Math.min(1, (burnMult - 1) / 2.2));
+          }
+
+          if (heart <= 0) {
+            ghostRings.push({ sx, sy, r: 2, alpha: 0.8 });
+            initPrimate(i, true);
+          } else {
+            pX[i] = sx;
+            pY[i] = sy;
+            pVx[i] = vx;
+            pVy[i] = vy;
+            pHeading[i] = heading;
+            pHeart[i] = heart;
+            pDigits[i] = digits;
+            pCaffeine[i] = caff;
+            circulatingDigits += digits;
+          }
+        }
+
+        totalHallucinatedDigits = circulatingDigits + fluidStats.sumDigits * 190;
+
+        // 7. Update Ember Sparks, Ghost Rings & Shock Rings
+        for (let i = 0; i < MAX_EMBERS; i++) {
+          if (eLife[i] > 0) {
+            eLife[i] -= dt;
+            eX[i] += eVx[i] * dt;
+            eY[i] += eVy[i] * dt;
+            eVx[i] *= 0.96;
+          }
+        }
+
+        for (let i = ghostRings.length - 1; i >= 0; i--) {
+          const gr = ghostRings[i];
+          gr.r += dt * 28;
+          gr.alpha -= dt * 1.2;
+          if (gr.alpha <= 0) ghostRings.splice(i, 1);
+        }
+
+        for (let i = shockRings.length - 1; i >= 0; i--) {
+          const sr = shockRings[i];
+          sr.r += (sr.maxR - sr.r) * dt * 4.8 + 45 * dt;
+          sr.alpha -= dt * 0.95;
+          if (sr.alpha <= 0) shockRings.splice(i, 1);
+        }
+
+        // 8. Telemetry & Sparkline
+        const totalEnergy = fluidStats.sumDigits + fluidStats.sumCapture + fluidStats.sumCoherence + 0.001;
+        const captureRatio = Math.min(1, fluidStats.sumCapture / totalEnergy);
+        const flowRatio = Math.max(0, 1 - captureRatio);
+
+        audio.updateAtmosphere(captureRatio, flowRatio);
+
+        historyTimer += dt;
+        if (historyTimer >= 0.14) {
+          historyTimer = 0;
+          historyCapture.copyWithin(0, 1);
+          historyFlow.copyWithin(0, 1);
+          historyCapture[historyCapture.length - 1] = captureRatio;
+          historyFlow[historyFlow.length - 1] = flowRatio;
+          updateTelemetryHUD(fluidStats.avgDiv, captureRatio, flowRatio, maxUpsilon);
+        }
+      }
+
+      // =========================================================================
+      // 9. TELEMETRY HUD & SPARKLINE
+      // =========================================================================
+      const elHeartbeats = document.getElementById('statHeartbeats');
+      const elDigits = document.getElementById('statDigits');
+      const elDivergence = document.getElementById('statDivergence');
+      const elCapturePct = document.getElementById('statCapturePct');
+      const elFlowPct = document.getElementById('statFlowPct');
+      const elUpsilon = document.getElementById('statUpsilon');
+
+      function formatCurrency(val) {
+        if (val >= 1e6) return '$' + (val / 1e6).toFixed(2) + 'M';
+        if (val >= 1e3) return '$' + (val / 1e3).toFixed(1) + 'K';
+        return '$' + val.toFixed(0);
+      }
+
+      function updateTelemetryHUD(avgDiv, captureRatio, flowRatio, maxUpsilon) {
+        elHeartbeats.textContent = `${Math.floor(totalHeartbeatsBurned).toLocaleString()} ♥`;
+        elDigits.textContent = formatCurrency(totalHallucinatedDigits);
+
+        elCapturePct.textContent = `${(captureRatio * 100).toFixed(1)}%`;
+        elFlowPct.textContent = `Flow ${(flowRatio * 100).toFixed(0)}%`;
+
+        const divVal = Math.max(0, avgDiv * 4.2 + captureRatio * 0.16 - solitonPortals.length * 0.012);
+        elDivergence.textContent = `∇·Θ = ${divVal.toFixed(2)}`;
+        elDivergence.className = divVal < 0.04 ? 'div-badge mono' : 'div-badge high mono';
+
+        elUpsilon.textContent = `Υ ${maxUpsilon.toFixed(2)}`;
+
+        const sw = sparkCanvas.width;
+        const sh = sparkCanvas.height;
+        sparkCtx.clearRect(0, 0, sw, sh);
+
+        sparkCtx.beginPath();
+        sparkCtx.strokeStyle = '#00f5d4';
+        sparkCtx.lineWidth = 1.5;
+        for (let i = 0; i < historyFlow.length; i++) {
+          const px = (i / (historyFlow.length - 1)) * sw;
+          const py = sh - 3 - historyFlow[i] * (sh - 6);
+          if (i === 0) sparkCtx.moveTo(px, py);
+          else sparkCtx.lineTo(px, py);
+        }
+        sparkCtx.stroke();
+
+        sparkCtx.beginPath();
+        sparkCtx.strokeStyle = '#c084fc';
+        sparkCtx.lineWidth = 1.5;
+        for (let i = 0; i < historyCapture.length; i++) {
+          const px = (i / (historyCapture.length - 1)) * sw;
+          const py = sh - 3 - historyCapture[i] * (sh - 6);
+          if (i === 0) sparkCtx.moveTo(px, py);
+          else sparkCtx.lineTo(px, py);
+        }
+        sparkCtx.stroke();
+      }
+
+      // =========================================================================
+      // 10. HIGH-DPI CANVAS RENDERING
+      // =========================================================================
+      function render() {
+        // Fill deep obsidian void across entire screen
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = '#06070d';
+        ctx.fillRect(0, 0, width, height);
+
+        // Draw bilinear-smoothed Navier-Stokes Fluid inside Safe Playable Bounds
+        fluid.renderToOffscreen(simTime);
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(fluid.offscreen, safe.left, safe.top, safe.w, safe.h);
+
+        // Subtle glowing boundary frame for the playable arena
+        ctx.strokeStyle = 'rgba(0, 245, 212, 0.14)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(safe.left, safe.top, safe.w, safe.h);
+
+        // Optional Fluid Velocity Vector Overlay
+        if (showVectors) {
+          ctx.save();
+          const stepX = 4;
+          const stepY = 4;
+          const cellW = safe.w / fluid.cols;
+          const cellH = safe.h / fluid.rows;
+          for (let gy = 2; gy < fluid.rows - 2; gy += stepY) {
+            for (let gx = 2; gx < fluid.cols - 2; gx += stepX) {
+              const i = gy * fluid.cols + gx;
+              if (fluid.obstacle[i]) continue;
+              const sx = safe.left + (gx + 0.5) * cellW;
+              const sy = safe.top + (gy + 0.5) * cellH;
+              const vx = fluid.u[i] * 3.8;
+              const vy = fluid.v[i] * 3.8;
+              const cap = fluid.capture[i];
+              ctx.strokeStyle = cap > 0.25 ? 'rgba(217, 70, 239, 0.42)' : 'rgba(0, 245, 212, 0.35)';
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(sx, sy);
+              ctx.lineTo(sx + vx, sy + vy);
+              ctx.stroke();
+            }
+          }
+          ctx.restore();
+        }
+
+        renderLandmarks();
+        renderSolitonNetwork();
+        renderSwarmAndEmbers();
+        renderToolPreview();
+      }
+
+      function renderLandmarks() {
+        ctx.save();
+
+        // A. Drywall Boxes (30-Yr Mortgages)
+        drywallBoxes.forEach((box) => {
+          const bx = toScreenX(box.x);
+          const by = toScreenY(box.y);
+          const bw = box.w * safe.w;
+          const bh = box.h * safe.h;
+          const doorX0 = bx + bw * 0.34;
+          const doorX1 = bx + bw * 0.66;
+
+          ctx.fillStyle = 'rgba(30, 41, 59, 0.28)';
+          ctx.fillRect(bx, by, bw, bh);
+
+          ctx.strokeStyle = 'rgba(245, 158, 11, 0.8)';
+          ctx.lineWidth = 2;
+          ctx.shadowColor = 'rgba(245, 158, 11, 0.45)';
+          ctx.shadowBlur = 10;
+
+          ctx.beginPath();
+          ctx.moveTo(doorX0, by + bh);
+          ctx.lineTo(bx, by + bh);
+          ctx.lineTo(bx, by);
+          ctx.lineTo(bx + bw, by);
+          ctx.lineTo(bx + bw, by + bh);
+          ctx.lineTo(doorX1, by + bh);
+          ctx.stroke();
+
+          ctx.setLineDash([4, 4]);
+          ctx.strokeStyle = 'rgba(251, 191, 36, 0.4)';
+          ctx.beginPath();
+          ctx.moveTo(doorX0, by + bh);
+          ctx.lineTo(doorX1, by + bh);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.shadowBlur = 0;
+
+          ctx.font = '700 9.5px ui-monospace, Menlo, monospace';
+          ctx.fillStyle = 'rgba(253, 224, 71, 0.9)';
+          ctx.fillText(box.label, bx + 4, by - 5);
+          ctx.font = '600 8.5px ui-monospace, Menlo, monospace';
+          ctx.fillStyle = 'rgba(148, 163, 184, 0.85)';
+          ctx.fillText(`ESCROW $${Math.floor(box.escrow).toLocaleString()}`, bx + 6, by + 13);
+        });
+
+        // B. Fluorescent Cubicles
+        cubicles.forEach((cub) => {
+          const cx = toScreenX(cub.x);
+          const cy = toScreenY(cub.y);
+          const cw = cub.w * safe.w;
+          const ch = cub.h * safe.h;
+          const flicker = 0.88 + 0.12 * Math.sin(simTime * 26 + cx);
+
+          ctx.fillStyle = `rgba(128, 255, 219, ${0.06 * flicker})`;
+          ctx.fillRect(cx, cy, cw, ch);
+
+          ctx.strokeStyle = `rgba(128, 255, 219, ${0.46 * flicker})`;
+          ctx.lineWidth = 1.2;
+          ctx.strokeRect(cx, cy, cw, ch);
+
+          ctx.strokeStyle = `rgba(167, 139, 250, ${0.26 * flicker})`;
+          ctx.beginPath();
+          for (let c = 1; c < cub.cols; c++) {
+            const lx = cx + (cw / cub.cols) * c;
+            ctx.moveTo(lx, cy);
+            ctx.lineTo(lx, cy + ch);
+          }
+          for (let r = 1; r < cub.rows; r++) {
+            const ly = cy + (ch / cub.rows) * r;
+            ctx.moveTo(cx, ly);
+            ctx.lineTo(cx + cw, ly);
+          }
+          ctx.stroke();
+
+          ctx.font = '700 9.5px ui-monospace, Menlo, monospace';
+          ctx.fillStyle = 'rgba(128, 255, 219, 0.9)';
+          ctx.fillText(cub.label, cx + 4, cy - 5);
+        });
+
+        // C. Espresso Towers (Pulsing Gold Concentric Rings)
+        espressoTowers.forEach((tw) => {
+          const tx = toScreenX(tw.x);
+          const ty = toScreenY(tw.y);
+          const pulse = tw.timer / 2.0;
+
+          for (let ring = 1; ring <= 3; ring++) {
+            ctx.beginPath();
+            ctx.arc(tx, ty, ring * 6 + pulse * 10, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(251, 191, 36, ${0.55 - ring * 0.12})`;
+            ctx.lineWidth = 1.4;
+            ctx.stroke();
+          }
+
+          ctx.beginPath();
+          ctx.arc(tx, ty, 4.5, 0, Math.PI * 2);
+          ctx.fillStyle = '#fde047';
+          ctx.fill();
+
+          ctx.font = '700 9.5px ui-monospace, Menlo, monospace';
+          ctx.fillStyle = 'rgba(253, 224, 71, 0.92)';
+          ctx.textAlign = 'center';
+          ctx.fillText(tw.label, tx, ty - 22);
+          ctx.textAlign = 'left';
+        });
+
+        // D. Scarcity Dams
+        scarcityDams.forEach((dam) => {
+          const x1 = toScreenX(dam.x1);
+          const y1 = toScreenY(dam.y1);
+          const x2 = toScreenX(dam.x2);
+          const y2 = toScreenY(dam.y2);
+
+          ctx.strokeStyle = '#ff0055';
+          ctx.lineWidth = 6;
+          ctx.lineCap = 'round';
+          ctx.shadowColor = 'rgba(255, 0, 85, 0.75)';
+          ctx.shadowBlur = 12;
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+
+          ctx.strokeStyle = '#190612';
+          ctx.lineWidth = 2.5;
+          ctx.shadowBlur = 0;
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        });
+
+        // E. Luxury Billboards
+        luxuryBillboards.forEach((bb) => {
+          const bx = toScreenX(bb.x);
+          const by = toScreenY(bb.y);
+          const glowR = 23 + Math.sin(bb.pulsePhase) * 4;
+
+          ctx.beginPath();
+          ctx.arc(bx, by, glowR * 1.85, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(255, 0, 127, 0.22)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(bx, by, glowR, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255, 0, 127, 0.16)';
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(255, 209, 102, 0.88)';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          ctx.font = '800 12px ui-monospace, Menlo, monospace';
+          ctx.fillStyle = '#ffd166';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(bb.logo, bx, by);
+
+          ctx.font = '600 9px ui-monospace, Menlo, monospace';
+          ctx.fillStyle = 'rgba(255, 180, 215, 0.92)';
+          ctx.fillText(`$${Math.floor(bb.digitsCollected).toLocaleString()}`, bx, by + 20);
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'alphabetic';
+        });
+
+        ctx.restore();
+      }
+
+      function renderSolitonNetwork() {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+
+        // 1. Golden Sinusoidal Sisterlock Filaments (Δθ = 2πΥ)
+        for (let i = 0; i < solitonPortals.length; i++) {
+          for (let j = i + 1; j < solitonPortals.length; j++) {
+            const a = solitonPortals[i];
+            const b = solitonPortals[j];
+            const ax = toScreenX(a.x);
+            const ay = toScreenY(a.y);
+            const bx = toScreenX(b.x);
+            const by = toScreenY(b.y);
+            const dist = Math.hypot(bx - ax, by - ay);
+            if (dist < Math.max(safe.w, safe.h) * 0.7) {
+              const mx = (ax + bx) * 0.5;
+              const my = (ay + by) * 0.5;
+              const nx = -(by - ay) / (dist + 1);
+              const ny = (bx - ax) / (dist + 1);
+              const wave = Math.sin(simTime * 3.5 + i + j) * 18;
+
+              ctx.strokeStyle = 'rgba(253, 224, 71, 0.52)';
+              ctx.lineWidth = 1.6;
+              ctx.beginPath();
+              ctx.moveTo(ax, ay);
+              ctx.quadraticCurveTo(mx + nx * wave, my + ny * wave, bx, by);
+              ctx.stroke();
+
+              ctx.strokeStyle = 'rgba(0, 245, 212, 0.38)';
+              ctx.beginPath();
+              ctx.moveTo(ax, ay);
+              ctx.quadraticCurveTo(mx - nx * wave, my - ny * wave, bx, by);
+              ctx.stroke();
+
+              const t = (simTime * 0.65 + i * 0.3) % 1;
+              ctx.beginPath();
+              ctx.arc(ax + (bx - ax) * t, ay + (by - ay) * t, 3, 0, Math.PI * 2);
+              ctx.fillStyle = '#fef08a';
+              ctx.fill();
+            }
+          }
+        }
+
+        // 2. 7-Layered Rotating Motzkin Hexagonal Rainbow Portals
+        solitonPortals.forEach((sp) => {
+          const sx = toScreenX(sp.x);
+          const sy = toScreenY(sp.y);
+          const baseR = 16 + sp.upsilon * 6.0 + sp.collapseFlash * 15;
+
+          for (let layer = 1; layer <= 7; layer++) {
+            const r = (baseR * layer) / 7;
+            const dir = layer % 2 === 0 ? 1 : -1;
+            const rot = sp.phase * dir * (0.35 + layer * 0.08);
+            const hue = (simTime * 65 + layer * 48) % 360;
+
+            ctx.strokeStyle = `hsla(${hue}, 95%, 68%, ${0.25 + (layer / 7) * 0.42})`;
+            ctx.lineWidth = layer === 7 ? 1.8 : 1.0;
+            ctx.beginPath();
+            const sides = 6; // Hexagonal Motzkin rings
+            for (let v = 0; v <= sides; v++) {
+              const ang = rot + (v / sides) * Math.PI * 2;
+              const vx = sx + Math.cos(ang) * r;
+              const vy = sy + Math.sin(ang) * r;
+              if (v === 0) ctx.moveTo(vx, vy);
+              else ctx.lineTo(vx, vy);
+            }
+            ctx.stroke();
+          }
+
+          ctx.beginPath();
+          ctx.arc(sx, sy, 4, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.fill();
+
+          ctx.font = '700 9.5px ui-monospace, Menlo, monospace';
+          ctx.fillStyle = 'rgba(254, 240, 138, 0.94)';
+          ctx.textAlign = 'center';
+          ctx.fillText(`∇·Θ=0  Υ ${sp.upsilon.toFixed(2)}`, sx, sy + baseR + 14);
+          ctx.textAlign = 'left';
+        });
+
+        // 3. Shock Rings
+        shockRings.forEach((sr) => {
+          ctx.beginPath();
+          ctx.arc(sr.sx, sr.sy, sr.r, 0, Math.PI * 2);
+          ctx.strokeStyle = sr.color;
+          ctx.globalAlpha = Math.max(0, sr.alpha);
+          ctx.lineWidth = 2.2;
+          ctx.stroke();
+        });
+
+        ctx.restore();
+      }
+
+      function renderSwarmAndEmbers() {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+
+        // 1. Warm Ember-Sparks
+        for (let i = 0; i < MAX_EMBERS; i++) {
+          const life = eLife[i];
+          if (life > 0) {
+            ctx.fillStyle = `hsla(${eHue[i]}, 100%, 62%, ${Math.min(0.85, life)})`;
+            ctx.fillRect(eX[i], eY[i], 2, 2);
+          }
+        }
+
+        // 2. Ghostly Death Rings
+        for (let i = 0; i < ghostRings.length; i++) {
+          const gr = ghostRings[i];
+          ctx.beginPath();
+          ctx.arc(gr.sx, gr.sy, gr.r, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(255, 77, 109, ${gr.alpha * 0.7})`;
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+        }
+
+        // 3. Primate Glowing Motion Trails + Sparks + Dragon Hoarder Halos
+        ctx.lineWidth = 1.4;
+        for (let i = 0; i < PRIMATE_COUNT; i++) {
+          const sx = pX[i];
+          const sy = pY[i];
+          const px = pPrevX[i];
+          const py = pPrevY[i];
+          const heart = pHeart[i];
+          const digits = pDigits[i];
+
+          // Dragon Hoarder oversized cyan halo
+          if (digits > 35) {
+            const haloR = Math.min(13, 3.8 + (digits - 35) * 0.11);
+            ctx.beginPath();
+            ctx.arc(sx, sy, haloR, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(0, 245, 212, 0.36)';
+            ctx.stroke();
+          }
+
+          // Motion trail & core spark
+          const isHealthy = heart > 42;
+          ctx.strokeStyle = isHealthy ? 'rgba(255, 168, 30, 0.38)' : 'rgba(255, 77, 109, 0.42)';
+          ctx.beginPath();
+          ctx.moveTo(px, py);
+          ctx.lineTo(sx, sy);
+          ctx.stroke();
+
+          ctx.fillStyle = isHealthy ? 'rgba(255, 184, 48, 0.94)' : 'rgba(255, 77, 109, 0.96)';
+          ctx.fillRect(sx - 1.3, sy - 1.3, 2.6, 2.6);
+        }
+
+        ctx.restore();
+      }
+
+      function renderToolPreview() {
+        if (activeTool === 'dam' && isPointerDown && damStart) {
+          ctx.save();
+          ctx.strokeStyle = '#ff0055';
+          ctx.lineWidth = 4;
+          ctx.setLineDash([6, 4]);
+          ctx.beginPath();
+          ctx.moveTo(toScreenX(damStart.x), toScreenY(damStart.y));
+          ctx.lineTo(pointerScreen.x, pointerScreen.y);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+
+      // =========================================================================
+      // 11. UI EVENT WIRING, RESIZE & 60FPS LOOP
+      // =========================================================================
+      const TOOL_HINTS = {
+        stir: '<strong style="color:#00f5d4;">Stir Current:</strong> Drag anywhere to inject swirling cyan liquidity &amp; velocity wakes.',
+        dam: '<strong style="color:#fb7185;">Scarcity Dam:</strong> Click or drag to build crimson barriers that pool stagnant purple capture swamps.',
+        billboard: '<strong style="color:#f472b6;">Luxury Billboard:</strong> Tap to drop pulsing <code>$$</code> totems that lure primates into tight orbiting queues.',
+        soliton: '<strong style="color:#fde047;">Soliton Portal (∇·Θ = 0):</strong> Tap to drop 7-layered hexagonal rainbow portals &amp; Sisterlock filaments.'
+      };
+
+      function selectTool(tool) {
+        activeTool = tool;
+        document.querySelectorAll('.tool-btn').forEach((btn) => {
+          btn.classList.toggle('active', btn.dataset.tool === tool);
+        });
+        document.getElementById('toolHintPill').innerHTML = TOOL_HINTS[tool] || '';
+      }
+
+      document.querySelectorAll('.tool-btn').forEach((btn) => {
+        btn.addEventListener('click', () => selectTool(btn.dataset.tool));
+      });
+
+      document.getElementById('btnClearPlaced').addEventListener('click', () => {
+        scarcityDams = [];
+        luxuryBillboards = [];
+        solitonPortals = [];
+        rebuildObstacleGrid();
+        showEventBanner('🧹', 'CLEARED PLACED DAMS, BILLBOARDS & PORTALS');
+      });
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key === '1') selectTool('stir');
+        else if (e.key === '2') selectTool('dam');
+        else if (e.key === '3') selectTool('billboard');
+        else if (e.key === '4') selectTool('soliton');
+        else if (e.code === 'Space' && !document.getElementById('guideModal').classList.contains('open')) {
+          e.preventDefault();
+          triggerTick40Shockwave();
+        }
+      });
+
+      document.querySelectorAll('.preset-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.preset-btn').forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          loadPreset(btn.dataset.preset);
+          showEventBanner('🗺️', `PRESET: ${btn.textContent.trim().toUpperCase()}`);
+        });
+      });
+
+      document.getElementById('btnShockwave').addEventListener('click', triggerTick40Shockwave);
+
+      const btnVectors = document.getElementById('btnVectors');
+      btnVectors.addEventListener('click', () => {
+        showVectors = !showVectors;
+        btnVectors.classList.toggle('btn-toggle-on', showVectors);
+      });
+
+      const btnAudio = document.getElementById('btnAudio');
+      btnAudio.addEventListener('click', () => {
+        const on = audio.toggle();
+        btnAudio.textContent = on ? '🔊 Synth' : '🔇 Synth';
+        btnAudio.classList.toggle('btn-toggle-on', on);
+      });
+
+      const guideModal = document.getElementById('guideModal');
+      document.getElementById('btnGuide').addEventListener('click', () => guideModal.classList.add('open'));
+      document.getElementById('btnCloseGuide').addEventListener('click', () => guideModal.classList.remove('open'));
+      document.getElementById('btnResumeModal').addEventListener('click', () => guideModal.classList.remove('open'));
+      guideModal.addEventListener('click', (e) => {
+        if (e.target === guideModal) guideModal.classList.remove('open');
+      });
+
+      function handleResize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        updateSafeBounds();
+
+        const targetRows = Math.max(64, Math.min(116, Math.round(GRID_COLS * (safe.h / safe.w))));
+        if (targetRows !== fluid.rows) {
+          fluid.resize(GRID_COLS, targetRows);
+        }
+
+        enforceBuildingMargins();
+        rebuildObstacleGrid();
+
+        // Keep any existing primates safely inside updated playable bounds
+        for (let i = 0; i < PRIMATE_COUNT; i++) {
+          if (pX[i] < safe.left + 6 || pX[i] > safe.right - 6 || pY[i] < safe.top + 6 || pY[i] > safe.bottom - 6) {
+            initPrimate(i, false);
+          }
+        }
+      }
+
+      window.addEventListener('resize', handleResize);
+      if (window.ResizeObserver) {
+        const ro = new ResizeObserver(() => handleResize());
+        ro.observe(topHudEl);
+        ro.observe(bottomDockEl);
+      }
+
+      let lastTime = performance.now();
+      function animate(now) {
+        const dt = Math.min(0.033, Math.max(0.004, (now - lastTime) / 1000));
+        lastTime = now;
+
+        updateSimulation(dt);
+        render();
+
+        requestAnimationFrame(animate);
+      }
+
+      window.onload = function () {
+        handleResize();
+        loadPreset('metropolis');
+        requestAnimationFrame(animate);
+      };
+    })();
+  </script>
+</body>
+</html>
