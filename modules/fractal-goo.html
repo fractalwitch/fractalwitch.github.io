@@ -1,0 +1,2011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>GOOAE: Visceral Matter — Slime Fractal Toy</title>
+<style>
+  :root {
+    --bg-benthic: #070312;
+    --glass-bg: rgba(14, 7, 30, 0.72);
+    --glass-border: rgba(236, 72, 153, 0.36);
+    --glass-highlight: rgba(255, 255, 255, 0.12);
+    --pink: #FF69B4;
+    --magenta: #EC4899;
+    --violet: #8B5CF6;
+    --cyan: #06B6D4;
+    --purple: #4A0E4E;
+    --orange: #FB923C;
+    --text-main: #F8F5FF;
+    --text-muted: rgba(232, 224, 255, 0.74);
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg-benthic);
+    color: var(--text-main);
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  #sim-canvas, #fallback-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    z-index: 1;
+    touch-action: none;
+    cursor: grab;
+  }
+
+  #sim-canvas:active, #fallback-canvas:active {
+    cursor: grabbing;
+  }
+
+  #fallback-canvas {
+    display: none;
+  }
+
+  /* Overlay HUD container lets canvas receive drags everywhere except interactive controls */
+  #hud-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 15;
+    pointer-events: none;
+  }
+
+  /* Floating Top Header */
+  .hud-top {
+    position: fixed;
+    top: max(12px, env(safe-area-inset-top));
+    left: 12px;
+    right: 12px;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .hud-top.hidden-hud {
+    opacity: 0;
+    transform: translateY(-24px);
+    pointer-events: none !important;
+  }
+
+  .hud-top.hidden-hud * {
+    pointer-events: none !important;
+  }
+
+  .brand-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    pointer-events: none;
+  }
+
+  .brand-badge {
+    pointer-events: auto;
+    position: relative;
+    z-index: 20;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 40px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.52), inset 0 1px 0 var(--glass-highlight);
+  }
+
+  .brand-orb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: conic-gradient(from 45deg, var(--pink), var(--cyan), var(--violet), var(--orange), var(--pink));
+    box-shadow: 0 0 12px var(--magenta);
+    animation: orbSpin 6s linear infinite;
+  }
+
+  @keyframes orbSpin {
+    to { transform: rotate(360deg); }
+  }
+
+  .brand-title {
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, #fff 0%, #f9a8d4 45%, #67e8f9 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .brand-sub {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--cyan);
+    opacity: 0.92;
+  }
+
+  .icon-pill {
+    pointer-events: auto;
+    position: relative;
+    z-index: 20;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid rgba(139, 92, 246, 0.45);
+    color: var(--text-main);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 var(--glass-highlight);
+    transition: transform 0.14s ease, border-color 0.2s ease, background 0.2s ease;
+  }
+
+  .icon-pill:active {
+    transform: scale(0.95);
+    border-color: var(--pink);
+  }
+
+  /* Floating Un-Hide Pill when HUD is hidden */
+  #show-hud-btn {
+    position: fixed;
+    top: max(12px, env(safe-area-inset-top));
+    right: 12px;
+    z-index: 30;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-10px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+
+  #show-hud-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  /* Horizontal Swipeable Preset Strip with Edge Fade Cue */
+  .preset-wrap {
+    position: relative;
+    pointer-events: auto;
+    z-index: 20;
+    width: 100%;
+    mask-image: linear-gradient(to right, #000 0%, #000 92%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, #000 0%, #000 92%, transparent 100%);
+  }
+
+  .preset-strip {
+    pointer-events: auto;
+    position: relative;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    padding: 2px 28px 6px 2px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(236, 72, 153, 0.45) transparent;
+  }
+
+  .preset-strip::-webkit-scrollbar {
+    height: 3px;
+  }
+
+  .preset-strip::-webkit-scrollbar-thumb {
+    background: rgba(236, 72, 153, 0.45);
+    border-radius: 999px;
+  }
+
+  .preset-pill {
+    pointer-events: auto;
+    position: relative;
+    z-index: 20;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 40px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(14, 7, 30, 0.74);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: transform 0.14s ease, border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.42);
+  }
+
+  .preset-pill:active {
+    transform: scale(0.95);
+  }
+
+  .preset-pill .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .preset-pill.active {
+    color: #ffffff;
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.42), rgba(139, 92, 246, 0.42));
+    border-color: var(--pink);
+    box-shadow: 0 0 18px rgba(236, 72, 153, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  }
+
+  /* Bottom Collapsible Drawer — generous bottom clearance above mobile overlays/orbs */
+  .hud-bottom {
+    position: fixed;
+    bottom: 0;
+    left: 12px;
+    right: 12px;
+    padding-bottom: max(72px, calc(env(safe-area-inset-bottom) + 60px));
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .hud-bottom.hidden-hud {
+    opacity: 0;
+    transform: translateY(28px);
+    pointer-events: none !important;
+  }
+
+  .hud-bottom.hidden-hud * {
+    pointer-events: none !important;
+  }
+
+  .drawer-shell {
+    pointer-events: auto;
+    position: relative;
+    z-index: 20;
+    width: 100%;
+    max-width: 780px;
+    border-radius: 24px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(170%);
+    -webkit-backdrop-filter: blur(20px) saturate(170%);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 16px 42px rgba(0, 0, 0, 0.68), inset 0 1px 0 var(--glass-highlight);
+    overflow: hidden;
+  }
+
+  .drawer-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .drawer-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .action-btn {
+    pointer-events: auto;
+    position: relative;
+    z-index: 20;
+    min-height: 40px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: transform 0.14s ease, background 0.18s ease, border-color 0.18s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .action-btn:active {
+    transform: scale(0.95);
+    border-color: var(--cyan);
+  }
+
+  .action-btn.primary {
+    background: linear-gradient(135deg, var(--magenta), var(--violet));
+    border-color: rgba(255, 105, 180, 0.65);
+    box-shadow: 0 4px 14px rgba(236, 72, 153, 0.42);
+  }
+
+  .toggle-drawer-btn {
+    pointer-events: auto;
+    position: relative;
+    z-index: 20;
+    min-height: 40px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(6, 182, 212, 0.18);
+    border: 1px solid rgba(6, 182, 212, 0.48);
+    color: #67e8f9;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform 0.14s ease;
+  }
+
+  .toggle-drawer-btn:active {
+    transform: scale(0.95);
+  }
+
+  .drawer-body {
+    display: grid;
+    grid-template-columns: 126px 1fr;
+    gap: 14px;
+    padding: 12px 14px 14px 14px;
+    align-items: center;
+    max-height: 420px;
+    transition: max-height 0.28s ease, padding 0.28s ease, opacity 0.22s ease;
+  }
+
+  .drawer-shell.collapsed .drawer-body {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .drawer-shell.collapsed .drawer-bar {
+    border-bottom-color: transparent;
+  }
+
+  /* Orbital Gravity Dial + Tilt Sensor Controls */
+  .gravity-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .gravity-pad {
+    pointer-events: auto;
+    position: relative;
+    z-index: 20;
+    width: 86px;
+    height: 86px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.30) 0%, rgba(7, 3, 18, 0.92) 75%);
+    border: 1.5px solid rgba(6, 182, 212, 0.55);
+    box-shadow: inset 0 0 16px rgba(236, 72, 153, 0.30), 0 4px 16px rgba(0, 0, 0, 0.5);
+    cursor: crosshair;
+    touch-action: none;
+  }
+
+  .gravity-ring {
+    position: absolute;
+    inset: 20px;
+    border-radius: 50%;
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    pointer-events: none;
+  }
+
+  .gravity-crosshair {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .gravity-crosshair::before,
+  .gravity-crosshair::after {
+    content: "";
+    position: absolute;
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .gravity-crosshair::before {
+    left: 50%;
+    top: 10%;
+    bottom: 10%;
+    width: 1px;
+  }
+
+  .gravity-crosshair::after {
+    top: 50%;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+  }
+
+  .gravity-puck {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle at 35% 35%, #fff, var(--cyan) 55%, var(--magenta));
+    box-shadow: 0 0 12px var(--cyan);
+    pointer-events: none;
+  }
+
+  .gravity-label {
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: var(--cyan);
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  .tilt-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 100%;
+  }
+
+  .tilt-mini-btn {
+    pointer-events: auto;
+    position: relative;
+    z-index: 20;
+    min-height: 30px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(74, 14, 78, 0.55);
+    border: 1px solid rgba(255, 105, 180, 0.38);
+    color: var(--text-main);
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: transform 0.12s ease, background 0.2s ease, border-color 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .tilt-mini-btn:active {
+    transform: scale(0.94);
+  }
+
+  .tilt-mini-btn.active {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.45), rgba(236, 72, 153, 0.45));
+    border-color: var(--cyan);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.45);
+  }
+
+  /* Sliders Grid */
+  .sliders-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px 14px;
+  }
+
+  .slider-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .slider-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--text-main);
+  }
+
+  .slider-val {
+    color: var(--cyan);
+    font-variant-numeric: tabular-nums;
+  }
+
+  input[type="range"] {
+    pointer-events: auto;
+    position: relative;
+    z-index: 20;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 24px;
+    background: transparent;
+    outline: none;
+    cursor: pointer;
+    margin: 0;
+  }
+
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16);
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    margin-top: -7px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #fff, var(--pink));
+    border: 2px solid var(--bg-benthic);
+    box-shadow: 0 0 10px var(--magenta);
+    cursor: pointer;
+  }
+
+  input[type="range"]::-moz-range-track {
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16);
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #fff, var(--pink));
+    border: 2px solid var(--bg-benthic);
+    box-shadow: 0 0 10px var(--magenta);
+    cursor: pointer;
+  }
+
+  /* Live Status & Tap Confirmation Pill */
+  .toast-pill {
+    position: fixed;
+    top: 44%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.92);
+    z-index: 40;
+    padding: 9px 18px;
+    border-radius: 999px;
+    background: rgba(14, 7, 32, 0.88);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--pink);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+    box-shadow: 0 8px 30px rgba(236, 72, 153, 0.4);
+    white-space: nowrap;
+  }
+
+  .toast-pill.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  @media (max-width: 599px) {
+    .drawer-body {
+      grid-template-columns: 112px 1fr;
+      gap: 10px;
+      padding: 10px 12px 12px 12px;
+    }
+    .gravity-pad {
+      width: 78px;
+      height: 78px;
+    }
+    .sliders-grid {
+      grid-template-columns: 1fr;
+      gap: 5px;
+    }
+    .brand-sub {
+      display: none;
+    }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="sim-canvas"></canvas>
+<canvas id="fallback-canvas"></canvas>
+
+<!-- Floating Show HUD Button -->
+<button id="show-hud-btn" type="button" class="icon-pill" title="Restore Controls">✨ Show HUD</button>
+
+<!-- Toast Feedback -->
+<div id="toast" class="toast-pill">Ω FUSED FRACTAL</div>
+
+<div id="hud-layer">
+  <!-- Top Floating Bar -->
+  <header id="hud-top" class="hud-top">
+    <div class="brand-row">
+      <div class="brand-badge">
+        <div class="brand-orb"></div>
+        <div>
+          <div class="brand-title">GOOAE // Visceral Matter</div>
+          <div class="brand-sub" id="engine-badge">GooCore Fractal Engine</div>
+        </div>
+      </div>
+      <button id="hide-hud-btn" type="button" class="icon-pill" title="Hide Interface">👁️ Hide HUD</button>
+    </div>
+
+    <!-- 6 Preset Selector Pills -->
+    <div class="preset-wrap">
+      <nav class="preset-strip" id="preset-strip" aria-label="Visceral Matter Presets">
+        <button type="button" class="preset-pill active" data-preset="fused">
+          <span class="dot" style="background: conic-gradient(#FF69B4, #06B6D4, #FB923C, #8B5CF6);"></span>
+          Ω FUSED FRACTAL
+        </button>
+        <button type="button" class="preset-pill" data-preset="honey">
+          <span class="dot" style="background: #F59E0B;"></span>
+          HONEY HEIST
+        </button>
+        <button type="button" class="preset-pill" data-preset="slime">
+          <span class="dot" style="background: #FF69B4;"></span>
+          SLIME SYNCHRONY
+        </button>
+        <button type="button" class="preset-pill" data-preset="molten">
+          <span class="dot" style="background: #FB923C;"></span>
+          MOLTEN MEMORY
+        </button>
+        <button type="button" class="preset-pill" data-preset="custard">
+          <span class="dot" style="background: #FDE047;"></span>
+          CUSTARD CATASTROPHE
+        </button>
+        <button type="button" class="preset-pill" data-preset="schlieren">
+          <span class="dot" style="background: #06B6D4;"></span>
+          SCHLIEREN ORACLE
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Bottom Collapsible Control Drawer -->
+  <section id="hud-bottom" class="hud-bottom">
+    <div id="drawer-shell" class="drawer-shell">
+      <div class="drawer-bar">
+        <div class="drawer-actions">
+          <button id="btn-pulse" type="button" class="action-btn primary">🌀 Inject Goo Pulse</button>
+          <button id="btn-mutate" type="button" class="action-btn">🌈 Mutate Palette</button>
+          <button id="btn-reset" type="button" class="action-btn">🫧 Reset</button>
+        </div>
+        <button id="btn-collapse" type="button" class="toggle-drawer-btn">▴ Controls</button>
+      </div>
+
+      <div class="drawer-body">
+        <!-- Orbital Gravity Dial + Isolated Tilt Controls -->
+        <div class="gravity-box">
+          <div id="gravity-pad" class="gravity-pad" title="Drag to tilt orbital gravity; double-tap for Zero-G">
+            <div class="gravity-ring"></div>
+            <div class="gravity-crosshair"></div>
+            <div id="gravity-puck" class="gravity-puck"></div>
+          </div>
+          <div id="gravity-readout" class="gravity-label">ZERO-G</div>
+          <div class="tilt-row">
+            <button id="btn-tilt" type="button" class="tilt-mini-btn" title="Toggle Phone Tilt Gravity">📱 Tilt: OFF</button>
+            <button id="btn-calibrate" type="button" class="tilt-mini-btn" title="Calibrate Neutral Tilt Angle">🎯 Zero</button>
+          </div>
+        </div>
+
+        <!-- Sliders -->
+        <div class="sliders-grid">
+          <div class="slider-item">
+            <div class="slider-head">
+              <span>Fractal Fold Depth</span>
+              <span id="val-fold" class="slider-val">5.2</span>
+            </div>
+            <input id="sl-fold" type="range" min="1.0" max="8.0" step="0.1" value="5.2" />
+          </div>
+
+          <div class="slider-item">
+            <div class="slider-head">
+              <span>Viscosity &amp; Drag</span>
+              <span id="val-visc" class="slider-val">0.46</span>
+            </div>
+            <input id="sl-visc" type="range" min="0.05" max="0.96" step="0.01" value="0.46" />
+          </div>
+
+          <div class="slider-item">
+            <div class="slider-head">
+              <span>Elastic Memory</span>
+              <span id="val-elastic" class="slider-val">0.64</span>
+            </div>
+            <input id="sl-elastic" type="range" min="0.0" max="1.0" step="0.01" value="0.64" />
+          </div>
+
+          <div class="slider-item">
+            <div class="slider-head">
+              <span>Iridescence &amp; Schlieren</span>
+              <span id="val-irid" class="slider-val">0.82</span>
+            </div>
+            <input id="sl-irid" type="range" min="0.0" max="1.5" step="0.01" value="0.82" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // =========================================================================
+  // 1. UI-FIRST DECOUPLED STATE & PRESET DEFINITIONS (ZERO WEBGL DEPENDENCIES)
+  // =========================================================================
+  const PRESETS = {
+    fused: {
+      name: 'Ω FUSED FRACTAL',
+      foldDepth: 5.2,
+      viscosity: 0.46,
+      elasticity: 0.64,
+      iridescence: 0.82,
+      shearThicken: 0.45,
+      schlierenGain: 0.72,
+      sigmaA: [0.22, 1.85, 0.55], // Hot Bubblegum Pink
+      sigmaB: [1.85, 0.22, 0.35], // Neon Cyan Slime
+      sigmaC: [0.16, 1.25, 2.25], // Sunset Amber-Violet
+      filmThickness: 1.45,
+      palettePhase: 0.12
+    },
+    honey: {
+      name: 'HONEY HEIST',
+      foldDepth: 3.8,
+      viscosity: 0.86,
+      elasticity: 0.30,
+      iridescence: 0.36,
+      shearThicken: 0.18,
+      schlierenGain: 0.42,
+      sigmaA: [0.12, 0.72, 2.55], // Deep Golden Amber
+      sigmaB: [0.24, 1.15, 2.85], // Spiced Acacia Honey
+      sigmaC: [0.08, 0.42, 1.95], // Sunlit Nectar
+      filmThickness: 1.10,
+      palettePhase: 0.58
+    },
+    slime: {
+      name: 'SLIME SYNCHRONY',
+      foldDepth: 5.8,
+      viscosity: 0.38,
+      elasticity: 0.88,
+      iridescence: 0.68,
+      shearThicken: 0.25,
+      schlierenGain: 0.55,
+      sigmaA: [0.22, 1.85, 0.55], // Hot Bubblegum Pink
+      sigmaB: [1.85, 0.22, 0.35], // Neon Cyan Slime
+      sigmaC: [0.75, 1.65, 0.15], // Ultraviolet Jelly
+      filmThickness: 1.25,
+      palettePhase: 0.05
+    },
+    molten: {
+      name: 'MOLTEN MEMORY',
+      foldDepth: 4.8,
+      viscosity: 0.58,
+      elasticity: 0.42,
+      iridescence: 0.92,
+      shearThicken: 0.15,
+      schlierenGain: 0.80,
+      sigmaA: [0.15, 1.35, 2.40], // Sunset Magma Orange
+      sigmaB: [0.65, 2.20, 0.45], // Thermal Ultraviolet
+      sigmaC: [0.10, 0.55, 1.80], // Incandescent Gold
+      filmThickness: 1.75,
+      palettePhase: 0.42
+    },
+    custard: {
+      name: 'CUSTARD CATASTROPHE',
+      foldDepth: 4.2,
+      viscosity: 0.52,
+      elasticity: 0.82,
+      iridescence: 0.44,
+      shearThicken: 0.92,
+      schlierenGain: 0.38,
+      sigmaA: [0.14, 0.24, 1.55], // Pastel Lemon Oobleck
+      sigmaB: [0.65, 1.35, 0.28], // Soft Ultraviolet Cream
+      sigmaC: [0.20, 0.72, 1.15], // Peachy Custard
+      filmThickness: 0.95,
+      palettePhase: 0.82
+    },
+    schlieren: {
+      name: 'SCHLIEREN ORACLE',
+      foldDepth: 6.8,
+      viscosity: 0.32,
+      elasticity: 0.56,
+      iridescence: 1.28,
+      shearThicken: 0.20,
+      schlierenGain: 1.35,
+      sigmaA: [1.35, 0.45, 0.25], // Benthic Abyssal Cyan
+      sigmaB: [0.55, 1.55, 0.22], // Spectral Indigo
+      sigmaC: [0.25, 0.95, 0.75], // Prismatic Pearl
+      filmThickness: 2.15,
+      palettePhase: 0.28
+    }
+  };
+
+  const GOO_STATE = window.GOO_STATE = {
+    presetKey: 'fused',
+    foldDepth: PRESETS.fused.foldDepth,
+    viscosity: PRESETS.fused.viscosity,
+    elasticity: PRESETS.fused.elasticity,
+    iridescence: PRESETS.fused.iridescence,
+    shearThicken: PRESETS.fused.shearThicken,
+    schlierenGain: PRESETS.fused.schlierenGain,
+    sigmaA: [...PRESETS.fused.sigmaA],
+    sigmaB: [...PRESETS.fused.sigmaB],
+    sigmaC: [...PRESETS.fused.sigmaC],
+    filmThickness: PRESETS.fused.filmThickness,
+    palettePhase: PRESETS.fused.palettePhase,
+    gravity: [0.0, 0.0],
+    tiltEnabled: false,
+    tiltRaw: [0.0, 0.0],
+    tiltZero: [0.0, 0.0],
+    tiltSmooth: [0.0, 0.0],
+    tiltNeedsZeroCapture: false,
+    tiltReceivedData: false,
+    time: 0.0,
+    vortexImpulse: 0.85,
+    pointers: new Map(),
+    pinchDist: 0,
+    resetRequested: false
+  };
+
+  // =========================================================================
+  // 2. CPU 48x48 EULERIAN + LAGRANGIAN VORTEX FLUID FIELD (UNIVERSAL & FAST)
+  // =========================================================================
+  const GRID = 48;
+  const CELL_COUNT = GRID * GRID;
+  const vx = new Float32Array(CELL_COUNT);
+  const vy = new Float32Array(CELL_COUNT);
+  const vxTmp = new Float32Array(CELL_COUNT);
+  const vyTmp = new Float32Array(CELL_COUNT);
+  const dispX = new Float32Array(CELL_COUNT); // Elastic covector displacement X
+  const dispY = new Float32Array(CELL_COUNT); // Elastic covector displacement Y
+  const thick = new Float32Array(CELL_COUNT);
+  const phase = new Float32Array(CELL_COUNT);
+  const fluidTexBytes = new Uint8Array(CELL_COUNT * 4);
+
+  function seedFluidField() {
+    for (let y = 0; y < GRID; y++) {
+      const ny = (y + 0.5) / GRID - 0.5;
+      for (let x = 0; x < GRID; x++) {
+        const nx = (x + 0.5) / GRID - 0.5;
+        const idx = y * GRID + x;
+        const r = Math.hypot(nx, ny) * 2.2 + 0.08;
+        const a = Math.atan2(ny, nx);
+
+        // Multi-vortex counter-rotating spiral field
+        const swirl = Math.exp(-r * 1.15) * 0.85;
+        vx[idx] = -ny * swirl * 2.4 + Math.cos(a * 3.0 + r * 5.0) * 0.14;
+        vy[idx] =  nx * swirl * 2.4 + Math.sin(a * 3.0 + r * 5.0) * 0.14;
+        dispX[idx] = Math.cos(a * 2.0 + r * 4.0) * 0.16 * Math.exp(-r * 0.9);
+        dispY[idx] = Math.sin(a * 2.0 + r * 4.0) * 0.16 * Math.exp(-r * 0.9);
+        thick[idx] = Math.min(1.0, Math.max(0.15, 0.65 + 0.32 * Math.sin(a * 3.0 + r * 6.5) * Math.exp(-r * 0.65)));
+        phase[idx] = ((0.5 + 0.35 * Math.sin(a * 2.0 - r * 5.5)) % 1.0 + 1.0) % 1.0;
+      }
+    }
+  }
+
+  function stepFluidField(dt) {
+    if (GOO_STATE.resetRequested) {
+      seedFluidField();
+      GOO_STATE.resetRequested = false;
+    }
+
+    const visc = GOO_STATE.viscosity;
+    const elas = GOO_STATE.elasticity;
+    const shear = GOO_STATE.shearThicken;
+    const gx = GOO_STATE.gravity[0];
+    const gy = GOO_STATE.gravity[1];
+    const impulse = GOO_STATE.vortexImpulse;
+    const t = GOO_STATE.time;
+
+    // Apply pointer drags, gravity, & vortex impulses
+    for (let y = 0; y < GRID; y++) {
+      const ny = (y + 0.5) / GRID - 0.5;
+      for (let x = 0; x < GRID; x++) {
+        const nx = (x + 0.5) / GRID - 0.5;
+        const idx = y * GRID + x;
+
+        let u = vx[idx];
+        let v = vy[idx];
+
+        // Shear-thickening non-Newtonian damping (Custard Catastrophe)
+        const spd2 = u * u + v * v;
+        const shearDamp = 1.0 / (1.0 + shear * spd2 * 4.5);
+        u *= shearDamp;
+        v *= shearDamp;
+
+        // Orbital / Tilt gravity + viscoelastic spring recoil
+        u += (gx * 0.92 - dispX[idx] * elas * 2.4) * dt;
+        v += (gy * 0.92 - dispY[idx] * elas * 2.4) * dt;
+
+        // Gentle benthic self-sustaining curl
+        const r = Math.hypot(nx, ny) + 0.08;
+        const amb = Math.exp(-r * 2.8) * 0.16 * Math.sin(t * 0.7);
+        u += -ny * amb * dt * 4.0;
+        v +=  nx * amb * dt * 4.0;
+
+        // Center spiral pulse burst
+        if (impulse > 0.002) {
+          const burst = Math.exp(-r * 5.5) * impulse;
+          u += (-ny / r * 2.6 + nx / r * 0.55) * burst * dt * 14.0;
+          v += ( nx / r * 2.6 + ny / r * 0.55) * burst * dt * 14.0;
+          thick[idx] = Math.min(1.0, thick[idx] + burst * 0.18);
+          phase[idx] = (phase[idx] + burst * 0.22) % 1.0;
+        }
+
+        // Interactive multi-touch / mouse finger drag
+        for (const p of GOO_STATE.pointers.values()) {
+          if (!p.active) continue;
+          const dx = (x + 0.5) / GRID - p.x;
+          const dy = (y + 0.5) / GRID - p.y;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < 0.09) {
+            const w = Math.exp(-d2 * 48.0);
+            u += p.dx * w * 18.0 - dy * w * 2.2;
+            v += p.dy * w * 18.0 + dx * w * 2.2;
+            thick[idx] = Math.min(1.0, thick[idx] + w * 0.08);
+            phase[idx] = (phase[idx] + w * 0.06) % 1.0;
+          }
+        }
+
+        // Clamp max velocity for strict stability
+        const mag = Math.hypot(u, v);
+        if (mag > 2.2) {
+          u = (u / mag) * 2.2;
+          v = (v / mag) * 2.2;
+        }
+
+        vxTmp[idx] = u;
+        vyTmp[idx] = v;
+      }
+    }
+
+    // Viscous neighbor diffusion + semi-Lagrangian advection + elastic covector integration
+    const diffAlpha = 0.06 + visc * 0.16;
+    const damp = 0.991 - visc * 0.012;
+    const relax = 0.02 + (1.0 - elas) * 0.08;
+
+    for (let y = 0; y < GRID; y++) {
+      const y0 = Math.max(0, y - 1);
+      const y1 = Math.min(GRID - 1, y + 1);
+      for (let x = 0; x < GRID; x++) {
+        const x0 = Math.max(0, x - 1);
+        const x1 = Math.min(GRID - 1, x + 1);
+        const idx = y * GRID + x;
+
+        const uAvg = 0.25 * (vxTmp[y * GRID + x0] + vxTmp[y * GRID + x1] + vxTmp[y0 * GRID + x] + vxTmp[y1 * GRID + x]);
+        const vAvg = 0.25 * (vyTmp[y * GRID + x0] + vyTmp[y * GRID + x1] + vyTmp[y0 * GRID + x] + vyTmp[y1 * GRID + x]);
+
+        let u = (vxTmp[idx] + diffAlpha * uAvg) / (1.0 + diffAlpha);
+        let v = (vyTmp[idx] + diffAlpha * vAvg) / (1.0 + diffAlpha);
+
+        // Soft tank wall reflection
+        if (x <= 1 || x >= GRID - 2) u *= -0.45;
+        if (y <= 1 || y >= GRID - 2) v *= -0.45;
+
+        u *= damp;
+        v *= damp;
+        vx[idx] = u;
+        vy[idx] = v;
+
+        // Integrate elastic covector displacement
+        dispX[idx] = Math.max(-0.5, Math.min(0.5, dispX[idx] * (1.0 - relax) + u * dt * 0.85));
+        dispY[idx] = Math.max(-0.5, Math.min(0.5, dispY[idx] * (1.0 - relax) + v * dt * 0.85));
+
+        // Gently relax thickness toward rich sculptural equilibrium
+        thick[idx] = thick[idx] * 0.996 + 0.56 * 0.004;
+        phase[idx] = (phase[idx] + (Math.abs(u) + Math.abs(v)) * dt * 0.08) % 1.0;
+
+        // Pack into RGBA Uint8 texture
+        const bIdx = idx * 4;
+        fluidTexBytes[bIdx + 0] = Math.max(0, Math.min(255, Math.round((dispX[idx] + 0.5) * 255)));
+        fluidTexBytes[bIdx + 1] = Math.max(0, Math.min(255, Math.round((dispY[idx] + 0.5) * 255)));
+        fluidTexBytes[bIdx + 2] = Math.max(0, Math.min(255, Math.round(thick[idx] * 255)));
+        fluidTexBytes[bIdx + 3] = Math.max(0, Math.min(255, Math.round(phase[idx] * 255)));
+      }
+    }
+
+    // Decay pointer deltas and vortex impulse
+    for (const p of GOO_STATE.pointers.values()) {
+      p.dx *= 0.6;
+      p.dy *= 0.6;
+    }
+    GOO_STATE.vortexImpulse *= 0.86;
+  }
+
+  seedFluidField();
+
+  // =========================================================================
+  // 3. ATTACH ALL UI LISTENERS IMMEDIATELY (BEFORE GRAPHICS & SENSOR INIT)
+  // =========================================================================
+  const toastEl = document.getElementById('toast');
+  let toastTimer = null;
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1450);
+  }
+
+  const slFold = document.getElementById('sl-fold');
+  const slVisc = document.getElementById('sl-visc');
+  const slElastic = document.getElementById('sl-elastic');
+  const slIrid = document.getElementById('sl-irid');
+
+  const valFold = document.getElementById('val-fold');
+  const valVisc = document.getElementById('val-visc');
+  const valElastic = document.getElementById('val-elastic');
+  const valIrid = document.getElementById('val-irid');
+
+  function syncSlidersFromState() {
+    slFold.value = GOO_STATE.foldDepth.toFixed(1);
+    valFold.textContent = GOO_STATE.foldDepth.toFixed(1);
+
+    slVisc.value = GOO_STATE.viscosity.toFixed(2);
+    valVisc.textContent = GOO_STATE.viscosity.toFixed(2);
+
+    slElastic.value = GOO_STATE.elasticity.toFixed(2);
+    valElastic.textContent = GOO_STATE.elasticity.toFixed(2);
+
+    slIrid.value = GOO_STATE.iridescence.toFixed(2);
+    valIrid.textContent = GOO_STATE.iridescence.toFixed(2);
+  }
+
+  slFold.addEventListener('input', () => {
+    GOO_STATE.foldDepth = parseFloat(slFold.value);
+    valFold.textContent = GOO_STATE.foldDepth.toFixed(1);
+  });
+
+  slVisc.addEventListener('input', () => {
+    GOO_STATE.viscosity = parseFloat(slVisc.value);
+    valVisc.textContent = GOO_STATE.viscosity.toFixed(2);
+  });
+
+  slElastic.addEventListener('input', () => {
+    GOO_STATE.elasticity = parseFloat(slElastic.value);
+    valElastic.textContent = GOO_STATE.elasticity.toFixed(2);
+  });
+
+  slIrid.addEventListener('input', () => {
+    GOO_STATE.iridescence = parseFloat(slIrid.value);
+    valIrid.textContent = GOO_STATE.iridescence.toFixed(2);
+  });
+
+  // Preset Pill Selection
+  const presetStrip = document.getElementById('preset-strip');
+  function selectPreset(key) {
+    const p = PRESETS[key];
+    if (!p) return;
+    document.querySelectorAll('.preset-pill').forEach(el => {
+      el.classList.toggle('active', el.dataset.preset === key);
+    });
+    GOO_STATE.presetKey = key;
+    GOO_STATE.foldDepth = p.foldDepth;
+    GOO_STATE.viscosity = p.viscosity;
+    GOO_STATE.elasticity = p.elasticity;
+    GOO_STATE.iridescence = p.iridescence;
+    GOO_STATE.shearThicken = p.shearThicken;
+    GOO_STATE.schlierenGain = p.schlierenGain;
+    GOO_STATE.sigmaA = [...p.sigmaA];
+    GOO_STATE.sigmaB = [...p.sigmaB];
+    GOO_STATE.sigmaC = [...p.sigmaC];
+    GOO_STATE.filmThickness = p.filmThickness;
+    GOO_STATE.palettePhase = p.palettePhase;
+    GOO_STATE.vortexImpulse = Math.max(GOO_STATE.vortexImpulse, 0.65);
+
+    syncSlidersFromState();
+    showToast(p.name);
+  }
+
+  presetStrip.addEventListener('click', (e) => {
+    const btn = e.target.closest('.preset-pill');
+    if (btn && btn.dataset.preset) {
+      selectPreset(btn.dataset.preset);
+    }
+  });
+
+  // Orbital Gravity Dial + Isolated Tilt Sensor Layer
+  const gravityPad = document.getElementById('gravity-pad');
+  const gravityPuck = document.getElementById('gravity-puck');
+  const gravityReadout = document.getElementById('gravity-readout');
+  const btnTilt = document.getElementById('btn-tilt');
+  const btnCalibrate = document.getElementById('btn-calibrate');
+  let draggingGravity = false;
+
+  function setGravityUI(nx, ny, sourceTag) {
+    const clampedX = Math.max(-1, Math.min(1, nx));
+    const clampedY = Math.max(-1, Math.min(1, ny));
+    const mag = Math.hypot(clampedX, clampedY);
+
+    if (mag < 0.12) {
+      GOO_STATE.gravity = [0, 0];
+      gravityPuck.style.left = '50%';
+      gravityPuck.style.top = '50%';
+      gravityReadout.textContent = sourceTag === 'TILT' ? 'TILT ZERO-G' : 'ZERO-G';
+    } else {
+      GOO_STATE.gravity = [clampedX * 1.45, -clampedY * 1.45];
+      gravityPuck.style.left = `${50 + clampedX * 42}%`;
+      gravityPuck.style.top = `${50 + clampedY * 42}%`;
+      if (sourceTag === 'TILT') {
+        const sx = (clampedX >= 0 ? '+' : '') + clampedX.toFixed(1);
+        const sy = (-clampedY >= 0 ? '+' : '') + (-clampedY).toFixed(1);
+        gravityReadout.textContent = `TILT ${sx},${sy}`;
+      } else {
+        const deg = Math.round((Math.atan2(clampedY, clampedX) * 180) / Math.PI);
+        gravityReadout.textContent = `G ${deg}°`;
+      }
+    }
+  }
+
+  function disableTiltMode(silent) {
+    GOO_STATE.tiltEnabled = false;
+    btnTilt.classList.remove('active');
+    btnTilt.textContent = '📱 Tilt: OFF';
+    if (!silent) showToast('📱 TILT SENSOR OFF (MANUAL DIAL)');
+  }
+
+  function updateGravityFromClientXY(clientX, clientY) {
+    if (GOO_STATE.tiltEnabled) {
+      disableTiltMode(true);
+    }
+    const rect = gravityPad.getBoundingClientRect();
+    const cx = rect.left + rect.width * 0.5;
+    const cy = rect.top + rect.height * 0.5;
+    const maxR = Math.max(rect.width * 0.42, 1);
+
+    let dx = clientX - cx;
+    let dy = clientY - cy;
+    const dist = Math.hypot(dx, dy);
+    if (dist > maxR) {
+      dx = (dx / dist) * maxR;
+      dy = (dy / dist) * maxR;
+    }
+
+    setGravityUI(dx / maxR, dy / maxR, 'DIAL');
+  }
+
+  let lastGravTap = 0;
+  gravityPad.addEventListener('pointerdown', (e) => {
+    draggingGravity = true;
+    try { gravityPad.setPointerCapture(e.pointerId); } catch (_) {}
+    updateGravityFromClientXY(e.clientX, e.clientY);
+    const now = performance.now();
+    if (now - lastGravTap < 280) {
+      setGravityUI(0, 0, 'DIAL');
+      showToast('ZERO-G ORBITAL LOCK');
+    }
+    lastGravTap = now;
+  });
+
+  gravityPad.addEventListener('pointermove', (e) => {
+    if (!draggingGravity) return;
+    updateGravityFromClientXY(e.clientX, e.clientY);
+  });
+
+  gravityPad.addEventListener('pointerup', () => { draggingGravity = false; });
+  gravityPad.addEventListener('pointercancel', () => { draggingGravity = false; });
+
+  // Isolated Accelerometer & Gyroscope Tilt Sensor Guard (never blocks boot or rendering)
+  let sensorListenersBound = false;
+
+  function getScreenAngle() {
+    try {
+      if (window.screen && window.screen.orientation && typeof window.screen.orientation.angle === 'number') {
+        return window.screen.orientation.angle;
+      }
+      if (typeof window.orientation === 'number') {
+        return window.orientation;
+      }
+    } catch (_) {}
+    return 0;
+  }
+
+  function rotateForScreenOrientation(rawX, rawY) {
+    const angle = ((getScreenAngle() % 360) + 360) % 360;
+    if (angle === 90) return [-rawY, rawX];
+    if (angle === 270) return [rawY, -rawX];
+    if (angle === 180) return [-rawX, -rawY];
+    return [rawX, rawY];
+  }
+
+  function applyTiltSample(nx, ny) {
+    GOO_STATE.tiltReceivedData = true;
+    GOO_STATE.tiltRaw[0] = nx;
+    GOO_STATE.tiltRaw[1] = ny;
+
+    if (GOO_STATE.tiltNeedsZeroCapture) {
+      GOO_STATE.tiltZero[0] = nx;
+      GOO_STATE.tiltZero[1] = ny;
+      GOO_STATE.tiltNeedsZeroCapture = false;
+    }
+
+    if (!GOO_STATE.tiltEnabled || draggingGravity) return;
+
+    const relX = Math.max(-1, Math.min(1, nx - GOO_STATE.tiltZero[0]));
+    const relY = Math.max(-1, Math.min(1, ny - GOO_STATE.tiltZero[1]));
+
+    // Exponential low-pass smoothing to eliminate hand tremor
+    GOO_STATE.tiltSmooth[0] = GOO_STATE.tiltSmooth[0] * 0.78 + relX * 0.22;
+    GOO_STATE.tiltSmooth[1] = GOO_STATE.tiltSmooth[1] * 0.78 + relY * 0.22;
+
+    setGravityUI(GOO_STATE.tiltSmooth[0], GOO_STATE.tiltSmooth[1], 'TILT');
+  }
+
+  function bindMotionSensorsSafely() {
+    if (sensorListenersBound) return;
+    sensorListenersBound = true;
+
+    try {
+      window.addEventListener('deviceorientation', (e) => {
+        try {
+          if (!GOO_STATE.tiltEnabled) return;
+          if (typeof e.gamma !== 'number' || typeof e.beta !== 'number') return;
+          const rawX = Math.max(-1, Math.min(1, e.gamma / 36.0));
+          const rawY = Math.max(-1, Math.min(1, (e.beta - 35.0) / 36.0));
+          const [ox, oy] = rotateForScreenOrientation(rawX, rawY);
+          applyTiltSample(ox, oy);
+        } catch (_) {}
+      }, { passive: true });
+    } catch (_) {}
+
+    try {
+      window.addEventListener('devicemotion', (e) => {
+        try {
+          if (!GOO_STATE.tiltEnabled) return;
+          const acc = e.accelerationIncludingGravity;
+          if (!acc || typeof acc.x !== 'number' || typeof acc.y !== 'number') return;
+          const rawX = Math.max(-1, Math.min(1, -acc.x / 6.5));
+          const rawY = Math.max(-1, Math.min(1, acc.y / 6.5));
+          const [ox, oy] = rotateForScreenOrientation(rawX, rawY);
+          applyTiltSample(ox, oy);
+        } catch (_) {}
+      }, { passive: true });
+    } catch (_) {}
+  }
+
+  async function toggleTiltSensor() {
+    if (GOO_STATE.tiltEnabled) {
+      disableTiltMode(false);
+      return;
+    }
+
+    try {
+      // iOS 13+ permission request if present
+      if (typeof window.DeviceOrientationEvent !== 'undefined' &&
+          typeof window.DeviceOrientationEvent.requestPermission === 'function') {
+        const perm = await window.DeviceOrientationEvent.requestPermission();
+        if (perm !== 'granted') {
+          showToast('⚠️ TILT BLOCKED — USE ORBITAL DIAL');
+          return;
+        }
+      } else if (typeof window.DeviceMotionEvent !== 'undefined' &&
+                 typeof window.DeviceMotionEvent.requestPermission === 'function') {
+        const perm = await window.DeviceMotionEvent.requestPermission();
+        if (perm !== 'granted') {
+          showToast('⚠️ MOTION BLOCKED — USE ORBITAL DIAL');
+          return;
+        }
+      }
+
+      bindMotionSensorsSafely();
+      GOO_STATE.tiltEnabled = true;
+      GOO_STATE.tiltNeedsZeroCapture = true;
+      GOO_STATE.tiltReceivedData = false;
+      btnTilt.classList.add('active');
+      btnTilt.textContent = '📱 Tilt: ON';
+      showToast('📱 PHONE TILT GRAVITY ACTIVE');
+
+      // Warn gently if desktop/restricted iframe provides no sensor telemetry
+      setTimeout(() => {
+        if (GOO_STATE.tiltEnabled && !GOO_STATE.tiltReceivedData) {
+          showToast('ℹ️ NO SENSOR SIGNAL — DRAG DIAL OR TILT DEVICE');
+        }
+      }, 1500);
+    } catch (_) {
+      disableTiltMode(true);
+      showToast('⚠️ SENSORS UNAVAILABLE — USE DIAL');
+    }
+  }
+
+  btnTilt.addEventListener('click', () => {
+    toggleTiltSensor();
+  });
+
+  btnCalibrate.addEventListener('click', () => {
+    if (GOO_STATE.tiltEnabled) {
+      GOO_STATE.tiltZero[0] = GOO_STATE.tiltRaw[0];
+      GOO_STATE.tiltZero[1] = GOO_STATE.tiltRaw[1];
+      GOO_STATE.tiltSmooth = [0, 0];
+      setGravityUI(0, 0, 'TILT');
+      showToast('🎯 NEUTRAL TILT ZEROED');
+    } else {
+      setGravityUI(0, 0, 'DIAL');
+      showToast('🎯 ORBITAL ZERO-G CENTERED');
+    }
+  });
+
+  // Action Buttons
+  document.getElementById('btn-pulse').addEventListener('click', () => {
+    GOO_STATE.vortexImpulse = Math.min(GOO_STATE.vortexImpulse + 1.4, 2.4);
+    showToast('🌀 FRACTAL PULSE INJECTED');
+  });
+
+  document.getElementById('btn-mutate').addEventListener('click', () => {
+    const tmp = GOO_STATE.sigmaA;
+    GOO_STATE.sigmaA = GOO_STATE.sigmaB;
+    GOO_STATE.sigmaB = GOO_STATE.sigmaC;
+    GOO_STATE.sigmaC = tmp;
+    GOO_STATE.palettePhase = (GOO_STATE.palettePhase + 0.27) % 1.0;
+    GOO_STATE.filmThickness = 0.85 + ((GOO_STATE.filmThickness + 0.45) % 1.5);
+    showToast('🌈 BEER-LAMBERT SPECTRUM MUTATED');
+  });
+
+  document.getElementById('btn-reset').addEventListener('click', () => {
+    GOO_STATE.resetRequested = true;
+    GOO_STATE.vortexImpulse = 0.95;
+    showToast('🫧 TANK RE-SEEDED');
+  });
+
+  // Collapsible Drawer (starts collapsed on narrow mobile screens < 600px)
+  const drawerShell = document.getElementById('drawer-shell');
+  const btnCollapse = document.getElementById('btn-collapse');
+
+  function setDrawerCollapsed(collapsed) {
+    drawerShell.classList.toggle('collapsed', collapsed);
+    btnCollapse.textContent = collapsed ? '▴ Controls' : '▾ Controls';
+  }
+
+  setDrawerCollapsed(window.innerWidth < 600);
+
+  btnCollapse.addEventListener('click', () => {
+    setDrawerCollapsed(!drawerShell.classList.contains('collapsed'));
+  });
+
+  // Hide / Show HUD
+  const hudTop = document.getElementById('hud-top');
+  const hudBottom = document.getElementById('hud-bottom');
+  const hideHudBtn = document.getElementById('hide-hud-btn');
+  const showHudBtn = document.getElementById('show-hud-btn');
+
+  hideHudBtn.addEventListener('click', () => {
+    hudTop.classList.add('hidden-hud');
+    hudBottom.classList.add('hidden-hud');
+    showHudBtn.classList.add('visible');
+  });
+
+  showHudBtn.addEventListener('click', () => {
+    hudTop.classList.remove('hidden-hud');
+    hudBottom.classList.remove('hidden-hud');
+    showHudBtn.classList.remove('visible');
+  });
+
+  // Canvas Touch / Mouse Interaction (attached to both canvases)
+  function attachCanvasInteractions(el) {
+    let lastCanvasTap = 0;
+
+    function getNorm(clientX, clientY) {
+      const rect = el.getBoundingClientRect();
+      return {
+        x: (clientX - rect.left) / Math.max(rect.width, 1),
+        y: 1.0 - (clientY - rect.top) / Math.max(rect.height, 1)
+      };
+    }
+
+    el.addEventListener('pointerdown', (e) => {
+      try { el.setPointerCapture(e.pointerId); } catch (_) {}
+      const pos = getNorm(e.clientX, e.clientY);
+      GOO_STATE.pointers.set(e.pointerId, {
+        x: pos.x,
+        y: pos.y,
+        dx: 0,
+        dy: 0,
+        active: true
+      });
+
+      const now = performance.now();
+      if (now - lastCanvasTap < 280) {
+        GOO_STATE.vortexImpulse = Math.min(GOO_STATE.vortexImpulse + 1.25, 2.2);
+        showToast('🌀 SPIRAL PULSE');
+      }
+      lastCanvasTap = now;
+    });
+
+    el.addEventListener('pointermove', (e) => {
+      const ptr = GOO_STATE.pointers.get(e.pointerId);
+      if (!ptr || !ptr.active) return;
+      const pos = getNorm(e.clientX, e.clientY);
+      ptr.dx = (pos.x - ptr.x) * 1.5;
+      ptr.dy = (pos.y - ptr.y) * 1.5;
+      ptr.x = pos.x;
+      ptr.y = pos.y;
+
+      if (GOO_STATE.pointers.size === 2) {
+        const pts = Array.from(GOO_STATE.pointers.values());
+        const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+        if (GOO_STATE.pinchDist > 0) {
+          const delta = (dist - GOO_STATE.pinchDist) * 7.5;
+          GOO_STATE.foldDepth = Math.min(8.0, Math.max(1.0, GOO_STATE.foldDepth + delta));
+          syncSlidersFromState();
+        }
+        GOO_STATE.pinchDist = dist;
+      }
+    });
+
+    function endPtr(e) {
+      GOO_STATE.pointers.delete(e.pointerId);
+      if (GOO_STATE.pointers.size < 2) {
+        GOO_STATE.pinchDist = 0;
+      }
+    }
+
+    el.addEventListener('pointerup', endPtr);
+    el.addEventListener('pointercancel', endPtr);
+
+    el.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = -Math.sign(e.deltaY) * 0.25;
+      GOO_STATE.foldDepth = Math.min(8.0, Math.max(1.0, GOO_STATE.foldDepth + delta));
+      syncSlidersFromState();
+    }, { passive: false });
+  }
+
+  const simCanvas = document.getElementById('sim-canvas');
+  const fallbackCanvas = document.getElementById('fallback-canvas');
+  attachCanvasInteractions(simCanvas);
+  attachCanvasInteractions(fallbackCanvas);
+  syncSlidersFromState();
+
+  // =========================================================================
+  // 4. SINGLE-PASS WEBGL2 -> WEBGL1 -> 2D CANVAS GUARANTEED RENDER ENGINE
+  // =========================================================================
+  const engineBadge = document.getElementById('engine-badge');
+
+  function start2DFallback() {
+    simCanvas.style.display = 'none';
+    fallbackCanvas.style.display = 'block';
+    engineBadge.textContent = 'GooCore 2D Canvas Mode';
+    const ctx = fallbackCanvas.getContext('2d');
+    let lastT = performance.now();
+
+    function render2D(now) {
+      const dt = Math.min(Math.max((now - lastT) * 0.001, 0.001), 0.033);
+      lastT = now;
+      GOO_STATE.time += dt;
+      stepFluidField(dt);
+
+      const cw = fallbackCanvas.clientWidth || window.innerWidth || 360;
+      const ch = fallbackCanvas.clientHeight || window.innerHeight || 640;
+      if (fallbackCanvas.width !== cw || fallbackCanvas.height !== ch) {
+        fallbackCanvas.width = cw;
+        fallbackCanvas.height = ch;
+      }
+
+      ctx.fillStyle = '#070312';
+      ctx.fillRect(0, 0, cw, ch);
+
+      const cx = cw * 0.5;
+      const cy = ch * 0.5;
+      const minDim = Math.min(cw, ch);
+      const folds = Math.round(GOO_STATE.foldDepth);
+
+      // Render recursive spiral goo tendrils driven by live 48x48 fluid field
+      for (let layer = 0; layer < folds; layer++) {
+        const frac = layer / Math.max(folds, 1);
+        const hue = (GOO_STATE.palettePhase * 360 + frac * 220 + GOO_STATE.time * 18) % 360;
+        ctx.strokeStyle = `hsla(${hue}, 92%, 62%, ${0.35 + 0.35 * (1.0 - frac)})`;
+        ctx.lineWidth = Math.max(2, (1.0 - frac * 0.65) * 14);
+        ctx.beginPath();
+
+        const steps = 160;
+        for (let i = 0; i <= steps; i++) {
+          const u = i / steps;
+          const ang = u * Math.PI * 6.0 + layer * 1.15 + GOO_STATE.time * 0.35;
+          const rad = (0.08 + u * 0.44) * minDim * (1.0 - frac * 0.35);
+
+          const gx = Math.max(0, Math.min(GRID - 1, Math.floor((0.5 + Math.cos(ang) * 0.35) * GRID)));
+          const gy = Math.max(0, Math.min(GRID - 1, Math.floor((0.5 + Math.sin(ang) * 0.35) * GRID)));
+          const idx = gy * GRID + gx;
+
+          const px = cx + Math.cos(ang) * rad + dispX[idx] * minDim * 0.65;
+          const py = cy + Math.sin(ang) * rad - dispY[idx] * minDim * 0.65;
+
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+      }
+
+      requestAnimationFrame(render2D);
+    }
+
+    requestAnimationFrame(render2D);
+  }
+
+  function initWebGLEngine() {
+    let gl = simCanvas.getContext('webgl2', { alpha: false, antialias: false, depth: false, stencil: false });
+    let isWebGL2 = true;
+
+    if (!gl) {
+      gl = simCanvas.getContext('webgl', { alpha: false, antialias: false, depth: false, stencil: false }) ||
+           simCanvas.getContext('experimental-webgl');
+      isWebGL2 = false;
+    }
+
+    if (!gl) {
+      start2DFallback();
+      return;
+    }
+
+    // Single-pass vertex & fragment shaders (WebGL2 ES 3.00 and WebGL1 ES 1.00 variants)
+    const vertSrc = isWebGL2
+      ? `#version 300 es
+         precision highp float;
+         layout(location = 0) in vec2 aPos;
+         out vec2 vUv;
+         void main() {
+           vUv = aPos * 0.5 + 0.5;
+           gl_Position = vec4(aPos, 0.0, 1.0);
+         }`
+      : `precision highp float;
+         attribute vec2 aPos;
+         varying vec2 vUv;
+         void main() {
+           vUv = aPos * 0.5 + 0.5;
+           gl_Position = vec4(aPos, 0.0, 1.0);
+         }`;
+
+    const fragSrc = isWebGL2
+      ? `#version 300 es
+         precision highp float;
+         precision highp int;
+         precision highp sampler2D;
+
+         in vec2 vUv;
+         out vec4 fragColor;
+
+         uniform sampler2D uFluidTex;
+         uniform vec2 uResolution;
+         uniform float uTime;
+         uniform float uFoldDepth;
+         uniform float uIridescence;
+         uniform float uSchlierenGain;
+         uniform float uFilmThickness;
+         uniform float uPalettePhase;
+         uniform vec3 uSigmaA;
+         uniform vec3 uSigmaB;
+         uniform vec3 uSigmaC;
+
+         vec3 thinFilmIridescence(float cosTheta, float opdScale) {
+           float opd = 2.0 * 1.38 * opdScale * clamp(cosTheta, 0.08, 1.0);
+           vec3 phase = 6.2831853 * opd / vec3(0.65, 0.53, 0.45) + uPalettePhase * 6.2831853;
+           return 0.5 + 0.5 * cos(phase);
+         }
+
+         vec4 evaluateSlimeFractal(vec2 uv, vec4 fluidSample) {
+           float aspect = uResolution.x / max(uResolution.y, 1.0);
+           vec2 disp = (fluidSample.xy - 0.5) * 1.35;
+           float fluidThick = fluidSample.z;
+           float fluidPhase = fluidSample.w;
+
+           vec2 z = (uv - 0.5 + disp * 0.55) * vec2(aspect, 1.0) * 2.15;
+           float rotA = (disp.x - disp.y) * 1.6 + uTime * 0.09;
+           float ca = cos(rotA), sa = sin(rotA);
+           z = mat2(ca, -sa, sa, ca) * z;
+
+           float trapMin = 1e5;
+           float filamentAcc = 0.0;
+           float ridgeAcc = 0.0;
+
+           int maxIter = int(clamp(ceil(uFoldDepth), 1.0, 8.0));
+           float fracIter = fract(uFoldDepth);
+
+           for (int i = 0; i < 8; i++) {
+             if (i >= maxIter) break;
+             float iterWeight = (i == maxIter - 1 && fracIter > 0.001) ? fracIter : 1.0;
+
+             // Kleinian box-fold + hyperbolic sphere inversion
+             z = abs(z + 0.62) - abs(z - 0.62) - z;
+             float r2 = dot(z, z) + 0.14;
+             float k = 1.28 / clamp(r2, 0.22, 1.45);
+             z *= k;
+
+             // Spiral coil rotation per fractal octave
+             float ang = 0.68 + 0.30 * sin(fluidPhase * 6.2831853 + float(i) * 1.1) + (disp.x + disp.y) * 0.85;
+             float c = cos(ang), s = sin(ang);
+             z = mat2(c, -s, s, c) * z + vec2(0.18, -0.14) * sin(uTime * 0.24 + float(i));
+
+             float dCircle = abs(length(z) - 0.52);
+             float dSpiral = abs(sin(atan(z.y, z.x) * 2.0 + length(z) * 4.5));
+             float dTube = min(dCircle, dSpiral * 0.38);
+
+             trapMin = min(trapMin, dTube);
+             filamentAcc += (exp(-dTube * 7.5) * iterWeight) / (1.0 + float(i) * 0.35);
+             ridgeAcc += smoothstep(0.32, 0.0, dTube) * iterWeight;
+           }
+
+           float normFilaments = clamp(filamentAcc * 0.72, 0.0, 1.4);
+           float phaseMix = fract(fluidPhase + trapMin * 1.85 + ridgeAcc * 0.22 + fluidThick * 0.25);
+           return vec4(trapMin, normFilaments, clamp(ridgeAcc * 0.55, 0.0, 1.2), phaseMix);
+         }
+
+         void main() {
+           vec2 stepUv = 2.0 / max(uResolution, vec2(1.0));
+
+           vec4 flC = texture(uFluidTex, vUv);
+           vec4 flL = texture(uFluidTex, vUv - vec2(stepUv.x, 0.0));
+           vec4 flR = texture(uFluidTex, vUv + vec2(stepUv.x, 0.0));
+           vec4 flB = texture(uFluidTex, vUv - vec2(0.0, stepUv.y));
+           vec4 flT = texture(uFluidTex, vUv + vec2(0.0, stepUv.y));
+
+           vec4 fracC = evaluateSlimeFractal(vUv, flC);
+           vec4 fracL = evaluateSlimeFractal(vUv - vec2(stepUv.x, 0.0), flL);
+           vec4 fracR = evaluateSlimeFractal(vUv + vec2(stepUv.x, 0.0), flR);
+           vec4 fracB = evaluateSlimeFractal(vUv - vec2(0.0, stepUv.y), flB);
+           vec4 fracT = evaluateSlimeFractal(vUv + vec2(0.0, stepUv.y), flT);
+
+           float hC = flC.z * 0.72 + fracC.y * 0.68 + fracC.z * 0.35;
+           float hL = flL.z * 0.72 + fracL.y * 0.68 + fracL.z * 0.35;
+           float hR = flR.z * 0.72 + fracR.y * 0.68 + fracR.z * 0.35;
+           float hB = flB.z * 0.72 + fracB.y * 0.68 + fracB.z * 0.35;
+           float hT = flT.z * 0.72 + fracT.y * 0.68 + fracT.z * 0.35;
+
+           vec3 normal = normalize(vec3((hL - hR) * 2.8, (hB - hT) * 2.8, 0.24));
+           vec3 viewDir = vec3(0.0, 0.0, 1.0);
+           float ndotv = clamp(dot(normal, viewDir), 0.001, 1.0);
+           float fresnel = pow(1.0 - ndotv, 3.2);
+
+           vec3 light1 = normalize(vec3(-0.48, 0.62, 0.62));
+           vec3 light2 = normalize(vec3(0.65, -0.45, 0.61));
+           vec3 half1 = normalize(light1 + viewDir);
+           vec3 half2 = normalize(light2 + viewDir);
+
+           float diff1 = max(dot(normal, light1), 0.0);
+           float diff2 = max(dot(normal, light2), 0.0);
+           float spec1 = pow(max(dot(normal, half1), 0.0), 72.0);
+           float spec2 = pow(max(dot(normal, half2), 0.0), 36.0);
+
+           float p = fracC.w;
+           vec3 sigma = mix(uSigmaA, uSigmaB, smoothstep(0.15, 0.55, p));
+           sigma = mix(sigma, uSigmaC, smoothstep(0.62, 0.92, p));
+
+           // Beer-Lambert Exponential Absorption
+           float opticalDepth = clamp(hC * 1.45, 0.05, 3.2);
+           vec3 beerLambert = vec3(1.24, 1.16, 1.30) * exp(-sigma * opticalDepth);
+
+           // Subsurface forward-scattering glow
+           float sssFactor = exp(-abs(hC - 0.68) * 3.2) * (0.45 + 0.55 * diff1);
+           vec3 sssTint = exp(-sigma * 0.45) * sssFactor * 0.68;
+
+           // Schlieren refractive density gradient striae
+           vec2 gradDensity = vec2(flR.z - flL.z, flT.z - flB.z) * 18.0 + vec2(fracR.y - fracL.y, fracT.y - fracB.y) * 2.5;
+           float schlierenWave = sin(length(gradDensity) * 14.0 - fracC.x * 18.0 + uTime * 0.85);
+           float schlierenBands = pow(0.5 + 0.5 * schlierenWave, 3.0) * clamp(length(gradDensity) * 1.4, 0.0, 1.0) * uSchlierenGain;
+
+           // Thin-Film Interference iridescence
+           float stretchMag = length(flC.xy - 0.5) * 2.5;
+           float filmMod = uFilmThickness * (0.75 + 0.45 * fracC.y + 0.35 * stretchMag);
+           vec3 iridColor = thinFilmIridescence(ndotv, filmMod) * uIridescence;
+
+           // Holographic micro-glitter suspended in the slime matrix
+           vec2 glitterGrid = floor((vUv + (flC.xy - 0.5) * 0.6) * 190.0 + fracC.xy * 24.0);
+           float hash = fract(sin(dot(glitterGrid, vec2(127.1, 311.7))) * 43758.5453);
+           float sparkle = smoothstep(0.986, 0.999, hash) * pow(max(dot(normal, half1), 0.0), 12.0) * 1.65;
+
+           // Benthic obsidian-indigo floor
+           vec3 benthicFloor = vec3(0.032, 0.014, 0.082) + vec3(0.05, 0.018, 0.11) * smoothstep(0.95, 0.0, length(vUv - 0.5));
+           float gooMask = smoothstep(0.05, 0.24, hC);
+
+           vec3 bodyColor = beerLambert * (0.48 + 0.65 * diff1 + 0.25 * diff2) + sssTint;
+           bodyColor += iridColor * (0.20 + 0.55 * fresnel + 0.25 * fracC.z);
+           bodyColor += schlierenBands * mix(vec3(0.35, 0.92, 1.0), vec3(1.0, 0.45, 0.82), p) * 0.45;
+           bodyColor += sparkle * mix(vec3(1.0), iridColor, 0.5);
+
+           vec3 clearcoat = vec3(1.0, 0.96, 1.0) * spec1 * 1.35 + vec3(0.45, 0.88, 1.0) * spec2 * 0.45;
+           bodyColor += clearcoat + fresnel * vec3(0.85, 0.45, 0.95) * 0.30;
+
+           vec3 finalColor = mix(benthicFloor, bodyColor, gooMask);
+           finalColor = finalColor / (1.0 + finalColor * 0.26);
+           finalColor = pow(max(finalColor, vec3(0.0)), vec3(0.93));
+           finalColor *= 1.0 - 0.20 * dot(vUv - 0.5, vUv - 0.5);
+
+           fragColor = vec4(finalColor, 1.0);
+         }`
+      : `precision highp float;
+         varying vec2 vUv;
+
+         uniform sampler2D uFluidTex;
+         uniform vec2 uResolution;
+         uniform float uTime;
+         uniform float uFoldDepth;
+         uniform float uIridescence;
+         uniform float uSchlierenGain;
+         uniform float uFilmThickness;
+         uniform float uPalettePhase;
+         uniform vec3 uSigmaA;
+         uniform vec3 uSigmaB;
+         uniform vec3 uSigmaC;
+
+         vec3 thinFilmIridescence(float cosTheta, float opdScale) {
+           float opd = 2.0 * 1.38 * opdScale * clamp(cosTheta, 0.08, 1.0);
+           vec3 phase = 6.2831853 * opd / vec3(0.65, 0.53, 0.45) + uPalettePhase * 6.2831853;
+           return 0.5 + 0.5 * cos(phase);
+         }
+
+         vec4 evaluateSlimeFractal(vec2 uv, vec4 fluidSample) {
+           float aspect = uResolution.x / max(uResolution.y, 1.0);
+           vec2 disp = (fluidSample.xy - 0.5) * 1.35;
+           float fluidThick = fluidSample.z;
+           float fluidPhase = fluidSample.w;
+
+           vec2 z = (uv - 0.5 + disp * 0.55) * vec2(aspect, 1.0) * 2.15;
+           float rotA = (disp.x - disp.y) * 1.6 + uTime * 0.09;
+           float ca = cos(rotA), sa = sin(rotA);
+           z = mat2(ca, -sa, sa, ca) * z;
+
+           float trapMin = 1e5;
+           float filamentAcc = 0.0;
+           float ridgeAcc = 0.0;
+
+           for (int i = 0; i < 8; i++) {
+             float fi = float(i);
+             if (fi >= uFoldDepth) break;
+             float iterWeight = clamp(uFoldDepth - fi, 0.0, 1.0);
+
+             z = abs(z + 0.62) - abs(z - 0.62) - z;
+             float r2 = dot(z, z) + 0.14;
+             float k = 1.28 / clamp(r2, 0.22, 1.45);
+             z *= k;
+
+             float ang = 0.68 + 0.30 * sin(fluidPhase * 6.2831853 + fi * 1.1) + (disp.x + disp.y) * 0.85;
+             float c = cos(ang), s = sin(ang);
+             z = mat2(c, -s, s, c) * z + vec2(0.18, -0.14) * sin(uTime * 0.24 + fi);
+
+             float dCircle = abs(length(z) - 0.52);
+             float dSpiral = abs(sin(atan(z.y, z.x) * 2.0 + length(z) * 4.5));
+             float dTube = min(dCircle, dSpiral * 0.38);
+
+             trapMin = min(trapMin, dTube);
+             filamentAcc += (exp(-dTube * 7.5) * iterWeight) / (1.0 + fi * 0.35);
+             ridgeAcc += smoothstep(0.32, 0.0, dTube) * iterWeight;
+           }
+
+           float normFilaments = clamp(filamentAcc * 0.72, 0.0, 1.4);
+           float phaseMix = fract(fluidPhase + trapMin * 1.85 + ridgeAcc * 0.22 + fluidThick * 0.25);
+           return vec4(trapMin, normFilaments, clamp(ridgeAcc * 0.55, 0.0, 1.2), phaseMix);
+         }
+
+         void main() {
+           vec2 stepUv = 2.0 / max(uResolution, vec2(1.0));
+
+           vec4 flC = texture2D(uFluidTex, vUv);
+           vec4 flL = texture2D(uFluidTex, vUv - vec2(stepUv.x, 0.0));
+           vec4 flR = texture2D(uFluidTex, vUv + vec2(stepUv.x, 0.0));
+           vec4 flB = texture2D(uFluidTex, vUv - vec2(0.0, stepUv.y));
+           vec4 flT = texture2D(uFluidTex, vUv + vec2(0.0, stepUv.y));
+
+           vec4 fracC = evaluateSlimeFractal(vUv, flC);
+           vec4 fracL = evaluateSlimeFractal(vUv - vec2(stepUv.x, 0.0), flL);
+           vec4 fracR = evaluateSlimeFractal(vUv + vec2(stepUv.x, 0.0), flR);
+           vec4 fracB = evaluateSlimeFractal(vUv - vec2(0.0, stepUv.y), flB);
+           vec4 fracT = evaluateSlimeFractal(vUv + vec2(0.0, stepUv.y), flT);
+
+           float hC = flC.z * 0.72 + fracC.y * 0.68 + fracC.z * 0.35;
+           float hL = flL.z * 0.72 + fracL.y * 0.68 + fracL.z * 0.35;
+           float hR = flR.z * 0.72 + fracR.y * 0.68 + fracR.z * 0.35;
+           float hB = flB.z * 0.72 + fracB.y * 0.68 + fracB.z * 0.35;
+           float hT = flT.z * 0.72 + fracT.y * 0.68 + fracT.z * 0.35;
+
+           vec3 normal = normalize(vec3((hL - hR) * 2.8, (hB - hT) * 2.8, 0.24));
+           vec3 viewDir = vec3(0.0, 0.0, 1.0);
+           float ndotv = clamp(dot(normal, viewDir), 0.001, 1.0);
+           float fresnel = pow(1.0 - ndotv, 3.2);
+
+           vec3 light1 = normalize(vec3(-0.48, 0.62, 0.62));
+           vec3 light2 = normalize(vec3(0.65, -0.45, 0.61));
+           vec3 half1 = normalize(light1 + viewDir);
+           vec3 half2 = normalize(light2 + viewDir);
+
+           float diff1 = max(dot(normal, light1), 0.0);
+           float diff2 = max(dot(normal, light2), 0.0);
+           float spec1 = pow(max(dot(normal, half1), 0.0), 72.0);
+           float spec2 = pow(max(dot(normal, half2), 0.0), 36.0);
+
+           float p = fracC.w;
+           vec3 sigma = mix(uSigmaA, uSigmaB, smoothstep(0.15, 0.55, p));
+           sigma = mix(sigma, uSigmaC, smoothstep(0.62, 0.92, p));
+
+           float opticalDepth = clamp(hC * 1.45, 0.05, 3.2);
+           vec3 beerLambert = vec3(1.24, 1.16, 1.30) * exp(-sigma * opticalDepth);
+
+           float sssFactor = exp(-abs(hC - 0.68) * 3.2) * (0.45 + 0.55 * diff1);
+           vec3 sssTint = exp(-sigma * 0.45) * sssFactor * 0.68;
+
+           vec2 gradDensity = vec2(flR.z - flL.z, flT.z - flB.z) * 18.0 + vec2(fracR.y - fracL.y, fracT.y - fracB.y) * 2.5;
+           float schlierenWave = sin(length(gradDensity) * 14.0 - fracC.x * 18.0 + uTime * 0.85);
+           float schlierenBands = pow(0.5 + 0.5 * schlierenWave, 3.0) * clamp(length(gradDensity) * 1.4, 0.0, 1.0) * uSchlierenGain;
+
+           float stretchMag = length(flC.xy - 0.5) * 2.5;
+           float filmMod = uFilmThickness * (0.75 + 0.45 * fracC.y + 0.35 * stretchMag);
+           vec3 iridColor = thinFilmIridescence(ndotv, filmMod) * uIridescence;
+
+           vec2 glitterGrid = floor((vUv + (flC.xy - 0.5) * 0.6) * 190.0 + fracC.xy * 24.0);
+           float hash = fract(sin(dot(glitterGrid, vec2(127.1, 311.7))) * 43758.5453);
+           float sparkle = smoothstep(0.986, 0.999, hash) * pow(max(dot(normal, half1), 0.0), 12.0) * 1.65;
+
+           vec3 benthicFloor = vec3(0.032, 0.014, 0.082) + vec3(0.05, 0.018, 0.11) * smoothstep(0.95, 0.0, length(vUv - 0.5));
+           float gooMask = smoothstep(0.05, 0.24, hC);
+
+           vec3 bodyColor = beerLambert * (0.48 + 0.65 * diff1 + 0.25 * diff2) + sssTint;
+           bodyColor += iridColor * (0.20 + 0.55 * fresnel + 0.25 * fracC.z);
+           bodyColor += schlierenBands * mix(vec3(0.35, 0.92, 1.0), vec3(1.0, 0.45, 0.82), p) * 0.45;
+           bodyColor += sparkle * mix(vec3(1.0), iridColor, 0.5);
+
+           vec3 clearcoat = vec3(1.0, 0.96, 1.0) * spec1 * 1.35 + vec3(0.45, 0.88, 1.0) * spec2 * 0.45;
+           bodyColor += clearcoat + fresnel * vec3(0.85, 0.45, 0.95) * 0.30;
+
+           vec3 finalColor = mix(benthicFloor, bodyColor, gooMask);
+           finalColor = finalColor / (1.0 + finalColor * 0.26);
+           finalColor = pow(max(finalColor, vec3(0.0)), vec3(0.93));
+           finalColor *= 1.0 - 0.20 * dot(vUv - 0.5, vUv - 0.5);
+
+           gl_FragColor = vec4(finalColor, 1.0);
+         }`;
+
+    function compile(type, src) {
+      const sh = gl.createShader(type);
+      gl.shaderSource(sh, src);
+      gl.compileShader(sh);
+      if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+        const log = gl.getShaderInfoLog(sh) || 'Shader compile error';
+        gl.deleteShader(sh);
+        throw new Error(log);
+      }
+      return sh;
+    }
+
+    const vs = compile(gl.VERTEX_SHADER, vertSrc);
+    const fs = compile(gl.FRAGMENT_SHADER, fragSrc);
+    const prog = gl.createProgram();
+    gl.attachShader(prog, vs);
+    gl.attachShader(prog, fs);
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+      throw new Error(gl.getProgramInfoLog(prog) || 'Program link error');
+    }
+
+    gl.useProgram(prog);
+
+    // Fullscreen Triangle Buffer (universally supported in WebGL1 & WebGL2)
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+
+    // 48x48 RGBA UNSIGNED_BYTE fluid data texture with gl.LINEAR (universally hardware-accelerated!)
+    const fluidTex = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, fluidTex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, GRID, GRID, 0, gl.RGBA, gl.UNSIGNED_BYTE, fluidTexBytes);
+
+    const uFluidTex = gl.getUniformLocation(prog, 'uFluidTex');
+    const uResolution = gl.getUniformLocation(prog, 'uResolution');
+    const uTime = gl.getUniformLocation(prog, 'uTime');
+    const uFoldDepth = gl.getUniformLocation(prog, 'uFoldDepth');
+    const uIridescence = gl.getUniformLocation(prog, 'uIridescence');
+    const uSchlierenGain = gl.getUniformLocation(prog, 'uSchlierenGain');
+    const uFilmThickness = gl.getUniformLocation(prog, 'uFilmThickness');
+    const uPalettePhase = gl.getUniformLocation(prog, 'uPalettePhase');
+    const uSigmaA = gl.getUniformLocation(prog, 'uSigmaA');
+    const uSigmaB = gl.getUniformLocation(prog, 'uSigmaB');
+    const uSigmaC = gl.getUniformLocation(prog, 'uSigmaC');
+
+    engineBadge.textContent = isWebGL2 ? 'GooCore WebGL2 Live' : 'GooCore WebGL1 Live';
+
+    let lastFrameTime = performance.now();
+
+    function frame(now) {
+      const rawDt = (now - lastFrameTime) * 0.001;
+      lastFrameTime = now;
+      const dt = Math.min(Math.max(rawDt, 0.001), 0.033);
+      GOO_STATE.time += dt;
+
+      // Sync canvas dimensions dynamically on Android WebView / iframe resize
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const cw = simCanvas.clientWidth || window.innerWidth || document.documentElement.clientWidth || 360;
+      const ch = simCanvas.clientHeight || window.innerHeight || document.documentElement.clientHeight || 640;
+      const targetW = Math.max(2, Math.floor(cw * dpr));
+      const targetH = Math.max(2, Math.floor(ch * dpr));
+      if (simCanvas.width !== targetW || simCanvas.height !== targetH) {
+        simCanvas.width = targetW;
+        simCanvas.height = targetH;
+      }
+
+      // Advance 2 physics substeps on the 48x48 vortex-covector grid & upload RGBA texture
+      stepFluidField(dt * 0.5);
+      stepFluidField(dt * 0.5);
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.viewport(0, 0, simCanvas.width, simCanvas.height);
+      gl.useProgram(prog);
+
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, fluidTex);
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, GRID, GRID, gl.RGBA, gl.UNSIGNED_BYTE, fluidTexBytes);
+
+      gl.uniform1i(uFluidTex, 0);
+      gl.uniform2f(uResolution, simCanvas.width, simCanvas.height);
+      gl.uniform1f(uTime, GOO_STATE.time);
+      gl.uniform1f(uFoldDepth, GOO_STATE.foldDepth);
+      gl.uniform1f(uIridescence, GOO_STATE.iridescence);
+      gl.uniform1f(uSchlierenGain, GOO_STATE.schlierenGain);
+      gl.uniform1f(uFilmThickness, GOO_STATE.filmThickness);
+      gl.uniform1f(uPalettePhase, GOO_STATE.palettePhase);
+      gl.uniform3fv(uSigmaA, GOO_STATE.sigmaA);
+      gl.uniform3fv(uSigmaB, GOO_STATE.sigmaB);
+      gl.uniform3fv(uSigmaC, GOO_STATE.sigmaC);
+
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      requestAnimationFrame(frame);
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  // =========================================================================
+  // 5. PROTECTED BOOTSTRAP (NEVER BLOCKS UI CONTROLS ON ANY WEBVIEW ERROR)
+  // =========================================================================
+  try {
+    initWebGLEngine();
+  } catch (err) {
+    console.warn('WebGL fallback triggered:', err);
+    try {
+      start2DFallback();
+    } catch (fallbackErr) {
+      console.error('2D fallback error:', fallbackErr);
+    }
+  }
+})();
+</script>
+</body>
+</html>
