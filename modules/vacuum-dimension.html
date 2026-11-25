@@ -1,0 +1,2060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>VACU-SYNTH // VVV-9000</title>
+  <style>
+    /* ==========================================================================
+       VACU-SYNTH // VVV-9000 — 100% SELF-CONTAINED MOBILE-FIRST CHASSIS CSS
+       Zero external CDNs, explicit high-contrast colors, custom sliders & layout
+       ========================================================================== */
+    :root {
+      --bg-obsidian: #0b0914;
+      --bg-panel: #161128;
+      --bg-panel-alt: #1d1636;
+      --bg-well: #090711;
+      --border-subtle: #2e2452;
+      --border-glow: #4c3a85;
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --accent-pink: #ff69b4;
+      --accent-cyan: #06b6d4;
+      --accent-violet: #8b5cf6;
+      --accent-orange: #fb923c;
+      --accent-lime: #a3e635;
+      --accent-red: #f43f5e;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100vh;
+      background-color: var(--bg-obsidian);
+      background-image:
+        radial-gradient(circle at 15% 10%, rgba(139, 92, 246, 0.14) 0%, transparent 45%),
+        radial-gradient(circle at 85% 30%, rgba(255, 105, 180, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 50% 90%, rgba(6, 182, 212, 0.12) 0%, transparent 50%);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      overflow-x: hidden;
+      line-height: 1.35;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    /* Main Container */
+    .app-shell {
+      max-width: 1060px;
+      margin: 0 auto;
+      padding: 10px 10px 36px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Card / Module Box */
+    .module-card {
+      background: linear-gradient(165deg, var(--bg-panel) 0%, #110d20 100%);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+
+    .module-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .module-title {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-primary);
+    }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(6, 182, 212, 0.16);
+      border: 1px solid rgba(6, 182, 212, 0.45);
+      color: #67e8f9;
+    }
+
+    /* ==========================================================================
+       TOP STATUS & POWER BAR
+       ========================================================================== */
+    .top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: linear-gradient(180deg, #1b1433 0%, #120d22 100%);
+      border: 1px solid var(--border-glow);
+      border-radius: 14px;
+      padding: 10px 12px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+    }
+
+    .brand-block {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent-pink), var(--accent-violet));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 14px;
+      color: #fff;
+      box-shadow: 0 0 14px rgba(255, 105, 180, 0.5);
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      color: #ffffff;
+      margin: 0;
+    }
+
+    .brand-sub {
+      font-size: 10px;
+      color: var(--accent-cyan);
+      letter-spacing: 0.06em;
+      font-weight: 700;
+    }
+
+    .top-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      justify-content: flex-end;
+    }
+
+    /* Buttons */
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      outline: none;
+      transition: transform 0.08s ease, box-shadow 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    }
+
+    button:active {
+      transform: scale(0.96);
+    }
+
+    .btn-pill {
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      color: var(--text-primary);
+      background: var(--bg-panel-alt);
+      border: 1px solid var(--border-subtle);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 36px;
+    }
+
+    .btn-power {
+      background: linear-gradient(135deg, #db2777 0%, #9333ea 100%);
+      border: 1px solid #f472b6;
+      color: #ffffff;
+      box-shadow: 0 0 14px rgba(236, 72, 153, 0.45);
+    }
+
+    .btn-power.unlocked {
+      background: linear-gradient(135deg, #059669 0%, #0891b2 100%);
+      border-color: #34d399;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-latch.active {
+      background: linear-gradient(135deg, #d97706 0%, #ea580c 100%);
+      border-color: #fdba74;
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(251, 146, 60, 0.45);
+    }
+
+    .btn-panic {
+      background: rgba(244, 63, 94, 0.18);
+      border: 1px solid rgba(244, 63, 94, 0.55);
+      color: #fda4af;
+    }
+
+    .mini-chip {
+      padding: 6px 9px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      background: #130f24;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-subtle);
+      min-height: 30px;
+    }
+
+    .mini-chip.active-pink {
+      background: linear-gradient(135deg, #ec4899, #8b5cf6);
+      border-color: #f9a8d4;
+      color: #ffffff;
+      box-shadow: 0 0 10px rgba(236, 72, 153, 0.45);
+    }
+
+    .mini-chip.active-cyan {
+      background: linear-gradient(135deg, #0891b2, #2563eb);
+      border-color: #67e8f9;
+      color: #ffffff;
+      box-shadow: 0 0 10px rgba(6, 182, 212, 0.45);
+    }
+
+    .mini-chip.active-lime {
+      background: linear-gradient(135deg, #65a30d, #0d9488);
+      border-color: #bef264;
+      color: #ffffff;
+      box-shadow: 0 0 10px rgba(163, 230, 53, 0.4);
+    }
+
+    /* ==========================================================================
+       CUSTOM RANGE SLIDERS (MOBILE-OPTIMIZED TOUCH TARGETS)
+       ========================================================================== */
+    .slider-box {
+      background: var(--bg-well);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .slider-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+
+    .slider-sub {
+      font-size: 9px;
+      color: var(--text-muted);
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 24px;
+      background: transparent;
+      margin: 0;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 7px;
+      border-radius: 999px;
+      background: #231b42;
+      border: 1px solid #382c66;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #f8fafc 0%, #cbd5e1 100%);
+      border: 2px solid var(--accent-cyan);
+      margin-top: -8px;
+      box-shadow: 0 0 10px rgba(6, 182, 212, 0.65);
+    }
+
+    input[type="range"].pink::-webkit-slider-thumb {
+      border-color: var(--accent-pink);
+      box-shadow: 0 0 10px rgba(255, 105, 180, 0.75);
+    }
+
+    input[type="range"].lime::-webkit-slider-thumb {
+      border-color: var(--accent-lime);
+      box-shadow: 0 0 10px rgba(163, 230, 53, 0.75);
+    }
+
+    input[type="range"].orange::-webkit-slider-thumb {
+      border-color: var(--accent-orange);
+      box-shadow: 0 0 10px rgba(251, 146, 60, 0.75);
+    }
+
+    input[type="range"].violet::-webkit-slider-thumb {
+      border-color: var(--accent-violet);
+      box-shadow: 0 0 10px rgba(139, 92, 246, 0.75);
+    }
+
+    /* ==========================================================================
+       4x4 VACUUM SYNTHESIZER KEYPAD GRID
+       ========================================================================== */
+    .keypad-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      touch-action: none;
+    }
+
+    .vac-pad {
+      position: relative;
+      background: linear-gradient(175deg, #1f183d 0%, #130e26 100%);
+      border: 1.5px solid #352963;
+      border-radius: 12px;
+      padding: 9px 6px;
+      min-height: 76px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: flex-start;
+      text-align: left;
+      color: var(--text-primary);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .vac-pad.selected-brush {
+      border-color: rgba(6, 182, 212, 0.75);
+    }
+
+    .vac-pad.active {
+      background: linear-gradient(155deg, rgba(255, 105, 180, 0.32) 0%, rgba(139, 92, 246, 0.38) 100%);
+      border-color: var(--accent-pink);
+      box-shadow: 0 0 18px rgba(255, 105, 180, 0.55), inset 0 0 12px rgba(255, 105, 180, 0.35);
+      transform: scale(0.97);
+    }
+
+    .pad-top-row {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 9px;
+      font-weight: 800;
+      color: var(--accent-cyan);
+    }
+
+    .pad-led {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #2f2554;
+    }
+
+    .vac-pad.active .pad-led {
+      background: var(--accent-lime);
+      box-shadow: 0 0 8px var(--accent-lime);
+    }
+
+    .pad-name {
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.15;
+      color: #ffffff;
+      margin: 3px 0;
+      word-break: break-word;
+    }
+
+    .pad-hz {
+      font-size: 9px;
+      font-weight: 700;
+      color: #f9a8d4;
+    }
+
+    /* ==========================================================================
+       CANVAS DISPLAYS (OSCILLOSCOPE, GOO METRONOME, FRACTAL)
+       ========================================================================== */
+    .dual-visual-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    @media (min-width: 720px) {
+      .dual-visual-grid {
+        grid-template-columns: 1.25fr 1fr;
+      }
+    }
+
+    .canvas-well {
+      width: 100%;
+      height: 120px;
+      min-height: 120px;
+      background: #07050d;
+      border: 1px solid #302459;
+      border-radius: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .canvas-well canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .canvas-overlay-tag {
+      position: absolute;
+      top: 6px;
+      left: 8px;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      padding: 2px 6px;
+      border-radius: 5px;
+      background: rgba(11, 9, 20, 0.78);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      pointer-events: none;
+    }
+
+    /* ==========================================================================
+       SYNCOPATION ARRANGEMENT & PLACEMENT BUBBLES SEQUENCER
+       ========================================================================== */
+    .bubble-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 6px;
+      touch-action: none;
+    }
+
+    @media (min-width: 768px) {
+      .bubble-grid {
+        grid-template-columns: repeat(16, 1fr);
+      }
+    }
+
+    .step-slot {
+      height: 64px;
+      background: var(--bg-well);
+      border: 1px solid #2b214d;
+      border-radius: 10px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .step-slot.beat-accent {
+      border-color: #46367d;
+      background: #0f0b1c;
+    }
+
+    .step-slot.playhead {
+      border-color: var(--accent-lime);
+      box-shadow: inset 0 0 12px rgba(163, 230, 53, 0.35);
+    }
+
+    .step-num {
+      position: absolute;
+      top: 3px;
+      left: 5px;
+      font-size: 8px;
+      font-weight: 800;
+      color: #64748b;
+    }
+
+    .goo-bubble {
+      border-radius: 50%;
+      background: radial-gradient(circle at 32% 30%, #ffffff 0%, var(--accent-pink) 38%, #7e22ce 100%);
+      box-shadow: 0 0 12px rgba(255, 105, 180, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      font-weight: 900;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+      transition: width 0.06s ease, height 0.06s ease;
+      pointer-events: none;
+    }
+
+    /* ==========================================================================
+       CONTROL GRIDS
+       ========================================================================== */
+    .controls-grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .controls-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    @media (min-width: 640px) {
+      .controls-grid-3 {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 8px;
+    }
+
+    .color-pink { color: var(--accent-pink); }
+    .color-cyan { color: var(--accent-cyan); }
+    .color-violet { color: #c084fc; }
+    .color-orange { color: var(--accent-orange); }
+    .color-lime { color: var(--accent-lime); }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+
+    <!-- =====================================================================
+         1. TOP STATUS & AUDIO POWER BAR
+         ===================================================================== -->
+    <header class="top-bar">
+      <div class="brand-block">
+        <div class="brand-icon mono">VVV</div>
+        <div>
+          <h1 class="brand-title">VACU-SYNTH // VVV-9000</h1>
+          <div class="brand-sub mono" id="statusTelemetry">READY // TAP ANY VACUUM PAD</div>
+        </div>
+      </div>
+
+      <div class="top-controls">
+        <button type="button" id="powerBtn" class="btn-pill btn-power">
+          ⚡ POWER / UNMUTE
+        </button>
+        <button type="button" id="latchBtn" class="btn-pill btn-latch">
+          🔒 HOLD / LATCH: OFF
+        </button>
+        <button type="button" id="panicBtn" class="btn-pill btn-panic">
+          ■ KILL SUCTION
+        </button>
+      </div>
+
+      <div style="width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 2px;">
+        <div class="slider-box">
+          <div class="slider-label-row">
+            <span class="color-cyan">MASTER SUCTION VOL</span>
+            <span class="mono" id="masterVolVal">82%</span>
+          </div>
+          <input type="range" id="masterVolSlider" min="0" max="100" value="82" />
+        </div>
+        <div class="slider-box">
+          <div class="slider-label-row">
+            <span class="color-orange">BASE MOTOR PITCH</span>
+            <span class="mono" id="basePitchVal">1.00x</span>
+          </div>
+          <input type="range" id="basePitchSlider" class="orange" min="50" max="200" value="100" />
+        </div>
+      </div>
+    </header>
+
+    <!-- =====================================================================
+         2. 4x4 VACUUM SYNTHESIZER KEYPAD GRID (16 DISTINCT VACUUM PROFILES)
+         ===================================================================== -->
+    <section class="module-card">
+      <div class="module-header">
+        <div class="module-title">
+          <span class="color-pink">●</span> 4×4 VACUUM MOTOR KEYPAD
+          <span class="badge mono" id="activeBrushBadge">BRUSH: #1 SHOP-VAC</span>
+        </div>
+        <span class="slider-sub mono">MULTI-TOUCH POLYPHONIC // SETS SEQUENCER BRUSH</span>
+      </div>
+      <div class="keypad-grid" id="keypadGrid"></div>
+    </section>
+
+    <!-- =====================================================================
+         3. LIVE VFD OSCILLOSCOPE & PART-GOO BIO-VISCOUS METRONOME
+         ===================================================================== -->
+    <section class="module-card">
+      <div class="module-header">
+        <div class="module-title">
+          <span class="color-lime">●</span> VFD OSCILLOSCOPE &amp; PART-GOO METRONOME
+        </div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <button type="button" id="playGrooveBtn" class="mini-chip active-lime">▶ PLAY GROOVE</button>
+          <button type="button" id="tapTempoBtn" class="mini-chip">👆 TAP TEMPO</button>
+          <button type="button" id="gooSoundToggleBtn" class="mini-chip active-pink">💧 GOO POP: ON</button>
+        </div>
+      </div>
+
+      <div class="dual-visual-grid">
+        <!-- Live VFD Waveform Oscilloscope -->
+        <div class="canvas-well">
+          <canvas id="scopeCanvas" width="480" height="140"></canvas>
+          <div class="canvas-overlay-tag mono" id="scopeReadout">SUCTION WAVE // 0.0 Hz</div>
+        </div>
+
+        <!-- Stretching Bio-Viscous Goo Metronome -->
+        <div class="canvas-well">
+          <canvas id="gooCanvas" width="360" height="140"></canvas>
+          <div class="canvas-overlay-tag mono" id="gooReadout" style="color: #a3e635; border-color: rgba(163,230,53,0.4);">
+            122 BPM // BEAT 1/4
+          </div>
+        </div>
+      </div>
+
+      <div class="controls-grid-2" style="margin-top: 10px;">
+        <div class="slider-box">
+          <div class="slider-label-row">
+            <span class="color-lime">METRONOME TEMPO (BPM)</span>
+            <span class="mono" id="bpmVal">122 BPM</span>
+          </div>
+          <input type="range" id="bpmSlider" class="lime" min="40" max="200" value="122" />
+        </div>
+
+        <div class="slider-box">
+          <div class="slider-label-row">
+            <span class="color-pink">GOO VISCOSITY &amp; WET POP</span>
+            <span class="mono" id="gooViscVal">68%</span>
+          </div>
+          <input type="range" id="gooViscSlider" class="pink" min="0" max="100" value="68" />
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         4. SYNCOPATION ARRANGEMENT & PLACEMENT BUBBLES (16-STEP MATRIX)
+         ===================================================================== -->
+    <section class="module-card">
+      <div class="module-header">
+        <div class="module-title">
+          <span class="color-cyan">●</span> SYNCOPATION ARRANGEMENT &amp; PLACEMENT BUBBLES
+        </div>
+        <div class="chip-row" style="margin-bottom: 0;">
+          <button type="button" class="mini-chip" data-preset="drunken">DRUNKEN HOSE</button>
+          <button type="button" class="mini-chip" data-preset="332">3-3-2 BUBBLE</button>
+          <button type="button" class="mini-chip" data-preset="poly54">POLYRHYTHM 5/4</button>
+          <button type="button" class="mini-chip" data-preset="funk">CLOGGED FUNK</button>
+          <button type="button" class="mini-chip btn-panic" id="clearBubblesBtn">CLEAR</button>
+        </div>
+      </div>
+
+      <div class="bubble-grid" id="bubbleGrid"></div>
+
+      <div class="controls-grid-2" style="margin-top: 10px;">
+        <div class="slider-box">
+          <div class="slider-label-row">
+            <span class="color-cyan">SYNCOPATE SWING OFFSET</span>
+            <span class="mono" id="swingVal">28%</span>
+          </div>
+          <input type="range" id="swingSlider" min="0" max="75" value="28" />
+        </div>
+        <div class="slider-box" style="justify-content: center;">
+          <div class="slider-label-row">
+            <span class="color-pink">BUBBLE GESTURE GUIDE</span>
+          </div>
+          <div class="slider-sub">
+            TAP step to place/pop bubble • DRAG UP/DOWN on bubble to inflate suction &amp; wobble throw
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         5. HEAVY WOBBLE / HOSE-THROB FX & SUCTION PHYSICS
+         ===================================================================== -->
+    <section class="module-card">
+      <div class="module-header">
+        <div class="module-title">
+          <span class="color-orange">●</span> HEAVY WOBBLE / HOSE-THROB FX
+        </div>
+        <button type="button" id="wobbleToggleBtn" class="mini-chip active-pink">WOBBLE LFO: ON</button>
+      </div>
+
+      <div class="chip-row" id="wobbleShapeRow">
+        <button type="button" class="mini-chip" data-wshape="sine">SINE</button>
+        <button type="button" class="mini-chip active-pink" data-wshape="goo">GOO-BLOB</button>
+        <button type="button" class="mini-chip" data-wshape="drunk">DRUNK</button>
+        <button type="button" class="mini-chip" data-wshape="surge">SURGE</button>
+        <button type="button" class="mini-chip" data-wshape="chaos">CHAOS</button>
+      </div>
+
+      <div class="chip-row" id="wobbleDivRow">
+        <button type="button" class="mini-chip" data-wdiv="0.25">1/1</button>
+        <button type="button" class="mini-chip" data-wdiv="0.5">1/2</button>
+        <button type="button" class="mini-chip" data-wdiv="1">1/4</button>
+        <button type="button" class="mini-chip active-cyan" data-wdiv="1.5">1/8D</button>
+        <button type="button" class="mini-chip" data-wdiv="2">1/8</button>
+        <button type="button" class="mini-chip" data-wdiv="3">1/8T</button>
+        <button type="button" class="mini-chip" data-wdiv="4">1/16</button>
+        <button type="button" class="mini-chip" data-wdiv="2.6667">3/16</button>
+      </div>
+
+      <div class="controls-grid-3">
+        <div class="slider-box">
+          <div class="slider-label-row">
+            <span class="color-pink">WOBBLE DEPTH (VVVV)</span>
+            <span class="mono" id="wobbleDepthVal">78%</span>
+          </div>
+          <input type="range" id="wobbleDepthSlider" class="pink" min="0" max="100" value="78" />
+        </div>
+
+        <div class="slider-box">
+          <div class="slider-label-row">
+            <span class="color-cyan">HOSE CLOG RESONANCE (Q)</span>
+            <span class="mono" id="clogQVal">64%</span>
+          </div>
+          <input type="range" id="clogQSlider" min="0" max="100" value="64" />
+        </div>
+
+        <div class="slider-box">
+          <div class="slider-label-row">
+            <span class="color-orange">INTAKE AIRFLOW NOISE</span>
+            <span class="mono" id="airflowVal">52%</span>
+          </div>
+          <input type="range" id="airflowSlider" class="orange" min="0" max="100" value="52" />
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         6. FRACTAL WAVE MODULATOR ENGINE
+         ===================================================================== -->
+    <section class="module-card" style="border-color: rgba(139, 92, 246, 0.55);">
+      <div class="module-header">
+        <div class="module-title">
+          <span class="color-violet">●</span> FRACTAL WAVE MODULATOR
+        </div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <button type="button" id="fractalToggleBtn" class="mini-chip active-pink">FRACTAL: ON</button>
+          <button type="button" id="gooFractalCoupleBtn" class="mini-chip active-cyan">✦ GOO-FRACTAL COUPLE: ON</button>
+        </div>
+      </div>
+
+      <div class="chip-row" id="fractalAlgoRow">
+        <button type="button" class="mini-chip active-pink" data-falgo="weierstrass">WEIERSTRASS</button>
+        <button type="button" class="mini-chip" data-falgo="julia">JULIA ORBIT</button>
+        <button type="button" class="mini-chip" data-falgo="cantor">CANTOR STAIRS</button>
+        <button type="button" class="mini-chip" data-falgo="fbm">1/fᵝ FBM</button>
+      </div>
+
+      <div class="canvas-well" style="height: 105px; min-height: 105px; margin-bottom: 10px; cursor: ew-resize;">
+        <canvas id="fractalCanvas" width="600" height="120"></canvas>
+        <div class="canvas-overlay-tag mono" id="fractalReadout" style="color: #e879f9; border-color: rgba(232,121,249,0.4);">
+          WEIERSTRASS // D=1.55 // DRAG TO SCRUB SEED
+        </div>
+      </div>
+
+      <div class="controls-grid-3">
+        <div class="slider-box">
+          <div class="slider-label-row">
+            <span class="color-violet">FRACTAL FM DEPTH</span>
+            <span class="mono" id="fractalDepthVal">65%</span>
+          </div>
+          <input type="range" id="fractalDepthSlider" class="violet" min="0" max="100" value="65" />
+        </div>
+
+        <div class="slider-box">
+          <div class="slider-label-row">
+            <span class="color-cyan">FRACTAL SCAN RATE</span>
+            <span class="mono" id="fractalRateVal">1.60 Hz</span>
+          </div>
+          <input type="range" id="fractalRateSlider" min="15" max="800" value="160" />
+        </div>
+
+        <div class="slider-box">
+          <div class="slider-label-row">
+            <span class="color-pink">DIMENSION (D) / SEED</span>
+            <span class="mono" id="fractalDimVal">D=1.55</span>
+          </div>
+          <input type="range" id="fractalDimSlider" class="pink" min="105" max="195" value="155" />
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    /* ==========================================================================
+       VACU-SYNTH // VVV-9000 — COMPLETE PROCEDURAL WEB AUDIO & VISUAL ENGINE
+       ========================================================================== */
+    document.addEventListener('DOMContentLoaded', () => {
+      // ------------------------------------------------------------------------
+      // 1. 16 DISTINCT VACUUM CLEANER MOTOR PROFILES & SOURCE FREQUENCIES
+      // ------------------------------------------------------------------------
+      const VACUUM_PADS = [
+        { id: 0,  code: 'V-01', name: 'Shop-Vac 16Gal',    hz: 65.41,  note: 'C2',  wave: 'sawtooth', harm: 1.50, formant: 320,  q: 4.5, noise: 'brown', spin: 0.24 },
+        { id: 1,  code: 'V-02', name: 'Dyson Cyclonic',    hz: 82.41,  note: 'E2',  wave: 'triangle', harm: 2.01, formant: 890,  q: 7.2, noise: 'pink',  spin: 0.14 },
+        { id: 2,  code: 'V-03', name: 'Upright Brushroll', hz: 98.00,  note: 'G2',  wave: 'square',   harm: 1.33, formant: 520,  q: 5.0, noise: 'pink',  spin: 0.19 },
+        { id: 3,  code: 'V-04', name: 'HEPA Canister',     hz: 110.00, note: 'A2',  wave: 'sawtooth', harm: 2.50, formant: 680,  q: 6.1, noise: 'white', spin: 0.16 },
+        { id: 4,  code: 'V-05', name: 'Clogged Hose',      hz: 130.81, note: 'C3',  wave: 'sawtooth', harm: 1.41, formant: 1240, q: 11.5,noise: 'pink',  spin: 0.22 },
+        { id: 5,  code: 'V-06', name: 'Wet/Dry Sluice',    hz: 146.83, note: 'D3',  wave: 'triangle', harm: 1.75, formant: 430,  q: 6.8, noise: 'brown', spin: 0.26 },
+        { id: 6,  code: 'V-07', name: 'DustBuster Mini',   hz: 164.81, note: 'E3',  wave: 'square',   harm: 2.00, formant: 1480, q: 5.8, noise: 'white', spin: 0.09 },
+        { id: 7,  code: 'V-08', name: 'Central Turbine',   hz: 196.00, note: 'G3',  wave: 'sawtooth', harm: 1.50, formant: 760,  q: 8.2, noise: 'pink',  spin: 0.28 },
+        { id: 8,  code: 'V-09', name: 'Ind. Extractor',    hz: 220.00, note: 'A3',  wave: 'sawtooth', harm: 3.01, formant: 940,  q: 7.5, noise: 'brown', spin: 0.21 },
+        { id: 9,  code: 'V-10', name: 'Crevice Whistle',   hz: 261.63, note: 'C4',  wave: 'sine',     harm: 2.00, formant: 2150, q: 14.0,noise: 'white', spin: 0.11 },
+        { id: 10, code: 'V-11', name: 'Bagless Vortex',    hz: 293.66, note: 'D4',  wave: 'triangle', harm: 1.62, formant: 1120, q: 6.4, noise: 'pink',  spin: 0.15 },
+        { id: 11, code: 'V-12', name: 'Roomba Lidar',      hz: 329.63, note: 'E4',  wave: 'sine',     harm: 2.50, formant: 1680, q: 8.8, noise: 'white', spin: 0.07 },
+        { id: 12, code: 'V-13', name: 'Carpet Shampooer',  hz: 392.00, note: 'G4',  wave: 'square',   harm: 1.25, formant: 610,  q: 5.5, noise: 'brown', spin: 0.20 },
+        { id: 13, code: 'V-14', name: "Retro Hoover '74",  hz: 440.00, note: 'A4',  wave: 'sawtooth', harm: 1.50, formant: 850,  q: 9.0, noise: 'pink',  spin: 0.25 },
+        { id: 14, code: 'V-15', name: 'Static Wand',       hz: 523.25, note: 'C5',  wave: 'triangle', harm: 3.14, formant: 2450, q: 10.2,noise: 'white', spin: 0.08 },
+        { id: 15, code: 'V-16', name: 'MAX TURBO BOOST',   hz: 587.33, note: 'D5',  wave: 'sawtooth', harm: 2.00, formant: 1850, q: 12.5,noise: 'white', spin: 0.12 }
+      ];
+
+      // ------------------------------------------------------------------------
+      // 2. APPLICATION STATE
+      // ------------------------------------------------------------------------
+      const state = {
+        masterVol: 0.82,
+        basePitchMult: 1.0,
+        latchMode: false,
+        selectedBrushPad: 0,
+
+        // Wobble / Hose-Throb FX
+        wobbleOn: true,
+        wobbleShape: 'goo',
+        wobbleDiv: 1.5, // multiplier against quarter-note Hz
+        wobbleDepth: 0.78,
+        clogQ: 0.64,
+        airflow: 0.52,
+
+        // Fractal Wave Modulator
+        fractalOn: true,
+        gooFractalCouple: true,
+        fractalAlgo: 'weierstrass',
+        fractalDepth: 0.65,
+        fractalRate: 1.60,
+        fractalDim: 1.55,
+        fractalSeed: 0.38,
+
+        // Metronome & Sequencer
+        bpm: 122,
+        gooVisc: 0.68,
+        gooPopOn: true,
+        swing: 0.28,
+        isPlaying: false,
+        currentStep: 0,
+
+        // 16-step bubble sequencer: null or { padId, intensity (0.3..1.0) }
+        steps: new Array(16).fill(null)
+      };
+
+      // Seed an initial syncopated groove so pressing PLAY immediately rocks
+      state.steps[0]  = { padId: 0,  intensity: 0.95 };
+      state.steps[3]  = { padId: 4,  intensity: 0.72 };
+      state.steps[6]  = { padId: 1,  intensity: 0.85 };
+      state.steps[8]  = { padId: 0,  intensity: 0.90 };
+      state.steps[10] = { padId: 9,  intensity: 0.68 };
+      state.steps[12] = { padId: 2,  intensity: 0.88 };
+      state.steps[14] = { padId: 15, intensity: 0.98 };
+
+      // ------------------------------------------------------------------------
+      // 3. WEB AUDIO API ENGINE (100% PROCEDURAL SYNTHESIS)
+      // ------------------------------------------------------------------------
+      let audioCtx = null;
+      let masterGain = null;
+      let compressor = null;
+      let analyser = null;
+      let wobbleOsc = null;
+      let wobbleGain = null;
+      let fractalSource = null;
+      let fractalGain = null;
+      let fractalBuffer = null;
+      let fractalSnapshot = new Float32Array(256);
+      let noiseBuffers = {};
+      let wobbleWaves = {};
+
+      // Active voice map: key -> voice object
+      const activeVoices = new Map();
+      const padElements = [];
+
+      function initAudio() {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          audioCtx = new AudioContextClass();
+
+          compressor = audioCtx.createDynamicsCompressor();
+          compressor.threshold.value = -14;
+          compressor.knee.value = 18;
+          compressor.ratio.value = 6;
+          compressor.attack.value = 0.005;
+          compressor.release.value = 0.15;
+
+          masterGain = audioCtx.createGain();
+          masterGain.gain.value = state.masterVol;
+
+          analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 1024;
+          analyser.smoothingTimeConstant = 0.82;
+
+          compressor.connect(masterGain);
+          masterGain.connect(analyser);
+          analyser.connect(audioCtx.destination);
+
+          buildNoiseBuffers();
+          buildWobblePeriodicWaves();
+          initWobbleLFO();
+          initFractalEngine();
+        }
+
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+
+        const powerBtn = document.getElementById('powerBtn');
+        powerBtn.textContent = '⚡ ENGINE ONLINE';
+        powerBtn.classList.add('unlocked');
+      }
+
+      function buildNoiseBuffers() {
+        const len = audioCtx.sampleRate * 2;
+        const white = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+        const pink = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+        const brown = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+
+        const wData = white.getChannelData(0);
+        const pData = pink.getChannelData(0);
+        const bData = brown.getChannelData(0);
+
+        let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+        let lastOut = 0;
+
+        for (let i = 0; i < len; i++) {
+          const r = Math.random() * 2 - 1;
+          wData[i] = r;
+
+          // Paul Kellet pink noise filter
+          b0 = 0.99886 * b0 + r * 0.0555179;
+          b1 = 0.99332 * b1 + r * 0.0750759;
+          b2 = 0.96900 * b2 + r * 0.1538520;
+          b3 = 0.86650 * b3 + r * 0.3104856;
+          b4 = 0.55000 * b4 + r * 0.5329522;
+          b5 = -0.7616 * b5 - r * 0.0168980;
+          pData[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + r * 0.5362) * 0.08;
+          b6 = r * 0.115926;
+
+          // Brownian turbulent rumble
+          lastOut = (lastOut + 0.03 * r) / 1.03;
+          bData[i] = lastOut * 2.8;
+        }
+
+        noiseBuffers = { white, pink, brown };
+      }
+
+      function buildWobblePeriodicWaves() {
+        // Goo-Blob asymmetric squishy harmonic wave
+        const gooReal = new Float32Array([0, 0.85, 0.42, 0.18, 0.08]);
+        const gooImag = new Float32Array([0, 0.25, -0.35, 0.14, -0.05]);
+        wobbleWaves.goo = audioCtx.createPeriodicWave(gooReal, gooImag);
+
+        // Drunk syncopated double-throb
+        const drunkReal = new Float32Array([0, 0.5, 0.75, 0.35, 0.25]);
+        const drunkImag = new Float32Array([0, -0.4, 0.3, -0.45, 0.2]);
+        wobbleWaves.drunk = audioCtx.createPeriodicWave(drunkReal, drunkImag);
+
+        // Chaos multi-harmonic wobble
+        const chaosReal = new Float32Array([0, 0.4, 0.5, 0.6, 0.45, 0.35, 0.25]);
+        const chaosImag = new Float32Array([0, 0.3, -0.5, 0.25, -0.4, 0.3, -0.2]);
+        wobbleWaves.chaos = audioCtx.createPeriodicWave(chaosReal, chaosImag);
+      }
+
+      function initWobbleLFO() {
+        wobbleOsc = audioCtx.createOscillator();
+        wobbleGain = audioCtx.createGain();
+        wobbleGain.gain.value = state.wobbleOn ? 1.0 : 0.0;
+        applyWobbleShape();
+        updateWobbleRate();
+        wobbleOsc.connect(wobbleGain);
+        wobbleOsc.start();
+      }
+
+      function applyWobbleShape() {
+        if (!wobbleOsc) return;
+        const s = state.wobbleShape;
+        if (s === 'sine') wobbleOsc.type = 'sine';
+        else if (s === 'surge') wobbleOsc.type = 'sawtooth';
+        else if (wobbleWaves[s]) wobbleOsc.setPeriodicWave(wobbleWaves[s]);
+      }
+
+      function updateWobbleRate() {
+        if (!wobbleOsc || !audioCtx) return;
+        const quarterHz = state.bpm / 60;
+        const lfoHz = quarterHz * state.wobbleDiv;
+        wobbleOsc.frequency.setTargetAtTime(lfoHz, audioCtx.currentTime, 0.03);
+      }
+
+      // ------------------------------------------------------------------------
+      // 4. FRACTAL WAVE GENERATOR (WEIERSTRASS / JULIA / CANTOR / FBM)
+      // ------------------------------------------------------------------------
+      function evaluateFractal(u) {
+        const D = state.fractalDim;
+        const H = Math.max(0.05, Math.min(0.95, 2.0 - D));
+        const seed = state.fractalSeed;
+        const algo = state.fractalAlgo;
+        const N = 5;
+
+        if (algo === 'weierstrass') {
+          const b = 1.618 + seed * 1.1;
+          const a = Math.pow(b, -H);
+          let sum = 0, norm = 0;
+          for (let k = 0; k < N; k++) {
+            const amp = Math.pow(a, k);
+            sum += amp * Math.cos(2 * Math.PI * Math.pow(b, k) * (u + seed * 0.3 * (k + 1)));
+            norm += amp;
+          }
+          return sum / (norm || 1);
+        }
+
+        if (algo === 'julia') {
+          const angle = 2 * Math.PI * u;
+          let zr = 0.72 * Math.cos(angle);
+          let zi = 0.72 * Math.sin(angle);
+          const cr = -0.76 + (seed - 0.5) * 0.65;
+          const ci = 0.22 + (D - 1.5) * 0.35;
+          let acc = 0;
+          for (let k = 0; k < 6; k++) {
+            const nzr = zr * zr - zi * zi + cr;
+            const nzi = 2 * zr * zi + ci;
+            zr = nzr;
+            zi = nzi;
+            if (zr * zr + zi * zi > 12) {
+              zr = Math.cos(angle * (k + 1));
+              zi = Math.sin(angle * (k + 1));
+            }
+            acc += Math.tanh(zr * 0.9) * Math.pow(0.75, k);
+          }
+          return Math.max(-1, Math.min(1, acc * 0.45));
+        }
+
+        if (algo === 'cantor') {
+          let x = (u + seed) % 1.0;
+          if (x < 0) x += 1.0;
+          let stairs = 0, weight = 0.55;
+          for (let k = 0; k < N; k++) {
+            const s = x * 3;
+            const d = Math.floor(s);
+            x = s - d;
+            const step = d === 0 ? 0 : d === 1 ? 0.5 : 1.0;
+            stairs += step * weight;
+            weight *= (0.45 + H * 0.22);
+          }
+          return Math.max(-1, Math.min(1, stairs * 1.9 - 1.0));
+        }
+
+        // 1/f^beta fBm turbulence
+        const beta = 1.0 + 2.0 * H;
+        let sum = 0, norm = 0;
+        for (let k = 1; k <= 7; k++) {
+          const amp = Math.pow(k, -beta * 0.55);
+          const phase = Math.sin(k * 19.31 + seed * 53.7) * Math.PI * 2;
+          sum += amp * Math.sin(2 * Math.PI * k * u + phase);
+          norm += amp;
+        }
+        return Math.max(-1, Math.min(1, (sum / (norm || 1)) * 1.35));
+      }
+
+      function rebuildFractalWave() {
+        for (let i = 0; i < fractalSnapshot.length; i++) {
+          fractalSnapshot[i] = evaluateFractal(i / fractalSnapshot.length);
+        }
+
+        const readout = document.getElementById('fractalReadout');
+        if (readout) {
+          readout.textContent = `${state.fractalAlgo.toUpperCase()} // D=${state.fractalDim.toFixed(2)} // DRAG TO SCRUB`;
+        }
+
+        if (!audioCtx) return;
+        const bufLen = 2048;
+        if (!fractalBuffer) {
+          fractalBuffer = audioCtx.createBuffer(1, bufLen, audioCtx.sampleRate);
+        }
+        const ch = fractalBuffer.getChannelData(0);
+        for (let i = 0; i < bufLen; i++) {
+          ch[i] = evaluateFractal(i / bufLen);
+        }
+      }
+
+      function initFractalEngine() {
+        rebuildFractalWave();
+        fractalGain = audioCtx.createGain();
+        fractalGain.gain.value = state.fractalOn ? 1.0 : 0.0;
+        startFractalSource();
+      }
+
+      function startFractalSource() {
+        if (!audioCtx || !fractalBuffer) return;
+        if (fractalSource) {
+          try { fractalSource.stop(); fractalSource.disconnect(); } catch (e) {}
+        }
+        fractalSource = audioCtx.createBufferSource();
+        fractalSource.buffer = fractalBuffer;
+        fractalSource.loop = true;
+        const baseHz = audioCtx.sampleRate / fractalBuffer.length;
+        fractalSource.playbackRate.value = Math.max(0.02, state.fractalRate / baseHz);
+        fractalSource.connect(fractalGain);
+        fractalSource.start();
+      }
+
+      function updateFractalEngine() {
+        rebuildFractalWave();
+        if (!audioCtx || !fractalGain) return;
+        const now = audioCtx.currentTime;
+        fractalGain.gain.setTargetAtTime(state.fractalOn ? 1.0 : 0.0, now, 0.03);
+        if (fractalSource && fractalBuffer) {
+          const baseHz = audioCtx.sampleRate / fractalBuffer.length;
+          fractalSource.playbackRate.setTargetAtTime(Math.max(0.02, state.fractalRate / baseHz), now, 0.03);
+        }
+        updateActiveVoices();
+      }
+
+      // ------------------------------------------------------------------------
+      // 5. VACUUM MOTOR VOICE TRIGGER & RELEASE (WITH SPIN-UP & COAST-DOWN)
+      // ------------------------------------------------------------------------
+      function startVacuumVoice(voiceKey, padId, intensity = 0.85, autoReleaseSec = null) {
+        initAudio();
+        stopVacuumVoice(voiceKey, true);
+
+        const pad = VACUUM_PADS[padId];
+        const now = audioCtx.currentTime;
+        const targetFreq = pad.hz * state.basePitchMult;
+        const startFreq = targetFreq * 0.42; // Motor spin-up from low RPM
+
+        const voiceGain = audioCtx.createGain();
+        voiceGain.gain.setValueAtTime(0.001, now);
+        voiceGain.gain.linearRampToValueAtTime(0.28 * intensity, now + 0.035);
+
+        const throbGain = audioCtx.createGain();
+        throbGain.gain.value = 1.0;
+
+        // Primary Motor Rotor Oscillator
+        const motorOsc = audioCtx.createOscillator();
+        motorOsc.type = pad.wave;
+        motorOsc.frequency.setValueAtTime(startFreq, now);
+        motorOsc.frequency.exponentialRampToValueAtTime(targetFreq, now + pad.spin);
+
+        // Impeller Harmonic Overtones
+        const harmOsc = audioCtx.createOscillator();
+        harmOsc.type = 'triangle';
+        harmOsc.frequency.setValueAtTime(startFreq * pad.harm, now);
+        harmOsc.frequency.exponentialRampToValueAtTime(targetFreq * pad.harm, now + pad.spin);
+
+        const harmGain = audioCtx.createGain();
+        harmGain.gain.value = 0.42;
+
+        // Turbulent Hose Airflow & Clog Bandpass Filter
+        const noiseSrc = audioCtx.createBufferSource();
+        noiseSrc.buffer = noiseBuffers[pad.noise] || noiseBuffers.pink;
+        noiseSrc.loop = true;
+
+        const hoseFilter = audioCtx.createBiquadFilter();
+        hoseFilter.type = 'bandpass';
+        const cutoff = pad.formant * (0.55 + state.clogQ * 1.45);
+        hoseFilter.frequency.setValueAtTime(cutoff * 0.55, now);
+        hoseFilter.frequency.exponentialRampToValueAtTime(cutoff, now + pad.spin);
+        hoseFilter.Q.value = pad.q * (0.45 + state.clogQ * 1.4);
+
+        const airGain = audioCtx.createGain();
+        airGain.gain.value = state.airflow * 1.25;
+
+        // Wobble Modulation Routing (Pitch + Hose Formant + Suction Throb)
+        const wobMult = state.wobbleOn ? state.wobbleDepth * (0.55 + intensity * 0.6) : 0;
+        const wobPitchMod = audioCtx.createGain();
+        wobPitchMod.gain.value = targetFreq * 0.22 * wobMult;
+        wobbleGain.connect(wobPitchMod);
+        wobPitchMod.connect(motorOsc.frequency);
+        wobPitchMod.connect(harmOsc.frequency);
+
+        const wobFormantMod = audioCtx.createGain();
+        wobFormantMod.gain.value = cutoff * 0.65 * wobMult;
+        wobbleGain.connect(wobFormantMod);
+        wobFormantMod.connect(hoseFilter.frequency);
+
+        const wobAmpMod = audioCtx.createGain();
+        wobAmpMod.gain.value = 0.44 * wobMult;
+        wobbleGain.connect(wobAmpMod);
+        wobAmpMod.connect(throbGain.gain);
+
+        // Fractal Wave Modulation Routing (Recursive Pitch Warp + Formant Sweep)
+        const fracMult = state.fractalOn ? state.fractalDepth : 0;
+        const fracPitchMod = audioCtx.createGain();
+        fracPitchMod.gain.value = targetFreq * 0.30 * fracMult;
+        fractalGain.connect(fracPitchMod);
+        fracPitchMod.connect(motorOsc.frequency);
+        fracPitchMod.connect(harmOsc.frequency);
+
+        const fracFilterMod = audioCtx.createGain();
+        fracFilterMod.gain.value = cutoff * 0.72 * fracMult;
+        fractalGain.connect(fracFilterMod);
+        fracFilterMod.connect(hoseFilter.frequency);
+
+        // Wire Graph
+        motorOsc.connect(voiceGain);
+        harmOsc.connect(harmGain);
+        harmGain.connect(voiceGain);
+        noiseSrc.connect(hoseFilter);
+        hoseFilter.connect(airGain);
+        airGain.connect(voiceGain);
+
+        voiceGain.connect(throbGain);
+        throbGain.connect(compressor);
+
+        motorOsc.start(now);
+        harmOsc.start(now);
+        noiseSrc.start(now);
+
+        const voiceObj = {
+          padId,
+          intensity,
+          motorOsc,
+          harmOsc,
+          noiseSrc,
+          hoseFilter,
+          airGain,
+          voiceGain,
+          throbGain,
+          wobPitchMod,
+          wobFormantMod,
+          wobAmpMod,
+          fracPitchMod,
+          fracFilterMod
+        };
+
+        activeVoices.set(voiceKey, voiceObj);
+        updatePadVisuals();
+
+        document.getElementById('statusTelemetry').textContent =
+          `ACTIVE // ${pad.name.toUpperCase()} (${targetFreq.toFixed(1)} Hz)`;
+
+        if (autoReleaseSec !== null) {
+          setTimeout(() => stopVacuumVoice(voiceKey, false), autoReleaseSec * 1000);
+        }
+      }
+
+      function stopVacuumVoice(voiceKey, immediate = false) {
+        const v = activeVoices.get(voiceKey);
+        if (!v || !audioCtx) return;
+        activeVoices.delete(voiceKey);
+        updatePadVisuals();
+
+        const now = audioCtx.currentTime;
+        const coastTime = immediate ? 0.03 : 0.24;
+
+        try {
+          v.voiceGain.gain.cancelScheduledValues(now);
+          v.voiceGain.gain.setValueAtTime(Math.max(0.001, v.voiceGain.gain.value), now);
+          v.voiceGain.gain.exponentialRampToValueAtTime(0.0001, now + coastTime);
+
+          // Motor coast-down pitch drop
+          v.motorOsc.frequency.cancelScheduledValues(now);
+          v.motorOsc.frequency.setValueAtTime(Math.max(25, v.motorOsc.frequency.value), now);
+          v.motorOsc.frequency.exponentialRampToValueAtTime(24, now + coastTime);
+
+          setTimeout(() => {
+            try {
+              v.motorOsc.stop();
+              v.harmOsc.stop();
+              v.noiseSrc.stop();
+              v.motorOsc.disconnect();
+              v.harmOsc.disconnect();
+              v.noiseSrc.disconnect();
+              v.voiceGain.disconnect();
+              v.throbGain.disconnect();
+              wobbleGain.disconnect(v.wobPitchMod);
+              wobbleGain.disconnect(v.wobFormantMod);
+              wobbleGain.disconnect(v.wobAmpMod);
+              fractalGain.disconnect(v.fracPitchMod);
+              fractalGain.disconnect(v.fracFilterMod);
+            } catch (e) {}
+          }, (coastTime + 0.05) * 1000);
+        } catch (err) {}
+      }
+
+      function killAllVoices() {
+        Array.from(activeVoices.keys()).forEach((k) => stopVacuumVoice(k, true));
+        document.getElementById('statusTelemetry').textContent = 'ALL VACUUM MOTORS STOPPED';
+      }
+
+      function updateActiveVoices() {
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+        activeVoices.forEach((v) => {
+          const pad = VACUUM_PADS[v.padId];
+          const targetFreq = pad.hz * state.basePitchMult;
+          const cutoff = pad.formant * (0.55 + state.clogQ * 1.45);
+          const wobMult = state.wobbleOn ? state.wobbleDepth * (0.55 + v.intensity * 0.6) : 0;
+          const fracMult = state.fractalOn ? state.fractalDepth : 0;
+
+          v.motorOsc.frequency.setTargetAtTime(targetFreq, now, 0.04);
+          v.harmOsc.frequency.setTargetAtTime(targetFreq * pad.harm, now, 0.04);
+          v.hoseFilter.frequency.setTargetAtTime(cutoff, now, 0.04);
+          v.hoseFilter.Q.setTargetAtTime(pad.q * (0.45 + state.clogQ * 1.4), now, 0.04);
+          v.airGain.gain.setTargetAtTime(state.airflow * 1.25, now, 0.04);
+
+          v.wobPitchMod.gain.setTargetAtTime(targetFreq * 0.22 * wobMult, now, 0.04);
+          v.wobFormantMod.gain.setTargetAtTime(cutoff * 0.65 * wobMult, now, 0.04);
+          v.wobAmpMod.gain.setTargetAtTime(0.44 * wobMult, now, 0.04);
+
+          v.fracPitchMod.gain.setTargetAtTime(targetFreq * 0.30 * fracMult, now, 0.04);
+          v.fracFilterMod.gain.setTargetAtTime(cutoff * 0.72 * fracMult, now, 0.04);
+        });
+      }
+
+      // Wet Bio-Viscous Goo Suction-Pop Click Synthesis
+      function triggerGooPopSound(isDownbeat, hasBubble) {
+        if (!audioCtx || !state.gooPopOn) return;
+        const now = audioCtx.currentTime;
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+
+        const basePop = isDownbeat ? 210 : 145;
+        const stretchTop = basePop * (1.6 + state.gooVisc * 1.9);
+        const dur = 0.055 + state.gooVisc * 0.085;
+
+        osc.frequency.setValueAtTime(basePop * 0.65, now);
+        osc.frequency.exponentialRampToValueAtTime(stretchTop, now + dur * 0.45);
+        osc.frequency.exponentialRampToValueAtTime(basePop * 0.5, now + dur);
+
+        const vol = (isDownbeat ? 0.22 : 0.13) * (0.35 + state.gooVisc * 0.65);
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.linearRampToValueAtTime(vol, now + 0.008);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+        osc.connect(gain);
+        gain.connect(compressor);
+        osc.start(now);
+        osc.stop(now + dur + 0.02);
+      }
+
+      // ------------------------------------------------------------------------
+      // 6. BUILD 4x4 KEYPAD UI & MULTI-TOUCH HANDLERS
+      // ------------------------------------------------------------------------
+      const keypadGrid = document.getElementById('keypadGrid');
+
+      VACUUM_PADS.forEach((pad) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'vac-pad' + (pad.id === state.selectedBrushPad ? ' selected-brush' : '');
+        btn.dataset.padId = pad.id;
+        btn.innerHTML = `
+          <div class="pad-top-row mono">
+            <span>${pad.code} • ${pad.note}</span>
+            <span class="pad-led"></span>
+          </div>
+          <div class="pad-name">${pad.name}</div>
+          <div class="pad-hz mono">${pad.hz.toFixed(1)} Hz</div>
+        `;
+
+        const key = `pad_${pad.id}`;
+
+        btn.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          selectSequencerBrush(pad.id);
+
+          if (state.latchMode && activeVoices.has(key)) {
+            stopVacuumVoice(key, false);
+            return;
+          }
+          startVacuumVoice(key, pad.id, 0.92, null);
+        });
+
+        const releaseHandler = () => {
+          if (!state.latchMode) {
+            stopVacuumVoice(key, false);
+          }
+        };
+
+        btn.addEventListener('pointerup', releaseHandler);
+        btn.addEventListener('pointercancel', releaseHandler);
+        btn.addEventListener('pointerleave', (e) => {
+          if (e.buttons === 0 && !state.latchMode) {
+            stopVacuumVoice(key, false);
+          }
+        });
+
+        keypadGrid.appendChild(btn);
+        padElements.push(btn);
+      });
+
+      function selectSequencerBrush(padId) {
+        state.selectedBrushPad = padId;
+        const pad = VACUUM_PADS[padId];
+        document.getElementById('activeBrushBadge').textContent = `BRUSH: #${padId + 1} ${pad.name.toUpperCase()}`;
+        padElements.forEach((el, idx) => {
+          el.classList.toggle('selected-brush', idx === padId);
+        });
+      }
+
+      function updatePadVisuals() {
+        const activePadIds = new Set();
+        activeVoices.forEach((v) => activePadIds.add(v.padId));
+        padElements.forEach((el, idx) => {
+          el.classList.toggle('active', activePadIds.has(idx));
+        });
+      }
+
+      // ------------------------------------------------------------------------
+      // 7. SYNCOPATION ARRANGEMENT & PLACEMENT BUBBLES SEQUENCER
+      // ------------------------------------------------------------------------
+      const bubbleGrid = document.getElementById('bubbleGrid');
+      const stepSlotElements = [];
+      let draggingStepIdx = -1;
+      let dragStartY = 0;
+      let dragStartIntensity = 0.8;
+      let didDragBubble = false;
+
+      function renderBubbleGrid() {
+        bubbleGrid.innerHTML = '';
+        stepSlotElements.length = 0;
+
+        for (let i = 0; i < 16; i++) {
+          const slot = document.createElement('div');
+          slot.className = 'step-slot' + (i % 4 === 0 ? ' beat-accent' : '') +
+            (state.isPlaying && state.currentStep === i ? ' playhead' : '');
+
+          const num = document.createElement('span');
+          num.className = 'step-num mono';
+          num.textContent = i + 1;
+          slot.appendChild(num);
+
+          const stepData = state.steps[i];
+          if (stepData) {
+            const diameter = Math.round(22 + stepData.intensity * 26);
+            const bubble = document.createElement('div');
+            bubble.className = 'goo-bubble mono';
+            bubble.style.width = `${diameter}px`;
+            bubble.style.height = `${diameter}px`;
+            bubble.textContent = `V${stepData.padId + 1}`;
+            slot.appendChild(bubble);
+          }
+
+          slot.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            initAudio();
+            draggingStepIdx = i;
+            dragStartY = e.clientY;
+            didDragBubble = false;
+
+            if (!state.steps[i]) {
+              // Place new squishy bubble with current vacuum brush
+              state.steps[i] = { padId: state.selectedBrushPad, intensity: 0.82 };
+              dragStartIntensity = 0.82;
+              startVacuumVoice(`preview_${i}`, state.selectedBrushPad, 0.82, 0.16);
+              triggerGooPopSound(i % 4 === 0, true);
+              renderBubbleGrid();
+            } else {
+              dragStartIntensity = state.steps[i].intensity;
+            }
+          });
+
+          bubbleGrid.appendChild(slot);
+          stepSlotElements.push(slot);
+        }
+      }
+
+      window.addEventListener('pointermove', (e) => {
+        if (draggingStepIdx < 0) return;
+        const dy = dragStartY - e.clientY;
+        if (Math.abs(dy) > 5) {
+          didDragBubble = true;
+          const stepData = state.steps[draggingStepIdx];
+          if (stepData) {
+            stepData.intensity = Math.max(0.28, Math.min(1.0, dragStartIntensity + dy / 90));
+            const bubbleEl = stepSlotElements[draggingStepIdx]?.querySelector('.goo-bubble');
+            if (bubbleEl) {
+              const d = Math.round(22 + stepData.intensity * 26);
+              bubbleEl.style.width = `${d}px`;
+              bubbleEl.style.height = `${d}px`;
+            }
+          }
+        }
+      });
+
+      window.addEventListener('pointerup', () => {
+        if (draggingStepIdx >= 0 && !didDragBubble && state.steps[draggingStepIdx]) {
+          // If user tapped an existing bubble without dragging, pop/remove it
+          // (unless it was just created on this very pointerdown)
+        }
+        draggingStepIdx = -1;
+      });
+
+      // Double-tap or clean click-to-pop toggle on existing bubbles
+      bubbleGrid.addEventListener('dblclick', (e) => {
+        const slot = e.target.closest('.step-slot');
+        if (!slot) return;
+        const idx = stepSlotElements.indexOf(slot);
+        if (idx >= 0 && state.steps[idx]) {
+          state.steps[idx] = null;
+          triggerGooPopSound(false, false);
+          renderBubbleGrid();
+        }
+      });
+
+      // Add explicit tap-to-pop behavior when tapping an already-existing bubble
+      let tapExistingStepIdx = -1;
+      bubbleGrid.addEventListener('pointerdown', (e) => {
+        const slot = e.target.closest('.step-slot');
+        if (!slot) return;
+        const idx = stepSlotElements.indexOf(slot);
+        // If step already existed BEFORE this pointerdown, mark it for pop-on-tap
+        tapExistingStepIdx = idx;
+      }, true);
+
+      // Refine pointerdown/pointerup so tapping an empty cell places a bubble,
+      // dragging vertically inflates/deflates it, and tapping an existing bubble pops it!
+      let existedBeforeDown = false;
+      bubbleGrid.addEventListener('pointerdown', (e) => {
+        const slot = e.target.closest('.step-slot');
+        if (!slot) return;
+        const idx = stepSlotElements.indexOf(slot);
+        existedBeforeDown = Boolean(state.steps[idx]);
+      }, true);
+
+      window.addEventListener('pointerup', () => {
+        if (tapExistingStepIdx >= 0 && existedBeforeDown && !didDragBubble) {
+          state.steps[tapExistingStepIdx] = null;
+          triggerGooPopSound(false, false);
+          renderBubbleGrid();
+        }
+        tapExistingStepIdx = -1;
+        existedBeforeDown = false;
+      });
+
+      // Rhythm Presets
+      const RHYTHM_PRESETS = {
+        drunken: [
+          { s: 0, p: 0, i: 0.95 }, { s: 3, p: 4, i: 0.72 }, { s: 6, p: 1, i: 0.85 },
+          { s: 8, p: 0, i: 0.90 }, { s: 11, p: 9, i: 0.68 }, { s: 14, p: 15, i: 0.98 }
+        ],
+        '332': [
+          { s: 0, p: 0, i: 0.96 }, { s: 3, p: 2, i: 0.82 }, { s: 6, p: 4, i: 0.88 },
+          { s: 8, p: 1, i: 0.94 }, { s: 11, p: 7, i: 0.80 }, { s: 14, p: 13, i: 0.90 }
+        ],
+        poly54: [
+          { s: 0, p: 0, i: 0.95 }, { s: 5, p: 6, i: 0.84 }, { s: 10, p: 11, i: 0.88 },
+          { s: 12, p: 3, i: 0.78 }, { s: 15, p: 14, i: 0.92 }
+        ],
+        funk: [
+          { s: 0, p: 0, i: 0.98 }, { s: 2, p: 6, i: 0.65 }, { s: 4, p: 4, i: 0.92 },
+          { s: 7, p: 9, i: 0.74 }, { s: 10, p: 1, i: 0.86 }, { s: 12, p: 2, i: 0.94 },
+          { s: 15, p: 15, i: 0.88 }
+        ]
+      };
+
+      document.querySelectorAll('[data-preset]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          initAudio();
+          const list = RHYTHM_PRESETS[btn.dataset.preset] || [];
+          state.steps.fill(null);
+          list.forEach((item) => {
+            state.steps[item.s] = { padId: item.p, intensity: item.i };
+          });
+          renderBubbleGrid();
+        });
+      });
+
+      document.getElementById('clearBubblesBtn').addEventListener('click', () => {
+        state.steps.fill(null);
+        renderBubbleGrid();
+      });
+
+      // ------------------------------------------------------------------------
+      // 8. PART-GOO BIO-VISCOUS METRONOME & SEQUENCER CLOCK
+      // ------------------------------------------------------------------------
+      let seqTimer = null;
+      const gooVisual = {
+        stretchX: 1.0,
+        stretchY: 1.0,
+        pulse: 0.0
+      };
+
+      function scheduleNextStep() {
+        if (!state.isPlaying) return;
+
+        const stepIdx = state.currentStep;
+        const isQuarterBeat = stepIdx % 4 === 0;
+        const stepData = state.steps[stepIdx];
+
+        // Trigger Goo Metronome Pulse on quarter-note beats and bubble hits
+        if (isQuarterBeat) {
+          gooVisual.stretchX = 1.38 + state.gooVisc * 0.25;
+          gooVisual.stretchY = 0.68;
+          gooVisual.pulse = 1.0;
+          triggerGooPopSound(stepIdx === 0, Boolean(stepData));
+        } else if (stepData) {
+          gooVisual.stretchX = 0.78;
+          gooVisual.stretchY = 1.32 + stepData.intensity * 0.22;
+          gooVisual.pulse = 0.75;
+        }
+
+        // Trigger Vacuum Bubble Voice
+        if (stepData) {
+          const stepDur = (60 / state.bpm) * 0.25 * (0.7 + stepData.intensity * 0.85);
+          startVacuumVoice(`seq_${stepIdx}`, stepData.padId, stepData.intensity, stepDur);
+        }
+
+        // Highlight active step
+        stepSlotElements.forEach((el, idx) => {
+          el.classList.toggle('playhead', idx === stepIdx);
+        });
+
+        const beatNum = Math.floor(stepIdx / 4) + 1;
+        document.getElementById('gooReadout').textContent = `${state.bpm} BPM // BEAT ${beatNum}/4`;
+
+        // Calculate next 16th-note delay with Syncopate Swing
+        const sixteenthMs = (60 / state.bpm / 4) * 1000;
+        const isEven = stepIdx % 2 === 0;
+        const swingFactor = isEven ? (1 + state.swing * 0.45) : (1 - state.swing * 0.45);
+        const delayMs = Math.max(35, sixteenthMs * swingFactor);
+
+        state.currentStep = (stepIdx + 1) % 16;
+        seqTimer = setTimeout(scheduleNextStep, delayMs);
+      }
+
+      const playGrooveBtn = document.getElementById('playGrooveBtn');
+      playGrooveBtn.addEventListener('click', () => {
+        initAudio();
+        state.isPlaying = !state.isPlaying;
+        if (state.isPlaying) {
+          state.currentStep = 0;
+          playGrooveBtn.textContent = '⏹ STOP GROOVE';
+          playGrooveBtn.classList.add('active-pink');
+          scheduleNextStep();
+        } else {
+          clearTimeout(seqTimer);
+          playGrooveBtn.textContent = '▶ PLAY GROOVE';
+          playGrooveBtn.classList.remove('active-pink');
+          stepSlotElements.forEach((el) => el.classList.remove('playhead'));
+        }
+      });
+
+      // Tap Tempo
+      let tapTimes = [];
+      document.getElementById('tapTempoBtn').addEventListener('click', () => {
+        initAudio();
+        const now = performance.now();
+        tapTimes.push(now);
+        if (tapTimes.length > 4) tapTimes.shift();
+        if (tapTimes.length >= 2) {
+          const intervals = [];
+          for (let i = 1; i < tapTimes.length; i++) {
+            intervals.push(tapTimes[i] - tapTimes[i - 1]);
+          }
+          const avgMs = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+          const newBpm = Math.max(40, Math.min(200, Math.round(60000 / avgMs)));
+          state.bpm = newBpm;
+          document.getElementById('bpmSlider').value = newBpm;
+          document.getElementById('bpmVal').textContent = `${newBpm} BPM`;
+          document.getElementById('gooReadout').textContent = `${newBpm} BPM // TAP SYNC`;
+          updateWobbleRate();
+        }
+      });
+
+      // ------------------------------------------------------------------------
+      // 9. UI SLIDERS & TOGGLE CONTROLS
+      // ------------------------------------------------------------------------
+      document.getElementById('powerBtn').addEventListener('click', initAudio);
+
+      const latchBtn = document.getElementById('latchBtn');
+      latchBtn.addEventListener('click', () => {
+        state.latchMode = !state.latchMode;
+        latchBtn.textContent = state.latchMode ? '🔒 HOLD / LATCH: ON' : '🔒 HOLD / LATCH: OFF';
+        latchBtn.classList.toggle('active', state.latchMode);
+        if (!state.latchMode) killAllVoices();
+      });
+
+      document.getElementById('panicBtn').addEventListener('click', killAllVoices);
+
+      document.getElementById('masterVolSlider').addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        state.masterVol = val / 100;
+        document.getElementById('masterVolVal').textContent = `${val}%`;
+        if (masterGain && audioCtx) {
+          masterGain.gain.setTargetAtTime(state.masterVol, audioCtx.currentTime, 0.03);
+        }
+      });
+
+      document.getElementById('basePitchSlider').addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10) / 100;
+        state.basePitchMult = val;
+        document.getElementById('basePitchVal').textContent = `${val.toFixed(2)}x`;
+        updateActiveVoices();
+      });
+
+      document.getElementById('bpmSlider').addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        state.bpm = val;
+        document.getElementById('bpmVal').textContent = `${val} BPM`;
+        document.getElementById('gooReadout').textContent = `${val} BPM // BEAT ${Math.floor(state.currentStep / 4) + 1}/4`;
+        updateWobbleRate();
+      });
+
+      document.getElementById('gooViscSlider').addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        state.gooVisc = val / 100;
+        document.getElementById('gooViscVal').textContent = `${val}%`;
+      });
+
+      const gooSoundToggleBtn = document.getElementById('gooSoundToggleBtn');
+      gooSoundToggleBtn.addEventListener('click', () => {
+        state.gooPopOn = !state.gooPopOn;
+        gooSoundToggleBtn.textContent = state.gooPopOn ? '💧 GOO POP: ON' : '💧 GOO POP: OFF';
+        gooSoundToggleBtn.classList.toggle('active-pink', state.gooPopOn);
+      });
+
+      document.getElementById('swingSlider').addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        state.swing = val / 100;
+        document.getElementById('swingVal').textContent = `${val}%`;
+      });
+
+      // Wobble FX Controls
+      const wobbleToggleBtn = document.getElementById('wobbleToggleBtn');
+      wobbleToggleBtn.addEventListener('click', () => {
+        state.wobbleOn = !state.wobbleOn;
+        wobbleToggleBtn.textContent = state.wobbleOn ? 'WOBBLE LFO: ON' : 'WOBBLE LFO: OFF';
+        wobbleToggleBtn.classList.toggle('active-pink', state.wobbleOn);
+        if (wobbleGain && audioCtx) {
+          wobbleGain.gain.setTargetAtTime(state.wobbleOn ? 1.0 : 0.0, audioCtx.currentTime, 0.03);
+        }
+        updateActiveVoices();
+      });
+
+      document.querySelectorAll('[data-wshape]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.wobbleShape = btn.dataset.wshape;
+          document.querySelectorAll('[data-wshape]').forEach((b) => b.classList.remove('active-pink'));
+          btn.classList.add('active-pink');
+          applyWobbleShape();
+        });
+      });
+
+      document.querySelectorAll('[data-wdiv]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.wobbleDiv = parseFloat(btn.dataset.wdiv);
+          document.querySelectorAll('[data-wdiv]').forEach((b) => b.classList.remove('active-cyan'));
+          btn.classList.add('active-cyan');
+          updateWobbleRate();
+        });
+      });
+
+      document.getElementById('wobbleDepthSlider').addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        state.wobbleDepth = val / 100;
+        document.getElementById('wobbleDepthVal').textContent = `${val}%`;
+        updateActiveVoices();
+      });
+
+      document.getElementById('clogQSlider').addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        state.clogQ = val / 100;
+        document.getElementById('clogQVal').textContent = `${val}%`;
+        updateActiveVoices();
+      });
+
+      document.getElementById('airflowSlider').addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        state.airflow = val / 100;
+        document.getElementById('airflowVal').textContent = `${val}%`;
+        updateActiveVoices();
+      });
+
+      // Fractal Wave Modulator Controls
+      const fractalToggleBtn = document.getElementById('fractalToggleBtn');
+      fractalToggleBtn.addEventListener('click', () => {
+        state.fractalOn = !state.fractalOn;
+        fractalToggleBtn.textContent = state.fractalOn ? 'FRACTAL: ON' : 'FRACTAL: OFF';
+        fractalToggleBtn.classList.toggle('active-pink', state.fractalOn);
+        updateFractalEngine();
+      });
+
+      const gooFractalCoupleBtn = document.getElementById('gooFractalCoupleBtn');
+      gooFractalCoupleBtn.addEventListener('click', () => {
+        state.gooFractalCouple = !state.gooFractalCouple;
+        gooFractalCoupleBtn.textContent = state.gooFractalCouple
+          ? '✦ GOO-FRACTAL COUPLE: ON'
+          : '✧ GOO-FRACTAL COUPLE: OFF';
+        gooFractalCoupleBtn.classList.toggle('active-cyan', state.gooFractalCouple);
+      });
+
+      document.querySelectorAll('[data-falgo]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.fractalAlgo = btn.dataset.falgo;
+          document.querySelectorAll('[data-falgo]').forEach((b) => b.classList.remove('active-pink'));
+          btn.classList.add('active-pink');
+          updateFractalEngine();
+        });
+      });
+
+      document.getElementById('fractalDepthSlider').addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        state.fractalDepth = val / 100;
+        document.getElementById('fractalDepthVal').textContent = `${val}%`;
+        updateActiveVoices();
+      });
+
+      document.getElementById('fractalRateSlider').addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10) / 100;
+        state.fractalRate = val;
+        document.getElementById('fractalRateVal').textContent = `${val.toFixed(2)} Hz`;
+        updateFractalEngine();
+      });
+
+      document.getElementById('fractalDimSlider').addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10) / 100;
+        state.fractalDim = val;
+        document.getElementById('fractalDimVal').textContent = `D=${val.toFixed(2)}`;
+        updateFractalEngine();
+      });
+
+      // ------------------------------------------------------------------------
+      // 10. REAL-TIME CANVAS VISUALIZERS (OSCILLOSCOPE, GOO METRONOME, FRACTAL)
+      // ------------------------------------------------------------------------
+      const scopeCanvas = document.getElementById('scopeCanvas');
+      const scopeCtx = scopeCanvas.getContext('2d');
+      const gooCanvas = document.getElementById('gooCanvas');
+      const gooCtx = gooCanvas.getContext('2d');
+      const fractalCanvas = document.getElementById('fractalCanvas');
+      const fractalCtx = fractalCanvas.getContext('2d');
+
+      // Scrubbable Fractal Seed on Canvas
+      let scrubbingFractal = false;
+      function scrubSeed(e) {
+        const rect = fractalCanvas.getBoundingClientRect();
+        state.fractalSeed = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        updateFractalEngine();
+      }
+      fractalCanvas.addEventListener('pointerdown', (e) => {
+        scrubbingFractal = true;
+        fractalCanvas.setPointerCapture(e.pointerId);
+        scrubSeed(e);
+      });
+      fractalCanvas.addEventListener('pointermove', (e) => {
+        if (scrubbingFractal) scrubSeed(e);
+      });
+      fractalCanvas.addEventListener('pointerup', () => { scrubbingFractal = false; });
+      fractalCanvas.addEventListener('pointercancel', () => { scrubbingFractal = false; });
+
+      function syncCanvasSizes() {
+        [scopeCanvas, gooCanvas, fractalCanvas].forEach((cvs) => {
+          const rect = cvs.parentElement.getBoundingClientRect();
+          const dpr = window.devicePixelRatio || 1;
+          const w = Math.max(200, Math.floor(rect.width * dpr));
+          const h = Math.max(90, Math.floor(rect.height * dpr));
+          if (cvs.width !== w || cvs.height !== h) {
+            cvs.width = w;
+            cvs.height = h;
+          }
+        });
+      }
+
+      if (typeof ResizeObserver !== 'undefined') {
+        const ro = new ResizeObserver(syncCanvasSizes);
+        ro.observe(scopeCanvas.parentElement);
+        ro.observe(gooCanvas.parentElement);
+        ro.observe(fractalCanvas.parentElement);
+      }
+      window.addEventListener('resize', syncCanvasSizes);
+
+      function drawOscilloscope(nowMs) {
+        const w = scopeCanvas.width;
+        const h = scopeCanvas.height;
+        scopeCtx.clearRect(0, 0, w, h);
+
+        // Subtle grid
+        scopeCtx.strokeStyle = 'rgba(6, 182, 212, 0.14)';
+        scopeCtx.lineWidth = 1;
+        scopeCtx.beginPath();
+        scopeCtx.moveTo(0, h * 0.5);
+        scopeCtx.lineTo(w, h * 0.5);
+        scopeCtx.stroke();
+
+        const grad = scopeCtx.createLinearGradient(0, 0, w, 0);
+        grad.addColorStop(0, '#06b6d4');
+        grad.addColorStop(0.5, '#ff69b4');
+        grad.addColorStop(1, '#a3e635');
+
+        scopeCtx.strokeStyle = grad;
+        scopeCtx.lineWidth = 2.5;
+        scopeCtx.beginPath();
+
+        if (analyser && activeVoices.size > 0) {
+          const buf = new Uint8Array(analyser.fftSize);
+          analyser.getByteTimeDomainData(buf);
+          const slice = w / buf.length;
+          for (let i = 0; i < buf.length; i++) {
+            const v = buf[i] / 128.0;
+            const y = (v * h) / 2;
+            const x = i * slice;
+            if (i === 0) scopeCtx.moveTo(x, y);
+            else scopeCtx.lineTo(x, y);
+          }
+        } else {
+          // Idle breathing suction wave
+          const t = nowMs * 0.004;
+          for (let x = 0; x <= w; x += 4) {
+            const y = h * 0.5 + Math.sin(x * 0.025 + t) * 6 * Math.sin(t * 0.4);
+            if (x === 0) scopeCtx.moveTo(x, y);
+            else scopeCtx.lineTo(x, y);
+          }
+        }
+        scopeCtx.stroke();
+      }
+
+      function drawGooMetronome(nowMs) {
+        const w = gooCanvas.width;
+        const h = gooCanvas.height;
+        gooCtx.clearRect(0, 0, w, h);
+
+        // Spring-damper relaxation back to 1.0
+        gooVisual.stretchX += (1.0 - gooVisual.stretchX) * 0.14;
+        gooVisual.stretchY += (1.0 - gooVisual.stretchY) * 0.14;
+        gooVisual.pulse *= 0.90;
+
+        const cx = w * 0.5;
+        const cy = h * 0.54;
+        const baseR = Math.min(w, h) * 0.27;
+        const t = nowMs * 0.004;
+
+        const grad = gooCtx.createRadialGradient(cx - baseR * 0.25, cy - baseR * 0.25, 4, cx, cy, baseR * 1.45);
+        grad.addColorStop(0, '#ecfccb');
+        grad.addColorStop(0.45, '#a3e635');
+        grad.addColorStop(0.85, '#06b6d4');
+        grad.addColorStop(1, '#7e22ce');
+
+        gooCtx.fillStyle = grad;
+        gooCtx.beginPath();
+
+        const pts = 64;
+        for (let i = 0; i <= pts; i++) {
+          const ang = (i / pts) * Math.PI * 2;
+          const viscWobble = Math.sin(ang * 3 + t * (1.8 - state.gooVisc * 0.7)) * (4.5 * state.gooVisc);
+
+          let fractalSpine = 0;
+          if (state.fractalOn && state.gooFractalCouple) {
+            const idx = Math.floor(((i / pts) + nowMs * 0.0002 * state.fractalRate) * fractalSnapshot.length) % fractalSnapshot.length;
+            const s = fractalSnapshot[(idx + fractalSnapshot.length) % fractalSnapshot.length] || 0;
+            fractalSpine = s * (5.5 + gooVisual.pulse * 9.0) * state.fractalDepth;
+          }
+
+          const rx = (baseR + viscWobble + fractalSpine) * gooVisual.stretchX;
+          const ry = (baseR - viscWobble + fractalSpine) * gooVisual.stretchY;
+          const px = cx + Math.cos(ang) * rx;
+          const py = cy + Math.sin(ang) * ry;
+
+          if (i === 0) gooCtx.moveTo(px, py);
+          else gooCtx.lineTo(px, py);
+        }
+        gooCtx.closePath();
+        gooCtx.fill();
+      }
+
+      function drawFractalWave(nowMs) {
+        const w = fractalCanvas.width;
+        const h = fractalCanvas.height;
+        fractalCtx.clearRect(0, 0, w, h);
+
+        fractalCtx.strokeStyle = 'rgba(139, 92, 246, 0.22)';
+        fractalCtx.lineWidth = 1;
+        fractalCtx.beginPath();
+        fractalCtx.moveTo(0, h * 0.5);
+        fractalCtx.lineTo(w, h * 0.5);
+        fractalCtx.stroke();
+
+        const scroll = (nowMs * 0.0004 * state.fractalRate) % 1.0;
+        const len = fractalSnapshot.length;
+
+        // Self-similar zoomed shadow harmonic layer
+        fractalCtx.strokeStyle = 'rgba(6, 182, 212, 0.35)';
+        fractalCtx.lineWidth = 1.5;
+        fractalCtx.beginPath();
+        for (let x = 0; x <= w; x += 3) {
+          const u = ((x / w) * 2.1 + scroll * 2) % 1.0;
+          const val = fractalSnapshot[Math.floor(u * len) % len] || 0;
+          const y = h * 0.5 - val * (h * 0.28);
+          if (x === 0) fractalCtx.moveTo(x, y);
+          else fractalCtx.lineTo(x, y);
+        }
+        fractalCtx.stroke();
+
+        // Main Fractal Modulator Wave
+        const grad = fractalCtx.createLinearGradient(0, 0, w, 0);
+        grad.addColorStop(0, '#c084fc');
+        grad.addColorStop(0.5, '#ff69b4');
+        grad.addColorStop(1, '#06b6d4');
+
+        fractalCtx.strokeStyle = state.fractalOn ? grad : '#475569';
+        fractalCtx.lineWidth = 2.5;
+        fractalCtx.beginPath();
+        for (let x = 0; x <= w; x += 2) {
+          const u = ((x / w) + scroll) % 1.0;
+          const val = fractalSnapshot[Math.floor(u * len) % len] || 0;
+          const y = h * 0.5 - val * (h * 0.38);
+          if (x === 0) fractalCtx.moveTo(x, y);
+          else fractalCtx.lineTo(x, y);
+        }
+        fractalCtx.stroke();
+
+        // Seed scrubber indicator line
+        const sx = state.fractalSeed * w;
+        fractalCtx.strokeStyle = 'rgba(251, 146, 60, 0.85)';
+        fractalCtx.lineWidth = 2;
+        fractalCtx.beginPath();
+        fractalCtx.moveTo(sx, 0);
+        fractalCtx.lineTo(sx, h);
+        fractalCtx.stroke();
+      }
+
+      function animationLoop(nowMs) {
+        requestAnimationFrame(animationLoop);
+        drawOscilloscope(nowMs);
+        drawGooMetronome(nowMs);
+        drawFractalWave(nowMs);
+      }
+
+      // Initialize UI & Start Visual Loop
+      renderBubbleGrid();
+      rebuildFractalWave();
+      syncCanvasSizes();
+      requestAnimationFrame(animationLoop);
+    });
+  </script>
+</body>
+</html>
