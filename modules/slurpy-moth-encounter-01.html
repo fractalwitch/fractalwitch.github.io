@@ -1,0 +1,1148 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Slurpy Moth Oracle</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500;700&family=Silkscreen&display=swap">
+<style>
+/* Layout: a creature terrarium. The egg lives in a tall dark tank; a small altar of controls and its prophecy log sit beside it, stacking under it on phones. Single committed void-violet world. */
+:root{
+  --bg:#07020d; --panel:#110719; --line:#2b1840; --fg:#f6ecff; --mute:#a68fbf; --pink:#ff3fb4; --acid:#a6ff3a;
+  --display:"Syne", "Avenir Next", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+  --pixel:"Silkscreen", ui-monospace, monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:13px/1.5 var(--mono);
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:16px}
+.wrap{max-width:1260px;margin:0 auto;display:grid;gap:16px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 24px}
+.eyebrow{font:400 11px/1.3 var(--pixel);color:var(--mute)}
+h1{font:800 clamp(32px,6vw,64px)/.9 var(--display);letter-spacing:-.02em;margin:6px 0 0}
+h1 em{font-style:normal;background:linear-gradient(95deg,var(--pink),#ff9be0 30%,var(--acid) 60%,#3fe0ff 85%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{max-width:46ch;color:var(--mute);margin:0;font-size:12.5px}
+.lab{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start}
+@media (max-width:860px){.lab{grid-template-columns:minmax(0,1fr)}}
+.tank{position:relative;border:1px solid var(--line);border-radius:18px;overflow:hidden;height:clamp(520px,82vh,880px);touch-action:none;user-select:none;-webkit-user-select:none;background:#0b0412;cursor:grab}
+.tank canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.tank .say{position:absolute;left:14px;right:14px;top:14px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;pointer-events:none}
+.say p{margin:0;font:500 12px/1.4 var(--mono);background:rgba(7,2,13,.6);padding:7px 11px;border-radius:999px;backdrop-filter:blur(6px)}
+.say .mood{font:400 11px/1.4 var(--pixel);color:var(--acid)}
+.bench{border:1px solid var(--line);border-radius:18px;background:var(--panel);padding:16px;display:grid;gap:16px}
+.group{display:grid;gap:10px}
+.group h2{font:400 11px/1 var(--pixel);color:var(--mute);margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:500 12px/1 var(--mono);color:var(--fg);background:transparent;border:1px solid var(--line);border-radius:999px;padding:9px 12px;cursor:pointer}
+.chip:hover{border-color:var(--pink)}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.chip.hot{background:var(--pink);border-color:var(--pink);color:#fff}
+.chip:focus-visible,input:focus-visible,button:focus-visible{outline:2px solid var(--acid);outline-offset:2px}
+.row{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center}
+.row label{font-size:12px}
+.row output{font-size:11px;color:var(--mute);font-variant-numeric:tabular-nums}
+.row input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--pink);margin:0}
+ol.log{margin:0;padding:0 0 0 18px;display:grid;gap:6px;max-height:220px;overflow:auto;font-size:12px}
+ol.log li span{display:block;font:400 10px var(--pixel);color:var(--acid)}
+.empty{color:var(--mute);font-size:12px;margin:0}
+.anatomy{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;border-top:1px solid var(--line);padding-top:16px}
+.anatomy div{min-width:0}
+.anatomy h3{font:700 16px/1.2 var(--display);margin:2px 0 4px}
+.anatomy p{margin:0;color:var(--mute);font-size:12px;max-width:60ch}
+.anatomy .k{font:400 10px var(--pixel);color:var(--acid)}
+.err{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:var(--mute)}
+/* Toy mode (default): the creature fills the screen, nothing else. Dev mode brings back title, controls and notes. */
+html[data-mode="toy"] body{overflow:hidden}
+html[data-mode="toy"] header, html[data-mode="toy"] .bench, html[data-mode="toy"] .anatomy, html[data-mode="toy"] .tank .say{display:none}
+html[data-mode="toy"] .tank{position:fixed;inset:0;height:auto;border:0;border-radius:0;z-index:1}
+html[data-mode="dev"] body{padding-bottom:calc(72px + env(safe-area-inset-bottom, 0px))}
+.devbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom, 0px));z-index:20;display:flex;gap:6px;padding:4px;border-radius:999px;background:rgba(7,2,13,.55);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(8px)}
+.devbar button{font:400 11px/1 var(--pixel);letter-spacing:.04em;color:rgba(246,236,255,.8);background:transparent;border:0;border-radius:999px;padding:10px 14px;cursor:pointer}
+.devbar button[aria-pressed="true"]{background:var(--acid);color:#07020d}
+.devbar button:focus-visible{outline:2px solid var(--acid);outline-offset:2px}
+.tank{background:#05020c;cursor:crosshair}
+.pstamp{font:400 10px/1.4 var(--pixel);color:var(--mute);margin:0}
+</style>
+
+<nav class="devbar" aria-label="Mode"><button id="devBtn" type="button" aria-pressed="false">DEV MODE</button></nav>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">ORACLE CREATURE 03 · THE FRACTAL GARDENS AT NIGHT</div>
+      <h1>Slurpy <em>Moth Oracle</em></h1>
+    </div>
+    <p class="lede">A velvet moth whose wing scales are tiny letters and whose compound eyes each hold an infinite mirror tunnel. Drag a light across the dark and it chases it. Squeeze it and it gives you a little wonder. Offer a prophecy and it uncurls its tongue and slurps it up. Leave a ticket lying around and it will come and steal it.</p>
+  </header>
+
+  <section class="lab">
+    <div class="tank" id="tank" aria-label="The Slurpy Moth Oracle. Drag across the dark to hold up a light it chases, tap the moth to poke it, press and hold it to squeeze out a prophecy, drag the moth to carry it, drag tickets to its head to feed it.">
+      <canvas id="gl"></canvas>
+      <canvas id="fx"></canvas>
+      <div class="say"><p id="hint">drag dark · lamp &nbsp; tap · poke &nbsp; hold · squeeze &nbsp; drag moth · carry &nbsp; ticket → head · slurp</p><p class="mood" id="mood">MOOD: CURIOUS</p></div>
+    </div>
+
+    <aside class="bench" aria-label="Controls">
+      <div class="group">
+        <h2>DO THINGS</h2>
+        <div class="chips">
+          <button class="chip hot" id="bSpit" type="button">Squeeze out a wonder</button>
+          <button class="chip" id="bPoke" type="button">Poke</button>
+          <button class="chip" id="bLamp" type="button" aria-pressed="false">Lamp</button>
+          <button class="chip" id="bFeed" type="button">Feed newest ticket</button>
+        </div>
+      </div>
+      <div class="group">
+        <h2>FORM</h2>
+        <div class="chips" id="pals"></div>
+      </div>
+      <div class="group" id="sliders"><h2>BODY</h2></div>
+      <div class="group">
+        <h2>WONDERS</h2>
+        <p class="empty" id="logEmpty">None yet. Hold the moth until its wings fold shut.</p>
+        <ol class="log" id="log"></ol>
+      </div>
+    </aside>
+  </section>
+
+  <section class="anatomy" aria-label="How the five studies are fused into one moth">
+    <div><div class="k">SCALES · GLYPH-FIELD</div><h3>Wings written in letters</h3><p>Every wing scale is a glyph, picked by the brightness of the wing pattern under it, so the eyespots, veins and bands are drawn entirely in tiny letters. They churn faster where a ripple passes.</p></div>
+    <div><div class="k">SHEEN · HOLO-FOIL</div><h3>Foil and velvet</h3><p>Thin-film foil over the wings, and an iridescent sheen on the fuzzy velvet body. Your lamp lights it, and glows through the wings from behind.</p></div>
+    <div><div class="k">NERVES · RIPPLE-BLOOM</div><h3>Ripples, feelers, goo</h3><p>A poke sends a ring across the wing membrane. The feathered antennae light up barb by barb. Goo strands hang from its tails, stretch, and snap off as drops.</p></div>
+    <div><div class="k">EYES · MIRROR-VAULT</div><h3>A thousand tunnels</h3><p>Each compound eye is made of hex facets, and every facet is its own small window into an infinite mirror tunnel. A dark pseudopupil follows you. Whatever it slurps shows up in there.</p></div>
+    <div><div class="k">TONGUE · TICKET-PRESS</div><h3>Little wonders</h3><p>Squeeze it and it gifts you a printed wonder that flutters to the ground. Offer one back and the curled proboscis unrolls to slurp it. Leave one on the ground and it may come and take it.</p></div>
+    <div><div class="k">WORLD · GOOAE</div><h3>Fractal Gardens at night</h3><p>Recursive flower silhouettes, glitter in the soil and the three moons 🌒🌕🌘. The forms are its canon transformations: Slurpy, Gooform, Crystalwing and Fractal Moth.</p><p class="pstamp">PROPOSED · GOO-FG-CRE-ORACLEMOTH-V1 · based on GOO-0001 Slurpy Moth</p></div>
+  </section>
+</div>
+
+<script id="fs" type="x-shader/x-fragment">#version 300 es
+precision highp float;
+// SLURPY MOTH ORACLE — velvet body, foil wings whose scales are glyphs, wing ripples,
+// and compound eyes whose every facet is a window into an infinite mirror-vault.
+uniform vec2  uRes;
+uniform float uTime;
+uniform vec3  uCamPos;
+uniform mat3  uCamRot;
+uniform float uFov;
+uniform vec3  uCenter;
+uniform mat3  uBody;        // local -> world rotation
+uniform float uFlap;        // wing angle about the body axis (radians, + = tips away from you)
+uniform float uBend;        // tip lag from flapping
+uniform vec4  uPoke[8];     // xy = wing-plane point, z = side (+1 right, -1 left, 0 both), w = start time
+uniform float uAmp[8];
+uniform vec3  uLight;       // lamp position (world)
+uniform float uLamp;        // lamp intensity
+uniform vec2  uLook;
+uniform float uRoll, uFly, uHue, uExcite, uGlow;
+uniform float uFoil, uWaveSpeed, uGlyph, uSpiral, uFuzz, uFractal, uIdle;
+uniform vec3  uColA, uColB, uColC, uBg0, uBg1;
+uniform sampler2D uAtlas;
+uniform float uGlyphN;
+uniform sampler2D uTicket;
+uniform float uTicketOn;
+out vec4 o;
+
+#define TAU 6.2831853
+const vec3 HINGE = vec3(0.1, 0.4, 0.0);
+const vec3 EYEC = vec3(0.15, 0.86, 0.1);
+const float ER = 0.15;
+mat2 rot(float a){ float c = cos(a), s = sin(a); return mat2(c, s, -s, c); }
+vec3 hueRot(vec3 c, float a){ const vec3 k = vec3(0.57735); float ca = cos(a); return c * ca + cross(k, c) * sin(a) + k * dot(k, c) * (1.0 - ca); }
+float hash21(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+float smin(float a, float b, float k){ float h = max(k - abs(a - b), 0.0) / k; return min(a, b) - h * h * k * 0.25; }
+float sdEll(vec3 p, vec3 r){ float k0 = length(p / r), k1 = length(p / (r * r)); return k0 * (k0 - 1.0) / max(k1, 1e-5); }
+float sdE2(vec2 p, vec2 r){ float k0 = length(p / r), k1 = length(p / (r * r)); return k0 * (k0 - 1.0) / max(k1, 1e-5); }
+
+vec3 toLocal(vec3 p){ return transpose(uBody) * (p - uCenter); }
+vec3 wingFrame(vec3 a){ vec3 w = a - HINGE; w.xz = rot(uFlap) * w.xz; return w; }
+
+float wing2D(vec2 u){
+  vec2 f = rot(-0.5) * (u - vec2(0.78, 0.36));
+  float fw = sdE2(f, vec2(0.88, 0.40));
+  vec2 h = rot(0.55) * (u - vec2(0.5, -0.36));
+  float hw = sdE2(h, vec2(0.58, 0.44)) + 0.014 * sin(atan(h.y, h.x) * 14.0);
+  vec2 t = rot(-0.3) * (u - vec2(0.58, -0.92));
+  float tw = sdE2(t, vec2(0.10, 0.24));                 // the slurpy tail lobe
+  return max(smin(smin(fw, hw, 0.07), tw, 0.1), -u.x - 0.02);
+}
+
+float wingWaves(vec2 u, float side, out float trail){
+  float d = 0.0; trail = 0.0;
+  for (int i = 0; i < 8; i++){
+    float age = uTime - uPoke[i].w;
+    if (age < 0.0 || age > 4.0) continue;
+    float s = uPoke[i].z;
+    if (s != 0.0 && s != side) continue;
+    float x = length(u - uPoke[i].xy) - age * uWaveSpeed;
+    float env = uAmp[i] * exp(-age * 1.3);
+    d += env * exp(-x * x / 0.02);
+    trail += env * smoothstep(-0.9, -0.04, x) * (1.0 - smoothstep(-0.04, 0.08, x)) * exp(-age * 0.5);
+  }
+  return d;
+}
+
+vec2 map(vec3 p){
+  vec3 q = toLocal(p);
+  float side = q.x < 0.0 ? -1.0 : 1.0;
+  vec3 a = vec3(abs(q.x), q.y, q.z);
+  // wings: a thin cupped membrane in the hinge frame, rippled by pokes
+  vec3 w = wingFrame(a);
+  float tr; float wv = wingWaves(w.xy, side, tr);
+  float wz = w.z - (0.05 * w.x * w.x + uBend * w.x * w.x * 0.18 + wv * 0.07 + 0.012 * sin(w.x * 6.0 + uTime * 2.0) * uIdle);
+  float wd = wing2D(w.xy);
+  vec2 e = vec2(max(wd, 0.0), max(abs(wz) - 0.009, 0.0));
+  float dW = length(e) + min(max(wd, abs(wz) - 0.009), 0.0) - 0.004;
+  // velvet body: head, thorax, segmented abdomen that sways
+  vec3 qb = q - vec3(0.0, -0.38, 0.0);
+  qb.x -= sin(uTime * 1.3) * 0.09 * min(qb.y, 0.0) * min(qb.y, 0.0);
+  float abd = sdEll(qb, vec3(0.17, 0.62, 0.16)) - 0.012 * (1.0 - abs(sin(qb.y * 11.0)));
+  float tho = sdEll(q - vec3(0.0, 0.42, 0.0), vec3(0.2, 0.27, 0.19));
+  float head = length(q - vec3(0.0, 0.8, 0.03)) - 0.17;
+  float bd = smin(smin(head, tho, 0.07), abd, 0.08);
+  bd -= uFuzz * 0.012 * sin(q.x * 61.0) * sin(q.y * 57.0) * sin(q.z * 59.0);
+  float ed = length(a - EYEC) - ER;
+  vec2 r = vec2(dW, 0.0);
+  if (bd < r.x) r = vec2(bd, 1.0);
+  if (ed < r.x) r = vec2(ed, 2.0);
+  return vec2(r.x * 0.6, r.y);
+}
+
+vec3 calcNormal(vec3 p){
+  const vec2 k = vec2(1.0, -1.0); const float e = 0.0012;
+  return normalize(k.xyy * map(p + k.xyy * e).x + k.yyx * map(p + k.yyx * e).x + k.yxy * map(p + k.yxy * e).x + k.xxx * map(p + k.xxx * e).x);
+}
+
+vec3 backdrop(vec3 ro, vec3 rd){
+  vec3 col = mix(uBg0 * 1.6, uBg1, smoothstep(-0.1, 0.6, rd.y));
+  // stars
+  vec2 sg = vec2(atan(rd.x, -rd.z), rd.y) * 150.0; vec2 sc = floor(sg); float sh = hash21(sc);
+  if (sh > 0.991) col += vec3(0.95, 0.9, 1.0) * smoothstep(0.35, 0.0, length(fract(sg) - 0.5)) * (0.45 + 0.55 * sin(uTime * 2.0 + sh * 80.0));
+  // the three moons: waxing, full, waning
+  for (int k = 0; k < 3; k++){
+    vec3 md = normalize(vec3(-0.3 + 0.3 * float(k) + (k == 1 ? 0.09 : 0.0), 0.115 + (k == 1 ? 0.02 : 0.0), -1.0));
+    float r = acos(clamp(dot(rd, md), -1.0, 1.0)), R = k == 1 ? 0.034 : 0.027;
+    float disc = smoothstep(R, R * 0.9, r);
+    float cut = 0.0;
+    if (k != 1){ vec3 od = normalize(md + vec3(k == 0 ? -0.018 : 0.018, 0.004, 0.0)); cut = smoothstep(R * 1.02, R * 0.92, acos(clamp(dot(rd, od), -1.0, 1.0))); }
+    col = mix(col, mix(vec3(1.0, 0.96, 0.93), uColB, 0.12), clamp(disc - cut, 0.0, 1.0));
+    col += uColB * (k == 1 ? 0.12 : 0.05) * exp(-r * r * 520.0);
+  }
+  // Fractal Gardens: nested rose silhouettes glowing on the far horizon
+  if (rd.z < -0.05){
+    float t = (-26.0 - ro.z) / rd.z; vec3 fp = ro + rd * t;
+    for (int k = 0; k < 4; k++){
+      vec2 c = vec2(-16.0 + float(k) * 10.5, -2.0 + 1.6 * float(k % 2)); vec2 d = fp.xy - c;
+      float rr = length(d), an = atan(d.y, d.x), g = 0.0;
+      for (int l = 0; l < 3; l++){
+        float R = 3.2 * pow(0.5, float(l)), pet = 5.0 + 3.0 * float(l);
+        float rose = R * (0.62 + 0.38 * cos(pet * an + uTime * 0.04 * float(l + 1) + float(k)));
+        g += exp(-pow((rr - rose) / (0.05 * R + 0.03), 2.0)) * (1.0 - 0.25 * float(l));
+      }
+      float stem = exp(-pow((d.x + 0.35 * sin(d.y * 0.45)) / 0.09, 2.0)) * step(d.y, -0.6) ;
+      col += mix(uColA, uColB, 0.35) * 0.07 * g + uColA * 0.04 * stem * step(-9.0, fp.y);
+    }
+  }
+  if (rd.y < -0.02){
+    float t = (-2.4 - ro.y) / rd.y; vec3 fp = ro + rd * t;
+    vec3 fl = uBg0 * 1.4;
+    float gh = hash21(floor(fp.xz * 14.0));
+    fl += mix(uColB, vec3(1.0), 0.5) * step(0.9975, gh) * (0.5 + 0.5 * sin(uTime * 3.0 + gh * 90.0)) * exp(-t * 0.05);
+    vec2 dl = fp.xz - uLight.xz; fl += uColC * 0.14 * uLamp * exp(-dot(dl, dl) * 1.2);
+    vec2 dm = fp.xz - uCenter.xz; fl += uColA * 0.07 * (0.5 + uGlow) * exp(-dot(dm, dm) * 0.35);
+    col = mix(col, fl, smoothstep(0.0, 0.06, -rd.y) * exp(-t * 0.02));
+  }
+  return col;
+}
+
+// mirror-vault: lines along a mirrored box, bounced to infinity, the last slurped ticket on the end mirrors
+vec3 gut(vec3 p, vec3 d, float h){
+  vec3 ad = abs(d);
+  int cax = (ad.x >= ad.y && ad.x >= ad.z) ? 0 : (ad.y >= ad.z ? 1 : 2);
+  vec3 acc = vec3(0.0); float att = 1.0, travel = 0.0;
+  float px = uFov * 2.0 / uRes.y;
+  const float W0 = 0.008;
+  for (int b = 0; b < 12; b++){
+    vec3 sd = vec3(d.x >= 0.0 ? 1.0 : -1.0, d.y >= 0.0 ? 1.0 : -1.0, d.z >= 0.0 ? 1.0 : -1.0);
+    vec3 tt = (sd * h - p) / max(abs(d), vec3(1e-5)) * sd;
+    float T = max(min(tt.x, min(tt.y, tt.z)), 0.0);
+    int ax = (tt.x <= tt.y && tt.x <= tt.z) ? 0 : (tt.y <= tt.z ? 1 : 2);
+    vec3 col = mix(uColA, uColB, (b % 2 == 1) ? 0.75 : 0.0);
+    float g = 0.0;
+    for (int a = 0; a < 3; a++){
+      vec2 q0; vec2 dq; float pa; float da;
+      if (a == 0){ q0 = p.yz; dq = d.yz; pa = p.x; da = d.x; }
+      else if (a == 1){ q0 = p.xz; dq = d.xz; pa = p.y; da = d.y; }
+      else { q0 = p.xy; dq = d.xy; pa = p.z; da = d.z; }
+      float den = max(dot(dq, dq), 1e-6);
+      for (int m = 0; m < 4; m++){
+        vec2 c = vec2((m % 2 == 0) ? h : -h, (m < 2) ? h : -h);
+        float t = clamp(dot(c - q0, dq) / den, 0.0, T);
+        vec2 df = q0 + dq * t - c;
+        float d2 = dot(df, df);
+        float w = W0 + (travel + t) * px * 3.0;
+        float s = pa + da * t;
+        float wave = 0.5 + 0.5 * sin(s * 3.0 - uTime * 2.6 + c.x * 5.1 + c.y * 8.3 + float(a) * 2.0);
+        g += (0.45 + 2.2 * pow(wave, 12.0)) * (exp(-d2 / (w * w)) * (W0 / w) + 0.035 * 0.0007 / (d2 + 0.0007));
+      }
+    }
+    acc += col * g * att;
+    if (ax == cax && uTicketOn > 0.001){
+      vec3 ph = p + d * T;
+      vec2 w2 = (cax == 0) ? ph.zy : ((cax == 1) ? ph.xz : ph.xy);
+      vec2 tuv = w2 / (h * vec2(1.0, 1.5) * 0.7) * 0.5 + 0.5;
+      if (all(greaterThan(tuv, vec2(0.0))) && all(lessThan(tuv, vec2(1.0)))){
+        vec4 tx = texture(uTicket, vec2(tuv.x, 1.0 - tuv.y));
+        float paper = smoothstep(0.62, 0.86, dot(tx.rgb, vec3(0.3333)));
+        acc += tx.rgb * tx.a * (1.0 - paper) * att * uTicketOn * 0.8;
+      }
+    }
+    p += d * T; travel += T;
+    float tw = (ax == cax) ? uSpiral * 0.07 : 0.0;
+    if (ax == 0){ d.x = -d.x; p.yz = rot(tw) * p.yz; d.yz = rot(tw) * d.yz; }
+    else if (ax == 1){ d.y = -d.y; p.xz = rot(tw) * p.xz; d.xz = rot(tw) * d.xz; }
+    else { d.z = -d.z; p.xy = rot(tw) * p.xy; d.xy = rot(tw) * d.xy; }
+    p = clamp(p, vec3(-h * 0.9999), vec3(h * 0.9999));
+    att *= (ax == cax) ? 0.86 : 0.3;
+    if (att < 0.015) break;
+  }
+  return acc * 2.4;
+}
+
+// eyespot weights: x pupil, y ring, z halo
+vec3 spot(vec2 d, float R){
+  float r = length(d);
+  return vec3(smoothstep(R * 0.3, R * 0.24, r), smoothstep(R * 0.62, R * 0.55, r) * smoothstep(R * 0.26, R * 0.32, r), smoothstep(R, R * 0.9, r) * smoothstep(R * 0.58, R * 0.66, r));
+}
+vec3 wingPattern(vec2 u, float wd){
+  float L = length(u), an = atan(u.y, u.x + 0.05);
+  vec3 col = mix(uColA * 0.22, uColA * 0.85, smoothstep(0.0, 1.3, L));
+  float vein = exp(-pow(sin(an * 6.0 + 0.3) * L * 10.0, 2.0)) * smoothstep(0.05, 0.3, L);
+  float band = smoothstep(0.03, 0.0, abs(wd + 0.15 + 0.025 * sin(an * 40.0)));
+  vec3 s = spot(u - vec2(1.0, 0.48), 0.25) + spot(u - vec2(0.6, -0.44), 0.19);
+  // fractal moth: the big eyespot is ringed by little eyespots, and those by tinier ones
+  if (uFractal > 0.01){
+    for (int k = 0; k < 6; k++){
+      float a = float(k) * TAU / 6.0 + uTime * 0.08;
+      vec2 c = vec2(1.0, 0.48) + 0.17 * vec2(cos(a), sin(a));
+      s += spot(u - c, 0.055) * min(uFractal, 1.0);
+      if (uFractal > 1.01){
+        for (int j = 0; j < 4; j++){ float b = float(j) * TAU / 4.0 - uTime * 0.15; s += spot(u - c - 0.035 * vec2(cos(b), sin(b)), 0.014) * (uFractal - 1.0); }
+      }
+    }
+  }
+  s = clamp(s, 0.0, 1.0);
+  col = mix(col, uColB, s.z * 0.9);
+  col = mix(col, uColC, s.y);
+  col = mix(col, uBg0 * 0.5, s.x);
+  col = mix(col, uColB * 1.1, vein * 0.45);
+  col = mix(col, uColC * 0.9, band * 0.7);
+  col *= mix(1.0, 0.35, smoothstep(-0.07, -0.015, wd));          // dark velvet margin
+  return col;
+}
+
+void main(){
+  vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
+  vec3 rd = normalize(uCamRot * vec3(uv * 2.0 * uFov, -1.0));
+  vec3 ro = uCamPos;
+  vec3 col = backdrop(ro, rd);
+
+  vec3 bc = uCenter + uBody * vec3(0.0, 0.1, 0.0);
+  vec3 oc = ro - bc;
+  float bb = dot(oc, rd), cc = dot(oc, oc) - 1.95 * 1.95, disc = bb * bb - cc;
+  if (disc > 0.0){
+    float t = max(0.0, -bb - sqrt(disc)), tmax = -bb + sqrt(disc);
+    bool hit = false;
+    for (int i = 0; i < 110; i++){
+      float d = map(ro + rd * t).x;
+      if (d < 0.0008 * t){ hit = true; break; }
+      t += d;
+      if (t > tmax) break;
+    }
+    if (hit){
+      vec3 p = ro + rd * t;
+      float id = map(p).y;
+      vec3 n = calcNormal(p);
+      if (dot(n, rd) > 0.0) n = -n;                         // wings are two-sided
+      vec3 q = toLocal(p);
+      float side = q.x < 0.0 ? -1.0 : 1.0;
+      vec3 a = vec3(abs(q.x), q.y, q.z);
+      vec3 V = -rd, L = normalize(uLight - p);
+      float ld = length(uLight - p), att = uLamp / (1.0 + ld * ld * 0.25);
+      vec3 Lm = normalize(vec3(-0.4, 0.8, 0.5));
+      float difM = max(dot(n, Lm), 0.0) * 0.35 + 0.12, dif = abs(dot(n, L));
+      float NdV = clamp(dot(n, V), 0.0, 1.0), NdH = max(dot(n, normalize(L + V)), 0.0);
+      float fres = pow(1.0 - NdV, 2.0);
+      float cosT = sqrt(max(1.0 - (1.0 - NdV * NdV) / 2.1025, 0.0));
+      vec3 gd = normalize(cross(n, vec3(0.0, 1.0, 0.0)) + vec3(1e-4));
+
+      if (id < 0.5){
+        // ---- wing: pattern drawn in glyph scales, foil over it, lamp glowing through ----
+        vec3 w = wingFrame(a);
+        vec2 u = w.xy;
+        float wd = wing2D(u), trail; wingWaves(u, side, trail);
+        vec3 pat = wingPattern(u, wd);
+        float thick = 320.0 + 200.0 * sin(u.x * 4.0 + uTime * 0.2) * sin(u.y * 5.0 - u.x * 2.0) + 600.0 * trail;
+        float opd = 2.0 * 1.45 * thick * cosT + uFoil * 650.0 * dot(V + L, gd);
+        vec3 film = pow(0.5 + 0.5 * cos(TAU * opd / vec3(650.0, 532.0, 450.0)), vec3(1.4));
+        vec2 g = u / 0.042; g.x += 0.5 * mod(floor(g.y), 2.0);
+        vec2 cell = floor(g), f = fract(g);
+        float lum = dot(pat, vec3(0.3, 0.5, 0.2));
+        float churn = floor(uTime * (0.6 + 12.0 * trail) + hash21(cell) * 7.0);
+        float hs = hash21(cell + churn);
+        float idx = floor(clamp(0.12 + lum * 1.2 + trail * 0.4 + (hs - 0.5) * 0.22, 0.0, 0.999) * uGlyphN);
+        float gA = texture(uAtlas, vec2((idx + 0.08 + f.x * 0.84) / uGlyphN, 0.06 + f.y * 0.88)).a;
+        vec3 scales = pat * (0.4 + 1.25 * gA * uGlyph) + (film * 0.8 + uColC * 0.4) * gA * trail * 1.6;
+        float trans = pow(max(dot(rd, L), 0.0), 3.0) * att;
+        col = scales * (difM + dif * att * 1.4) * 1.3;
+        col += film * (0.08 + 0.9 * fres + 0.7 * pow(NdH, 24.0) * (0.3 + att)) * uFoil * (0.5 + trail);
+        col += pat * uColB * trans * 1.4 + uColB * smoothstep(-0.012, 0.0, wd) * 0.25;
+      } else if (id < 1.5){
+        // ---- velvet body: fuzzy sheen, candy stripes on the abdomen, an iridescent collar ----
+        float stripe = (0.5 + 0.5 * sin(q.y * 11.0 + 1.2)) * step(q.y, 0.12);
+        vec3 base = mix(uColA * 0.16, uColA * 0.55, stripe);
+        base = mix(base, uColB * 0.45, 0.45 * smoothstep(0.55, 0.62, q.y) * smoothstep(0.75, 0.68, q.y));
+        float sheen = pow(1.0 - NdV, 1.5);
+        float opd = 2.0 * 1.45 * 380.0 * cosT + uFoil * 500.0 * dot(V + L, gd);
+        vec3 film = pow(0.5 + 0.5 * cos(TAU * opd / vec3(650.0, 532.0, 450.0)), vec3(1.4));
+        col = base * (difM + dif * att * 1.2) * 1.6 + sheen * mix(uColB, uColA, 0.4) * (0.45 + 0.8 * att) + film * sheen * 0.35 * uFoil;
+        col += vec3(hash21(floor(q.xy * 220.0)) * 0.05) * uFuzz;
+      } else {
+        // ---- compound eye: every hex facet is a little window into the infinite mirror tunnel ----
+        vec2 lookS = vec2(uLook.x * side, uLook.y);
+        vec3 ev = normalize(a - EYEC);
+        vec2 euv = vec2(atan(ev.x, ev.z), asin(clamp(ev.y, -1.0, 1.0))) * 11.0;
+        const vec2 hs2 = vec2(1.0, 1.7320508);
+        vec4 hC = floor(vec4(euv, euv - vec2(0.5, 1.0)) / hs2.xyxy) + 0.5;
+        vec4 hh = vec4(euv - hC.xy * hs2, euv - (hC.zw + 0.5) * hs2);
+        vec2 hx = dot(hh.xy, hh.xy) < dot(hh.zw, hh.zw) ? hh.xy : hh.zw;
+        vec2 fc = (euv - hx) / 11.0;
+        vec2 ah = abs(hx);
+        float edge = smoothstep(0.4, 0.5, max(dot(ah, hs2 * 0.5), ah.x));
+        vec2 dir2 = rot(uRoll) * (fc * 1.7 + hx * 0.22) - lookS * 0.3;
+        vec3 dl = normalize(vec3(dir2, -1.0));
+        float hb = 0.4;
+        vec3 pl = vec3(lookS * 0.05, hb * (1.0 - 2.0 * fract(uFly)) * 0.999);
+        vec3 inv = 1.0 / dl;
+        vec3 t0s = (-vec3(hb) - pl) * inv, t1s = (vec3(hb) - pl) * inv;
+        vec3 tmin = min(t0s, t1s), tmx = max(t0s, t1s);
+        float tn = max(max(tmin.x, tmin.y), tmin.z), tf = min(min(tmx.x, tmx.y), tmx.z);
+        vec3 inside = uColA * 0.05;
+        if (tf > max(tn, 0.0)) inside += gut(clamp(pl + dl * max(tn, 0.0), vec3(-hb * 0.9999), vec3(hb * 0.9999)), dl, hb) * exp(-max(tn, 0.0) * 0.8);
+        inside = hueRot(inside, uHue) * (0.7 + 0.6 * uGlow);
+        vec2 pp = fc - vec2(lookS.x * 0.35, lookS.y * 0.3);
+        inside *= 1.0 - 0.75 * exp(-dot(pp, pp) / 0.012);          // the pseudopupil follows you
+        col = inside * (1.0 - edge) + uColA * 0.12 * edge;
+        col += vec3(1.0) * pow(NdH, 90.0) * (0.4 + att) + vec3(1.0) * pow(max(dot(n, normalize(Lm + V)), 0.0), 200.0) * 0.8;
+        col += uColB * fres * 0.25;
+      }
+    }
+  }
+  col = 1.0 - exp(-max(col, vec3(0.0)) * 1.15);
+  o = vec4(pow(col, vec3(1.0 / 2.2)), 1.0);
+}</script>
+<script>
+(() => {
+'use strict';
+const $ = (id) => document.getElementById(id);
+const tank = $('tank'), cv = $('gl'), fx = $('fx'), fctx = fx.getContext('2d');
+let devMode = location.hash === '#dev';
+function setMode(dev){ devMode = dev; document.documentElement.dataset.mode = dev ? 'dev' : 'toy'; $('devBtn').setAttribute('aria-pressed', String(dev)); $('devBtn').textContent = dev ? 'DEV MODE · ON' : 'DEV MODE'; }
+setMode(devMode);
+$('devBtn').onclick = () => setMode(!devMode);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const TAU = Math.PI * 2;
+
+// ================= forms (canon transformations) + knobs =================
+const SPECIES = {
+  'Slurpy':       { A:'#B000FF', B:'#F000A8', C:'#25D9FF', bg0:'#05020c', bg1:'#1c0833', inks:['#B000FF','#F000A8','#25D9FF','#7200C9','#FF4BBF'], dark:'#25072F', paper:'#F4E9FF', preset:{ fuzz:1.0, goo:1.0, foil:1.0, fractal:0.0, wobble:1.0, glyph:1.0 } },
+  'Gooform':      { A:'#00F0C8', B:'#E8FF65', C:'#F000A8', bg0:'#010807', bg1:'#072320', inks:['#00F0C8','#E8FF65','#F000A8','#25D9FF','#7200C9'], dark:'#062a2a', paper:'#effff9', preset:{ fuzz:0.6, goo:2.4, foil:0.9, fractal:0.0, wobble:2.0, glyph:1.0 } },
+  'Crystalwing':  { A:'#D9A5FF', B:'#F4E9FF', C:'#25D9FF', bg0:'#04040d', bg1:'#16133b', inks:['#7200C9','#25D9FF','#D9A5FF','#B000FF','#FF4BBF'], dark:'#1d1840', paper:'#f6f3ff', preset:{ fuzz:0.3, goo:0.4, foil:1.9, fractal:0.0, wobble:0.5, glyph:0.7 } },
+  'Fractal Moth': { A:'#F000A8', B:'#FFCB37', C:'#B000FF', bg0:'#090209', bg1:'#2a0626', inks:['#F000A8','#FFCB37','#B000FF','#FF4BBF','#25D9FF'], dark:'#2a0626', paper:'#fff6ea', preset:{ fuzz:0.9, goo:0.8, foil:1.2, fractal:2.0, wobble:1.0, glyph:1.2 } },
+};
+let species = 'Slurpy';
+const K = { foil: 1.0, glyph: 1.0, waveSpeed: 1.6, spiral: 1.4, flapRate: 1.0, fuzz: 1.0, goo: 1.0, fractal: 0.0, wobble: 1.0 };
+const SLIDERS = [['foil','Foil sheen',0,2,0.01],['glyph','Scale letters',0,2,0.01],['waveSpeed','Wing ripple speed',0.4,3,0.01],['spiral','Eye spiral',-3,3,0.01],['flapRate','Flap',0.2,2.5,0.01],['fuzz','Velvet fuzz',0,2,0.01],['goo','Goo drip',0,3,0.01],['fractal','Fractal eyespots',0,2,0.01],['wobble','Goo wobble',0,2.5,0.01]];
+const P = { glow: 1.2, chroma: 1.3, palette: 'gooae', grain: 0.4 };   // for the ticket-press helpers
+
+// ================= ticket-press helpers =================
+const mk = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; };
+const rngOf = (seed) => { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+function tint(src, color){ const c = mk(src.width, src.height), x = c.getContext('2d'); x.drawImage(src, 0, 0); x.globalCompositeOperation = 'source-in'; x.fillStyle = color; x.fillRect(0, 0, c.width, c.height); return c; }
+function soften(src, f){                 // blur by shrinking then growing in halving steps
+  let cur = src, w = src.width, h = src.height;
+  const steps = Math.max(1, Math.round(Math.log2(Math.max(f, 1.01))));
+  for (let i = 0; i < steps; i++){ w = Math.max(2, w / 2); h = Math.max(2, h / 2); const c = mk(w, h), x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(cur, 0, 0, c.width, c.height); cur = c; }
+  for (let i = 0; i < steps; i++){ const c = mk(cur.width * 2, cur.height * 2), x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(cur, 0, 0, c.width, c.height); cur = c; }
+  return cur;
+}
+const FONT_STACK = '"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic","Hiragino Sans","Noto Sans JP","Yu Gothic",Arial,sans-serif';
+const textCache = new Map();
+function bitmapText(text, rows){         // tiny raster, hard alpha threshold → pixel type in any script
+  const key = text + '|' + rows; if (textCache.has(key)) return textCache.get(key);
+  const m = mk(4, 4).getContext('2d'); const font = `700 ${rows}px ${FONT_STACK}`; m.font = font;
+  const w = Math.ceil(m.measureText(text).width) + 2, h = Math.ceil(rows * 1.3);
+  const c = mk(w, h), x = c.getContext('2d', { willReadFrequently: true });
+  x.font = font; x.textBaseline = 'middle'; x.fillStyle = '#000'; x.fillText(text, 1, h / 2 + 0.5);
+  const d = x.getImageData(0, 0, w, h); for (let i = 3; i < d.data.length; i += 4) d.data[i] = d.data[i] > 105 ? 255 : 0;
+  x.putImageData(d, 0, 0); textCache.set(key, c); return c;
+}
+function drawText(x, text, cx, cy, px, color, opt = {}){   // opt: align, vertical (stack chars), rotate
+  x.save(); x.imageSmoothingEnabled = false;
+  const rows = opt.rows || 8;
+  if (opt.vertical){
+    const chars = Array.from(text); const lh = rows * 1.15 * px;
+    const total = chars.length * lh; let y = cy - total / 2;
+    for (const ch of chars){ if (ch === ' ') { y += lh * 0.6; continue; } const t = tint(bitmapText(ch, rows), color); x.drawImage(t, Math.round(cx - t.width * px / 2), Math.round(y), t.width * px, t.height * px); y += lh; }
+  } else {
+    const t = tint(bitmapText(text, rows), color);
+    x.translate(cx, cy); if (opt.rotate) x.rotate(opt.rotate);
+    const w = t.width * px, h = t.height * px;
+    const ox = opt.align === 'left' ? 0 : opt.align === 'right' ? -w : -w / 2;
+    x.drawImage(t, Math.round(ox), Math.round(-h / 2), w, h);
+  }
+  x.restore();
+}
+const grainTile = (() => {
+  const c = mk(256, 256), x = c.getContext('2d'), d = x.createImageData(256, 256), r = rngOf(9);
+  for (let i = 0; i < d.data.length; i += 4){ const v = r(); const g = v < 0.5 ? 120 + r() * 80 : 255; d.data[i] = d.data[i+1] = d.data[i+2] = g; d.data[i+3] = v < 0.5 ? 40 + r() * 60 : (r() < 0.25 ? 120 : 0); }
+  x.putImageData(d, 0, 0); return c;
+})();
+
+function totemMask(rng, gw, gh, cx){ // mirrored pixel glyph on a grid → canvas mask
+  const g = Array.from({ length: gh }, () => new Uint8Array(gw)), mid = (gw - 1) / 2;
+  const set = (x, y) => { if (y < 0 || y >= gh) return; const a = Math.round(mid + x), b = Math.round(mid - x); if (a >= 0 && a < gw) g[y][a] = 1; if (b >= 0 && b < gw) g[y][b] = 1; };
+  const y0 = 1 + Math.floor(rng() * 3), y1 = gh - 1 - Math.floor(rng() * 3);
+  for (let y = y0; y <= y1; y++){ set(0, y); if (rng() < 0.25) set(1, y); }
+  const nBars = 2 + Math.floor(cx * 3 + rng() * 2);
+  for (let i = 0; i < nBars; i++){
+    const y = y0 + 1 + Math.floor(rng() * (y1 - y0 - 1)), hw = 2 + Math.floor(rng() * (mid - 1));
+    for (let x = 0; x <= hw; x++){ set(x, y); if (rng() < 0.35) set(x, y + 1); }
+    if (rng() < 0.6){ set(hw, y - 1); set(hw, y + 1); }
+    if (rng() < 0.4){ set(hw + 1, y - 2); set(hw + 1, y + 2); }
+  }
+  if (rng() < 0.7){ const y = y0 + 2 + Math.floor(rng() * (y1 - y0 - 4)), r = 1 + Math.floor(rng() * 2.5); for (let dy = -r; dy <= r; dy++) for (let dx = 0; dx <= r - Math.abs(dy); dx++) if (rng() < 0.8 || dx === r - Math.abs(dy)) set(dx, y + dy); }
+  if (rng() < 0.5){ const r = 2 + Math.floor(rng() * 2); for (let a = 0; a < 24; a++){ const t = a / 24 * Math.PI; set(Math.round(Math.sin(t) * r), Math.round(y0 + r - Math.cos(t) * r)); } }
+  const nBr = Math.floor(cx * 4 * rng());
+  for (let i = 0; i < nBr; i++){ const y = y0 + 3 + Math.floor(rng() * (y1 - y0 - 3)), len = 2 + Math.floor(rng() * 3), dir = rng() < 0.5 ? -1 : 1; for (let k = 1; k <= len; k++) set(k, y + dir * k); }
+  const cs = 12, c = mk(gw * cs, gh * cs), x = c.getContext('2d'); x.fillStyle = '#000';
+  for (let y = 0; y < gh; y++) for (let xx = 0; xx < gw; xx++) if (g[y][xx]) x.fillRect(xx * cs, y * cs, cs, cs);
+  return c;
+}
+function glowInto(x, mask, rx, ry, rw, rh, cols, rng, mode){
+  // airbrush halo + body in normal blending (stays luminous on paper), two misregistered plates on top
+  const k = P.glow, ca = P.chroma * rw * 0.012, bright = P.palette !== 'thermal';
+  const place = (img, s, dx = 0, dy = 0) => { const w = rw * s, h = rh * s; x.drawImage(img, rx + (rw - w) / 2 + dx, ry + (rh - h) / 2 + dy, w, h); };
+  x.save();
+  if (k > 0.02){
+    x.globalAlpha = Math.min(0.85, 0.35 + 0.25 * k); place(soften(tint(mask, cols[0]), 8 + 10 * k), 1.2 + 0.12 * k);
+    x.globalAlpha = Math.min(0.9, 0.5 + 0.2 * k);   place(soften(tint(mask, cols[1]), 4 + 4 * k), 1.05);
+  }
+  // misregistered plates: the offset plate first, the key plate on top, so only the edges fringe
+  x.globalCompositeOperation = P.palette === 'thermal' ? 'multiply' : 'source-over';
+  x.globalAlpha = 0.85; place(soften(tint(mask, cols[3] || cols[0]), 1.5 + k), 1, -ca, -ca * 0.3);
+  x.globalAlpha = 1;    place(soften(tint(mask, cols[2]), 1.5 + k), 1, ca * 0.4, ca * 0.2);
+  if (bright && k > 0.3){ x.globalCompositeOperation = 'screen'; x.globalAlpha = Math.min(0.7, 0.3 * k); place(soften(tint(mask, '#ffffff'), 3 + 2 * k), 0.92); }
+  x.restore();
+}
+function barcode(x, bx, by, bw, bh, rng, color){
+  x.save(); x.fillStyle = color; let px = bx; const u = bw / 120;
+  while (px < bx + bw){ const wBar = u * (1 + Math.floor(rng() * 3)), gap = u * (1 + Math.floor(rng() * 2)); if (px + wBar > bx + bw) break; x.fillRect(Math.round(px), by, Math.max(1, Math.round(wBar)), bh); px += wBar + gap; }
+  x.restore();
+}
+function outline(x, w, h, style, u){
+  x.beginPath();
+  if (style === 'plain'){ x.roundRect(0.5, 0.5, w - 1, h - 1, 3 * u); return; }
+  if (style === 'notch'){
+    const r = 4.5 * u; x.moveTo(2 * u, 0); x.lineTo(w - 2 * u, 0); x.quadraticCurveTo(w, 0, w, 2 * u);
+    x.lineTo(w, h / 2 - r); x.arc(w, h / 2, r, -Math.PI / 2, Math.PI / 2, true); x.lineTo(w, h - 2 * u); x.quadraticCurveTo(w, h, w - 2 * u, h);
+    x.lineTo(2 * u, h); x.quadraticCurveTo(0, h, 0, h - 2 * u); x.lineTo(0, h / 2 + r); x.arc(0, h / 2, r, Math.PI / 2, -Math.PI / 2, true); x.lineTo(0, 2 * u); x.quadraticCurveTo(0, 0, 2 * u, 0); x.closePath(); return;
+  }
+  const r = 1.9 * u, sp = r * 2.7;
+  const sides = style === 'perf' ? { t: true, b: true, l: false, r: false } : { t: true, b: true, l: true, r: true };
+  const nx = Math.max(1, Math.floor(w / sp)), ox = (w - nx * sp) / 2 + sp / 2;
+  const ny = Math.max(1, Math.floor(h / sp)), oy = (h - ny * sp) / 2 + sp / 2;
+  x.moveTo(0, 0);
+  if (sides.t) for (let i = 0; i < nx; i++){ const cx = ox + i * sp; x.lineTo(cx - r, 0); x.arc(cx, 0, r, Math.PI, 0, true); }
+  x.lineTo(w, 0);
+  if (sides.r) for (let i = 0; i < ny; i++){ const cy = oy + i * sp; x.lineTo(w, cy - r); x.arc(w, cy, r, -Math.PI / 2, Math.PI / 2, true); }
+  x.lineTo(w, h);
+  if (sides.b) for (let i = nx - 1; i >= 0; i--){ const cx = ox + i * sp; x.lineTo(cx + r, h); x.arc(cx, h, r, 0, Math.PI, true); }
+  x.lineTo(0, h);
+  if (sides.l) for (let i = ny - 1; i >= 0; i--){ const cy = oy + i * sp; x.lineTo(0, cy + r); x.arc(0, cy, r, Math.PI / 2, -Math.PI / 2, true); }
+  x.closePath();
+}
+
+// ================= little wonders =================
+const SUBJ = ['SLURPY MOTH','THE LAMP','A SOFT WING','THE FULL MOON','YOUR LITTLE WONDER','THE NIGHT GARDEN','A STRANGE TREASURE','YOUR NEXT SHAPE','A STICKY STAR','THE CRESCENT','THE MELT','AN OLD FRIEND'];
+const VERB = ['IS LISTENING','FINDS YOU FIRST','KNOWS YOUR NAME','WILL DRIP UPWARD','HUMS IN 5555','IS ALREADY HERE','LOVES THE DETOUR','RETURNS AS LIGHT','KEEPS ONE SECRET','WANTS YOU SOFT','COUNTS TO 999','MELTS AT MIDNIGHT'];
+function fitText(x, text, cx, cy, maxW, px, color){ const tb = bitmapText(text, 8); drawText(x, text, cx, cy, Math.min(px, maxW / tb.width), color, { rows: 8 }); }
+function printOracle(seed){
+  const rng = rngOf(seed), S = SPECIES[species];
+  const w = 360, h = Math.round(w * 1.5), u = w / 100, m = 7 * u, px = Math.max(2, Math.round(u * 0.95));
+  const c = mk(w, h), x = c.getContext('2d');
+  x.fillStyle = S.paper; x.fillRect(0, 0, w, h);
+  x.fillStyle = S.inks[1]; x.globalAlpha = 0.06; x.fillRect(m, m, w - 2 * m, h - 2 * m); x.globalAlpha = 1;
+  fitText(x, 'WONDER · SLURPY MOTH', w / 2, m + 6 * u, w - 2 * m, px * 0.9, S.dark);
+  const cols = S.inks.slice().sort(() => rng() - 0.5);
+  glowInto(x, totemMask(rng, 13, 15, 0.8), w * 0.2, h * 0.12, w * 0.6, h * 0.38, [cols[1], cols[0], cols[2], cols[3]], rng, 'multiply');
+  const a = SUBJ[Math.floor(rng() * SUBJ.length)], b = VERB[Math.floor(rng() * VERB.length)];
+  fitText(x, a, w / 2, h * 0.585, w - 2 * m - 6 * u, px, S.dark);
+  fitText(x, b, w / 2, h * 0.645, w - 2 * m - 6 * u, px, S.dark);
+  const lucky = [333, 5555, 999, 55, 777, 4444].sort(() => rng() - 0.5).slice(0, 3).join(' · ');
+  fitText(x, lucky, w / 2, h * 0.72, w - 2 * m, px * 0.85, S.inks[0]);
+  barcode(x, m + 2 * u, h - m - 15 * u, w - 2 * m - 4 * u, 8 * u, rng, S.dark);
+  const d = (n) => Array.from({ length: n }, () => Math.floor(rng() * 10)).join('');
+  const serial = `MTH-${d(4)}-5555`;
+  fitText(x, serial, w / 2, h - m - 3 * u, w - 2 * m, px * 0.8, S.dark);
+  x.save(); x.globalCompositeOperation = 'multiply'; x.globalAlpha = P.grain * 0.6; x.fillStyle = x.createPattern(grainTile, 'repeat'); x.fillRect(0, 0, w, h); x.restore();
+  x.save(); x.globalCompositeOperation = 'destination-in'; outline(x, w, h, 'stamp', u); x.fill(); x.restore();
+  x.save(); outline(x, w, h, 'stamp', u); x.strokeStyle = 'rgba(40,30,70,0.14)'; x.lineWidth = 1.5; x.stroke(); x.restore();
+  return { c, text: `${a} ${b}`, serial, lucky };
+}
+
+// ================= GL =================
+const gl = cv.getContext('webgl2', { antialias: false, alpha: false, preserveDrawingBuffer: location.search.includes('test') });
+if (!gl){ tank.insertAdjacentHTML('beforeend', '<div class="err">The moth needs WebGL2. Try a current Chrome, Safari or Firefox.</div>'); return; }
+function sh(type, src){ const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
+const prog = gl.createProgram();
+gl.attachShader(prog, sh(gl.VERTEX_SHADER, '#version 300 es\nin vec2 aPos; void main(){ gl_Position = vec4(aPos, 0.0, 1.0); }'));
+gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, $('fs').textContent.trim())); gl.linkProgram(prog);
+if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+gl.useProgram(prog);
+const vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vb); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+const aLoc = gl.getAttribLocation(prog, 'aPos'); gl.enableVertexAttribArray(aLoc); gl.vertexAttribPointer(aLoc, 2, gl.FLOAT, false, 0, 0);
+const U = {}; ['uRes','uTime','uCamPos','uCamRot','uFov','uCenter','uBody','uFlap','uBend','uPoke','uAmp','uLight','uLamp','uLook','uRoll','uFly','uHue','uExcite','uGlow','uFoil','uWaveSpeed','uGlyph','uSpiral','uFuzz','uFractal','uIdle','uColA','uColB','uColC','uBg0','uBg1','uAtlas','uGlyphN','uTicket','uTicketOn'].forEach((n) => U[n] = gl.getUniformLocation(prog, n));
+function makeTex(){ const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0])); return t; }
+const atlasTex = makeTex(), ticketTex = makeTex();
+const upload = (t, canvas) => { gl.bindTexture(gl.TEXTURE_2D, t); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas); };
+
+// ---------- glyph alphabet: grows with what it slurps ----------
+let alphabet = new Set(Array.from('·:+*×∞✧◇◆○◎MOTH5'));
+let glyphN = 1, glyphList = [];
+function buildAtlas(){
+  const chars = Array.from(alphabet).filter((ch) => ch.trim());
+  const cw = 40, ch = 56, c = mk(cw * chars.length, ch), x = c.getContext('2d', { willReadFrequently: true });
+  x.font = `700 44px "JetBrains Mono", ui-monospace, Menlo, monospace`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = '#fff';
+  chars.forEach((g, i) => x.fillText(g, i * cw + cw / 2, ch / 2 + 2));
+  const d = x.getImageData(0, 0, c.width, c.height).data;
+  const order = chars.map((g, i) => { let s = 0; for (let yy = 0; yy < ch; yy++) for (let xx = i * cw; xx < (i + 1) * cw; xx++) s += d[(yy * c.width + xx) * 4 + 3]; return { i, s }; }).filter((g) => g.s > 0).sort((p, q) => p.s - q.s);
+  const out = mk(cw * order.length, ch), ox = out.getContext('2d');
+  order.forEach((g, k) => ox.drawImage(c, g.i * cw, 0, cw, ch, k * cw, 0, cw, ch));
+  glyphN = order.length; glyphList = order.map((g) => chars[g.i]); upload(atlasTex, out);
+}
+
+// ================= math, camera + projection =================
+let W = 1, H = 1, dpr = 1, scale = matchMedia('(pointer: coarse)').matches ? 0.55 : 0.8, frameAvg = 16;
+const FOV = Math.tan(32 * Math.PI / 360);
+const cam = { pos: [0, 0.4, 9.0], target: [0, -0.4, 0] };
+const FLOOR = -2.4;
+const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const mul = (a, k) => [a[0] * k, a[1] * k, a[2] * k];
+const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const norm = (a) => { const l = Math.hypot(...a) || 1; return a.map((v) => v / l); };
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+let CF, CR, CU;
+function camBasis(){ CF = norm(sub(cam.target, cam.pos)); CR = norm(cross(CF, [0, 1, 0])); CU = cross(CR, CF); }
+function project(p){ const v = sub(p, cam.pos), z = dot(v, CF); return [W / 2 + dot(v, CR) / (z * 2 * FOV) * H, H / 2 - dot(v, CU) / (z * 2 * FOV) * H, z]; }
+function rayAt(px, py){ const ux = (px - W / 2) / H * 2 * FOV, uy = (H / 2 - py) / H * 2 * FOV; return norm([CR[0] * ux + CU[0] * uy + CF[0], CR[1] * ux + CU[1] * uy + CF[1], CR[2] * ux + CU[2] * uy + CF[2]]); }
+function onPlaneZ(px, py, z){ const d = rayAt(px, py), t = (z - cam.pos[2]) / d[2]; return add(cam.pos, mul(d, t)); }
+function resize(){
+  dpr = Math.min(devicePixelRatio || 1, 2); W = tank.clientWidth; H = tank.clientHeight;
+  let w = W * dpr * scale, h = H * dpr * scale; const cap = 1.2e6; if (w * h > cap){ const k = Math.sqrt(cap / (w * h)); w *= k; h *= k; }
+  cv.width = Math.max(2, Math.round(w)); cv.height = Math.max(2, Math.round(h));
+  fx.width = Math.round(W * dpr); fx.height = Math.round(H * dpr);
+  cam.pos[2] = W / H < 0.75 ? 14 : 9.0;
+}
+new ResizeObserver(resize).observe(tank);
+
+// ================= wing geometry, shared with the shader =================
+const sdE2 = (x, y, rx, ry) => { const k0 = Math.hypot(x / rx, y / ry), k1 = Math.hypot(x / (rx * rx), y / (ry * ry)); return k0 * (k0 - 1) / Math.max(k1, 1e-5); };
+const r2 = (a, x, y) => [Math.cos(a) * x - Math.sin(a) * y, Math.sin(a) * x + Math.cos(a) * y];
+const smin = (a, b, k) => { const h = Math.max(k - Math.abs(a - b), 0) / k; return Math.min(a, b) - h * h * k * 0.25; };
+function wing2D(ux, uy){
+  const f = r2(-0.5, ux - 0.78, uy - 0.36), fw = sdE2(f[0], f[1], 0.88, 0.40);
+  const h = r2(0.55, ux - 0.5, uy + 0.36), hw = sdE2(h[0], h[1], 0.58, 0.44) + 0.014 * Math.sin(Math.atan2(h[1], h[0]) * 14);
+  const t = r2(-0.3, ux - 0.58, uy + 0.92), tw = sdE2(t[0], t[1], 0.10, 0.24);
+  return Math.max(smin(smin(fw, hw, 0.07), tw, 0.1), -ux - 0.02);
+}
+
+// ================= the creature's state =================
+const M = { x: 0, y: 0.1, vx: 0, vy: 0, bob: 0 };
+const body = { yaw: 0, pitch: 0.16, roll: 0, hold: 0 };
+const flap = { ph: 0, ang: 0.3, prev: 0.3, bend: 0, fold: 0, rest: 0, kick: 0 };
+const pokes = Array.from({ length: 8 }, () => ({ u: [0, 0], side: 0, t0: -99, amp: 0 })); let pokeI = 0;
+const lamp = { on: false, sticky: false, x: 0, y: 0, k: 0, w: [-3, 4, 3], orbit: 0 };
+const tongue = { ext: 0, extT: 0, target: null, pts: [] };
+const ant = [{ x: 0, y: 0, vx: 0, vy: 0, ev: [] }, { x: 0, y: 0, vx: 0, vy: 0, ev: [] }];
+let T = 0, happy = 0, look = [0, 0], lookT = [0, 0], light = [-3, 4, 3];
+let excite = 0, hue = 0, roll = 0, rollDir = 1, fly = 0, nextSaccade = 1, lastPointer = -9, glow = 0.5;
+let fed = 0, spat = 0, hunger = 0.35, nextIdlePoke = 4, ticketOn = 0, mood = 'CURIOUS', lastTouch = 0, collecting = null, carried = false;
+const ry = (a) => [Math.cos(a), 0, Math.sin(a), 0, 1, 0, -Math.sin(a), 0, Math.cos(a)];
+const rx = (a) => [1, 0, 0, 0, Math.cos(a), -Math.sin(a), 0, Math.sin(a), Math.cos(a)];
+const rz = (a) => [Math.cos(a), -Math.sin(a), 0, Math.sin(a), Math.cos(a), 0, 0, 0, 1];
+const m3 = (A, B) => { const C = new Array(9); for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) C[r * 3 + c] = A[r * 3] * B[c] + A[r * 3 + 1] * B[3 + c] + A[r * 3 + 2] * B[6 + c]; return C; };
+const mv = (A, v) => [A[0] * v[0] + A[1] * v[1] + A[2] * v[2], A[3] * v[0] + A[4] * v[1] + A[5] * v[2], A[6] * v[0] + A[7] * v[1] + A[8] * v[2]];
+const mtv = (A, v) => [A[0] * v[0] + A[3] * v[1] + A[6] * v[2], A[1] * v[0] + A[4] * v[1] + A[7] * v[2], A[2] * v[0] + A[5] * v[1] + A[8] * v[2]];
+let BODY = ry(0);
+const center = () => [M.x, M.y + M.bob, 0];
+const toWorld = (l) => add(center(), mv(BODY, l));
+function wingToWorld(ux, uy, side){ const c = Math.cos(flap.ang), s = Math.sin(flap.ang); return toWorld([side * (0.1 + c * ux), 0.4 + uy, -s * ux + 0.05 * ux * ux]); }
+function mothScale(){ const a = project(center()), b = project(add(center(), [1, 0, 0])); return Math.abs(b[0] - a[0]); }
+
+function poke(u, side, amp){
+  const p = pokes[pokeI]; pokeI = (pokeI + 1) % 8;
+  p.u = u; p.side = side; p.t0 = T; p.amp = amp;
+  excite = Math.min(1.5, excite + amp * 0.2);
+  for (const a of ant){ a.vx += (Math.random() - 0.5) * 40 * amp; a.vy -= 20 * amp; a.ev.push({ t0: T, amp }); if (a.ev.length > 6) a.ev.shift(); }
+}
+function hitMoth(px, py){
+  const d = rayAt(px, py), o = mtv(BODY, sub(cam.pos, center())), dl = mtv(BODY, d);
+  if (Math.abs(dl[2]) < 1e-4) return null;
+  const t = -o[2] / dl[2]; if (t < 0) return null;
+  const x = o[0] + dl[0] * t, y = o[1] + dl[1] * t;
+  if (Math.abs(x) < 0.24 && y > -1.05 && y < 1.02) return { body: true, x, y };
+  const side = x < 0 ? -1 : 1, c = Math.max(0.3, Math.cos(flap.ang));
+  const ux = (Math.abs(x) - 0.1) / c, uy = y - 0.4;
+  if (wing2D(ux, uy) < 0.05) return { body: false, side, u: [ux, uy] };
+  return null;
+}
+
+// ================= goo strands (stretch, glow, snap) =================
+const strands = [{ kind: 'abd' }, { kind: 'tail', side: 1 }, { kind: 'tail', side: -1 }].map((s) => ({ ...s, n: 12, seg: 0.02 + Math.random() * 0.03, p: new Float32Array(36), q: new Float32Array(36), scr: new Float32Array(36), b: 0, init: false }));
+function strandAnchor(s){ return s.kind === 'abd' ? toWorld([0, -1.0, 0]) : wingToWorld(0.6, -1.12, s.side); }
+const drops = [], splats = [];
+function stepStrands(dt){
+  for (const s of strands){
+    const A = strandAnchor(s);
+    if (!s.init){ for (let i = 0; i < s.n; i++){ s.p[i * 3] = s.q[i * 3] = A[0]; s.p[i * 3 + 1] = s.q[i * 3 + 1] = A[1] - i * s.seg; s.p[i * 3 + 2] = s.q[i * 3 + 2] = A[2]; } s.init = true; }
+    s.seg += dt * 0.02 * K.goo * (1 + (happy > 0 ? 2 : 0) + body.hold * 2);
+    s.b *= Math.pow(0.2, dt);
+    const h = dt;
+    for (let i = 1; i < s.n; i++){
+      const j = i * 3;
+      const vx = (s.p[j] - s.q[j]) * 0.96, vy = (s.p[j + 1] - s.q[j + 1]) * 0.96, vz = (s.p[j + 2] - s.q[j + 2]) * 0.96;
+      s.q[j] = s.p[j]; s.q[j + 1] = s.p[j + 1]; s.q[j + 2] = s.p[j + 2];
+      s.p[j] += vx; s.p[j + 1] += vy - 3.0 * h * h; s.p[j + 2] += vz;
+    }
+    s.p[0] = A[0]; s.p[1] = A[1]; s.p[2] = A[2];
+    for (let it = 0; it < 5; it++) for (let i = 1; i < s.n; i++){
+      const a = (i - 1) * 3, b = i * 3, dx = s.p[b] - s.p[a], dy = s.p[b + 1] - s.p[a + 1], dz = s.p[b + 2] - s.p[a + 2];
+      const len = Math.hypot(dx, dy, dz) || 1e-6, corr = (len - s.seg) / len;
+      if (i === 1){ s.p[b] -= dx * corr; s.p[b + 1] -= dy * corr; s.p[b + 2] -= dz * corr; }
+      else { const c2 = corr * 0.5; s.p[a] += dx * c2; s.p[a + 1] += dy * c2; s.p[a + 2] += dz * c2; s.p[b] -= dx * c2; s.p[b + 1] -= dy * c2; s.p[b + 2] -= dz * c2; }
+    }
+    for (let i = 0; i < s.n; i++){ const pr = project([s.p[i * 3], s.p[i * 3 + 1], s.p[i * 3 + 2]]); s.scr[i * 3] = pr[0]; s.scr[i * 3 + 1] = pr[1]; s.scr[i * 3 + 2] = pr[2]; }
+    if (s.seg > 0.085 * (0.7 + 0.3 * K.goo)) snap(s);
+  }
+  for (const d of drops){ d.vy += 1100 * dt; d.x += d.vx * dt; d.y += d.vy * dt; d.st = Math.min(2.2, d.st + dt * 3); }
+  const fy = floorY();
+  for (let i = drops.length - 1; i >= 0; i--){ if (drops[i].y > fy - 2){ splats.push({ x: drops[i].x, y: fy, r: drops[i].r, life: 0 }); drops.splice(i, 1); } }
+  for (let i = splats.length - 1; i >= 0; i--){ splats[i].life += dt; if (splats[i].life > 2.5) splats.splice(i, 1); }
+}
+function snap(s){
+  const i = (s.n - 1) * 3, j = (s.n - 2) * 3;
+  drops.push({ x: s.scr[i], y: s.scr[i + 1], vx: (s.scr[i] - s.scr[j]) * 3, vy: 40, r: 3.5 + Math.random() * 2.5, st: 1 });
+  if (drops.length > 30) drops.shift();
+  s.seg = 0.018; s.b = 1;
+}
+
+// ================= particles: glyph dust, sparkles =================
+const dust = [];
+function dustBurst(x, y, n, spread = 1){
+  const S = SPECIES[species], cols = [S.A, S.B, S.C, '#ffffff'];
+  for (let k = 0; k < n; k++){ const a = Math.random() * TAU, v = (40 + Math.random() * 180) * spread; dust.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 60, ch: glyphList[Math.floor(Math.random() * glyphList.length)] || '·', col: cols[k % 4], life: 0, max: 1.2 + Math.random() * 1.4, s: 0.7 + Math.random() * 0.8 }); }
+  if (dust.length > 240) dust.splice(0, dust.length - 240);
+}
+function stepDust(dt){ for (const d of dust){ d.life += dt; d.vx *= 1 - 1.8 * dt; d.vy = d.vy * (1 - 1.8 * dt) + 60 * dt; d.x += d.vx * dt; d.y += d.vy * dt; } for (let i = dust.length - 1; i >= 0; i--) if (dust[i].life > dust[i].max) dust.splice(i, 1); }
+
+// ================= wonders (tickets) in the night air =================
+let tickets = [], newest = null;
+function floorY(){ return project([0, FLOOR, 0.6])[1]; }
+function spit(power = 1){
+  const seed = Math.floor(Math.random() * 1e9), o = printOracle(seed), m = project(toWorld([0, -0.6, 0.2]));
+  const w = Math.min(W * 0.2, 120);
+  const tk = { c: o.c, sh: tint(o.c, 'rgba(0,0,0,0.35)'), text: o.text, serial: o.serial, x: m[0], y: m[1], w, h: w * 1.5, s: 0.15, a: (Math.random() - 0.5) * 0.6,
+    vx: (Math.random() < 0.5 ? -1 : 1) * (60 + Math.random() * 120), vy: -100 - 80 * power, va: (Math.random() - 0.5) * 5, state: 'flutter', ph: Math.random() * 6, restT: 0 };
+  tickets.push(tk); newest = tk; spat++;
+  if (tickets.length > 7){ const i = tickets.findIndex((t) => t.state === 'rest'); tickets.splice(i >= 0 ? i : 0, 1); }
+  flap.kick = 1.2; M.vy += 0.8 * power;
+  poke([0, 0], 0, 1.3); dustBurst(m[0], m[1] - mothScale() * 0.4, 40 + 30 * power, 1.4);
+  excite = 1.5;
+  const li = document.createElement('li'); li.innerHTML = `${o.text}<span>${o.serial} · ${o.lucky}</span>`; $('log').prepend(li); $('logEmpty').hidden = true;
+  hunger = Math.min(1, hunger + 0.2);
+}
+function mouthScreen(){ return project(toWorld([0, 0.66, 0.16])); }
+function slurp(tk){
+  if (!tk || tk.state === 'slurp') return;
+  tk.state = 'slurp'; tk.k = 0; tongue.extT = 1; tongue.target = [tk.x, tk.y];
+  playSlurp();
+}
+function digest(tk){
+  upload(ticketTex, tk.c); ticketOn = 0.0001;
+  for (const ch of (tk.text + tk.serial)) if (ch.trim()) alphabet.add(ch);
+  buildAtlas();
+  fed++; hunger = Math.max(0, hunger - 0.55); happy = 2.6; excite = 1.5;
+  poke([0, 0], 1, 1.2); poke([0, 0], -1, 1.2); flap.kick = 1;
+  for (const s of strands) s.seg += 0.03;
+  const m = mouthScreen(); dustBurst(m[0], m[1], 50, 1.2);
+  tickets = tickets.filter((t) => t !== tk); if (newest === tk) newest = tickets[tickets.length - 1] || null;
+  if (collecting === tk) collecting = null;
+}
+function stepTickets(dt){
+  const fy = floorY();
+  for (const t of tickets){
+    if (t.state === 'grab') continue;
+    if (t.state === 'slurp'){
+      // sucked up the proboscis, tip to mouth
+      t.k = Math.min(1, t.k + dt / 0.9);
+      const pts = tongue.pts, n = pts.length;
+      if (n){ const i = Math.round((1 - t.k) * (n - 1)); t.x += (pts[i][0] - t.x) * Math.min(1, dt * 14); t.y += (pts[i][1] - t.y) * Math.min(1, dt * 14); }
+      t.s = Math.max(0.03, 0.55 * (1 - t.k)); t.a += dt * 9;
+      if (t.k >= 1) digest(t);
+      continue;
+    }
+    t.s = Math.min(1, t.s + dt * 2);
+    if (t.state === 'flutter'){
+      t.vy += 380 * dt; t.vx += Math.sin(T * 4 + t.ph) * 260 * dt; t.vx *= 1 - 1.6 * dt; t.vy *= 1 - 1.5 * dt;
+      t.va += (-t.a * 5 + Math.sin(T * 3.5 + t.ph) * 3) * dt; t.va *= 1 - 1.5 * dt;
+      t.x += t.vx * dt; t.y += t.vy * dt; t.a += t.va * dt;
+      const half = t.h * t.s * 0.5 * Math.abs(Math.cos(t.a)) + t.w * t.s * 0.5 * Math.abs(Math.sin(t.a));
+      if (t.y + half > fy){ t.y = fy - half; t.vy = 0; t.vx *= 0.3; t.state = 'rest'; t.restT = T; }
+      if (t.x < t.w * 0.5){ t.x = t.w * 0.5; t.vx = Math.abs(t.vx) * 0.5; } if (t.x > W - t.w * 0.5){ t.x = W - t.w * 0.5; t.vx = -Math.abs(t.vx) * 0.5; }
+    } else if (t.state === 'rest'){
+      const tilt = clamp(t.a, -0.3, 0.3); t.a += (tilt - t.a) * Math.min(1, dt * 4);
+      t.y += (fy - t.h * 0.5 * Math.cos(t.a) - t.y) * Math.min(1, dt * 8);
+    }
+  }
+}
+
+// ================= tongue (proboscis): a curled spiral that unrolls to reach =================
+function stepTongue(dt){
+  tongue.ext += (tongue.extT - tongue.ext) * Math.min(1, dt * (tongue.extT > tongue.ext ? 6 : 3));
+  const base = mouthScreen(), sc = mothScale(), L = (0.24 + 1.35 * tongue.ext) * sc, N = 44, ds = L / N;
+  let x = base[0], y = base[1], hd = Math.PI / 2 + 0.25;
+  const pts = [[x, y]];
+  for (let i = 1; i <= N; i++){
+    const f = i / N;
+    hd += (1 - tongue.ext) * 210 * f * f * (ds / sc);                    // the coil tightens towards the tip
+    if (tongue.target && tongue.ext > 0.05){ const ta = Math.atan2(tongue.target[1] - y, tongue.target[0] - x); let da = ta - hd; da = Math.atan2(Math.sin(da), Math.cos(da)); hd += da * tongue.ext * 0.22; }
+    hd += Math.sin(T * 5 + i * 0.4) * 0.015 * tongue.ext;
+    x += Math.cos(hd) * ds; y += Math.sin(hd) * ds; pts.push([x, y]);
+  }
+  tongue.pts = pts;
+}
+
+// ================= antennae: feathered combs that light up barb by barb =================
+function stepAntennae(dt){
+  for (const a of ant){
+    const tx = (lamp.k > 0.1 ? (lamp.x - project(center())[0]) * 0.04 : 0) + look[0] * 6, ty = (mood === 'SLEEPY' ? 18 : 0);
+    a.vx += (-60 * (a.x - tx) - 6 * a.vx) * dt; a.vy += (-60 * (a.y - ty) - 6 * a.vy) * dt;
+    a.x += a.vx * dt; a.y += a.vy * dt;
+    a.ev = a.ev.filter((e) => T - e.t0 < 2);
+  }
+}
+
+// ================= sound: one soft slurp =================
+let actx = null;
+function playSlurp(){
+  try {
+    if (!actx) return;
+    const t0 = actx.currentTime, len = 0.5, buf = actx.createBuffer(1, actx.sampleRate * len, actx.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 1.5);
+    const src = actx.createBufferSource(); src.buffer = buf;
+    const bp = actx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 6; bp.frequency.setValueAtTime(300, t0); bp.frequency.exponentialRampToValueAtTime(1800, t0 + len * 0.8);
+    const g = actx.createGain(); g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.22, t0 + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t0 + len);
+    src.connect(bp).connect(g).connect(actx.destination); src.start(t0);
+  } catch (e) {}
+}
+
+// ================= drawing the 2D layers =================
+const hexA = (h, a) => `rgba(${parseInt(h.substr(1, 2), 16)},${parseInt(h.substr(3, 2), 16)},${parseInt(h.substr(5, 2), 16)},${clamp(a, 0, 1)})`;
+function drawLamp(){
+  if (lamp.k < 0.02) return;
+  const g = fctx, S = SPECIES[species], fl = 0.9 + 0.1 * Math.sin(T * 23) * Math.sin(T * 7);
+  g.save(); g.globalCompositeOperation = 'lighter';
+  const r = 90 * fl * (H / 900 + 0.3);
+  const gr = g.createRadialGradient(lamp.x, lamp.y, 0, lamp.x, lamp.y, r);
+  gr.addColorStop(0, hexA('#ffffff', 0.9 * lamp.k)); gr.addColorStop(0.08, hexA('#ffffff', 0.55 * lamp.k)); gr.addColorStop(0.25, hexA(S.C, 0.3 * lamp.k)); gr.addColorStop(1, hexA(S.C, 0));
+  g.fillStyle = gr; g.beginPath(); g.arc(lamp.x, lamp.y, r, 0, TAU); g.fill();
+  g.restore();
+}
+function drawStrands(){
+  const g = fctx, S = SPECIES[species], px = Math.max(0.7, H / 900);
+  g.save(); g.lineCap = 'round'; g.lineJoin = 'round';
+  for (const s of strands){
+    const n = s.n, sc = s.scr, stretch = clamp((s.seg - 0.02) / 0.07, 0, 1);
+    for (let pass = 0; pass < 2; pass++){
+      g.globalCompositeOperation = pass === 0 ? 'lighter' : 'source-over';
+      g.strokeStyle = pass === 0 ? hexA(S.A, 0.18 + 0.4 * s.b) : hexA(S.C, 0.85);
+      for (let i = 1; i < n; i++){
+        g.lineWidth = ((5.5 - 3.8 * (i / n)) * (1 - stretch * 0.45)) * px * (pass === 0 ? 3 : 1);
+        g.beginPath(); g.moveTo(sc[(i - 1) * 3], sc[(i - 1) * 3 + 1]); g.lineTo(sc[i * 3], sc[i * 3 + 1]); g.stroke();
+      }
+    }
+    const tx = sc[(n - 1) * 3], ty = sc[(n - 1) * 3 + 1], br = (3.5 + 3.5 * stretch) * px;
+    g.fillStyle = hexA(S.C, 0.95); g.beginPath(); g.ellipse(tx, ty + br * 0.3, br * 0.85, br * 1.15, 0, 0, TAU); g.fill();
+    g.fillStyle = 'rgba(255,255,255,0.8)'; g.beginPath(); g.arc(tx - br * 0.3, ty - br * 0.1, br * 0.25, 0, TAU); g.fill();
+  }
+  for (const d of drops){ g.fillStyle = hexA(S.C, 0.9); g.beginPath(); g.ellipse(d.x, d.y, d.r * px, d.r * px * d.st, 0, 0, TAU); g.fill(); }
+  g.globalCompositeOperation = 'lighter';
+  for (const sp of splats){ const a = 1 - sp.life / 2.5; g.fillStyle = hexA(S.C, 0.5 * a); g.beginPath(); g.ellipse(sp.x, sp.y, sp.r * 4 * px * (1 + sp.life * 0.4), sp.r * px, 0, 0, TAU); g.fill(); }
+  g.restore();
+}
+function drawAntennae(){
+  const g = fctx, S = SPECIES[species], sc = mothScale(), px = Math.max(0.7, H / 900);
+  g.save(); g.lineCap = 'round'; g.globalCompositeOperation = 'lighter';
+  [1, -1].forEach((sd, k) => {
+    const a = ant[k], b0 = project(toWorld([sd * 0.06, 0.94, 0.08])), c0 = project(toWorld([sd * 0.14, 1.28, 0.12])), t0 = project(toWorld([sd * 0.44, 1.5, 0.12]));
+    const tip = [t0[0] + a.x * sd, t0[1] + a.y], ctl = [c0[0] + a.x * 0.4 * sd, c0[1] + a.y * 0.4];
+    const B = (t) => [(1 - t) * (1 - t) * b0[0] + 2 * (1 - t) * t * ctl[0] + t * t * tip[0], (1 - t) * (1 - t) * b0[1] + 2 * (1 - t) * t * ctl[1] + t * t * tip[1]];
+    g.strokeStyle = hexA(S.B, 0.85); g.lineWidth = 1.8 * px; g.beginPath(); g.moveTo(b0[0], b0[1]); g.quadraticCurveTo(ctl[0], ctl[1], tip[0], tip[1]); g.stroke();
+    const NB = 16;
+    for (let i = 1; i <= NB; i++){
+      const t = 0.12 + 0.88 * i / NB, p = B(t), q = B(Math.min(1, t + 0.02)), dx = q[0] - p[0], dy = q[1] - p[1], l = Math.hypot(dx, dy) || 1;
+      let br = 0; for (const e of a.ev){ const x = i - (T - e.t0) * 26; br += e.amp * Math.exp(-x * x / 4) * Math.exp(-(T - e.t0) * 1.5); }
+      br += lamp.k * 0.25;
+      const len = Math.sin(Math.PI * t) * sc * 0.07 * (1 + br * 0.4) + 2;
+      const nx = -dy / l, ny = dx / l, sw = Math.sin(T * 3 + i) * 0.15;
+      g.strokeStyle = hexA(br > 0.4 ? '#ffffff' : S.B, 0.45 + 0.5 * br); g.lineWidth = 1.1 * px;
+      g.beginPath(); g.moveTo(p[0], p[1]); g.lineTo(p[0] + (nx + dx / l * 0.5 + sw) * len, p[1] + (ny + dy / l * 0.5) * len); g.moveTo(p[0], p[1]); g.lineTo(p[0] - (nx - dx / l * 0.5 - sw) * len, p[1] - (ny - dy / l * 0.5) * len); g.stroke();
+    }
+  });
+  g.restore();
+}
+function drawTongue(){
+  const g = fctx, S = SPECIES[species], pts = tongue.pts, px = Math.max(0.7, H / 900);
+  if (pts.length < 2) return;
+  g.save(); g.lineCap = 'round'; g.lineJoin = 'round';
+  for (let pass = 0; pass < 2; pass++){
+    g.strokeStyle = pass === 0 ? hexA(S.C, 0.9) : 'rgba(255,255,255,0.55)';
+    g.lineWidth = (pass === 0 ? 3.6 : 1.0) * px;
+    g.beginPath(); g.moveTo(pts[0][0] - (pass ? px : 0), pts[0][1]); for (const p of pts) g.lineTo(p[0] - (pass ? px : 0), p[1] - (pass ? px : 0)); g.stroke();
+  }
+  const tp = pts[pts.length - 1];
+  g.globalCompositeOperation = 'lighter'; g.fillStyle = hexA(S.C, 0.6 + 0.4 * tongue.ext); g.beginPath(); g.arc(tp[0], tp[1], (2.5 + 2 * tongue.ext) * px, 0, TAU); g.fill();
+  g.restore();
+}
+function drawDust(){
+  const g = fctx, px = Math.max(0.7, H / 900);
+  g.save(); g.globalCompositeOperation = 'lighter'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (const d of dust){ const a = 1 - d.life / d.max; g.fillStyle = hexA(d.col, a); g.font = `700 ${Math.round(11 * d.s * px)}px "JetBrains Mono", ui-monospace, monospace`; g.fillText(d.ch, d.x, d.y); }
+  g.restore();
+}
+function drawTickets(){
+  const g = fctx;
+  for (const t of tickets){
+    const w = t.w * t.s, h = t.h * t.s;
+    g.save(); g.translate(t.x, t.y); g.rotate(t.a);
+    if (t.state !== 'slurp'){ g.globalAlpha = 0.45; g.drawImage(t.sh, -w / 2 + 5, -h / 2 + 7, w, h); g.globalAlpha = 1; }
+    g.drawImage(t.c, -w / 2, -h / 2, w, h);
+    g.restore();
+  }
+}
+function drawHud(){
+  const g = fctx, e = project(toWorld([0.15, 0.86, 0.25])), fs = 10, c = project(center()), sc = mothScale();
+  g.save(); g.font = `500 ${fs}px "JetBrains Mono", ui-monospace, monospace`; g.textBaseline = 'top';
+  g.strokeStyle = 'rgba(246,236,255,0.5)'; g.fillStyle = 'rgba(246,236,255,0.88)'; g.lineWidth = 1;
+  const lx = Math.min(c[0] + sc * 1.8, W - 160), ly = Math.max(56, c[1] - sc * 1.6);
+  g.beginPath(); g.moveTo(e[0], e[1]); g.lineTo(lx - 4, ly + 7); g.stroke();
+  g.beginPath(); g.arc(e[0], e[1], 2, 0, TAU); g.fill();
+  g.fillText('EYE DEPTH ∞ × 2', lx, ly); g.fillText(`ALPHABET ${glyphN} · SLURPED ${fed}`, lx, ly + 13);
+  const mm = Math.floor(T / 60), sec = (T % 60).toFixed(2).padStart(5, '0');
+  g.font = `700 13px "JetBrains Mono", ui-monospace, monospace`; g.fillText(`${mm}:${sec}`, 14, H - 54);
+  g.font = `500 9px "JetBrains Mono", ui-monospace, monospace`; g.fillStyle = 'rgba(200,185,220,0.75)';
+  g.fillText(`FLAP ${flapHz().toFixed(2)} Hz   LAMP ${lamp.k.toFixed(2)}   HUNGER ${hunger.toFixed(2)}   GIFTED ${spat}`, 14, H - 36);
+  g.fillText(`SLURPY MOTH ORACLE  /  ${species.toUpperCase()}`, 14, H - 24);
+  g.restore();
+}
+
+// ================= input =================
+let ptr = null, lastStroke = 0;
+const pos = (e) => { const r = tank.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top, t: performance.now() }; };
+function ticketAt(p){
+  for (let i = tickets.length - 1; i >= 0; i--){ const t = tickets[i]; if (t.state === 'slurp') continue; const dx = p.x - t.x, dy = p.y - t.y, c = Math.cos(-t.a), s = Math.sin(-t.a); if (Math.abs(dx * c - dy * s) < t.w * t.s / 2 && Math.abs(dx * s + dy * c) < t.h * t.s / 2) return t; }
+  return null;
+}
+function setLamp(x, y, on){ lamp.x = x; lamp.y = y; lamp.on = on; if (on) lamp.w = onPlaneZ(x, y, 0.9); }
+tank.addEventListener('pointerdown', (e) => {
+  if (!actx){ try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (err) {} } else if (actx.state === 'suspended') actx.resume();
+  const p = pos(e); tank.setPointerCapture(e.pointerId);
+  ptr = { start: p, last: p, vx: 0, vy: 0, moved: false, mode: 'lamp', t0: T };
+  const tk = ticketAt(p);
+  if (tk){ ptr.mode = 'ticket'; ptr.tk = tk; if (collecting === tk) collecting = null; tk.state = 'grab'; tk.gx = tk.x - p.x; tk.gy = tk.y - p.y; tickets.splice(tickets.indexOf(tk), 1); tickets.push(tk); return; }
+  const h = hitMoth(p.x, p.y);
+  if (h){ ptr.mode = 'moth'; ptr.hit = h; return; }
+  setLamp(p.x, p.y, true);
+});
+tank.addEventListener('pointermove', (e) => {
+  const p = pos(e);
+  const c = project(center()), sc = mothScale();
+  lookT = [clamp((p.x - c[0]) / (sc * 3), -1, 1), clamp(-(p.y - c[1]) / (sc * 3), -1, 1)];
+  lastPointer = T;
+  if (!ptr) return;
+  const dt = Math.max((p.t - ptr.last.t) / 1000, 1 / 240);
+  ptr.vx = ptr.vx * 0.5 + 0.5 * (p.x - ptr.last.x) / dt; ptr.vy = ptr.vy * 0.5 + 0.5 * (p.y - ptr.last.y) / dt;
+  if (Math.hypot(p.x - ptr.start.x, p.y - ptr.start.y) > 9) ptr.moved = true;
+  if (ptr.mode === 'ticket'){
+    ptr.tk.x = p.x + ptr.tk.gx; ptr.tk.y = p.y + ptr.tk.gy; ptr.tk.a += (clamp(ptr.vx * 0.0006, -0.5, 0.5) - ptr.tk.a) * 0.2;
+    const m = mouthScreen();
+    if (Math.hypot(ptr.tk.x - m[0], ptr.tk.y - m[1]) < sc * 1.9){ tongue.extT = 1; tongue.target = [ptr.tk.x, ptr.tk.y]; } else tongue.extT = 0;   // it reaches for the offering
+  } else if (ptr.mode === 'moth' && ptr.moved){ carried = true; }
+  else if (ptr.mode === 'lamp') setLamp(p.x, p.y, true);
+  ptr.last = p;
+});
+const endPtr = () => {
+  if (!ptr) return;
+  if (ptr.mode === 'ticket'){
+    const t = ptr.tk, tp = tongue.pts[tongue.pts.length - 1], m = mouthScreen();
+    if ((tp && Math.hypot(t.x - tp[0], t.y - tp[1]) < Math.max(40, t.w * 0.6)) || Math.hypot(t.x - m[0], t.y - m[1]) < mothScale() * 0.9) slurp(t);
+    else { t.state = 'flutter'; t.vx = ptr.vx * 0.5; t.vy = ptr.vy * 0.5; t.va = ptr.vx * 0.003; tongue.extT = 0; }
+  } else if (ptr.mode === 'moth'){
+    if (carried){ M.vx += ptr.vx / mothScale() * 0.25; M.vy -= ptr.vy / mothScale() * 0.25; carried = false; }
+    else {
+      const held = T - ptr.t0, h = ptr.hit;
+      if (held > 0.45) spit(Math.min(1.5, held / 1.2));
+      else { if (h.body) poke([0, 0], 0, 1.0); else poke(h.u, h.side, 1.1); dustBurst(ptr.start.x, ptr.start.y, 14); flap.kick = 0.6; }
+    }
+  } else if (ptr.mode === 'lamp' && !lamp.sticky) lamp.on = false;
+  body.hold = 0; ptr = null;
+};
+tank.addEventListener('pointerup', endPtr); tank.addEventListener('pointercancel', endPtr);
+$('bSpit').onclick = () => spit(1.1);
+$('bPoke').onclick = () => { const s = Math.random() < 0.5 ? 1 : -1; poke([0.5 + Math.random() * 0.6, Math.random() * 0.8 - 0.4], s, 1.1); };
+$('bLamp').onclick = () => { lamp.sticky = !lamp.sticky; $('bLamp').setAttribute('aria-pressed', String(lamp.sticky)); if (lamp.sticky){ setLamp(W * 0.75, H * 0.3, true); } else lamp.on = false; };
+const feedNewest = () => { const t = newest && newest.state !== 'slurp' ? newest : tickets.filter((x) => x.state === 'flutter' || x.state === 'rest').pop(); if (t){ tongue.target = [t.x, t.y]; slurpFromAfar(t); } else spit(1); };
+function slurpFromAfar(t){ collecting = t; t.restT = -99; hunger = Math.max(hunger, 0.6); }
+$('bFeed').onclick = feedNewest;
+
+// ================= loop =================
+const flapHz = () => {
+  const sp = Math.hypot(M.vx, M.vy), flying = sp > 0.25 || lamp.k > 0.3 || carried || !!collecting;
+  return (mood === 'SLEEPY' ? 0.25 : flying ? 5 + sp * 2 : 0.9) * K.flapRate * (reduceMotion ? 0.4 : 1);
+};
+function setMood(){
+  const m = body.hold > 0.2 ? 'SQUEEZED' : happy > 0 ? 'ECSTATIC' : (tickets.some((t) => t.state === 'slurp') || (ticketOn > 0 && ticketOn < 1)) ? 'SLURPING' : lamp.k > 0.3 ? 'DAZZLED' : (collecting || carried) ? 'MISCHIEVOUS' : hunger > 0.75 ? 'HUNGRY' : T - lastTouch > 14 ? 'SLEEPY' : 'CURIOUS';
+  if (m !== mood){ mood = m; $('mood').textContent = 'MOOD: ' + m; }
+}
+let prev = performance.now();
+function frame(now){
+  const dt = Math.min((now - prev) / 1000, 0.05); prev = now;
+  frameAvg = frameAvg * 0.95 + dt * 1000 * 0.05;
+  T += reduceMotion ? dt * 0.3 : dt;
+  if (ptr) lastTouch = T;
+  camBasis();
+  // squeeze while holding the moth: wings fold shut, it trembles, letters flood its wings
+  if (ptr && ptr.mode === 'moth' && !ptr.moved){
+    body.hold = Math.min(1, (T - ptr.t0) / 1.2);
+    if (body.hold > 0.25 && Math.random() < dt * 8) poke([Math.random() * 1.2, Math.random() - 0.5], Math.random() < 0.5 ? 1 : -1, 0.3 + body.hold * 0.4);
+  }
+  // the lamp
+  lamp.k += ((lamp.on ? 1 : 0) - lamp.k) * Math.min(1, dt * 6);
+  // ---- flight: home, lamp orbit, collecting, being carried ----
+  const halfW = cam.pos[2] * FOV * W / H, xLim = Math.max(0, halfW - 1.8);
+  const yTop = cam.pos[1] + cam.pos[2] * Math.tan(Math.atan(FOV) - Math.atan((cam.pos[1] - cam.target[1]) / cam.pos[2]));
+  const yMax = Math.max(-0.3, yTop - 1.65), yMin = FLOOR + (collecting ? 1.0 : 1.35);
+  let tgt = [0.45 * Math.sin(T * 0.21) * Math.min(1, xLim), 0.05 + 0.2 * Math.sin(T * 0.37) - (mood === 'SLEEPY' ? 0.35 : 0)], kS = 3, cD = 2.6;
+  if (lamp.k > 0.3){ lamp.orbit += dt * 2.4; tgt = [lamp.w[0] + Math.cos(lamp.orbit) * 0.9, lamp.w[1] + Math.sin(lamp.orbit) * 0.45 + 0.15]; kS = 6; }
+  if (collecting){
+    if (collecting.state !== 'rest' && collecting.state !== 'flutter'){ collecting = null; }
+    else {
+      const cw = onPlaneZ(collecting.x, collecting.y, 0); tgt = [cw[0], cw[1] + 0.35]; kS = 4;
+      const m = mouthScreen();
+      if (Math.hypot(collecting.x - m[0], collecting.y - m[1]) < mothScale() * 1.9){ tongue.extT = 1; tongue.target = [collecting.x, collecting.y]; const tp = tongue.pts[tongue.pts.length - 1]; if (tp && tongue.ext > 0.8 && Math.abs(tp[0] - collecting.x) < collecting.w * 0.5 + 12 && Math.abs(tp[1] - collecting.y) < collecting.h * 0.5 + 12) slurp(collecting); }
+    }
+  }
+  if (!collecting && !ptr && lamp.k < 0.1 && hunger > 0.45){ const t = tickets.find((x) => x.state === 'rest' && T - x.restT > 5); if (t) collecting = t; }
+  if (tickets.some((t) => t.state === 'slurp')){ tgt = [M.x, M.y + 0.02]; kS = 5; }      // hover still while slurping
+  if (carried && ptr){ const w = onPlaneZ(ptr.last.x, ptr.last.y, 0); tgt = [w[0], w[1] - 0.1]; kS = 30; cD = 9; }
+  M.vx += ((tgt[0] - M.x) * kS - M.vx * cD) * dt; M.vy += ((tgt[1] - M.y) * kS - M.vy * cD) * dt;
+  M.x += M.vx * dt; M.y += M.vy * dt;
+  M.x = clamp(M.x, -xLim, xLim); M.y = clamp(M.y, yMin, yMax);
+  // ---- wings ----
+  const hz = flapHz(), sp = Math.hypot(M.vx, M.vy), flying = hz > 2;
+  flap.ph += dt * hz * TAU;
+  flap.kick = Math.max(0, flap.kick - dt * 2);
+  const base = flying ? 0.32 : 0.1, amp = (flying ? 0.55 : 0.25) + flap.kick * 0.4;
+  let ang = base + amp * Math.sin(flap.ph);
+  if (mood === 'SLEEPY') ang = 0.06 + 0.05 * Math.sin(flap.ph);
+  ang = ang * (1 - body.hold) + 1.32 * body.hold;                      // squeezed: wings fold shut
+  flap.bend = clamp(-(ang - flap.prev) / Math.max(dt, 1e-3) * 0.04, -0.8, 0.8); flap.prev = ang; flap.ang = ang;
+  M.bob = flying ? -Math.cos(flap.ph) * 0.03 : 0;
+  // orientation: bank with the flight, tilt the top towards you a little
+  body.roll += (-M.vx * 0.3 + 0.04 * Math.sin(T * 0.7) - body.roll) * Math.min(1, dt * 3);
+  body.pitch += (0.16 + clamp(M.vy, -1, 1) * 0.1 - body.pitch) * Math.min(1, dt * 3);
+  body.yaw += (look[0] * 0.3 - body.yaw) * Math.min(1, dt * 1.5);
+  BODY = m3(ry(body.yaw), m3(rx(body.pitch), rz(body.roll)));
+  // looking around
+  if (lamp.k > 0.3) lookT = [clamp((lamp.x - project(center())[0]) / (mothScale() * 3), -1, 1), clamp(-(lamp.y - project(center())[1]) / (mothScale() * 3), -1, 1)];
+  else if (T - lastPointer > 2 && T > nextSaccade){ nextSaccade = T + 0.8 + Math.random() * 2.4; lookT = Math.random() < 0.3 ? [0, 0] : [(Math.random() - 0.5) * 1.4, (Math.random() - 0.5) * 0.9]; if (Math.random() < 0.3) rollDir *= -1; }
+  look = look.map((v, i) => v + (lookT[i] - v) * Math.min(1, dt * 8));
+  excite = Math.min(1.5, Math.max(0, excite - dt * 0.35) + body.hold * dt * 1.5 + lamp.k * dt * 0.3);
+  happy = Math.max(0, happy - dt);
+  const digesting = ticketOn > 0 && ticketOn < 1 ? 1 : 0;
+  hue += dt * (0.2 + excite * 1.6 + digesting * 3 + (happy > 0 ? 1.5 : 0));
+  roll += dt * rollDir * (0.12 + excite * 0.9);
+  const flyPrev = Math.floor(fly); fly += dt * (0.09 + excite * 0.5 + digesting * 0.4);
+  if (Math.floor(fly) !== flyPrev) roll += K.spiral * 0.07;
+  glow += (((mood === 'SLEEPY') ? 0.2 : 0.5) + excite * 0.4 + (happy > 0 ? 0.6 : 0) + digesting * 0.5 - glow) * Math.min(1, dt * 4);
+  if (!reduceMotion && T > nextIdlePoke){ nextIdlePoke = T + 4 + Math.random() * 4; poke([0.3 + Math.random() * 0.9, Math.random() * 0.9 - 0.5], Math.random() < 0.5 ? 1 : -1, 0.35 * K.wobble); }
+  if (!tickets.some((t) => t.state === 'slurp' || t.state === 'grab') && !collecting) { tongue.extT = 0; }
+  light = lamp.k > 0.02 ? lamp.w : [-3, 4, 3];
+  if (ticketOn > 0) ticketOn = Math.min(1, ticketOn + dt / 1.5);
+  hunger = Math.min(1, hunger + dt * 0.01);
+  stepTongue(dt); stepAntennae(dt); stepStrands(dt); stepDust(dt); stepTickets(dt); setMood();
+
+  if (frameAvg > 45 && scale > 0.35){ scale *= 0.85; frameAvg = 30; resize(); }
+  else if (frameAvg < 18 && scale < 0.9){ scale = Math.min(0.9, scale * 1.06); frameAvg = 24; resize(); }
+
+  // ---- shader ----
+  const S = SPECIES[species], lin = (h) => [1, 3, 5].map((i) => { const c = parseInt(h.substr(i, 2), 16) / 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); });
+  gl.viewport(0, 0, cv.width, cv.height);
+  gl.uniform2f(U.uRes, cv.width, cv.height); gl.uniform1f(U.uTime, T);
+  gl.uniform3fv(U.uCamPos, cam.pos); gl.uniformMatrix3fv(U.uCamRot, false, [CR[0], CR[1], CR[2], CU[0], CU[1], CU[2], -CF[0], -CF[1], -CF[2]]);
+  gl.uniform1f(U.uFov, FOV);
+  gl.uniform3fv(U.uCenter, center());
+  gl.uniformMatrix3fv(U.uBody, false, [BODY[0], BODY[3], BODY[6], BODY[1], BODY[4], BODY[7], BODY[2], BODY[5], BODY[8]]);
+  gl.uniform1f(U.uFlap, flap.ang); gl.uniform1f(U.uBend, flap.bend);
+  const pk = new Float32Array(32), am = new Float32Array(8);
+  pokes.forEach((p, i) => { pk.set([p.u[0], p.u[1], p.side, p.t0], i * 4); am[i] = p.amp; });
+  gl.uniform4fv(U.uPoke, pk); gl.uniform1fv(U.uAmp, am);
+  gl.uniform3fv(U.uLight, light); gl.uniform1f(U.uLamp, lamp.k * 1.6); gl.uniform2f(U.uLook, look[0], look[1]);
+  gl.uniform1f(U.uRoll, roll); gl.uniform1f(U.uFly, fly); gl.uniform1f(U.uHue, hue); gl.uniform1f(U.uExcite, Math.min(1, excite)); gl.uniform1f(U.uGlow, glow);
+  gl.uniform1f(U.uFoil, K.foil); gl.uniform1f(U.uWaveSpeed, K.waveSpeed); gl.uniform1f(U.uGlyph, K.glyph * (1 + body.hold)); gl.uniform1f(U.uSpiral, K.spiral); gl.uniform1f(U.uFuzz, K.fuzz); gl.uniform1f(U.uFractal, K.fractal); gl.uniform1f(U.uIdle, K.wobble);
+  gl.uniform3fv(U.uColA, lin(S.A)); gl.uniform3fv(U.uColB, lin(S.B)); gl.uniform3fv(U.uColC, lin(S.C)); gl.uniform3fv(U.uBg0, lin(S.bg0)); gl.uniform3fv(U.uBg1, lin(S.bg1));
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, atlasTex); gl.uniform1i(U.uAtlas, 0); gl.uniform1f(U.uGlyphN, glyphN);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, ticketTex); gl.uniform1i(U.uTicket, 1); gl.uniform1f(U.uTicketOn, ticketOn);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+  fctx.setTransform(dpr, 0, 0, dpr, 0, 0); fctx.clearRect(0, 0, W, H);
+  drawStrands(); drawAntennae(); drawTongue(); drawDust();
+  if (devMode) drawHud();
+  drawTickets(); drawLamp();
+  if (!window.__paused) requestAnimationFrame(frame);
+}
+
+// ================= bench =================
+const sliderEls = {};
+function applyPreset(n){ const pr = SPECIES[n].preset; for (const k in pr){ K[k] = pr[k]; if (sliderEls[k]){ sliderEls[k].i.value = K[k]; sliderEls[k].o.textContent = (+K[k]).toFixed(2); } } }
+function renderSpecies(){
+  const el = $('pals'); el.innerHTML = '';
+  for (const n of Object.keys(SPECIES)){ const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = n; b.setAttribute('aria-pressed', String(n === species)); b.onclick = () => { species = n; applyPreset(n); renderSpecies(); poke([0, 0], 0, 1.2); dustBurst(project(center())[0], project(center())[1], 40, 1.5); }; el.append(b); }
+}
+for (const [key, label, min, max, step] of SLIDERS){
+  const row = document.createElement('div'); row.className = 'row';
+  row.innerHTML = `<label for="s-${key}">${label}</label><output id="o-${key}" for="s-${key}">${(+K[key]).toFixed(2)}</output><input type="range" id="s-${key}" min="${min}" max="${max}" step="${step}" value="${K[key]}">`;
+  $('sliders').append(row);
+  const s = row.querySelector('input'), o = row.querySelector('output');
+  sliderEls[key] = { i: s, o };
+  s.oninput = () => { K[key] = +s.value; o.textContent = (+K[key]).toFixed(2); };
+}
+
+resize(); camBasis(); renderSpecies(); buildAtlas();
+if (document.fonts && document.fonts.load) document.fonts.load('700 44px "JetBrains Mono"').then(() => { buildAtlas(); textCache.clear(); }).catch(() => {});
+setTimeout(() => poke([0, 0], 0, 1.0), 500);
+if (location.search.includes('test')) window.__moth = { poke: () => poke([0.8, 0.3], 1, 1.2), spit, feedNewest, setMode, setScale: (s) => { scale = s; resize(); }, lamp: (x, y, on) => setLamp(x, y, on), species: (n) => { species = n; applyPreset(n); renderSpecies(); }, hold: (v) => { body.hold = v; }, state: () => ({ mood, fed, spat, tickets: tickets.map((t) => t.state), M: { x: M.x, y: M.y }, tongue: tongue.ext }) };
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body></html>
