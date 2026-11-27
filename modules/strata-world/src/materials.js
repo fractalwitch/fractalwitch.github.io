@@ -9,7 +9,7 @@ import {Fn,If,Loop,float,int,vec2,vec3,vec4,uniform,uniformArray,attribute,insta
 export const U={
  t:uniform(0),look:uniform(new THREE.Vector3(0,2,10)),melt:uniform(0),drip:uniform(1),wob:uniform(1),flow:uniform(1),glit:uniform(1),
  poke:uniform(new THREE.Vector4(0,0,0,-99)),pop:uniform(-99),startle:uniform(0),
- sun:uniform(new THREE.Vector3(0,1,0)),irisA:uniform(new THREE.Color()),irisB:uniform(new THREE.Color()),sclera:uniform(new THREE.Color()),
+ sun:uniform(new THREE.Vector3(0,1,0)),sunCol:uniform(new THREE.Color(1,1,1)),amb0:uniform(new THREE.Color(.3,.2,.4)),amb1:uniform(new THREE.Color(.05,.02,.08)),irisA:uniform(new THREE.Color()),irisB:uniform(new THREE.Color()),sclera:uniform(new THREE.Color()),
  hole:uniform(new THREE.Color()),pulseCol:uniform(new THREE.Color()),
  pulses:uniformArray(Array.from({length:6},()=>new THREE.Vector4(0,0,0,-99)),'vec4'),
  rips:uniformArray(Array.from({length:8},()=>new THREE.Vector4(0,0,0,-99)),'vec4'),
@@ -41,7 +41,7 @@ function seedMaterial(s,extra={}){const m=new THREE.MeshPhysicalNodeMaterial(ext
  m.roughness=Math.min(1,Math.max(.025,1-s.gloss));applySeed(m,s);m.userData.seed=s;return m}
 
 // ---------- pores: 3D Voronoi cells, larger ones grow eyes that look at U.look (returns rgb + mask in w, emissive via out var)
-const poresFn=Fn(([p,N,Pw])=>{
+export const poresFn=Fn(([p,N,Pw])=>{
  const ip=floor(p),fp=fract(p),best=vec3(0).toVar(),bc=vec3(0).toVar(),d1=float(9).toVar();
  Loop({start:-1,end:2,name:'z'},({z})=>{Loop({start:-1,end:2,name:'y'},({y})=>{Loop({start:-1,end:2,name:'x'},({x})=>{
   const g=vec3(float(x),float(y),float(z)),r=g.add(h33(ip.add(g))).sub(fp),d=dot(r,r);If(d.lessThan(d1),()=>{d1.assign(d);best.assign(r);bc.assign(ip.add(g))})})})});

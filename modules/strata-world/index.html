@@ -32,7 +32,7 @@ textarea{height:130px;resize:vertical}
 #hud{position:fixed;left:12px;top:calc(10px + env(safe-area-inset-top));font:11.5px/1.5 ui-monospace,Menlo,monospace;white-space:pre;pointer-events:none;color:#fff;text-shadow:0 1px 3px #000}
 #mood{position:fixed;left:12px;bottom:calc(70px + env(safe-area-inset-bottom));margin:0;font:600 11px ui-monospace,Menlo,monospace;letter-spacing:.12em;color:var(--acid);pointer-events:none;text-shadow:0 1px 3px #000}
 #hint{position:fixed;left:12px;right:410px;bottom:calc(88px + env(safe-area-inset-bottom));margin:0;font:12px ui-monospace,Menlo,monospace;color:#fff;opacity:.8;pointer-events:none;text-shadow:0 1px 3px #000}
-#toolbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom));z-index:5;border-radius:999px;padding:5px;background:rgba(12,6,24,.62);border:1px solid var(--line);backdrop-filter:blur(8px)}
+#toolbar{display:flex;gap:4px;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom));z-index:5;border-radius:999px;padding:5px;background:rgba(12,6,24,.62);border:1px solid var(--line);backdrop-filter:blur(8px)}
 #toolbar button{font:600 11px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:rgba(243,234,255,.85);background:transparent;border:0;border-radius:999px;padding:10px 16px;cursor:pointer}
 #toolbar button[aria-pressed=true]{background:var(--acid);color:#0b1402}
 #err{position:fixed;inset:auto 10px 70px 10px;color:#ffb3c7;font:12px monospace;white-space:pre-wrap;pointer-events:none}
@@ -43,9 +43,9 @@ textarea{height:130px;resize:vertical}
 <div id="stagewrap"></div>
 <div id="hud" class="dev"></div>
 <p id="mood" class="dev">MOOD · CURIOUS</p>
-<p id="hint" class="dev">drag · orbit   tap · poke an eye / pop a bubble / ripple   hold · melt + blow bubbles   double-tap · next world</p>
+<p id="hint" class="dev">goo: press · dent   drag · smear   hold · pour   jelly: grab + pull · stretch / pinch   orb: tap it · ORB MODE   empty: drag · orbit   double-tap · next world</p>
 <aside id="bench" class="dev" aria-label="Lab controls"></aside>
-<nav id="toolbar" aria-label="Mode"><button id="devbtn" type="button" aria-pressed="false">DEV MODE</button></nav>
+<nav id="toolbar" aria-label="Mode"><button id="orbbtn" type="button" aria-pressed="false">ORB MODE</button><button id="devbtn" type="button" aria-pressed="false">DEV MODE</button></nav>
 <div id="err"></div>
 <script type="module" src="./src/main.js"></script>
 </body>

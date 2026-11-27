@@ -26,7 +26,7 @@ export function eyeLife(list){
    g.xyz.assign(mix(g.xyz,dir,min(1,L.dt.mul(st.w.mul(12).add(3)))));
   });
  })().compute(n);
- return {gaze,compute,n};
+ return {gaze,stat,compute,n};
 }
 
 // bubbles: rise, sway, wrap, pop on request, blow from the hold point while holding
