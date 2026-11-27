@@ -2,7 +2,7 @@
 import * as THREE from 'three/webgpu';
 import {SEED_LIB,SEED_KEYS,RHEO_KEYS,WORLDS} from './recipes.js';
 import {buildGooLayer} from './gooworld.js';
-import {HS} from './goo.js';
+import {HS,RULES} from './goo.js';
 import {hueRot,clamp,norm,vsub,vadd,vscl,vdot} from './core.js';
 import {U,applySeed} from './materials.js';
 import {L} from './life.js';
@@ -140,7 +140,7 @@ async function frame(){
  if(orbMode){const o=GL.jelly.B[0].p,k=1-Math.exp(-dt*4);cam.t=cam.t.map((v,i)=>v+((i===1?o[1]+.5:o[i])-v)*k)}
  camera.fov=fovR*180/Math.PI;camera.aspect=asp;camera.position.set(...camEye());camera.lookAt(...cam.t);camera.updateProjectionMatrix();
  // moods and the shared look target
- for(const [id,p] of ptrs){if(p.mode==='goo'&&!p.moved&&holding&&!holding.on&&time-holding.t0>.45){holding.on=true;p.touch.kind=2;p.touch.r=.45;p.touch.str=3.6;p.seed={kind:3,x:p.touch.x,z:p.touch.z,vx:0,vz:0,r:.25,str:1};touches.push(p.seed)}
+ for(const [id,p] of ptrs){if(p.mode==='goo'&&!p.moved&&holding&&!holding.on&&time-holding.t0>.45){holding.on=true;p.touch.kind=2;p.touch.r=.45;p.touch.str=3.6;p.seed={kind:3,x:p.touch.x,z:p.touch.z,vx:0,vz:0,r:.8,str:1};touches.push(p.seed)}
   if(p.mode==='stick'&&!p.moved&&!p.pour&&performance.now()-p.t0>450){const o=GL.jelly.B[0];p.pour={kind:2,x:o.p[0],z:o.p[2],vx:0,vz:0,r:.45,str:3.4,follow:true};touches.push(p.pour);holding={id,t0:time,on:true,at:o.p}}}
  for(let i=touches.length-1;i>=0;i--){const t=touches[i];if(t.until&&time>t.until)touches.splice(i,1);else if(t.follow){const o=GL.jelly.B[0];t.x=o.p[0]-o.v[0]*.15;t.z=o.p[2]-o.v[2]*.15;if(holding)holding.at=o.p}else if(t.kind===3&&t.made)touches.splice(i,1);else if(t.kind===3)t.made=true}
  if(holding&&holding.on)setMood('MELTING');else if(time-lastPoke<1.2)setMood('STARTLED');else if(time-lastPop<2.2)setMood('DELIGHTED');else if(idle>14)setMood('DREAMING');else setMood('CURIOUS');
@@ -156,13 +156,13 @@ async function frame(){
  renderer.toneMappingExposure=R.post.expo*(1+fade*1.5);
  GL.jelly.step(dt,{time,look:lookT,cam:camera.position.toArray(),moodLid:moodLid[mood],orbInput:orbMode?orbStick||[0,0]:null,get orbHop(){return orbHop},set orbHop(v){orbHop=v},gooAt:GL.world.gooAt,
   onLand:b=>{if(b.r<.3)pulseAt(b.p)},onSwallow:b=>{pulseAt(b.p);burstAt(b.p)}});
- GL.jelly.feedGoo(GL.goo);GL.writeSources(touches,FOLD.k,FOLD.d);GL.goo.step(dt);GL.jelly.upload();GL.placeEyes(time);
+ GL.goo.R.seedHue.value=(time*.07)%1;GL.jelly.feedGoo(GL.goo);GL.writeSources(touches,FOLD.k,FOLD.d);GL.goo.step(dt);GL.jelly.upload();GL.placeEyes(time);
  renderer.compute(W.computes);
  post.pp.render();
  if(!readingGoo&&frameN%10===0){readingGoo=true;renderer.readRenderTargetPixelsAsync(GL.goo.A,0,0,GL.goo.N,GL.goo.N).then(px=>{gooMass=GL.onReadback(px,time)}).catch(e=>console.warn('goo readback',e)).finally(()=>{readingGoo=false})}
  if(!bubReading&&frameN%20===0){bubReading=true;renderer.getArrayBufferAsync(W.bubbleLife.buf.value).then(b=>{bubPos=new Float32Array(b)}).catch(()=>{}).finally(()=>{bubReading=false})}
  if(frameN%15===0&&document.documentElement.dataset.mode==='dev'){const inf=renderer.info.render;
-  $('hud').textContent=`${(1000/ema).toFixed(0)} fps · ${ema.toFixed(1)} ms · ${backend} · scale ${scale.toFixed(2)}\ngoo ${GL.goo.N}² · mass ${gooMass.toFixed(0)} · ${GL.jelly.B.filter(b=>b.on).length} jelly · ${GL.nodes.length} branch eyes · fold ${FOLD.k}×${FOLD.d} · ${orbMode?'ORB':'WORLD'}\n${inf.drawCalls} draws · ${(inf.triangles/1000).toFixed(0)}k tris · ${W.computes.length} compute passes · ${W.bodies.filter(b=>b.kind>0).length} eyes on GPU\nshadows ${quality.shadows?'on':'off'} · transmission ${quality.transmission?'on':'off'} · GTAO ${quality.gtao?'on':'off'} · build ${lastBuild.toFixed(0)} ms · ${mood}`}
+  $('hud').textContent=`${(1000/ema).toFixed(0)} fps · ${ema.toFixed(1)} ms · ${backend} · scale ${scale.toFixed(2)}\ngoo ${GL.goo.N}² · mass ${gooMass.toFixed(0)} · ${GL.jelly.B.filter(b=>b.on).length} jelly · life ${(RULES[R.life]||RULES.life).name} · gen ${GL.goo.gens} · ${GL.nodes.length} tissue eyes · fold ${FOLD.k}×${FOLD.d} · ${orbMode?'ORB':'WORLD'}\n${inf.drawCalls} draws · ${(inf.triangles/1000).toFixed(0)}k tris · ${W.computes.length} compute passes · ${W.bodies.filter(b=>b.kind>0).length} eyes on GPU\nshadows ${quality.shadows?'on':'off'} · transmission ${quality.transmission?'on':'off'} · GTAO ${quality.gtao?'on':'off'} · build ${lastBuild.toFixed(0)} ms · ${mood}`}
 }
 // ---------- dev bench
 const bench=$('bench'),devBtn=$('devbtn');
@@ -180,16 +180,19 @@ const KN=[['post','bloom','Bloom',0,2.5,.01,v=>post.K.bloom.value=v],['post','th
  ['camera','dist','Camera distance',5,45,.1],['camera','fov','Field of view',.4,1.4,.01],['counts','sparkles','Sparkles',0,600,10],['counts','bubbles','Bubbles',0,40,1],['counts','bulbs','Eye-bulbs (rebuild)',10,200,1,null,1]];
 let rebuildTimer=0;
 function buildBench(){bench.innerHTML='';
- bench.append(h('h1',{},'Strata World · WebGPU'),h('p',{},`Study 11 in Three.js r186 (TSL node materials, compute life, shadows, transmission, GTAO, node post), now with a shared goo state: a GooCore heightfield on the GPU that the optics read and the touches write, jelly beings that stretch, pinch off and melt back into it, DLA reef growth with eyes at branch nodes, and fold echoes. ${R.name}. Running on ${backend}.`));
+ bench.append(h('h1',{},'Strata World · WebGPU'),h('p',{},`Study 11 in Three.js r186 (TSL node materials, compute life, shadows, transmission, GTAO, node post), now with a shared goo state: a GooCore heightfield on the GPU that the optics read and the touches write, jelly beings that stretch, pinch off and melt back into it, a Life reef (a B/S automaton fed by the goo: births eat it, deaths give it back, currents drag it) with eyes on old tissue, and fold echoes. ${R.name}. Running on ${backend}.`));
  bench.append(h('h2',{},'Worlds'));const wc=h('div',{class:'chips'});for(const k in WORLDS)wc.append(h('button',{class:'chip',type:'button','aria-pressed':String(k===worldKey&&R.name===WORLDS[k].name),onclick:()=>goWorld(k)},WORLDS[k].name));
  wc.append(h('button',{class:'chip',type:'button',onclick:()=>mutate()},'Mutate'));bench.append(wc);
  bench.append(h('h2',{},'Strata'));['L0 sky','L1 macro + impostors','L2 liquid ground','L3 hero motifs','L4 bubbles + sparkles'].forEach((n,i)=>bench.append(tog(n,!!LAYERS[i],v=>{LAYERS[i]=v?1:0;W.strata[i].visible=v})));
  bench.append(h('h2',{},'Quality'),h('p',{},'These rebuild the world. Phones start with transmission and GTAO off.'));
  bench.append(tog('Real shadows (sun shadow map)',quality.shadows,v=>{quality.shadows=v;rebuildQuality()}),tog('Transmission (refracting hearts and bubbles)',quality.transmission,v=>{quality.transmission=v;rebuildQuality()}),tog('GTAO contact occlusion',quality.gtao,v=>{quality.gtao=v;rebuildQuality()}),tog('FXAA',quality.fxaa,v=>{quality.fxaa=v;rebuildQuality()}));
  bench.append(slider('k-ao','GTAO strength',0,1.5,.01,post.K.aoK.value,v=>post.K.aoK.value=v));
- bench.append(h('h2',{},'Goo'),h('p',{},'One shared GooCore state: tap presses it, drag smears it, hold pours (and seeds the fractal reef). The fold echoes every touch around the centre and down a 0.6 scale ladder.'));
+ bench.append(h('h2',{},'Goo'),h('p',{},'One shared GooCore state: tap presses it, drag smears it, hold pours (and sows Life). The fold echoes every touch around the centre and down a 0.6 scale ladder.'));
  {const fc=h('div',{class:'chips'});for(const k of [0,3,5,6])fc.append(h('button',{class:'chip',type:'button','aria-pressed':String(FOLD.k===k),onclick:()=>{FOLD.k=k;buildBench()}},k?`${k}-fold`:'no fold'));bench.append(fc)}
  bench.append(slider('k-fd','Fold depth',1,3,1,FOLD.d,v=>FOLD.d=v));
+ bench.append(h('h2',{},'Life reef'),h('p',{},'The reef is a B/S automaton on the goo. A birth needs goo underneath and eats it; a death gives it back. Old tissue (20+ generations) stands tallest and grows eyes; newborn cells glow in their lineage colour; births minus deaths drag the goo along, so gliders surf it.'));
+ {const rc=h('div',{class:'chips'});for(const k in RULES){const r=RULES[k];rc.append(h('button',{class:'chip',type:'button','aria-pressed':String((R.life||'life')===k),onclick:()=>{R.life=k;GL.goo.setRule(k);buildBench()}},`${r.name} B${r.B}/S${r.S}`))}bench.append(rc)}
+ bench.append(slider('k-lfeed','Feed (goo a birth needs)',.15,1.5,.01,GL.goo.R.feed.value,v=>GL.goo.R.feed.value=v),slider('k-lpush','Life current strength',0,4,.01,GL.goo.R.push.value,v=>GL.goo.R.push.value=v),slider('k-lspark','Spontaneous quickening',0,.004,.0001,GL.goo.R.spark.value,v=>GL.goo.R.spark.value=v));
  const fl=R.seeds.flow,jl=R.seeds.jelly;
  for(const [k,label,a,b,st] of RHEO_KEYS){if(fl[k]!==undefined)bench.append(slider('rf-'+k,'flow · '+label,a,b,st,fl[k],v=>{fl[k]=v;GL.goo.setRheo({[k]:v});if(k==='backlight')GL.surface.material.userData.u.back.value=v}))}
  for(const [k,label,a,b,st] of RHEO_KEYS){if(jl[k]!==undefined)bench.append(slider('rj-'+k,'jelly · '+label,a,b,st,jl[k],v=>{jl[k]=v}))}
@@ -224,7 +227,7 @@ renderer.setAnimationLoop(frame);
 window.__sw={sun,fill,hemi,scene,post,get R(){return R},get W(){return W},backend,poke:(i=5)=>{const b=W.bodies.filter(x=>x.kind>0)[i];poke(b,b.p)},popBubble,tap,goWorld,pick,cam,quality,
  setHold(on,at){holding=on?{id:-1,t0:time-1,on:true,at}:null},layers(a){LAYERS=a;a.forEach((v,i)=>W.strata[i].visible=!!v)},
  bub:()=>bubPos&&Array.from(bubPos.slice(0,8)).map(v=>+v.toFixed(2)),async gaze(){const m=W.strata[3].children.find(x=>x.userData.role);const a=new Float32Array(await renderer.getArrayBufferAsync(m.material.userData.gazeAttr));return Array.from(a.slice(0,8)).map(v=>+v.toFixed(3))},
- get GL(){return GL},async readP(){const N=GL.goo.N,px=await renderer.readRenderTargetPixelsAsync(GL.goo.P,0,0,N,N);let mx=[-1e9,-1e9,-1e9,-1e9],mn=[1e9,1e9,1e9,1e9];for(let i=0;i<px.length;i+=4)for(let c=0;c<4;c++){mx[c]=Math.max(mx[c],px[i+c]);mn[c]=Math.min(mn[c],px[i+c])}return {mx,mn,src:GL.goo.SRC.array.slice(0,3).map(v=>v.toArray()),src2:GL.goo.SRC2.array.slice(0,3).map(v=>v.toArray())}},touches,FOLD,setOrb,get orbMode(){return orbMode},orb:(x,z)=>{orbStick=[x,z]},hop:()=>{orbHop=true},pour:(x,z,on=true)=>{if(on)touches.push({kind:2,x,z,vx:0,vz:0,r:.45,str:3.6,tag:'test'},{kind:3,x,z,vx:0,vz:0,r:.25,str:1,tag:'test'});else for(let i=touches.length-1;i>=0;i--)if(touches[i].tag==='test')touches.splice(i,1)},
+ async readLife(){const g=GL.goo,px=await renderer.readRenderTargetPixelsAsync(g.L,0,0,g.LN,g.LN),hues=[],ages=[];let n=0;for(let i=0;i<px.length;i+=4)if(px[i]>.5){n++;if(hues.length<40){hues.push(+px[i+2].toFixed(2));ages.push(px[i+1])}}return {n,hues,ages,seedHue:g.R.seedHue.value}}, get GL(){return GL},life:()=>Object.assign(GL.stats(),{rule:R.life,genRate:GL.goo.genRate}),setRule:k=>{R.life=k;GL.goo.setRule(k)},async readP(){const N=GL.goo.N,px=await renderer.readRenderTargetPixelsAsync(GL.goo.P,0,0,N,N);let mx=[-1e9,-1e9,-1e9,-1e9],mn=[1e9,1e9,1e9,1e9];for(let i=0;i<px.length;i+=4)for(let c=0;c<4;c++){mx[c]=Math.max(mx[c],px[i+c]);mn[c]=Math.min(mn[c],px[i+c])}return {mx,mn,src:GL.goo.SRC.array.slice(0,3).map(v=>v.toArray()),src2:GL.goo.SRC2.array.slice(0,3).map(v=>v.toArray())}},touches,FOLD,setOrb,get orbMode(){return orbMode},orb:(x,z)=>{orbStick=[x,z]},hop:()=>{orbHop=true},pour:(x,z,on=true)=>{if(on)touches.push({kind:2,x,z,vx:0,vz:0,r:.45,str:3.6,tag:'test'},{kind:3,x,z,vx:0,vz:0,r:.8,str:1,tag:'test'});else for(let i=touches.length-1;i>=0;i--)if(touches[i].tag==='test')touches.splice(i,1)},
  press:(x,z,dur=1)=>touches.push({kind:0,x,z,vx:0,vz:0,r:.75,str:2.4,until:time+dur}),smear:(x,z,vx,vz,dur=1)=>touches.push({kind:1,x,z,vx,vz,r:.6,str:1,until:time+dur}),get mass(){return gooMass},
  stats:()=>({fps:+(1000/ema).toFixed(1),backend,draws:renderer.info.render.drawCalls,tris:renderer.info.render.triangles,build:lastBuild,eyes:W.bodies.filter(b=>b.kind>0).length,mood,scale}),
  async snapGPU(){renderer.setAnimationLoop(null);const w=renderer.domElement.width,h=renderer.domElement.height,rt=new THREE.RenderTarget(w,h);await frame();renderer.setRenderTarget(rt);post.pp.render();renderer.setRenderTarget(null);

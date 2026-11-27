@@ -19,10 +19,10 @@ const SEED_LIB={
  jelly:   {a:'#b04aff',b:'#ffffff',sss:'#d080ff',gloss:.96,metal:0,pore:0, film:0,filmK:0,emit:0,coat:1, wobble:1.6,stiff:.7},
  orb:     {a:'#d8f8ff',b:'#ffffff',sss:'#a0f0ff',gloss:1,  metal:0,pore:0, film:480,filmK:1,emit:0,coat:1, wobble:1.2,stiff:1}
 };
-const RHEO_KEYS=[['grav','gravity',50,900,5],['drag','drag',0,20,.1],['slump','slump',0,20,.1],['yieldH','yield',0,1,.01],['inertia','inertia',0,1.5,.01],['grow','fractal growth',0,4,.01],['backlight','forward scatter',0,3,.01],['wobble','wobble',0,3,.01],['stiff','stiffness',.2,3,.01]];
+const RHEO_KEYS=[['grav','gravity',50,900,5],['drag','drag',0,20,.1],['slump','slump',0,20,.1],['yieldH','yield',0,1,.01],['inertia','inertia',0,1.5,.01],['grow','life speed (×6 gens/s)',0,4,.01],['backlight','forward scatter',0,3,.01],['wobble','wobble',0,3,.01],['stiff','stiffness',.2,3,.01]];
 const SEED_KEYS=[['a','colour','color'],['b','accent','color'],['sss','glow-through','color'],['gloss','gloss',0,1,.01],['metal','metal',0,1,.01],['pore','pores',0,1,.01],['film','film nm',0,900,10],['filmK','film mix',0,1.2,.01],['emit','emissive',0,1.5,.01],['coat','coat',0,1,.01]];
 const WORLDS={
- reef:{name:'Eyebloom Reef',layout:'reef',seed:7,
+ reef:{name:'Eyebloom Reef',layout:'reef',seed:7,life:'coral',
   seeds:{skin:'eyegoo',nub:'eyegoo',coral:'gold',heart:'crystal',drip:'eyegoo',pool:'oil',bubble:'soap',flow:'ecto',jelly:'jelly',orb:'orb'},
   palette:{jelly:['#a23cff','#7a2ae8','#c25cff','#30d0f0'],orb:'#d8f8ff',bulb:['#7a22c8','#8a2ad6','#6c1cb8','#9230e0','#7e26cc'],heart:['#ff4fa8','#3fe6ff','#ffd04a','#ff7ad9','#c070ff'],glow:'#ff9ae8',cyan:'#30cfee',frond:['#c8a8ff','#a8c8ff','#d0a0ff'],
    irisA:'#b45cff',irisB:'#32d0ff',sclera:'#d2bff2',hole:'#1b2a8a',poolSkin:'#7a1fc0',bubble:['#c070ff','#ffffff','#70e0ff'],
@@ -32,7 +32,7 @@ const WORLDS={
   post:{bloom:.6,thresh:1.6,ca:.4,expo:1,vig:.5,grain:.03,sat:1.18,rays:0},
   motion:{drip:1,wobble:1,flow:1,stare:1,glit:1},atmos:{fogD:.012,fogH:.08},
   camera:{target:[0,2.6,.4],dist:8,yaw:0,pitch:.04,fov:.9},spark:{c:[0,3.6,-.5],s:[24,11,15]}},
- coast:{name:'Heart Coast',layout:'coast',seed:11,
+ coast:{name:'Heart Coast',layout:'coast',seed:11,life:'maze',
   seeds:{rock:'lime',goo:'slime',blob:'slime',ball:'slime',heart:'crystal',foam:'foam',eyeskin:'foam',spire:'pearl',arch:'pearl',drip:'slime',sea:'sea',bubble:'soap',flow:'ecto',jelly:'jelly',orb:'orb'},
   palette:{jelly:['#9b2cff','#2ad0dc','#b8e636','#ff5ab4'],orb:'#e8fcff',goo:['#9b2cff','#2ad0dc','#b8e636'],blob:['#8a1ef0','#7a18d8','#9a2cff','#8420e6','#24c4d0'],ball:['#2ad4dc','#a43cff','#ff5ab4','#45e0c0'],heart:['#a43cff','#ff3f8f','#ff6fb0','#2ad4dc','#c85cff'],bigHeart:['#ff2f6a','#ff4f8f','#e8205a'],
    spire:'#fbe8f2',bridge:'#ffa6d6',foam:'#f6f4ff',cloud:['#ff5a9a','#ff7a7a','#f04aa0','#ff8ab0'],glow:'#ffd0e8',sand:'#f2d4a0',bubble:['#b060ff','#40e0ff','#ffffff'],
@@ -43,13 +43,13 @@ const WORLDS={
   post:{bloom:.6,thresh:1.5,ca:.45,expo:.95,vig:.35,grain:.03,sat:1.28,rays:.7},
   motion:{drip:1,wobble:1,flow:1,stare:1,glit:1},atmos:{fogD:.0024,fogH:.05},
   camera:{target:[-1,2.4,-6],dist:16,yaw:-.06,pitch:.1,fov:.86},spark:{c:[3,9,-16],s:[52,22,42]}},
- jelly:{name:'Jelly Abyss',layout:'reef',seed:42,base:'reef',
+ jelly:{name:'Jelly Abyss',layout:'reef',seed:42,base:'reef',life:'life',
   seeds:{skin:'slime',nub:'slime',coral:'chrome',heart:'crystal',drip:'slime',pool:'oil',bubble:'soap',flow:'ectoCyan',jelly:'jelly',orb:'orb'},
   palette:{jelly:['#16c8d8','#22a6e8','#ffd04a'],bulb:['#16c8d8','#22a6e8','#14d6b8','#3a7cf0'],heart:['#ffd04a','#ff4fa8','#ffffff'],glow:'#9ffcff',cyan:'#ff5ab4',frond:['#9ffcff','#ffffff'],
    irisA:'#ffd04a',irisB:'#ff3fa0',sclera:'#eafcff',hole:'#08305a',poolSkin:'#0a6a8a',bubble:['#70f0ff','#ffffff'],
    skyA:'#01060c',skyB:'#021a2c',skyC:'#0a5a78',sun:'#e8fbff',fill:'#ff6ad0',amb0:'#0d4a60',amb1:'#020a12',fog:'#020c16',spA:'#c8fcff',spB:'#ffc8f0',pulse:'#5affef'},
   seedOver:{pool:{a:'#04263a',filmK:.75},skin:{sss:'#20e0ff'}}},
- valentine:{name:'Obsidian Valentine',layout:'coast',seed:23,base:'coast',
+ valentine:{name:'Obsidian Valentine',layout:'coast',seed:23,base:'coast',life:'daynight',
   seeds:{rock:'lime',goo:'obsidian',blob:'obsidian',ball:'obsidian',heart:'crystal',foam:'foam',eyeskin:'foam',spire:'chrome',arch:'pearl',drip:'obsidian',sea:'sea',bubble:'soap',flow:'honey',jelly:'jelly',orb:'orb'},
   palette:{jelly:['#ff2f7a','#ffd04a','#2a0f3a'],goo:['#1a0a24','#ff2f7a','#3a0f50'],blob:['#1a0a24','#2a0f3a','#14081c','#ff2f7a'],ball:['#ffd04a','#ff2f7a','#1a0a24'],heart:['#ffd04a','#ff2f7a','#ff5ab4'],bigHeart:['#ff1f5a','#ffd04a'],
    spire:'#2a1a34',bridge:'#ffd04a',foam:'#ffe8f0',cloud:['#ff4f6a','#ff7a5a','#c8306a'],glow:'#ffd08a',sand:'#4a2030',bubble:['#ff4f8f','#ffd04a'],
