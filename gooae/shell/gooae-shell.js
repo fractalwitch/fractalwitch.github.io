@@ -44,8 +44,8 @@
   /* ── desktop: show device-frame toys inside a device ─────────── */
   var wideDesk = window.matchMedia && matchMedia('(min-width: 900px) and (pointer: fine)').matches;
   if (!isPreview && !isFramed && cfg.frame === 'device' && wideDesk && !qs.has('noframe') && cfg.toy) {
+    html.style.visibility = 'hidden';            // the toy page is about to be swapped for its device frame
     location.replace(BASE + 'frame.html?toy=' + encodeURIComponent(cfg.toy) + location.hash);
-    try { window.stop(); } catch (e) {}
     return;
   }
 
