@@ -1,0 +1,988 @@
+<!doctype html><html><head><meta charset=utf8><link rel="stylesheet" href="/gooae/shell/gooae-shell.css">
+<script src="/gooae/shell/gooae-shell.js" data-toy="rainbow-serpent-oracle" data-dev="#devBtn" data-bar=".devbar" data-panel="header, .bench, .anatomy, .tank .say" data-frame="device"></script>
+<meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Rainbow Serpent Oracle</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500;700&family=Silkscreen&display=swap">
+<style>
+/* Layout: a creature terrarium. The egg lives in a tall dark tank; a small altar of controls and its prophecy log sit beside it, stacking under it on phones. Single committed void-violet world. */
+:root{
+  --bg:#07020d; --panel:#110719; --line:#2b1840; --fg:#f6ecff; --mute:#a68fbf; --pink:#ff3fb4; --acid:#a6ff3a;
+  --display:"Syne", "Avenir Next", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+  --pixel:"Silkscreen", ui-monospace, monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:13px/1.5 var(--mono);
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:16px}
+.wrap{max-width:1260px;margin:0 auto;display:grid;gap:16px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 24px}
+.eyebrow{font:400 11px/1.3 var(--pixel);color:var(--mute)}
+h1{font:800 clamp(32px,6vw,64px)/.9 var(--display);letter-spacing:-.02em;margin:6px 0 0}
+h1 em{font-style:normal;background:linear-gradient(95deg,var(--pink),#ff9be0 30%,var(--acid) 60%,#3fe0ff 85%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{max-width:46ch;color:var(--mute);margin:0;font-size:12.5px}
+.lab{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start}
+@media (max-width:860px){.lab{grid-template-columns:minmax(0,1fr)}}
+.tank{position:relative;border:1px solid var(--line);border-radius:18px;overflow:hidden;height:clamp(520px,82vh,880px);touch-action:none;user-select:none;-webkit-user-select:none;background:#0b0412;cursor:grab}
+.tank canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.tank .say{position:absolute;left:14px;right:14px;top:14px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;pointer-events:none}
+.say p{margin:0;font:500 12px/1.4 var(--mono);background:rgba(7,2,13,.6);padding:7px 11px;border-radius:999px;backdrop-filter:blur(6px)}
+.say .mood{font:400 11px/1.4 var(--pixel);color:var(--acid)}
+.bench{border:1px solid var(--line);border-radius:18px;background:var(--panel);padding:16px;display:grid;gap:16px}
+.group{display:grid;gap:10px}
+.group h2{font:400 11px/1 var(--pixel);color:var(--mute);margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:500 12px/1 var(--mono);color:var(--fg);background:transparent;border:1px solid var(--line);border-radius:999px;padding:9px 12px;cursor:pointer}
+.chip:hover{border-color:var(--pink)}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.chip.hot{background:var(--pink);border-color:var(--pink);color:#fff}
+.chip:focus-visible,input:focus-visible,button:focus-visible{outline:2px solid var(--acid);outline-offset:2px}
+.row{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center}
+.row label{font-size:12px}
+.row output{font-size:11px;color:var(--mute);font-variant-numeric:tabular-nums}
+.row input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--pink);margin:0}
+ol.log{margin:0;padding:0 0 0 18px;display:grid;gap:6px;max-height:220px;overflow:auto;font-size:12px}
+ol.log li span{display:block;font:400 10px var(--pixel);color:var(--acid)}
+.empty{color:var(--mute);font-size:12px;margin:0}
+.anatomy{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;border-top:1px solid var(--line);padding-top:16px}
+.anatomy div{min-width:0}
+.anatomy h3{font:700 16px/1.2 var(--display);margin:2px 0 4px}
+.anatomy p{margin:0;color:var(--mute);font-size:12px;max-width:60ch}
+.anatomy .k{font:400 10px var(--pixel);color:var(--acid)}
+.err{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:var(--mute)}
+/* Toy mode (default): the creature fills the screen, nothing else. Dev mode brings back title, controls and notes. */
+html[data-mode="toy"] body{overflow:hidden}
+html[data-mode="toy"] header, html[data-mode="toy"] .bench, html[data-mode="toy"] .anatomy, html[data-mode="toy"] .tank .say{display:none}
+html[data-mode="toy"] .tank{position:fixed;inset:0;height:auto;border:0;border-radius:0;z-index:1}
+html[data-mode="dev"] body{padding-bottom:calc(72px + env(safe-area-inset-bottom, 0px))}
+.devbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom, 0px));z-index:20;display:flex;gap:6px;padding:4px;border-radius:999px;background:rgba(7,2,13,.55);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(8px)}
+.devbar button{font:400 11px/1 var(--pixel);letter-spacing:.04em;color:rgba(246,236,255,.8);background:transparent;border:0;border-radius:999px;padding:10px 14px;cursor:pointer}
+.devbar button[aria-pressed="true"]{background:var(--acid);color:#07020d}
+.devbar button:focus-visible{outline:2px solid var(--acid);outline-offset:2px}
+.tank{background:#04020a}
+.pstamp{font:400 10px/1.4 var(--pixel);color:var(--mute);margin:0}
+</style>
+
+<nav class="devbar" aria-label="Mode"><button id="devBtn" type="button" aria-pressed="false">DEV MODE</button></nav>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">ORACLE CREATURE 04 · THE VOIDBLOOM, AT THE FIRST MELT</div>
+      <h1>Rainbow <em>Serpent Oracle</em></h1>
+    </div>
+    <p class="lede">A long foil serpent of living colour with a prophecy written down its back. Drag and it follows your finger. Poke it and colour waves run along its body. Hold it and it sheds a skin. Feed it a ticket and watch the lump travel all the way to its tail. Leave it alone and it chases its own tail until it bites it, and the loop becomes a door into forever.</p>
+  </header>
+
+  <section class="lab">
+    <div class="tank" id="tank" aria-label="The Rainbow Serpent Oracle. Drag anywhere to lead its head, tap its body to send colour waves, press and hold to make it shed a skin, drag tickets to its head to feed it.">
+      <canvas id="gl"></canvas>
+      <canvas id="fx"></canvas>
+      <div class="say"><p id="hint">drag · lead &nbsp; tap · colour wave &nbsp; hold · shed &nbsp; ticket → head · swallow &nbsp; wait · ouroboros</p><p class="mood" id="mood">MOOD: CURIOUS</p></div>
+    </div>
+
+    <aside class="bench" aria-label="Controls">
+      <div class="group">
+        <h2>DO THINGS</h2>
+        <div class="chips">
+          <button class="chip hot" id="bSpit" type="button">Shed a skin</button>
+          <button class="chip" id="bPoke" type="button">Colour wave</button>
+          <button class="chip" id="bLoop" type="button" aria-pressed="false">Ouroboros</button>
+          <button class="chip" id="bFeed" type="button">Feed newest ticket</button>
+        </div>
+      </div>
+      <div class="group">
+        <h2>FORM</h2>
+        <div class="chips" id="pals"></div>
+      </div>
+      <div class="group" id="sliders"><h2>BODY</h2></div>
+      <div class="group">
+        <h2>SHED SKINS</h2>
+        <p class="empty" id="logEmpty">None yet. Hold the serpent until its scales flare.</p>
+        <ol class="log" id="log"></ol>
+      </div>
+    </aside>
+  </section>
+
+  <section class="anatomy" aria-label="How the five studies are fused into one serpent">
+    <div><div class="k">SCALES · HOLO-FOIL</div><h3>Living colour</h3><p>Every scale is a domed thin-film tile with its own thickness, so the whole body shimmers through the rainbow. The colour bands slowly flow along it.</p></div>
+    <div><div class="k">MOTION · RIPPLE-BLOOM</div><h3>Colour waves</h3><p>A poke sends a bright ring travelling both ways along the body. The body swells as the ring passes, and the body itself is a wave, slithering.</p></div>
+    <div><div class="k">SPINE · GLYPH-FIELD</div><h3>A prophecy down its back</h3><p>A stripe of letters runs along its spine, scrolling from head to tail. When it eats a prophecy, the prophecy becomes the words on its back.</p></div>
+    <div><div class="k">LOOP · MIRROR-VAULT</div><h3>Ouroboros door</h3><p>When it bites its own tail, the hole in the ring opens onto an infinite mirror tunnel. The last thing it ate echoes down the tunnel.</p></div>
+    <div><div class="k">SHED · TICKET-PRESS</div><h3>Shed skins</h3><p>Squeeze it and its scales flare. Let go and a ghost of its old skin peels away, dropping a printed prophecy. Swallowed tickets travel down its body as a lump.</p></div>
+    <div><div class="k">WORLD · GOOAE</div><h3>The Voidbloom</h3><p>The void where the First Melt happened: a pulsing field of luminous goo, nebulae and the faint first rainbow. Four forms: Rainbow, Voidbloom, Slime and Carnival.</p><p class="pstamp">PROPOSED · GOO-VB-CRE-ORACLESERPENT-V1 · based on Rainbow Serpent</p></div>
+  </section>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = (id) => document.getElementById(id);
+const tank = $('tank'), cv = $('gl'), fx = $('fx'), fctx = fx.getContext('2d');
+let devMode = location.hash === '#dev';
+function setMode(dev){ devMode = dev; document.documentElement.dataset.mode = dev ? 'dev' : 'toy'; $('devBtn').setAttribute('aria-pressed', String(dev)); $('devBtn').textContent = dev ? 'DEV MODE · ON' : 'DEV MODE'; }
+setMode(devMode);
+$('devBtn').onclick = () => setMode(!devMode);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const TAU = Math.PI * 2;
+
+// ================= forms + knobs =================
+const SPECIES = {
+  'Rainbow':   { rainbow: 1, A:'#B000FF', B:'#25D9FF', C:'#FFCB37', bg0:'#03020a', bg1:'#170a2e', inks:['#F000A8','#FFCB37','#00F0C8','#25D9FF','#B000FF'], dark:'#25072F', paper:'#F4E9FF' },
+  'Voidbloom': { rainbow: 0, A:'#7200C9', B:'#F000A8', C:'#D9A5FF', bg0:'#040109', bg1:'#1e0730', inks:['#7200C9','#F000A8','#D9A5FF','#B000FF','#FF4BBF'], dark:'#25072F', paper:'#f6f0ff' },
+  'Slime':     { rainbow: 0, A:'#00F0C8', B:'#E8FF65', C:'#25D9FF', bg0:'#010706', bg1:'#06211e', inks:['#00F0C8','#E8FF65','#25D9FF','#F000A8','#7200C9'], dark:'#062a2a', paper:'#effff9' },
+  'Carnival':  { rainbow: 0, A:'#FFCB37', B:'#F000A8', C:'#FF4BBF', bg0:'#080208', bg1:'#2a0828', inks:['#FFCB37','#F000A8','#FF4BBF','#B000FF','#25D9FF'], dark:'#2a0626', paper:'#fff6ea' },
+};
+let species = 'Rainbow';
+const K = { foil: 1.0, glyph: 1.0, waveSpeed: 0.45, spiral: 1.4, hueSpeed: 1.0, slither: 1.0, speed: 1.0, scale: 1.0 };
+const SLIDERS = [['foil','Foil sheen',0,2,0.01],['glyph','Back letters',0,2,0.01],['waveSpeed','Colour wave speed',0.1,1.5,0.01],['spiral','Portal spiral',-3,3,0.01],['hueSpeed','Living colour',0,4,0.01],['slither','Slither',0,2.5,0.01],['speed','Speed',0.3,2.5,0.01],['scale','Scale size',0.5,2,0.01]];
+const P = { glow: 1.2, chroma: 1.3, palette: 'gooae', grain: 0.4 };   // for the ticket-press helpers
+
+// ================= ticket-press helpers =================
+const mk = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; };
+const rngOf = (seed) => { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+function tint(src, color){ const c = mk(src.width, src.height), x = c.getContext('2d'); x.drawImage(src, 0, 0); x.globalCompositeOperation = 'source-in'; x.fillStyle = color; x.fillRect(0, 0, c.width, c.height); return c; }
+function soften(src, f){                 // blur by shrinking then growing in halving steps
+  let cur = src, w = src.width, h = src.height;
+  const steps = Math.max(1, Math.round(Math.log2(Math.max(f, 1.01))));
+  for (let i = 0; i < steps; i++){ w = Math.max(2, w / 2); h = Math.max(2, h / 2); const c = mk(w, h), x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(cur, 0, 0, c.width, c.height); cur = c; }
+  for (let i = 0; i < steps; i++){ const c = mk(cur.width * 2, cur.height * 2), x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(cur, 0, 0, c.width, c.height); cur = c; }
+  return cur;
+}
+const FONT_STACK = '"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic","Hiragino Sans","Noto Sans JP","Yu Gothic",Arial,sans-serif';
+const textCache = new Map();
+function bitmapText(text, rows){         // tiny raster, hard alpha threshold → pixel type in any script
+  const key = text + '|' + rows; if (textCache.has(key)) return textCache.get(key);
+  const m = mk(4, 4).getContext('2d'); const font = `700 ${rows}px ${FONT_STACK}`; m.font = font;
+  const w = Math.ceil(m.measureText(text).width) + 2, h = Math.ceil(rows * 1.3);
+  const c = mk(w, h), x = c.getContext('2d', { willReadFrequently: true });
+  x.font = font; x.textBaseline = 'middle'; x.fillStyle = '#000'; x.fillText(text, 1, h / 2 + 0.5);
+  const d = x.getImageData(0, 0, w, h); for (let i = 3; i < d.data.length; i += 4) d.data[i] = d.data[i] > 105 ? 255 : 0;
+  x.putImageData(d, 0, 0); textCache.set(key, c); return c;
+}
+function drawText(x, text, cx, cy, px, color, opt = {}){   // opt: align, vertical (stack chars), rotate
+  x.save(); x.imageSmoothingEnabled = false;
+  const rows = opt.rows || 8;
+  if (opt.vertical){
+    const chars = Array.from(text); const lh = rows * 1.15 * px;
+    const total = chars.length * lh; let y = cy - total / 2;
+    for (const ch of chars){ if (ch === ' ') { y += lh * 0.6; continue; } const t = tint(bitmapText(ch, rows), color); x.drawImage(t, Math.round(cx - t.width * px / 2), Math.round(y), t.width * px, t.height * px); y += lh; }
+  } else {
+    const t = tint(bitmapText(text, rows), color);
+    x.translate(cx, cy); if (opt.rotate) x.rotate(opt.rotate);
+    const w = t.width * px, h = t.height * px;
+    const ox = opt.align === 'left' ? 0 : opt.align === 'right' ? -w : -w / 2;
+    x.drawImage(t, Math.round(ox), Math.round(-h / 2), w, h);
+  }
+  x.restore();
+}
+const grainTile = (() => {
+  const c = mk(256, 256), x = c.getContext('2d'), d = x.createImageData(256, 256), r = rngOf(9);
+  for (let i = 0; i < d.data.length; i += 4){ const v = r(); const g = v < 0.5 ? 120 + r() * 80 : 255; d.data[i] = d.data[i+1] = d.data[i+2] = g; d.data[i+3] = v < 0.5 ? 40 + r() * 60 : (r() < 0.25 ? 120 : 0); }
+  x.putImageData(d, 0, 0); return c;
+})();
+
+function totemMask(rng, gw, gh, cx){ // mirrored pixel glyph on a grid → canvas mask
+  const g = Array.from({ length: gh }, () => new Uint8Array(gw)), mid = (gw - 1) / 2;
+  const set = (x, y) => { if (y < 0 || y >= gh) return; const a = Math.round(mid + x), b = Math.round(mid - x); if (a >= 0 && a < gw) g[y][a] = 1; if (b >= 0 && b < gw) g[y][b] = 1; };
+  const y0 = 1 + Math.floor(rng() * 3), y1 = gh - 1 - Math.floor(rng() * 3);
+  for (let y = y0; y <= y1; y++){ set(0, y); if (rng() < 0.25) set(1, y); }
+  const nBars = 2 + Math.floor(cx * 3 + rng() * 2);
+  for (let i = 0; i < nBars; i++){
+    const y = y0 + 1 + Math.floor(rng() * (y1 - y0 - 1)), hw = 2 + Math.floor(rng() * (mid - 1));
+    for (let x = 0; x <= hw; x++){ set(x, y); if (rng() < 0.35) set(x, y + 1); }
+    if (rng() < 0.6){ set(hw, y - 1); set(hw, y + 1); }
+    if (rng() < 0.4){ set(hw + 1, y - 2); set(hw + 1, y + 2); }
+  }
+  if (rng() < 0.7){ const y = y0 + 2 + Math.floor(rng() * (y1 - y0 - 4)), r = 1 + Math.floor(rng() * 2.5); for (let dy = -r; dy <= r; dy++) for (let dx = 0; dx <= r - Math.abs(dy); dx++) if (rng() < 0.8 || dx === r - Math.abs(dy)) set(dx, y + dy); }
+  if (rng() < 0.5){ const r = 2 + Math.floor(rng() * 2); for (let a = 0; a < 24; a++){ const t = a / 24 * Math.PI; set(Math.round(Math.sin(t) * r), Math.round(y0 + r - Math.cos(t) * r)); } }
+  const nBr = Math.floor(cx * 4 * rng());
+  for (let i = 0; i < nBr; i++){ const y = y0 + 3 + Math.floor(rng() * (y1 - y0 - 3)), len = 2 + Math.floor(rng() * 3), dir = rng() < 0.5 ? -1 : 1; for (let k = 1; k <= len; k++) set(k, y + dir * k); }
+  const cs = 12, c = mk(gw * cs, gh * cs), x = c.getContext('2d'); x.fillStyle = '#000';
+  for (let y = 0; y < gh; y++) for (let xx = 0; xx < gw; xx++) if (g[y][xx]) x.fillRect(xx * cs, y * cs, cs, cs);
+  return c;
+}
+function glowInto(x, mask, rx, ry, rw, rh, cols, rng, mode){
+  // airbrush halo + body in normal blending (stays luminous on paper), two misregistered plates on top
+  const k = P.glow, ca = P.chroma * rw * 0.012, bright = P.palette !== 'thermal';
+  const place = (img, s, dx = 0, dy = 0) => { const w = rw * s, h = rh * s; x.drawImage(img, rx + (rw - w) / 2 + dx, ry + (rh - h) / 2 + dy, w, h); };
+  x.save();
+  if (k > 0.02){
+    x.globalAlpha = Math.min(0.85, 0.35 + 0.25 * k); place(soften(tint(mask, cols[0]), 8 + 10 * k), 1.2 + 0.12 * k);
+    x.globalAlpha = Math.min(0.9, 0.5 + 0.2 * k);   place(soften(tint(mask, cols[1]), 4 + 4 * k), 1.05);
+  }
+  // misregistered plates: the offset plate first, the key plate on top, so only the edges fringe
+  x.globalCompositeOperation = P.palette === 'thermal' ? 'multiply' : 'source-over';
+  x.globalAlpha = 0.85; place(soften(tint(mask, cols[3] || cols[0]), 1.5 + k), 1, -ca, -ca * 0.3);
+  x.globalAlpha = 1;    place(soften(tint(mask, cols[2]), 1.5 + k), 1, ca * 0.4, ca * 0.2);
+  if (bright && k > 0.3){ x.globalCompositeOperation = 'screen'; x.globalAlpha = Math.min(0.7, 0.3 * k); place(soften(tint(mask, '#ffffff'), 3 + 2 * k), 0.92); }
+  x.restore();
+}
+function barcode(x, bx, by, bw, bh, rng, color){
+  x.save(); x.fillStyle = color; let px = bx; const u = bw / 120;
+  while (px < bx + bw){ const wBar = u * (1 + Math.floor(rng() * 3)), gap = u * (1 + Math.floor(rng() * 2)); if (px + wBar > bx + bw) break; x.fillRect(Math.round(px), by, Math.max(1, Math.round(wBar)), bh); px += wBar + gap; }
+  x.restore();
+}
+function outline(x, w, h, style, u){
+  x.beginPath();
+  if (style === 'plain'){ x.roundRect(0.5, 0.5, w - 1, h - 1, 3 * u); return; }
+  if (style === 'notch'){
+    const r = 4.5 * u; x.moveTo(2 * u, 0); x.lineTo(w - 2 * u, 0); x.quadraticCurveTo(w, 0, w, 2 * u);
+    x.lineTo(w, h / 2 - r); x.arc(w, h / 2, r, -Math.PI / 2, Math.PI / 2, true); x.lineTo(w, h - 2 * u); x.quadraticCurveTo(w, h, w - 2 * u, h);
+    x.lineTo(2 * u, h); x.quadraticCurveTo(0, h, 0, h - 2 * u); x.lineTo(0, h / 2 + r); x.arc(0, h / 2, r, Math.PI / 2, -Math.PI / 2, true); x.lineTo(0, 2 * u); x.quadraticCurveTo(0, 0, 2 * u, 0); x.closePath(); return;
+  }
+  const r = 1.9 * u, sp = r * 2.7;
+  const sides = style === 'perf' ? { t: true, b: true, l: false, r: false } : { t: true, b: true, l: true, r: true };
+  const nx = Math.max(1, Math.floor(w / sp)), ox = (w - nx * sp) / 2 + sp / 2;
+  const ny = Math.max(1, Math.floor(h / sp)), oy = (h - ny * sp) / 2 + sp / 2;
+  x.moveTo(0, 0);
+  if (sides.t) for (let i = 0; i < nx; i++){ const cx = ox + i * sp; x.lineTo(cx - r, 0); x.arc(cx, 0, r, Math.PI, 0, true); }
+  x.lineTo(w, 0);
+  if (sides.r) for (let i = 0; i < ny; i++){ const cy = oy + i * sp; x.lineTo(w, cy - r); x.arc(w, cy, r, -Math.PI / 2, Math.PI / 2, true); }
+  x.lineTo(w, h);
+  if (sides.b) for (let i = nx - 1; i >= 0; i--){ const cx = ox + i * sp; x.lineTo(cx + r, h); x.arc(cx, h, r, 0, Math.PI, true); }
+  x.lineTo(0, h);
+  if (sides.l) for (let i = ny - 1; i >= 0; i--){ const cy = oy + i * sp; x.lineTo(0, cy + r); x.arc(0, cy, r, Math.PI / 2, -Math.PI / 2, true); }
+  x.closePath();
+}
+
+// ================= prophecies =================
+const SUBJ = ['THE RAINBOW SERPENT','YOUR TAIL','THE FIRST MELT','A LIVING COLOUR','THE VOIDBLOOM','AN OLD SKIN','THE INFINITE LOOP','YOUR NEXT SHAPE','THE FIRST RAINBOW','A SOFT SPIRAL','THE MELT','AN OLD FRIEND'];
+const VERB = ['IS LISTENING','BITES ITS TAIL','KNOWS YOUR NAME','WILL COIL UPWARD','HUMS IN 333','IS ALREADY HERE','LOVES THE DETOUR','RETURNS AS LIGHT','SHEDS ON TIME','WANTS YOU SOFT','COUNTS TO 999','NEVER ENDS'];
+function fitText(x, text, cx, cy, maxW, px, color){ const tb = bitmapText(text, 8); drawText(x, text, cx, cy, Math.min(px, maxW / tb.width), color, { rows: 8 }); }
+function printOracle(seed){
+  const rng = rngOf(seed), S = SPECIES[species];
+  const w = 360, h = Math.round(w * 1.5), u = w / 100, m = 7 * u, px = Math.max(2, Math.round(u * 0.95));
+  const c = mk(w, h), x = c.getContext('2d');
+  x.fillStyle = S.paper; x.fillRect(0, 0, w, h);
+  x.fillStyle = S.inks[1]; x.globalAlpha = 0.06; x.fillRect(m, m, w - 2 * m, h - 2 * m); x.globalAlpha = 1;
+  fitText(x, 'SHED · RAINBOW SERPENT', w / 2, m + 6 * u, w - 2 * m, px * 0.9, S.dark);
+  const cols = S.inks.slice().sort(() => rng() - 0.5);
+  glowInto(x, totemMask(rng, 13, 15, 0.8), w * 0.2, h * 0.12, w * 0.6, h * 0.38, [cols[1], cols[0], cols[2], cols[3]], rng, 'multiply');
+  const a = SUBJ[Math.floor(rng() * SUBJ.length)], b = VERB[Math.floor(rng() * VERB.length)];
+  fitText(x, a, w / 2, h * 0.585, w - 2 * m - 6 * u, px, S.dark);
+  fitText(x, b, w / 2, h * 0.645, w - 2 * m - 6 * u, px, S.dark);
+  const lucky = [333, 5555, 999, 55, 777, 4444].sort(() => rng() - 0.5).slice(0, 3).join(' · ');
+  fitText(x, lucky, w / 2, h * 0.72, w - 2 * m, px * 0.85, S.inks[0]);
+  barcode(x, m + 2 * u, h - m - 15 * u, w - 2 * m - 4 * u, 8 * u, rng, S.dark);
+  const d = (n) => Array.from({ length: n }, () => Math.floor(rng() * 10)).join('');
+  const serial = `SRP-${d(4)}-999`;
+  fitText(x, serial, w / 2, h - m - 3 * u, w - 2 * m, px * 0.8, S.dark);
+  x.save(); x.globalCompositeOperation = 'multiply'; x.globalAlpha = P.grain * 0.6; x.fillStyle = x.createPattern(grainTile, 'repeat'); x.fillRect(0, 0, w, h); x.restore();
+  x.save(); x.globalCompositeOperation = 'destination-in'; outline(x, w, h, 'stamp', u); x.fill(); x.restore();
+  x.save(); outline(x, w, h, 'stamp', u); x.strokeStyle = 'rgba(40,30,70,0.14)'; x.lineWidth = 1.5; x.stroke(); x.restore();
+  return { c, text: `${a} ${b}`, serial, lucky };
+}
+
+// ================= shaders =================
+const COMMON = `
+#define TAU 6.2831853
+mat2 rot(float a){ float c = cos(a), s = sin(a); return mat2(c, s, -s, c); }
+vec3 hueRot(vec3 c, float a){ const vec3 k = vec3(0.57735); float ca = cos(a); return c * ca + cross(k, c) * sin(a) + k * dot(k, c) * (1.0 - ca); }
+float hash21(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+vec3 hsv2rgb(vec3 c){ vec3 p = abs(fract(c.xxx + vec3(1.0, 2.0 / 3.0, 1.0 / 3.0)) * 6.0 - 3.0); return c.z * mix(vec3(1.0), clamp(p - 1.0, 0.0, 1.0), c.y); }
+vec3 tone(vec3 c){ c = 1.0 - exp(-max(c, vec3(0.0)) * 1.15); return pow(c, vec3(1.0 / 2.2)); }
+`;
+const GUT = `
+// mirror-vault: lines along a mirrored box, bounced to infinity, the last swallowed ticket on the end mirrors
+vec3 gut(vec3 p, vec3 d, float h){
+  vec3 ad = abs(d);
+  int cax = (ad.x >= ad.y && ad.x >= ad.z) ? 0 : (ad.y >= ad.z ? 1 : 2);
+  vec3 acc = vec3(0.0); float att = 1.0, travel = 0.0;
+  float px = uFov * 2.0 / uRes.y;
+  const float W0 = 0.006;
+  for (int b = 0; b < 16; b++){
+    vec3 sd = vec3(d.x >= 0.0 ? 1.0 : -1.0, d.y >= 0.0 ? 1.0 : -1.0, d.z >= 0.0 ? 1.0 : -1.0);
+    vec3 tt = (sd * h - p) / max(abs(d), vec3(1e-5)) * sd;
+    float T = max(min(tt.x, min(tt.y, tt.z)), 0.0);
+    int ax = (tt.x <= tt.y && tt.x <= tt.z) ? 0 : (tt.y <= tt.z ? 1 : 2);
+    vec3 col = mix(uColA, uColB, (b % 2 == 1) ? 0.75 : 0.0);
+    float g = 0.0;
+    for (int a = 0; a < 3; a++){
+      vec2 q0; vec2 dq; float pa; float da;
+      if (a == 0){ q0 = p.yz; dq = d.yz; pa = p.x; da = d.x; }
+      else if (a == 1){ q0 = p.xz; dq = d.xz; pa = p.y; da = d.y; }
+      else { q0 = p.xy; dq = d.xy; pa = p.z; da = d.z; }
+      float den = max(dot(dq, dq), 1e-6);
+      for (int m = 0; m < 4; m++){
+        vec2 c = vec2((m % 2 == 0) ? h : -h, (m < 2) ? h : -h);
+        float t = clamp(dot(c - q0, dq) / den, 0.0, T);
+        vec2 df = q0 + dq * t - c;
+        float d2 = dot(df, df);
+        float w = W0 + (travel + t) * px * 1.2;
+        float s = pa + da * t;
+        float wave = 0.5 + 0.5 * sin(s * 3.0 - uTime * 2.6 + c.x * 5.1 + c.y * 8.3 + float(a) * 2.0);
+        g += (0.45 + 2.2 * pow(wave, 12.0)) * (exp(-d2 / (w * w)) * (W0 / w) + 0.035 * 0.0007 / (d2 + 0.0007));
+      }
+    }
+    acc += col * g * att;
+    if (ax == cax && uTicketOn > 0.001){
+      vec3 ph = p + d * T;
+      vec2 w2 = (cax == 0) ? ph.zy : ((cax == 1) ? ph.xz : ph.xy);
+      vec2 tuv = w2 / (h * vec2(1.0, 1.5) * 0.7) * 0.5 + 0.5;
+      if (all(greaterThan(tuv, vec2(0.0))) && all(lessThan(tuv, vec2(1.0)))){
+        vec4 tx = texture(uTicket, vec2(tuv.x, 1.0 - tuv.y));
+        float paper = smoothstep(0.62, 0.86, dot(tx.rgb, vec3(0.3333)));
+        acc += tx.rgb * tx.a * (1.0 - paper) * att * uTicketOn * 0.8;
+      }
+    }
+    p += d * T; travel += T;
+    float tw = (ax == cax) ? uSpiral * 0.07 : 0.0;
+    if (ax == 0){ d.x = -d.x; p.yz = rot(tw) * p.yz; d.yz = rot(tw) * d.yz; }
+    else if (ax == 1){ d.y = -d.y; p.xz = rot(tw) * p.xz; d.xz = rot(tw) * d.xz; }
+    else { d.z = -d.z; p.xy = rot(tw) * p.xy; d.xy = rot(tw) * d.xy; }
+    p = clamp(p, vec3(-h * 0.9999), vec3(h * 0.9999));
+    att *= (ax == cax) ? 0.86 : 0.3;
+    if (att < 0.015) break;
+  }
+  return acc * 2.4;
+}
+`;
+const BG_VS = `#version 300 es
+in vec2 aPos; void main(){ gl_Position = vec4(aPos, 0.0, 1.0); }`;
+const BG_FS = `#version 300 es
+precision highp float;
+uniform vec2 uRes; uniform float uTime; uniform vec3 uCamPos; uniform mat3 uCamRot; uniform float uFov;
+uniform vec3 uColA, uColB, uColC, uBg0, uBg1; uniform vec3 uSnake; uniform float uGlow;
+out vec4 o;
+${COMMON}
+void main(){
+  vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
+  vec3 rd = normalize(uCamRot * vec3(uv * 2.0 * uFov, -1.0)), ro = uCamPos;
+  vec3 col = mix(uBg0, uBg1, smoothstep(-0.4, 0.8, rd.y));
+  // nebula of the Voidbloom
+  vec2 q = vec2(atan(rd.x, -rd.z), rd.y) * 2.2;
+  float n = 0.0, a = 1.0;
+  for (int i = 0; i < 4; i++){ n += a * sin(q.x * 1.7 + sin(q.y * 2.3 + uTime * 0.03) * 1.5) * sin(q.y * 1.9 + sin(q.x * 1.3 - uTime * 0.025) * 1.3); q = rot(0.9) * q * 1.9; a *= 0.55; }
+  col += mix(uColA, uColB, 0.5 + 0.5 * sin(q.x * 0.3)) * 0.055 * smoothstep(0.1, 1.0, n);
+  // stars
+  vec2 sg = vec2(atan(rd.x, -rd.z), rd.y) * 160.0; vec2 sc = floor(sg); float sh = hash21(sc);
+  if (sh > 0.99) col += vec3(0.95, 0.9, 1.0) * smoothstep(0.35, 0.0, length(fract(sg) - 0.5)) * (0.45 + 0.55 * sin(uTime * 2.0 + sh * 80.0));
+  // the first rainbow, faint, far away
+  float r = acos(clamp(dot(rd, normalize(vec3(0.0, -0.32, -1.0))), -1.0, 1.0));
+  float bnd = (r - 0.5) / 0.07;
+  if (bnd > 0.0 && bnd < 1.0 && rd.y > -0.02) col += hsv2rgb(vec3(bnd * 0.8, 0.8, 1.0)) * 0.05 * sin(bnd * 3.14159);
+  // the pulsing goo field: every pulse a pattern
+  if (rd.y < -0.02){
+    float t = (-2.2 - ro.y) / rd.y; vec3 fp = ro + rd * t;
+    vec2 dj = fp.xz - uSnake.xz; float dist = length(dj);
+    float ring = pow(0.5 + 0.5 * sin(dist * 3.0 - uTime * 1.4), 10.0);
+    vec3 fl = uBg0 * 1.5 + uColA * 0.09 * ring * exp(-dist * 0.18) + uColB * 0.1 * (0.5 + uGlow) * exp(-dist * dist * 0.2);
+    fl += vec3(0.8, 0.85, 1.0) * step(0.997, hash21(floor(fp.xz * 12.0))) * exp(-t * 0.05) * 0.6;
+    col = mix(col, fl, smoothstep(0.0, 0.06, -rd.y) * exp(-t * 0.02));
+  }
+  o = vec4(tone(col), 1.0);
+}`;
+const TUBE_VS = `#version 300 es
+in vec3 aPos; in vec3 aNrm; in vec3 aTan; in vec2 aUv;
+uniform mat4 uVP;
+out vec3 vPos; out vec3 vNrm; out vec3 vTan; out vec2 vUv;
+void main(){ vPos = aPos; vNrm = aNrm; vTan = aTan; vUv = aUv; gl_Position = uVP * vec4(aPos, 1.0); }`;
+const TUBE_FS = `#version 300 es
+precision highp float;
+in vec3 vPos; in vec3 vNrm; in vec3 vTan; in vec2 vUv;
+uniform vec3 uCamPos, uLight; uniform float uTime, uFoil, uGlyph, uWaveSpeed, uScale, uHue, uRainbow, uSqueeze, uFresh, uLen, uGlow;
+uniform vec4 uPoke[8];      // x = s0, y = start time, z = amplitude
+uniform vec3 uColA, uColB, uColC;
+uniform sampler2D uText; uniform float uTextN, uTextOn;
+out vec4 o;
+${COMMON}
+float waveAt(float s, out float trail){
+  float w = 0.0; trail = 0.0;
+  for (int i = 0; i < 8; i++){
+    float age = uTime - uPoke[i].y;
+    if (age < 0.0 || age > 6.0) continue;
+    float x = abs(s - uPoke[i].x) - age * uWaveSpeed;
+    float env = uPoke[i].z * exp(-age * 0.7);
+    w += env * exp(-x * x / 0.0016);
+    trail += env * smoothstep(-0.25, -0.01, x) * (1.0 - smoothstep(-0.01, 0.02, x)) * exp(-age * 0.4);
+  }
+  return w;
+}
+vec3 pal(float t){ t = fract(t) * 3.0; return t < 1.0 ? mix(uColA, uColB, t) : (t < 2.0 ? mix(uColB, uColC, t - 1.0) : mix(uColC, uColA, t - 2.0)); }
+void main(){
+  vec3 n = normalize(vNrm), T = normalize(vTan), B = normalize(cross(n, T));
+  float s = vUv.x, ar = vUv.y;
+  float trail; float w = waveAt(s, trail);
+  // overlapping scales: staggered rows around the body
+  vec2 sc = vec2(ar * 18.0, s * uLen / (0.1 * uScale));
+  sc.x += 0.5 * mod(floor(sc.y), 2.0);
+  vec2 cell = floor(sc), f = fract(sc) - 0.5;
+  float h = hash21(cell);
+  float dia = abs(f.x) + abs(f.y) * 1.15;
+  float edge = smoothstep(0.36, 0.5, dia);
+  vec3 nn = normalize(n + (B * f.x + T * f.y) * (0.6 + uSqueeze * 0.8));
+  vec3 V = normalize(uCamPos - vPos), L = normalize(uLight - vPos), H = normalize(L + V);
+  float NdL = max(dot(nn, L), 0.0), NdV = clamp(dot(nn, V), 0.0, 1.0), NdH = max(dot(nn, H), 0.0);
+  float fres = pow(1.0 - clamp(dot(n, V), 0.0, 1.0), 2.5);
+  // living colour: bands that flow along the body, nudged by the waves
+  float band = s * 2.4 - uTime * 0.12 * uHue + w * 0.25 + h * 0.06;
+  vec3 base = uRainbow > 0.5 ? hsv2rgb(vec3(fract(band), 0.78, 1.0)) : pal(band);
+  base = mix(base, vec3(1.0), uFresh * 0.25);
+  // thin-film foil per scale
+  float thick = 280.0 + 380.0 * h + 240.0 * sin(s * 40.0 - uTime * 2.0 + ar * TAU) + 900.0 * w + 450.0 * uSqueeze;
+  float cosT = sqrt(max(1.0 - (1.0 - NdV * NdV) / 2.25, 0.0));
+  float opd = 2.0 * 1.5 * thick * cosT + uFoil * 600.0 * dot(V + L, T);
+  vec3 film = pow(0.5 + 0.5 * cos(TAU * opd / vec3(650.0, 532.0, 450.0)), vec3(1.4));
+  vec3 col = base * (0.16 + 0.75 * NdL) + film * (0.2 + 1.2 * pow(NdH, 18.0) + 0.8 * fres) * uFoil * (0.6 + w + uSqueeze);
+  col *= mix(1.0, 0.3, edge);
+  // belly plates
+  float db = abs(fract(ar - 0.75 + 0.5) - 0.5);
+  float belly = 1.0 - smoothstep(0.1, 0.14, db);
+  float plate = smoothstep(0.4, 0.5, abs(fract(s * uLen / 0.07) - 0.5));
+  vec3 bcol = mix(vec3(0.96, 0.92, 1.0), base, 0.35) * (0.3 + 0.6 * NdL) * (1.0 - 0.4 * plate) + film * 0.25 * uFoil;
+  col = mix(col, bcol, belly * 0.85);
+  // a prophecy written down the spine, scrolling head to tail
+  float dd = fract(ar - 0.25 + 0.5) - 0.5;
+  float dorsal = (1.0 - smoothstep(0.042, 0.055, abs(dd))) * smoothstep(0.08, 0.12, s) * (1.0 - smoothstep(0.9, 0.96, s));
+  if (dorsal > 0.0){
+    float along = s * uLen / 0.15 - uTime * 1.1;
+    float ci = mod(floor(along), uTextN), fx = fract(along), fy = clamp(dd / 0.1 + 0.5, 0.0, 1.0);
+    float tA = texture(uText, vec2((ci + 0.06 + fx * 0.88) / uTextN, fy)).a;
+    col = mix(col, uColA * 0.08, dorsal * 0.75);
+    col += (vec3(1.0) * 0.6 + film * 0.7 + uColC * 0.3) * tA * dorsal * uGlyph * (0.7 + uTextOn * 0.8 + trail * 2.0);
+  }
+  col += mix(uColB, base, 0.5) * fres * 0.45 + vec3(1.0) * pow(max(dot(nn, H), 0.0), 140.0) * 1.2;
+  col += base * trail * 0.7 + vec3(1.0) * w * 0.12 + base * uGlow * 0.05;
+  o = vec4(tone(col), 1.0);
+}`;
+const PORTAL_VS = `#version 300 es
+in vec2 aPos;
+uniform mat4 uVP; uniform vec3 uC, uE1, uE2; uniform float uR;
+out vec3 vPos; out vec2 vLoc;
+void main(){ vLoc = aPos; vPos = uC + (uE1 * aPos.x + uE2 * aPos.y) * uR; gl_Position = uVP * vec4(vPos, 1.0); }`;
+const PORTAL_FS = `#version 300 es
+precision highp float;
+in vec3 vPos; in vec2 vLoc;
+uniform vec2 uRes; uniform float uTime, uFov, uSpiral, uHue, uRoll, uOpen, uTicketOn, uFly;
+uniform vec3 uCamPos, uE1, uE2, uN, uColA, uColB, uColC; uniform sampler2D uTicket;
+out vec4 o;
+${COMMON}
+${GUT}
+void main(){
+  vec3 rd = normalize(vPos - uCamPos);
+  vec3 dl = vec3(dot(rd, uE1), dot(rd, uE2), -abs(dot(rd, uN)));
+  dl.xy = rot(uRoll) * dl.xy + rot(uRoll) * vLoc * 0.9;
+  dl = normalize(dl);
+  float hb = 0.4;
+  vec3 p = vec3(rot(uRoll) * vLoc * hb * 0.95, hb * (1.0 - 2.0 * fract(uFly)) * 0.999);
+  vec3 g = hueRot(gut(p, dl, hb), uHue);
+  float r = length(vLoc);
+  float core = exp(-dot(vLoc, vLoc) / 0.02);
+  g = g * (1.0 - 0.5 * core) + hueRot(uColB, uHue) * core * 0.3;
+  g += hsv2rgb(vec3(fract(atan(vLoc.y, vLoc.x) / TAU + uTime * 0.1), 0.8, 1.0)) * exp(-pow((r - 0.97) / 0.04, 2.0)) * 0.8;
+  float a = smoothstep(1.0, 0.9, r) * uOpen;
+  o = vec4(tone(g), a);
+}`;
+
+// ================= GL setup =================
+const gl = cv.getContext('webgl2', { antialias: true, alpha: false, depth: true, preserveDrawingBuffer: location.search.includes('test') });
+if (!gl){ tank.insertAdjacentHTML('beforeend', '<div class="err">The serpent needs WebGL2. Try a current Chrome, Safari or Firefox.</div>'); return; }
+function sh(type, src){ const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
+function mkProg(vs, fs){
+  const p = gl.createProgram(); gl.attachShader(p, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+  const cache = {}; return { p, u: (n) => (n in cache ? cache[n] : (cache[n] = gl.getUniformLocation(p, n))) };
+}
+const bgP = mkProg(BG_VS, BG_FS), tubeP = mkProg(TUBE_VS, TUBE_FS), portP = mkProg(PORTAL_VS, PORTAL_FS);
+function makeTex(){ const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0])); return t; }
+const textTex = makeTex(), ticketTex = makeTex();
+const upload = (t, canvas) => { gl.bindTexture(gl.TEXTURE_2D, t); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas); };
+
+// fullscreen triangle
+const bgVao = gl.createVertexArray(); gl.bindVertexArray(bgVao);
+const bgBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bgBuf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+{ const l = gl.getAttribLocation(bgP.p, 'aPos'); gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, 2, gl.FLOAT, false, 0, 0); }
+// portal disc fan
+const portVao = gl.createVertexArray(); gl.bindVertexArray(portVao);
+const DISC = []; for (let i = 0; i < 64; i++){ const a0 = i / 64 * TAU, a1 = (i + 1) / 64 * TAU; DISC.push(0, 0, Math.cos(a0), Math.sin(a0), Math.cos(a1), Math.sin(a1)); }
+const portBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, portBuf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(DISC), gl.STATIC_DRAW);
+{ const l = gl.getAttribLocation(portP.p, 'aPos'); gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, 2, gl.FLOAT, false, 0, 0); }
+// the tube
+const NS = 64, NR = 170, NA = 20, LEN = 5.6, DS = LEN / (NS - 1);
+const tubeVao = gl.createVertexArray(); gl.bindVertexArray(tubeVao);
+const vtx = (NA + 1) * NR;
+const posA = new Float32Array(vtx * 3), nrmA = new Float32Array(vtx * 3), tanA = new Float32Array(vtx * 3), uvA = new Float32Array(vtx * 2);
+for (let k = 0; k < NR; k++) for (let j = 0; j <= NA; j++){ const v = k * (NA + 1) + j; uvA[v * 2] = k / (NR - 1); uvA[v * 2 + 1] = j / NA; }
+const idx = []; for (let k = 0; k < NR - 1; k++) for (let j = 0; j < NA; j++){ const a = k * (NA + 1) + j, b = a + NA + 1; idx.push(a, b, a + 1, a + 1, b, b + 1); }
+function attr(name, data, size, usage){ const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, data, usage); const l = gl.getAttribLocation(tubeP.p, name); if (l >= 0){ gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, size, gl.FLOAT, false, 0, 0); } return b; }
+const posB = attr('aPos', posA, 3, gl.DYNAMIC_DRAW), nrmB = attr('aNrm', nrmA, 3, gl.DYNAMIC_DRAW), tanB = attr('aTan', tanA, 3, gl.DYNAMIC_DRAW); attr('aUv', uvA, 2, gl.STATIC_DRAW);
+const ibuf = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibuf); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(idx), gl.STATIC_DRAW);
+gl.bindVertexArray(null);
+
+// ---------- the words on its back ----------
+let backText = 'NOTHING NEEDS TO REMAIN WHAT IT WAS · 333 · 5555 · 999 · ', textN = 1, textOn = 0;
+function buildText(str){
+  const chars = Array.from(str), cw = 44, ch = 64, c = mk(cw * chars.length, ch), x = c.getContext('2d');
+  x.font = `700 46px "JetBrains Mono", ui-monospace, Menlo, monospace`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = '#fff';
+  chars.forEach((g, i) => { x.save(); x.translate(i * cw + cw / 2, ch / 2 + 2); x.rotate(Math.PI / 2); x.fillText(g, 0, 0); x.restore(); });
+  textN = chars.length; upload(textTex, c);
+}
+let alphabet = new Set(Array.from('·:+*×∞✧◇◆○◎SERPNT9')), glyphList = Array.from(alphabet);
+
+// ================= camera + projection =================
+let W = 1, H = 1, dpr = 1, frameAvg = 16, rscale = matchMedia('(pointer: coarse)').matches ? 0.75 : 1;
+const FOVY = 32 * Math.PI / 180, FOV = Math.tan(FOVY / 2);
+const cam = { pos: [0, 0.7, 8.6], target: [0, -0.1, 0] };
+const FLOOR = -2.2;
+const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const mul = (a, k) => [a[0] * k, a[1] * k, a[2] * k], lerp3 = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const len = (a) => Math.hypot(a[0], a[1], a[2]);
+const norm = (a) => { const l = len(a) || 1; return [a[0] / l, a[1] / l, a[2] / l]; };
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const ss = (e0, e1, x) => { const t = clamp((x - e0) / (e1 - e0), 0, 1); return t * t * (3 - 2 * t); };
+let CF, CR, CU;
+function camBasis(){ CF = norm(sub(cam.target, cam.pos)); CR = norm(cross(CF, [0, 1, 0])); CU = cross(CR, CF); }
+function project(p){ const v = sub(p, cam.pos), z = dot(v, CF); return [W / 2 + dot(v, CR) / (z * 2 * FOV) * H, H / 2 - dot(v, CU) / (z * 2 * FOV) * H, z]; }
+function rayAt(px, py){ const ux = (px - W / 2) / H * 2 * FOV, uy = (H / 2 - py) / H * 2 * FOV; return norm([CR[0] * ux + CU[0] * uy + CF[0], CR[1] * ux + CU[1] * uy + CF[1], CR[2] * ux + CU[2] * uy + CF[2]]); }
+function onPlaneZ(px, py, z){ const d = rayAt(px, py), t = (z - cam.pos[2]) / d[2]; return add(cam.pos, mul(d, t)); }
+function pxPerUnit(p){ const z = dot(sub(p, cam.pos), CF); return H / (z * 2 * FOV); }
+function viewProj(){
+  const f = CF, s = CR, u = CU, e = cam.pos;
+  const V = [s[0], u[0], -f[0], 0, s[1], u[1], -f[1], 0, s[2], u[2], -f[2], 0, -dot(s, e), -dot(u, e), dot(f, e), 1];
+  const asp = W / H, n = 0.1, fa = 80, ff = 1 / FOV;
+  const Pm = [ff / asp, 0, 0, 0, 0, ff, 0, 0, 0, 0, (fa + n) / (n - fa), -1, 0, 0, 2 * fa * n / (n - fa), 0];
+  const o = new Array(16); for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++){ let v = 0; for (let k = 0; k < 4; k++) v += Pm[k * 4 + r] * V[c * 4 + k]; o[c * 4 + r] = v; } return o;
+}
+function resize(){
+  dpr = Math.min(devicePixelRatio || 1, 2); W = tank.clientWidth; H = tank.clientHeight;
+  let w = W * dpr * rscale, h = H * dpr * rscale; const cap = 2.0e6; if (w * h > cap){ const k = Math.sqrt(cap / (w * h)); w *= k; h *= k; }
+  cv.width = Math.max(2, Math.round(w)); cv.height = Math.max(2, Math.round(h));
+  fx.width = Math.round(W * dpr); fx.height = Math.round(H * dpr);
+  cam.pos[2] = W / H < 0.75 ? 14 : 8.6;
+}
+new ResizeObserver(resize).observe(tank);
+
+// ================= the serpent's spine =================
+const nodes = Array.from({ length: NS }, (_, i) => [1.8 - i * DS * 0.7, 0.3 + 0.5 * Math.sin(i * 0.25), 0.4 * Math.cos(i * 0.2)]);
+const headV = [0, 0, 0];
+let slPh = 0, T = 0, happy = 0, excite = 0, hunger = 0.35, fed = 0, spat = 0, mood = 'CURIOUS', lastTouch = 0, glow = 0.5, fresh = 0, squeeze = 0, hue = 0, roll = 0, pfly = 0;
+let ticketOn = 0, hunting = null, chaseTail = false, look = [0, 0], light = [-2, 4, 5];
+const pokes = Array.from({ length: 8 }, () => ({ s: 0, t0: -99, amp: 0 })); let pokeI = 0;
+const bulges = [];
+const loop = { on: false, k: 0, from: null, c: [0, 0.2, 0], nrm: [0, 0, 1], e1: [1, 0, 0], e2: [0, 1, 0], R: LEN / TAU * 0.97, spin: 0, t0: 0 };
+function poke(s0, amp){
+  const p = pokes[pokeI]; pokeI = (pokeI + 1) % 8; p.s = s0; p.t0 = T; p.amp = amp;
+  excite = Math.min(1.5, excite + amp * 0.2);
+  // a little flinch where it was touched
+  const i0 = Math.round(s0 * (NS - 1));
+  for (let i = Math.max(1, i0 - 4); i <= Math.min(NS - 1, i0 + 4); i++){ const g = Math.exp(-((i - i0) ** 2) / 6) * amp * 0.12; nodes[i][1] += g; }
+}
+function waveAtJS(s){ let w = 0; for (const p of pokes){ const age = T - p.t0; if (age < 0 || age > 6) continue; const x = Math.abs(s - p.s) - age * K.waveSpeed; w += p.amp * Math.exp(-age * 0.7) * Math.exp(-x * x / 0.0016); } return w; }
+function radius(s){
+  const head = 0.3 * Math.sqrt(clamp(s / 0.028, 0, 1)), neck = 0.21, bodyR = 0.27;
+  let r;
+  if (s < 0.045) r = head;
+  else if (s < 0.09) r = head + (neck - head) * ss(0.045, 0.09, s);
+  else if (s < 0.25) r = neck + (bodyR - neck) * ss(0.09, 0.25, s);
+  else r = bodyR * Math.pow(clamp((1 - s) / 0.75, 0, 1), 0.75) + 0.016;
+  for (const b of bulges) r += b.amp * 0.22 * Math.exp(-(((s - b.s) / 0.03) ** 2));
+  return r * (1 + 0.18 * Math.min(1.5, waveAtJS(s)) + squeeze * 0.06);
+}
+// smooth centreline through the nodes
+function cr(p0, p1, p2, p3, t){ const t2 = t * t, t3 = t2 * t; return [0, 1, 2].map((k) => 0.5 * (2 * p1[k] + (-p0[k] + p2[k]) * t + (2 * p0[k] - 5 * p1[k] + 4 * p2[k] - p3[k]) * t2 + (-p0[k] + 3 * p1[k] - 3 * p2[k] + p3[k]) * t3)); }
+function spineAt(s){ const x = clamp(s, 0, 1) * (NS - 1), i = Math.min(NS - 2, Math.floor(x)), t = x - i; return cr(nodes[Math.max(0, i - 1)], nodes[i], nodes[i + 1], nodes[Math.min(NS - 1, i + 2)], t); }
+const rings = Array.from({ length: NR }, () => ({ c: [0, 0, 0], t: [1, 0, 0], u: [0, 1, 0], sd: [0, 0, 1], r: 0.1 }));
+function buildTube(){
+  for (let k = 0; k < NR; k++) rings[k].c = spineAt(k / (NR - 1));
+  let prevU = [0, 1, 0];
+  for (let k = 0; k < NR; k++){
+    const a = rings[Math.max(0, k - 1)].c, b = rings[Math.min(NR - 1, k + 1)].c, t = norm(sub(b, a));
+    const tr = norm(sub(prevU, mul(t, dot(prevU, t))));                 // parallel transport
+    const pu = norm(sub([0, 1, 0], mul(t, t[1])));                      // keep the spine on top where it can
+    const wgt = ss(0.97, 0.75, Math.abs(t[1]));
+    const u = norm(lerp3(tr, pu, wgt * 0.25));
+    const sd = cross(t, u);
+    const s = k / (NR - 1);
+    Object.assign(rings[k], { t, u, sd, r: radius(s) }); prevU = u;
+  }
+  for (let k = 0; k < NR; k++){
+    const R = rings[k], s = k / (NR - 1);
+    const fyS = 0.7 + 0.3 * ss(0.03, 0.1, s), fxS = 1 + 0.14 * (1 - ss(0.03, 0.1, s));   // flattened head
+    for (let j = 0; j <= NA; j++){
+      const ph = j / NA * TAU, cx = Math.cos(ph), sy = Math.sin(ph), v = k * (NA + 1) + j;
+      const off = add(mul(R.sd, cx * fxS * R.r), mul(R.u, sy * fyS * R.r)), nn = norm(add(mul(R.sd, cx / fxS), mul(R.u, sy / fyS)));
+      posA[v * 3] = R.c[0] + off[0]; posA[v * 3 + 1] = R.c[1] + off[1]; posA[v * 3 + 2] = R.c[2] + off[2];
+      nrmA[v * 3] = nn[0]; nrmA[v * 3 + 1] = nn[1]; nrmA[v * 3 + 2] = nn[2];
+      tanA[v * 3] = R.t[0]; tanA[v * 3 + 1] = R.t[1]; tanA[v * 3 + 2] = R.t[2];
+    }
+  }
+  gl.bindBuffer(gl.ARRAY_BUFFER, posB); gl.bufferSubData(gl.ARRAY_BUFFER, 0, posA);
+  gl.bindBuffer(gl.ARRAY_BUFFER, nrmB); gl.bufferSubData(gl.ARRAY_BUFFER, 0, nrmA);
+  gl.bindBuffer(gl.ARRAY_BUFFER, tanB); gl.bufferSubData(gl.ARRAY_BUFFER, 0, tanA);
+}
+function bounds(){
+  const halfW = cam.pos[2] * FOV * W / H;
+  const yTop = cam.pos[1] + cam.pos[2] * Math.tan(Math.atan(FOV) - Math.atan((cam.pos[1] - cam.target[1]) / cam.pos[2]));
+  return { x: Math.max(0.6, halfW - 0.5), yMin: FLOOR + 0.45, yMax: yTop - 0.45 };
+}
+function hitSnake(px, py){
+  let best = null;
+  for (let i = 0; i < NR - 1; i += 2){
+    const a = project(rings[i].c), b = project(rings[Math.min(NR - 1, i + 2)].c);
+    const sx = b[0] - a[0], sy = b[1] - a[1], L2 = sx * sx + sy * sy || 1, t = clamp(((px - a[0]) * sx + (py - a[1]) * sy) / L2, 0, 1);
+    const d = Math.hypot(a[0] + sx * t - px, a[1] + sy * t - py), r = rings[i].r * pxPerUnit(rings[i].c) + 8;
+    if (d < r && (!best || a[2] < best.z)) best = { s: (i + 2 * t) / (NR - 1), z: a[2] };
+  }
+  return best;
+}
+const headScreen = () => project(rings[2].c);
+const headPx = () => rings[6].r * pxPerUnit(rings[6].c);
+
+// ================= ouroboros =================
+function formLoop(){
+  if (loop.on) return;
+  loop.on = true; loop.k = 0; loop.t0 = T; loop.from = nodes.map((n) => n.slice());
+  let c = [0, 0, 0]; for (const n of nodes) c = add(c, n); c = mul(c, 1 / NS);
+  const b = bounds(); loop.c = [clamp(c[0], -b.x + 1.2, b.x - 1.2), clamp(c[1], b.yMin + 1.1, b.yMax - 1.0), 0];
+  const h0 = sub(nodes[0], loop.c); loop.spin = Math.atan2(h0[1], h0[0]);
+  chaseTail = false; excite = 1.5; poke(0.5, 1.2);
+  $('bLoop').setAttribute('aria-pressed', 'true');
+}
+function releaseLoop(){
+  if (!loop.on) return;
+  loop.on = false; loop.k = 0; const t = norm(sub(nodes[0], nodes[1])); headV[0] = t[0] * 1.5; headV[1] = t[1] * 1.5; headV[2] = t[2] * 1.5;
+  $('bLoop').setAttribute('aria-pressed', 'false');
+}
+
+// ================= particles, shed skins, tickets =================
+const dust = [], ghosts = [];
+function dustBurst(x, y, n, spread = 1){
+  const S = SPECIES[species], cols = [S.A, S.B, S.C, '#ffffff'];
+  for (let k = 0; k < n; k++){ const a = Math.random() * TAU, v = (40 + Math.random() * 160) * spread; dust.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 40, ch: glyphList[Math.floor(Math.random() * glyphList.length)] || '·', col: cols[k % 4], life: 0, max: 1.2 + Math.random() * 1.4, s: 0.7 + Math.random() * 0.8 }); }
+  if (dust.length > 260) dust.splice(0, dust.length - 260);
+}
+let tickets = [], newest = null;
+function floorY(){ return project([0, FLOOR, 0.6])[1]; }
+function shed(power = 1){
+  // a ghost of the old skin peels away
+  const pts = []; for (let k = 0; k < NR; k += 3){ const p = project(rings[k].c); pts.push([p[0], p[1], rings[k].r * pxPerUnit(rings[k].c)]); }
+  ghosts.push({ pts, life: 0 });
+  for (let k = 0; k < pts.length; k += 3) dustBurst(pts[k][0], pts[k][1], 3, 0.6);
+  const seed = Math.floor(Math.random() * 1e9), o = printOracle(seed), tp = project(rings[Math.floor(NR * 0.8)].c);
+  const w = Math.min(W * 0.2, 120);
+  const tk = { c: o.c, sh: tint(o.c, 'rgba(0,0,0,0.35)'), text: o.text, serial: o.serial, x: tp[0], y: tp[1], w, h: w * 1.5, s: 0.15, a: (Math.random() - 0.5) * 0.6,
+    vx: (Math.random() - 0.5) * 120, vy: -60, va: (Math.random() - 0.5) * 3, state: 'float', ph: Math.random() * 6, restT: 0 };
+  tickets.push(tk); newest = tk; spat++;
+  if (tickets.length > 7){ const i = tickets.findIndex((t) => t.state === 'rest'); tickets.splice(i >= 0 ? i : 0, 1); }
+  fresh = 1; excite = 1.5; poke(0.95, 1.2); poke(0.05, 0.8);
+  const li = document.createElement('li'); li.innerHTML = `${o.text}<span>${o.serial} · ${o.lucky}</span>`; $('log').prepend(li); $('logEmpty').hidden = true;
+  hunger = Math.min(1, hunger + 0.2);
+}
+function swallow(tk){
+  if (!tk || tk.state === 'gulp') return;
+  tk.state = 'gulp'; tk.k = 0; if (hunting === tk) hunting = null;
+  poke(0.03, 1.0); excite = 1.5;
+}
+function digest(b){
+  const tk = b.tk;
+  upload(ticketTex, tk.c); ticketOn = 0.0001;
+  backText = `${tk.text} · ${tk.serial} · `; buildText(backText); textOn = 1;
+  for (const ch of (tk.text + tk.serial)) if (ch.trim()) alphabet.add(ch);
+  glyphList = Array.from(alphabet);
+  fed++; hunger = Math.max(0, hunger - 0.55); happy = 2.6; excite = 1.5;
+  poke(b.s, 1.4);
+  const p = project(spineAt(b.s)); dustBurst(p[0], p[1], 50, 1.2);
+}
+function stepThings(dt){
+  const fy = floorY();
+  for (const d of dust){ d.life += dt; d.vx *= 1 - 1.8 * dt; d.vy = d.vy * (1 - 1.8 * dt) + 50 * dt; d.x += d.vx * dt; d.y += d.vy * dt; }
+  for (let i = dust.length - 1; i >= 0; i--) if (dust[i].life > dust[i].max) dust.splice(i, 1);
+  for (const g of ghosts){ g.life += dt; for (const p of g.pts){ p[1] -= dt * 14; p[0] += Math.sin(g.life * 3 + p[1] * 0.05) * dt * 10; } }
+  for (let i = ghosts.length - 1; i >= 0; i--) if (ghosts[i].life > 2.8) ghosts.splice(i, 1);
+  for (const b of bulges){ b.s += dt * 0.2 * (0.7 + 0.3 * K.speed); if (!b.done && b.s > 0.5){ b.done = true; digest(b); } }
+  for (let i = bulges.length - 1; i >= 0; i--) if (bulges[i].s > 1.02) bulges.splice(i, 1);
+  const hs = headScreen();
+  for (const t of tickets){
+    if (t.state === 'grab') continue;
+    if (t.state === 'gulp'){
+      t.k = Math.min(1, t.k + dt / 0.35);
+      t.x += (hs[0] - t.x) * Math.min(1, dt * 16); t.y += (hs[1] - t.y) * Math.min(1, dt * 16); t.s = Math.max(0.02, 0.7 * (1 - t.k)); t.a += dt * 6;
+      if (t.k >= 1){ bulges.push({ s: 0.05, amp: 1, tk: t, done: false }); t.state = 'gone'; }
+      continue;
+    }
+    t.s = Math.min(1, t.s + dt * 2);
+    if (t.state === 'float'){
+      t.vy += 150 * dt; t.vx += Math.sin(T * 2.5 + t.ph) * 90 * dt; t.vx *= 1 - 1.2 * dt; t.vy *= 1 - 1.4 * dt;
+      t.va += (-t.a * 3 + Math.sin(T * 2 + t.ph) * 1.6) * dt; t.va *= 1 - 1.5 * dt;
+      t.x += t.vx * dt; t.y += t.vy * dt; t.a += t.va * dt;
+      const half = t.h * t.s * 0.5 * Math.abs(Math.cos(t.a)) + t.w * t.s * 0.5 * Math.abs(Math.sin(t.a));
+      if (t.y + half > fy){ t.y = fy - half; t.vy = 0; t.vx *= 0.3; t.state = 'rest'; t.restT = T; }
+      if (t.x < t.w * 0.5){ t.x = t.w * 0.5; t.vx = Math.abs(t.vx) * 0.5; } if (t.x > W - t.w * 0.5){ t.x = W - t.w * 0.5; t.vx = -Math.abs(t.vx) * 0.5; }
+    } else if (t.state === 'rest'){
+      const tilt = clamp(t.a, -0.3, 0.3); t.a += (tilt - t.a) * Math.min(1, dt * 4);
+      t.y += (fy - t.h * 0.5 * Math.cos(t.a) - t.y) * Math.min(1, dt * 8);
+    }
+  }
+  tickets = tickets.filter((t) => t.state !== 'gone');
+  if (newest && !tickets.includes(newest)) newest = tickets[tickets.length - 1] || null;
+}
+
+// ================= 2D layers: eyes, tongue, shed ghosts, dust, tickets =================
+const hexA = (h, a) => `rgba(${parseInt(h.substr(1, 2), 16)},${parseInt(h.substr(3, 2), 16)},${parseInt(h.substr(5, 2), 16)},${clamp(a, 0, 1)})`;
+let tongue = { t: 0, next: 1.5, flick: 0 };
+function drawHead(){
+  const g = fctx, S = SPECIES[species], R = rings[7], r = R.r;
+  const fwd = norm(sub(rings[0].c, rings[3].c));
+  // eyes: vertical slit pupils, never blinking (serpents have spectacles)
+  for (const sd of [1, -1]){
+    const ep = add(add(add(R.c, mul(R.sd, sd * r * 0.86 * 1.1)), mul(R.u, r * 0.38)), mul(fwd, 0.02));
+    const en = norm(add(mul(R.sd, sd), mul(R.u, 0.5))), facing = dot(en, norm(sub(cam.pos, ep)));
+    if (facing < -0.15) continue;
+    const s = project(ep), er = Math.max(2, r * 0.32 * pxPerUnit(ep)) * (0.65 + 0.35 * clamp(facing + 0.3, 0, 1));
+    g.save();
+    g.globalCompositeOperation = 'lighter'; g.fillStyle = hexA(S.C, 0.35); g.beginPath(); g.arc(s[0], s[1], er * 1.9, 0, TAU); g.fill();
+    g.globalCompositeOperation = 'source-over';
+    const gr = g.createRadialGradient(s[0], s[1], 0, s[0], s[1], er); gr.addColorStop(0, '#fff3b0'); gr.addColorStop(0.6, S.C); gr.addColorStop(1, '#1a0620');
+    g.fillStyle = gr; g.beginPath(); g.arc(s[0], s[1], er, 0, TAU); g.fill();
+    const lx = look[0] * er * 0.35, ly = -look[1] * er * 0.25, slit = 0.18 + 0.25 * (mood === 'DREAMING' || mood === 'INFINITE' ? 0 : excite * 0.5);
+    g.fillStyle = '#0a0210'; g.beginPath(); g.ellipse(s[0] + lx, s[1] + ly, er * slit, er * 0.85, 0, 0, TAU); g.fill();
+    g.fillStyle = 'rgba(255,255,255,0.9)'; g.beginPath(); g.arc(s[0] - er * 0.35, s[1] - er * 0.4, er * 0.22, 0, TAU); g.fill();
+    g.restore();
+  }
+  // forked tongue: flicks, faster when it is excited or tasting a ticket
+  if (tongue.flick > 0){
+    const tip = add(rings[0].c, mul(fwd, 0.02)), a = project(tip), b = project(add(tip, mul(fwd, 0.1)));
+    let dx = b[0] - a[0], dy = b[1] - a[1]; const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
+    const L = Math.sin(Math.PI * clamp(tongue.flick, 0, 1)) * pxPerUnit(tip) * 0.42, wig = Math.sin(T * 40) * 0.25;
+    const m = [a[0] + dx * L * 0.75, a[1] + dy * L * 0.75];
+    g.save(); g.lineCap = 'round'; g.strokeStyle = hexA('#F000A8', 0.95); g.lineWidth = Math.max(1.2, pxPerUnit(tip) * 0.018);
+    g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(m[0], m[1]);
+    for (const f of [1, -1]){ const ca = Math.cos(0.45 * f + wig), sa = Math.sin(0.45 * f + wig); g.moveTo(m[0], m[1]); g.lineTo(m[0] + (dx * ca - dy * sa) * L * 0.3, m[1] + (dx * sa + dy * ca) * L * 0.3); }
+    g.stroke(); g.restore();
+  }
+}
+function drawGhosts(){
+  const g = fctx, S = SPECIES[species];
+  g.save(); g.lineCap = 'round'; g.lineJoin = 'round'; g.globalCompositeOperation = 'lighter';
+  for (const gh of ghosts){
+    const a = Math.max(0, 1 - gh.life / 2.8);
+    for (let i = 1; i < gh.pts.length; i++){
+      const p = gh.pts[i - 1], q = gh.pts[i];
+      g.strokeStyle = hexA(S.C, 0.12 * a); g.lineWidth = p[2] * 2; g.beginPath(); g.moveTo(p[0], p[1]); g.lineTo(q[0], q[1]); g.stroke();
+      g.strokeStyle = hexA('#ffffff', 0.35 * a); g.lineWidth = 1; g.setLineDash([3, 5]); g.beginPath(); g.moveTo(p[0], p[1] - p[2]); g.lineTo(q[0], q[1] - q[2]); g.moveTo(p[0], p[1] + p[2]); g.lineTo(q[0], q[1] + q[2]); g.stroke(); g.setLineDash([]);
+    }
+  }
+  g.restore();
+}
+function drawDust(){
+  const g = fctx, px = Math.max(0.7, H / 900);
+  g.save(); g.globalCompositeOperation = 'lighter'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (const d of dust){ const a = 1 - d.life / d.max; g.fillStyle = hexA(d.col, a); g.font = `700 ${Math.round(11 * d.s * px)}px "JetBrains Mono", ui-monospace, monospace`; g.fillText(d.ch, d.x, d.y); }
+  g.restore();
+}
+function drawTickets(){
+  const g = fctx;
+  for (const t of tickets){
+    const w = t.w * t.s, h = t.h * t.s;
+    g.save(); g.translate(t.x, t.y); g.rotate(t.a);
+    if (t.state !== 'gulp'){ g.globalAlpha = 0.45; g.drawImage(t.sh, -w / 2 + 5, -h / 2 + 7, w, h); g.globalAlpha = 1; }
+    g.drawImage(t.c, -w / 2, -h / 2, w, h);
+    g.restore();
+  }
+}
+function drawHud(){
+  const g = fctx, hs = headScreen();
+  g.save(); g.font = `500 10px "JetBrains Mono", ui-monospace, monospace`; g.textBaseline = 'top';
+  g.strokeStyle = 'rgba(246,236,255,0.5)'; g.fillStyle = 'rgba(246,236,255,0.88)'; g.lineWidth = 1;
+  const lx = clamp(hs[0] + 60, 14, W - 190), ly = Math.max(56, hs[1] - 70);
+  g.beginPath(); g.moveTo(hs[0], hs[1]); g.lineTo(lx - 4, ly + 7); g.stroke();
+  g.fillText(loop.on ? 'LOOP CLOSED · DEPTH ∞' : `LENGTH ${LEN.toFixed(1)} · ${NS} VERTEBRAE`, lx, ly); g.fillText(`SWALLOWED ${fed} · SHED ${spat}`, lx, ly + 13);
+  const mm = Math.floor(T / 60), sec = (T % 60).toFixed(2).padStart(5, '0');
+  g.font = `700 13px "JetBrains Mono", ui-monospace, monospace`; g.fillText(`${mm}:${sec}`, 14, H - 54);
+  g.font = `500 9px "JetBrains Mono", ui-monospace, monospace`; g.fillStyle = 'rgba(200,185,220,0.75)';
+  g.fillText(`SLITHER ${(len(headV)).toFixed(2)}   BULGES ${bulges.length}   HUNGER ${hunger.toFixed(2)}`, 14, H - 36);
+  g.fillText(`RAINBOW SERPENT ORACLE  /  ${species.toUpperCase()}`, 14, H - 24);
+  g.restore();
+}
+
+// ================= input =================
+let ptr = null, lastStroke = 0;
+const pos = (e) => { const r = tank.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top, t: performance.now() }; };
+function ticketAt(p){
+  for (let i = tickets.length - 1; i >= 0; i--){ const t = tickets[i]; if (t.state === 'gulp') continue; const dx = p.x - t.x, dy = p.y - t.y, c = Math.cos(-t.a), s = Math.sin(-t.a); if (Math.abs(dx * c - dy * s) < t.w * t.s / 2 && Math.abs(dx * s + dy * c) < t.h * t.s / 2) return t; }
+  return null;
+}
+function inPortal(p){ if (!loop.on || loop.k < 0.8) return false; const c = project(loop.c); return Math.hypot(p.x - c[0], p.y - c[1]) < (loop.R - 0.3) * pxPerUnit(loop.c); }
+tank.addEventListener('pointerdown', (e) => {
+  const p = pos(e); tank.setPointerCapture(e.pointerId);
+  ptr = { start: p, last: p, vx: 0, vy: 0, moved: false, mode: 'lead', t0: T };
+  const tk = ticketAt(p);
+  if (tk){ ptr.mode = 'ticket'; ptr.tk = tk; if (hunting === tk) hunting = null; tk.state = 'grab'; tk.gx = tk.x - p.x; tk.gy = tk.y - p.y; tickets.splice(tickets.indexOf(tk), 1); tickets.push(tk); return; }
+  if (inPortal(p)){ ptr.mode = 'portal'; return; }
+  const h = hitSnake(p.x, p.y);
+  if (h){ ptr.mode = 'body'; ptr.s = h.s; return; }
+  releaseLoop(); chaseTail = false;
+});
+tank.addEventListener('pointermove', (e) => {
+  const p = pos(e), hs = headScreen();
+  look = [clamp((p.x - hs[0]) / 300, -1, 1), clamp(-(p.y - hs[1]) / 300, -1, 1)];
+  light = add(onPlaneZ(p.x, p.y, 2.5), [0, 1.5, 0]);
+  if (!ptr) return;
+  const dt = Math.max((p.t - ptr.last.t) / 1000, 1 / 240);
+  ptr.vx = ptr.vx * 0.5 + 0.5 * (p.x - ptr.last.x) / dt; ptr.vy = ptr.vy * 0.5 + 0.5 * (p.y - ptr.last.y) / dt;
+  if (Math.hypot(p.x - ptr.start.x, p.y - ptr.start.y) > 9) ptr.moved = true;
+  if (ptr.mode === 'ticket'){
+    ptr.tk.x = p.x + ptr.tk.gx; ptr.tk.y = p.y + ptr.tk.gy; ptr.tk.a += (clamp(ptr.vx * 0.0006, -0.5, 0.5) - ptr.tk.a) * 0.2;
+    if (Math.hypot(ptr.tk.x - hs[0], ptr.tk.y - hs[1]) < headPx() * 8) tongue.next = Math.min(tongue.next, T);   // it tastes the air
+  } else if (ptr.mode === 'body' && ptr.moved && p.t - lastStroke > 90){
+    const h = hitSnake(p.x, p.y); if (h){ lastStroke = p.t; poke(h.s, 0.6 + Math.min(Math.hypot(ptr.vx, ptr.vy) / 2500, 0.6)); dustBurst(p.x, p.y, 4, 0.5); }
+  } else if (ptr.mode === 'portal' && ptr.moved){ loop.spin -= (p.x - ptr.last.x) * 0.004; }
+  ptr.last = p;
+});
+const endPtr = () => {
+  if (!ptr) return;
+  const hs = headScreen();
+  if (ptr.mode === 'ticket'){
+    const t = ptr.tk;
+    if (Math.hypot(t.x - hs[0], t.y - hs[1]) < Math.max(70, headPx() * 4)) swallow(t);
+    else { t.state = 'float'; t.vx = ptr.vx * 0.5; t.vy = ptr.vy * 0.5; t.va = ptr.vx * 0.003; }
+  } else if (ptr.mode === 'body' && !ptr.moved){
+    const held = T - ptr.t0;
+    if (held > 0.45) shed(Math.min(1.5, held / 1.2));
+    else { poke(ptr.s, 1.1); dustBurst(ptr.start.x, ptr.start.y, 12); if (ptr.s < 0.08){ tongue.next = T; headV[1] += 1.5; } }
+  } else if (ptr.mode === 'portal' && !ptr.moved){ for (let k = 0; k < 4; k++) poke(k / 4 + 0.1, 0.9); excite = 1.5; const c = project(loop.c); dustBurst(c[0], c[1], 40, 1.5); }
+  squeeze = 0; ptr = null;
+};
+tank.addEventListener('pointerup', endPtr); tank.addEventListener('pointercancel', endPtr);
+$('bSpit').onclick = () => shed(1.1);
+$('bPoke').onclick = () => poke(Math.random() * 0.8 + 0.1, 1.2);
+$('bLoop').onclick = () => { if (loop.on) releaseLoop(); else formLoop(); };
+const feedNewest = () => { const t = newest && newest.state !== 'gulp' ? newest : tickets.filter((x) => x.state === 'float' || x.state === 'rest').pop(); if (t){ hunting = t; t.restT = -99; hunger = Math.max(hunger, 0.6); releaseLoop(); } else shed(1); };
+$('bFeed').onclick = feedNewest;
+
+// ================= loop =================
+function setMood(){
+  const m = squeeze > 0.2 ? 'SQUEEZED' : happy > 0 ? 'ECSTATIC' : bulges.length ? 'DIGESTING' : loop.on ? 'INFINITE' : (ptr && ptr.mode === 'lead') ? 'FOLLOWING' : hunting ? 'HUNTING' : chaseTail ? 'DREAMING' : hunger > 0.75 ? 'HUNGRY' : 'CURIOUS';
+  if (m !== mood){ mood = m; $('mood').textContent = 'MOOD: ' + m; }
+}
+let prev = performance.now();
+function frame(now){
+  const dt = Math.min((now - prev) / 1000, 0.05); prev = now;
+  frameAvg = frameAvg * 0.95 + dt * 1000 * 0.05;
+  T += reduceMotion ? dt * 0.3 : dt;
+  if (ptr) lastTouch = T;
+  camBasis();
+  const B = bounds();
+  // squeezing the body: scales flare, it tightens
+  if (ptr && ptr.mode === 'body' && !ptr.moved){ squeeze = Math.min(1, (T - ptr.t0) / 1.2); if (squeeze > 0.25 && Math.random() < dt * 8) poke(Math.random(), 0.25 + squeeze * 0.4); }
+  // what is the head going for?
+  if (!loop.on){
+    let tgt = [2.0 * Math.sin(T * 0.23) * Math.min(1, B.x / 2.6), 0.2 + 0.9 * Math.sin(T * 0.31), 1.1 * Math.sin(T * 0.17)], spd = 1.5;
+    if (!hunting && !ptr && hunger > 0.45){ const t = tickets.find((x) => x.state === 'rest' && T - x.restT > 5); if (t) hunting = t; }
+    if (hunting){
+      if (hunting.state !== 'rest' && hunting.state !== 'float') hunting = null;
+      else { tgt = add(onPlaneZ(hunting.x, hunting.y, 0.8), [0, 0.15, 0]); spd = 2.4; const hs = headScreen(); if (Math.hypot(hs[0] - hunting.x, hs[1] - hunting.y) < Math.max(40, headPx() * 2.5)) swallow(hunting); }
+    }
+    if (!ptr && !hunting && T - lastTouch > 16 && !bulges.length) chaseTail = true;
+    if (chaseTail){ tgt = nodes[NS - 1]; spd = 2.0; if (len(sub(nodes[0], nodes[NS - 1])) < 0.42) formLoop(); }
+    if (ptr && ptr.mode === 'lead'){ tgt = onPlaneZ(ptr.last.x, ptr.last.y, 0.6); spd = 3.6; }
+    if (ptr && ptr.mode === 'ticket'){ const hs = headScreen(); if (Math.hypot(ptr.tk.x - hs[0], ptr.tk.y - hs[1]) < headPx() * 8) { tgt = onPlaneZ(ptr.tk.x, ptr.tk.y, 0.8); spd = 1.4; } }
+    spd *= K.speed * (mood === 'DREAMING' ? 0.8 : 1) * (reduceMotion ? 0.5 : 1);
+    const H0 = nodes[0], to = sub(tgt, H0), dist = len(to), dir = mul(to, 1 / (dist || 1));
+    let perp = cross(dir, [0, 1, 0]); perp = len(perp) < 0.2 ? [1, 0, 0] : norm(perp);
+    slPh += dt * (2.0 + len(headV) * 2.2);
+    const wig = Math.sin(slPh) * K.slither * 0.75;
+    const want = add(mul(dir, spd * Math.min(1, dist / 0.5)), mul(perp, wig * spd * 0.55 + wig * 0.35));
+    for (let k = 0; k < 3; k++) headV[k] += (want[k] - headV[k]) * Math.min(1, dt * 4);
+    H0[0] = clamp(H0[0] + headV[0] * dt, -B.x, B.x); H0[1] = clamp(H0[1] + headV[1] * dt, B.yMin, B.yMax); H0[2] = clamp(H0[2] + headV[2] * dt, -1.6, 1.8);
+    // follow the leader
+    const ds = DS * (1 - 0.22 * squeeze);
+    for (let i = 1; i < NS; i++){ const d = sub(nodes[i], nodes[i - 1]), l = len(d); if (l > ds){ const k = ds / l; nodes[i] = add(nodes[i - 1], mul(d, k)); } }
+  } else {
+    // ouroboros: the body becomes a spinning ring; its hole is a door
+    loop.k = Math.min(1, loop.k + dt / 1.3);
+    const e = loop.k * loop.k * (3 - 2 * loop.k);
+    loop.nrm = norm([0.3 * Math.sin(T * 0.13), 0.22 + 0.1 * Math.sin(T * 0.21), 1]);
+    loop.e1 = norm(cross([0, 1, 0], loop.nrm)); loop.e2 = cross(loop.nrm, loop.e1);
+    loop.spin += dt * (0.35 + excite * 0.8) * K.speed;
+    for (let i = 0; i < NS; i++){
+      const a = loop.spin - i / (NS - 1) * TAU * 0.965, wob = 0.04 * Math.sin(a * 5 + T * 2);
+      const ringP = add(loop.c, add(mul(loop.e1, Math.cos(a) * (loop.R + wob)), mul(loop.e2, Math.sin(a) * (loop.R + wob))));
+      nodes[i] = lerp3(loop.from[i], ringP, e);
+    }
+    if (T - loop.t0 > 28 && !ptr) releaseLoop();
+  }
+  // tongue
+  if (T > tongue.next && tongue.flick <= 0){ tongue.flick = 0.0001; tongue.next = T + (hunting || excite > 0.6 ? 0.6 : 1.6 + Math.random() * 2.5); }
+  if (tongue.flick > 0){ tongue.flick += dt / 0.32; if (tongue.flick >= 1) tongue.flick = 0; }
+  excite = Math.min(1.5, Math.max(0, excite - dt * 0.35) + squeeze * dt * 1.5);
+  happy = Math.max(0, happy - dt); fresh = Math.max(0, fresh - dt * 0.4);
+  const digesting = ticketOn > 0 && ticketOn < 1 ? 1 : 0;
+  hue += dt * (0.25 + excite * 1.5 + digesting * 3 + (happy > 0 ? 1.5 : 0)); roll += dt * (0.15 + excite * 0.6); pfly += dt * (0.1 + excite * 0.4);
+  glow += ((0.5 + excite * 0.4 + (happy > 0 ? 0.6 : 0)) - glow) * Math.min(1, dt * 4);
+  if (ticketOn > 0) ticketOn = Math.min(1, ticketOn + dt / 1.5);
+  textOn = Math.max(0, textOn - dt * 0.15);
+  hunger = Math.min(1, hunger + dt * 0.01);
+  stepThings(dt); setMood();
+  if (frameAvg > 40 && rscale > 0.45){ rscale *= 0.85; frameAvg = 28; resize(); }
+
+  // ---- draw ----
+  buildTube();
+  const S = SPECIES[species], lin = (h) => [1, 3, 5].map((i) => { const c = parseInt(h.substr(i, 2), 16) / 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); });
+  const cols = { uColA: lin(S.A), uColB: lin(S.B), uColC: lin(S.C) };
+  gl.viewport(0, 0, cv.width, cv.height);
+  gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND);
+  gl.useProgram(bgP.p); gl.bindVertexArray(bgVao);
+  gl.uniform2f(bgP.u('uRes'), cv.width, cv.height); gl.uniform1f(bgP.u('uTime'), T); gl.uniform3fv(bgP.u('uCamPos'), cam.pos);
+  gl.uniformMatrix3fv(bgP.u('uCamRot'), false, [CR[0], CR[1], CR[2], CU[0], CU[1], CU[2], -CF[0], -CF[1], -CF[2]]); gl.uniform1f(bgP.u('uFov'), FOV);
+  for (const k in cols) gl.uniform3fv(bgP.u(k), cols[k]);
+  gl.uniform3fv(bgP.u('uBg0'), lin(S.bg0)); gl.uniform3fv(bgP.u('uBg1'), lin(S.bg1)); gl.uniform3fv(bgP.u('uSnake'), nodes[Math.floor(NS / 2)]); gl.uniform1f(bgP.u('uGlow'), glow);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  const VP = viewProj();
+  gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS); gl.clear(gl.DEPTH_BUFFER_BIT);
+  if (loop.on && loop.k > 0.05){
+    gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.useProgram(portP.p); gl.bindVertexArray(portVao);
+    gl.uniformMatrix4fv(portP.u('uVP'), false, VP); gl.uniform3fv(portP.u('uC'), loop.c); gl.uniform3fv(portP.u('uE1'), loop.e1); gl.uniform3fv(portP.u('uE2'), loop.e2); gl.uniform3fv(portP.u('uN'), loop.nrm);
+    gl.uniform1f(portP.u('uR'), (loop.R - 0.24) * loop.k); gl.uniform2f(portP.u('uRes'), cv.width, cv.height); gl.uniform1f(portP.u('uTime'), T); gl.uniform1f(portP.u('uFov'), FOV);
+    gl.uniform1f(portP.u('uSpiral'), K.spiral); gl.uniform1f(portP.u('uHue'), hue); gl.uniform1f(portP.u('uRoll'), roll); gl.uniform1f(portP.u('uOpen'), loop.k); gl.uniform1f(portP.u('uFly'), pfly);
+    gl.uniform1f(portP.u('uTicketOn'), ticketOn); gl.uniform3fv(portP.u('uCamPos'), cam.pos);
+    for (const k in cols) gl.uniform3fv(portP.u(k), cols[k]);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, ticketTex); gl.uniform1i(portP.u('uTicket'), 1);
+    gl.drawArrays(gl.TRIANGLES, 0, DISC.length / 2);
+    gl.disable(gl.BLEND);
+  }
+  gl.useProgram(tubeP.p); gl.bindVertexArray(tubeVao);
+  gl.uniformMatrix4fv(tubeP.u('uVP'), false, VP); gl.uniform3fv(tubeP.u('uCamPos'), cam.pos); gl.uniform3fv(tubeP.u('uLight'), light);
+  gl.uniform1f(tubeP.u('uTime'), T); gl.uniform1f(tubeP.u('uFoil'), K.foil); gl.uniform1f(tubeP.u('uGlyph'), K.glyph * (1 + squeeze)); gl.uniform1f(tubeP.u('uWaveSpeed'), K.waveSpeed);
+  gl.uniform1f(tubeP.u('uScale'), K.scale); gl.uniform1f(tubeP.u('uHue'), K.hueSpeed * (1 + excite)); gl.uniform1f(tubeP.u('uRainbow'), S.rainbow); gl.uniform1f(tubeP.u('uSqueeze'), squeeze);
+  gl.uniform1f(tubeP.u('uFresh'), fresh); gl.uniform1f(tubeP.u('uLen'), LEN); gl.uniform1f(tubeP.u('uGlow'), glow);
+  const pk = new Float32Array(32); pokes.forEach((p, i) => pk.set([p.s, p.t0, p.amp, 0], i * 4)); gl.uniform4fv(tubeP.u('uPoke'), pk);
+  for (const k in cols) gl.uniform3fv(tubeP.u(k), cols[k]);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, textTex); gl.uniform1i(tubeP.u('uText'), 0); gl.uniform1f(tubeP.u('uTextN'), textN); gl.uniform1f(tubeP.u('uTextOn'), textOn);
+  gl.drawElements(gl.TRIANGLES, idx.length, gl.UNSIGNED_SHORT, 0);
+  gl.bindVertexArray(null);
+
+  fctx.setTransform(dpr, 0, 0, dpr, 0, 0); fctx.clearRect(0, 0, W, H);
+  drawGhosts(); drawHead(); drawDust();
+  if (devMode) drawHud();
+  drawTickets();
+  if (!window.__paused) requestAnimationFrame(frame);
+}
+
+// ================= bench =================
+function renderSpecies(){
+  const el = $('pals'); el.innerHTML = '';
+  for (const n of Object.keys(SPECIES)){ const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = n; b.setAttribute('aria-pressed', String(n === species)); b.onclick = () => { species = n; renderSpecies(); poke(0.05, 1.2); fresh = 1; }; el.append(b); }
+}
+for (const [key, label, min, max, step] of SLIDERS){
+  const row = document.createElement('div'); row.className = 'row';
+  row.innerHTML = `<label for="s-${key}">${label}</label><output id="o-${key}" for="s-${key}">${(+K[key]).toFixed(2)}</output><input type="range" id="s-${key}" min="${min}" max="${max}" step="${step}" value="${K[key]}">`;
+  $('sliders').append(row);
+  const s = row.querySelector('input'), o = row.querySelector('output');
+  s.oninput = () => { K[key] = +s.value; o.textContent = (+K[key]).toFixed(2); };
+}
+
+resize(); camBasis(); renderSpecies(); buildText(backText);
+if (document.fonts && document.fonts.load) document.fonts.load('700 46px "JetBrains Mono"').then(() => { buildText(backText); textCache.clear(); }).catch(() => {});
+setTimeout(() => poke(0.05, 1.0), 500);
+if (location.search.includes('test')) window.__snake = { poke: (s) => poke(s ?? 0.4, 1.2), shed, feedNewest, loop: formLoop, release: releaseLoop, setMode, species: (n) => { species = n; renderSpecies(); }, squeeze: (v) => { squeeze = v; }, lead: (x, y) => { ptr = { mode: 'lead', last: { x, y }, start: { x, y }, t0: T, moved: true }; }, unlead: () => { ptr = null; }, state: () => ({ mood, fed, spat, tickets: tickets.map((t) => t.state), bulges: bulges.map((b) => +b.s.toFixed(2)), loop: loop.on, head: nodes[0].map((v) => +v.toFixed(2)) }) };
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body></html>

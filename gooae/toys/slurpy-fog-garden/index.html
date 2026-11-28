@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en" data-mode="toy">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="/gooae/shell/gooae-shell.css">
+<script src="/gooae/shell/gooae-shell.js" data-toy="slurpy-fog-garden" data-dev="#devbtn" data-bar="#bar" data-panel=".dev" data-frame="device"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Slurpy Moth · Fog Garden</title>
+<style>
+/* VOICE dreamy night garden · IDEA a moth wading through glowing ground fog over living colonies ·
+   PICTURE the world itself, full screen · COLOUR GOOAE night: void violet, magenta breath, acid and cyan life ·
+   TYPE system sans + mono · LAYOUT toy first; dev = stage + bench */
+:root{--bg:#07020d;--panel:#110719;--line:#2b1840;--txt:#f6ecff;--dim:#a68fbf;--acc:#a6ff3a;--pink:#ff3fb4}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0;background:var(--bg);color:var(--txt);font:13px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+html[data-mode=toy] body{overflow:hidden}
+html[data-mode=toy] .dev{display:none!important}
+#stage{position:fixed;inset:0;background:#0c0618;touch-action:none;user-select:none;-webkit-user-select:none;cursor:crosshair}
+#gl{width:100%;height:100%;display:block}
+html[data-mode=dev] body{padding:18px 18px calc(92px + env(safe-area-inset-bottom))}
+html[data-mode=dev] #stage{position:relative;inset:auto;height:min(74vh,860px);border-radius:16px;overflow:hidden;border:1px solid var(--line)}
+header{max-width:1400px;margin:0 auto 14px}
+header .eyebrow{font:11px ui-monospace,monospace;color:var(--dim);letter-spacing:.08em}
+header h1{margin:4px 0 6px;font-size:24px}
+header p{margin:0;color:var(--dim);max-width:880px}
+main{max-width:1400px;margin:0 auto}
+html[data-mode=dev] main{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;align-items:start}
+@media (max-width:900px){html[data-mode=dev] main{grid-template-columns:1fr}html[data-mode=dev] #stage{height:62vh}}
+#hud{position:absolute;left:10px;top:10px;font:11px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace;color:#f6ecff;background:rgba(7,2,13,.5);padding:6px 8px;border-radius:8px;pointer-events:none;white-space:pre}
+#mood{position:absolute;right:10px;top:10px;font:11px ui-monospace,monospace;color:var(--acc);background:rgba(7,2,13,.5);padding:6px 9px;border-radius:999px;pointer-events:none}
+#hint{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;font-size:11px;color:#e4d6f5;background:rgba(7,2,13,.5);padding:6px 10px;border-radius:999px;pointer-events:none;white-space:nowrap}
+@media (max-width:560px){#hint{display:none}}
+aside{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px}
+aside h3{margin:12px 0 6px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+aside h3:first-child{margin-top:0}
+.row{display:flex;flex-wrap:wrap;gap:6px}
+button{font:inherit;color:var(--txt);background:#1a0f26;border:1px solid #35204d;border-radius:999px;padding:5px 11px;cursor:pointer}
+button:hover{border-color:var(--pink)}
+button.on{background:var(--acc);color:#07020d;border-color:var(--acc)}
+.ctl{display:grid;grid-template-columns:118px 1fr 44px;align-items:center;gap:8px;margin:3px 0}
+.ctl label{color:var(--dim);font-size:12px}
+.ctl output{font:11px ui-monospace,monospace;color:var(--dim);text-align:right}
+.ctl input[type=range]{width:100%;accent-color:var(--pink)}
+.ctl select{width:100%;background:#0b0612;color:var(--txt);border:1px solid #35204d;border-radius:6px;padding:3px 5px;font:12px ui-monospace,monospace}
+.ctl input[type=color]{width:100%;height:24px;border:0;background:none;padding:0}
+textarea{width:100%;min-height:130px;background:#0b0612;color:#e6d8f7;border:1px solid #35204d;border-radius:8px;font:11px/1.35 ui-monospace,monospace;padding:6px}
+.anat{max-width:1400px;margin:16px auto 0;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px 16px;color:#d3c4e6;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.anat div{min-width:0}.anat .k{font:10px ui-monospace,monospace;color:var(--acc);letter-spacing:.06em}
+.anat h4{margin:2px 0 4px;font-size:14px;color:var(--txt)}.anat p{margin:0;font-size:12px;color:var(--dim)}
+#bar{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:20;display:flex;gap:6px;padding:5px;border-radius:999px;background:rgba(7,2,13,.5);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14)}
+#devbtn{font:600 11px/1 ui-monospace,monospace;letter-spacing:.14em;padding:9px 14px;background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.18)}
+#devbtn[aria-pressed=true]{background:var(--acc);color:#07020d}
+#err{position:absolute;inset:auto 12px 70px 12px;color:#ffd5e8;font:12px ui-monospace,monospace;white-space:pre-wrap;display:none}
+</style>
+</head>
+<body>
+<header class="dev">
+  <div class="eyebrow">ORACLE CREATURE 03 · AMBIENT · PUSH-FOG × LIFE-PULSE</div>
+  <h1>Slurpy Moth · Fog Garden</h1>
+  <p>The Slurpy Moth drifts over a living garden at night. A Life field glows under a layer of ground fog: colonies breathe in time with the moth's heartbeat, and fractal groves bloom into self-similar copies and fold back to a seed. When the moth flies low it wades through the fog and clears a channel; its wingbeats blow the fog outward; every few breaths it exhales coloured fog that swirls and drifts on the wind, and life sprouts where it skims. Drag to lure it, tap the garden to plant, tap the moth to ripple its wings, hold it to make it exhale.</p>
+</header>
+<main>
+  <div id="stage">
+    <canvas id="gl"></canvas>
+    <div id="hud" class="dev"></div>
+    <div id="mood" class="dev">MOOD · DRIFTING</div>
+    <div id="hint" class="dev">drag · lure &nbsp; tap garden · plant &nbsp; tap moth · ripple &nbsp; hold moth · exhale &nbsp; wheel/pinch · zoom</div>
+    <div id="err"></div>
+  </div>
+  <aside class="dev" id="bench"></aside>
+</main>
+<section class="anat dev">
+  <div><div class="k">GROUND · LIFE-PULSE</div><h4>A garden that computes</h4><p>A 192² Life torus tiles the endless floor. Conway colonies breathe between generations, swelling on a heartbeat that ripples outward from the moth. Fractal groves run a parity replicator inside a dead moat and are re-seeded every 8, 16 or 32 generations, so they bloom into copies of copies and fold back.</p></div>
+  <div><div class="k">AIR · PUSH-FOG</div><h4>Fog with memory</h4><p>A 2D fluid in the air's own frame holds fog amount, air velocity and a breath dye. One ray-marched pass turns it into a moonlit layer, and the garden's glow lights the fog from below, so colonies show as coloured haze long before you see their cells.</p></div>
+  <div><div class="k">BODY · ORACLE-CREATURE</div><h4>The moth wades and breathes</h4><p>Flying low, its body clears the fog and its wingbeats blow it outward; high, it glides above. It exhales tinted fog that the fluid carries, plants seeds where it skims, and plants a small fractal grove under each breath.</p></div>
+  <div><div class="k">SKIN · GLYPH-FIELD + HOLO-FOIL</div><h4>Wings written in letters</h4><p>The wing pattern is drawn in glyph scales over thin-film foil. The garden's light shines through the wings from below.</p></div>
+  <div><div class="k">EYES · MIRROR-VAULT</div><h4>A thousand tunnels</h4><p>Each hex facet of its compound eyes is a window into an infinite mirror corridor.</p></div>
+</section>
+<nav id="bar"><button id="devbtn" aria-pressed="false">DEV MODE</button></nav>
+<script>
+/*NOISE-START*/
+// ── Tiling 3D noise bake (CPU, once). RGBA8, N³ voxels, periodic in every axis.
+// r: five octaves of periodic gradient noise (the fog's body)
+// g, b: two very broad noises (bending the streams)
+// a: broad patches (where the layer is taller)
+// Each channel is stretched so its 1st and 99th percentiles land on 0 and 1.
+const FOGNOISE = (() => {
+  function mulberry(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  function bake(N = 64, seed = 7) {
+    const R = mulberry(seed);
+    const perm = new Uint8Array(512), GX = new Float32Array(256), GY = new Float32Array(256), GZ = new Float32Array(256);
+    const p = [...Array(256).keys()];
+    for (let i = 255; i > 0; i--) { const j = (R() * (i + 1)) | 0; [p[i], p[j]] = [p[j], p[i]]; }
+    for (let i = 0; i < 512; i++) perm[i] = p[i & 255];
+    for (let i = 0; i < 256; i++) { // uniform unit vectors
+      const z = R() * 2 - 1, a = R() * 6.2831853, r = Math.sqrt(1 - z * z);
+      GX[i] = r * Math.cos(a); GY[i] = r * Math.sin(a); GZ[i] = z;
+    }
+    const fade = t => t * t * t * (t * (t * 6 - 15) + 10);
+    // periodic gradient noise: lattice coordinates wrap at P, salt picks an independent field
+    function pn(x, y, z, P, salt) {
+      const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
+      const fx = x - xi, fy = y - yi, fz = z - zi;
+      const u = fade(fx), v = fade(fy), w = fade(fz);
+      let res = 0;
+      for (let c = 0; c < 8; c++) {
+        const dx = c & 1, dy = (c >> 1) & 1, dz = (c >> 2) & 1;
+        const X = (xi + dx) % P, Y = (yi + dy) % P, Z = (zi + dz) % P;
+        const h = perm[(perm[(perm[(X + salt * 37) & 255] + Y) & 255] + Z + salt * 11) & 255];
+        const g = GX[h] * (fx - dx) + GY[h] * (fy - dy) + GZ[h] * (fz - dz);
+        res += g * (dx ? u : 1 - u) * (dy ? v : 1 - v) * (dz ? w : 1 - w);
+      }
+      return res;
+    }
+    const V = N * N * N, ch = [new Float32Array(V), new Float32Array(V), new Float32Array(V), new Float32Array(V)];
+    for (let k = 0; k < N; k++) for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+      const x = i / N, y = j / N, z = k / N, o = i + N * (j + N * k);
+      let s = 0, amp = 1;
+      for (let oc = 0; oc < 5; oc++) { const f = 4 << oc; s += amp * pn(x * f, y * f, z * f, f, 0); amp *= 0.5; }
+      ch[0][o] = s;
+      ch[1][o] = pn(x * 2, y * 2, z * 2, 2, 1) + 0.5 * pn(x * 4, y * 4, z * 4, 4, 2);
+      ch[2][o] = pn(x * 2, y * 2, z * 2, 2, 3) + 0.5 * pn(x * 4, y * 4, z * 4, 4, 4);
+      ch[3][o] = pn(x * 3, y * 3, z * 3, 3, 5);
+    }
+    const out = new Uint8Array(V * 4), stats = [];
+    for (let c = 0; c < 4; c++) {
+      const sorted = Float32Array.from(ch[c]).sort();
+      const lo = sorted[Math.floor(V * 0.01)], hi = sorted[Math.floor(V * 0.99)], k = 255 / (hi - lo);
+      for (let o = 0; o < V; o++) out[o * 4 + c] = Math.max(0, Math.min(255, Math.round((ch[c][o] - lo) * k)));
+      stats.push([lo, hi]);
+    }
+    return { data: out, N, stats };
+  }
+  return { bake };
+})();
+/*NOISE-END*/
+/*LIFE-START*/
+// ── The Life floor: a toroidal tile that repeats under the endless fog.
+// Conway colonies everywhere, plus fractal groves: round zones that run a parity
+// replicator rule (B1357/S02468) inside a dead moat and are re-seeded every `period`
+// generations, so they bloom into self-similar copies and collapse, again and again.
+const MOORLIFE = (() => {
+  function rule(s) { const m = /B([0-8]*)\/S([0-8]*)/.exec(s), b = new Uint8Array(9), v = new Uint8Array(9); for (const c of m[1]) b[+c] = 1; for (const c of m[2]) v[+c] = 1; return { b, s: v }; }
+  const CONWAY = rule('B3/S23'), FRACTAL = rule('B1357/S02468');
+  const PAT = {
+    pulsar: '2b3o3b3o2$o4bobo4bo$o4bobo4bo$o4bobo4bo$2b3o3b3o2$2b3o3b3o$o4bobo4bo$o4bobo4bo$o4bobo4bo2$2b3o3b3o!',
+    penta: '2bo4bo$2ob4ob2o$2bo4bo!', beacon: '2o2b$2o2b$2b2o$2b2o!', toad: 'b3o$3o!', blinker: '3o!',
+    figure8: '3o$3o$3o$3b3o$3b3o$3b3o!', glider: 'bo$2bo$3o!', acorn: 'bo5b$3bo3b$2o2b3o!', rpent: 'b2o$2o$bo!',
+    lwss: 'bo2bo$o4b$o3bo$4o!', queenbee: '9bo$7bobo$6bobo$2o3bo2bo11b2o$2o4bobo11b2o$7bobo$9bo!',
+  };
+  function rle(t) { const cells = []; let x = 0, y = 0, n = ''; for (const ch of t) { if (ch >= '0' && ch <= '9') { n += ch; continue; } const k = n ? +n : 1; n = ''; if (ch === 'b') x += k; else if (ch === '$') { y += k; x = 0; } else if (ch === 'o') { for (let i = 0; i < k; i++) cells.push([x + i, y]); x += k; } else if (ch === '!') break; } let w = 0, h = 0; for (const [a, b] of cells) { w = Math.max(w, a + 1); h = Math.max(h, b + 1); } return { cells, w, h }; }
+  const LIB = {}; for (const k in PAT) LIB[k] = rle(PAT[k]);
+  function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+
+  class Floor {
+    constructor(N = 192, seed = 3) {
+      this.N = N; const C = N * N;
+      this.cur = new Uint8Array(C); this.prev = new Uint8Array(C); this.nxt = new Uint8Array(C);
+      this.age = new Uint8Array(C); this.hue = new Uint8Array(C); this.nhue = new Uint8Array(C);
+      this.heat = new Float32Array(C); this.osc = new Float32Array(C);
+      this.zone = new Uint8Array(C);           // 0 Conway, 1..k grove interior, 255 moat (always dead)
+      this.groves = []; this.gen = 0; this.pop = 0; this.births = 0; this.R = rng(seed); this.trail = 0.86;
+    }
+    idx(x, y) { const N = this.N; return (((y % N) + N) % N) * N + (((x % N) + N) % N); }
+    set(x, y, hue) { const i = this.idx(x, y); if (this.zone[i] === 255) return; if (!this.cur[i]) { this.cur[i] = 1; this.age[i] = 0; } this.hue[i] = hue; }
+    stamp(name, cx, cy, hue, t = (this.R() * 8) | 0) {
+      const p = LIB[name];
+      for (const [x0, y0] of p.cells) {
+        let x = x0 - (p.w >> 1), y = y0 - (p.h >> 1);
+        if (t & 4) x = -x; for (let r = 0; r < (t & 3); r++) { const nx = -y; y = x; x = nx; }
+        this.set(cx + x, cy + y, hue);
+      }
+    }
+    soup(cx, cy, r, dens, hue) { for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) if (x * x + y * y <= r * r && this.R() < dens) this.set(cx + x, cy + y, hue); }
+    addGrove(cx, cy, radius, period, hue, life = Infinity) {
+      const id = this.groves.length + 1; if (id > 250) return null;
+      const g = { id, cx, cy, radius, period, hue, phase: 0, life, cycles: 0, alive: true };
+      this.groves.push(g); this.paintZone(g, id); this.reseed(g); return g;
+    }
+    paintZone(g, v) {
+      const r1 = g.radius, r2 = g.radius + 2;
+      for (let y = -r2; y <= r2; y++) for (let x = -r2; x <= r2; x++) {
+        const d2 = x * x + y * y; if (d2 > r2 * r2) continue;
+        const i = this.idx(g.cx + x, g.cy + y);
+        this.zone[i] = v === 0 ? 0 : (d2 <= r1 * r1 ? v : 255);
+        if (v !== 0 || d2 > r1 * r1) { this.cur[i] = 0; }
+      }
+    }
+    reseed(g) { // clear the grove, plant a small symmetric seed: the rule turns any seed into fractal copies
+      const r = g.radius, R = this.R;
+      for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) if (x * x + y * y <= r * r) { const i = this.idx(g.cx + x, g.cy + y); this.cur[i] = 0; }
+      const k = 1 + ((R() * 3) | 0), h = (g.hue + g.cycles * 23) & 255;
+      for (let y = -k; y <= k; y++) for (let x = 0; x <= k; x++) if (R() < 0.45) { this.set(g.cx + x, g.cy + y, h); this.set(g.cx - x, g.cy + y, h); }
+      this.set(g.cx, g.cy, h); g.phase = 0; g.cycles++;
+    }
+    step() {
+      const { N, cur, nxt, hue, nhue, zone } = this; let pop = 0, births = 0;
+      const hs = new Uint8Array(8);
+      for (let y = 0; y < N; y++) {
+        const ym = (y + N - 1) % N * N, y0 = y * N, yp = (y + 1) % N * N;
+        for (let x = 0; x < N; x++) {
+          const xm = (x + N - 1) % N, xp = (x + 1) % N, i = y0 + x, z = zone[i];
+          if (z === 255) { nxt[i] = 0; nhue[i] = hue[i]; continue; }
+          const nb = [ym + xm, ym + x, ym + xp, y0 + xm, y0 + xp, yp + xm, yp + x, yp + xp];
+          let n = 0; for (let q = 0; q < 8; q++) n += cur[nb[q]];
+          const a = cur[i], R = z ? FRACTAL : CONWAY, v = a ? R.s[n] : R.b[n];
+          nxt[i] = v; pop += v;
+          if (v && !a) { // birth: majority parent hue, else the first parent's
+            births++; let k = 0; for (let q = 0; q < 8; q++) if (cur[nb[q]]) hs[k++] = hue[nb[q]];
+            let h = hs[0]; for (let p = 0; p < k; p++) for (let r = p + 1; r < k; r++) if (hs[p] === hs[r]) { h = hs[p]; p = k; break; }
+            nhue[i] = h;
+          } else nhue[i] = hue[i];
+        }
+      }
+      const P = this.prev; this.prev = cur; this.cur = nxt; this.nxt = P;
+      const H = this.hue; this.hue = nhue; this.nhue = H;
+      const C = this.cur, Pv = this.prev, age = this.age, heat = this.heat, osc = this.osc, td = this.trail;
+      for (let i = 0; i < C.length; i++) {
+        age[i] = C[i] ? (Pv[i] ? Math.min(255, age[i] + 1) : 0) : 0;
+        const hv = heat[i] * td; heat[i] = C[i] > hv ? C[i] : hv;
+        osc[i] += ((C[i] !== Pv[i] ? 1 : 0) - osc[i]) * 0.15;
+      }
+      for (const g of this.groves) if (g.alive && ++g.phase >= g.period) {
+        if (g.cycles >= g.life) { g.alive = false; this.paintZone(g, 0); } else this.reseed(g);
+      }
+      this.pop = pop; this.births = births; this.gen++;
+    }
+  }
+  return { Floor, LIB, CONWAY, FRACTAL, rng };
+})();
+/*LIFE-END*/
+/*APP-START*/
+(() => {
+const QS = new URLSearchParams(location.search);
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const html = document.documentElement;
+const TAU = Math.PI * 2;
+
+// ───────────────────────── worlds (presets) ─────────────────────────
+// All colours are sRGB hex, linearised once on upload.
+const SPECIES = {
+  'Slurpy':       { A: '#B000FF', B: '#F000A8', C: '#25D9FF', fuzz: 1.0, foil: 1.0, fractal: 0.0 },
+  'Gooform':      { A: '#00F0C8', B: '#E8FF65', C: '#F000A8', fuzz: 0.6, foil: 0.9, fractal: 0.0 },
+  'Crystalwing':  { A: '#D9A5FF', B: '#F4E9FF', C: '#25D9FF', fuzz: 0.3, foil: 1.9, fractal: 0.0 },
+  'Fractal Moth': { A: '#F000A8', B: '#FFCB37', C: '#B000FF', fuzz: 0.9, foil: 1.2, fractal: 2.0 },
+};
+const DEF = {
+  world: 'Fractal Gardens', species: 'Slurpy',
+  // fog (push-fog panel rows)
+  fog: 0.8, height: 1.35, wind: 0.35, trail: 10, swirl: 12, windDir: 30,
+  // light & colour
+  moonCol: '#b9a6ff', moonPow: 0.7, moonAz: 250, moonEl: 24, sky: '#1a0b33', albedo: '#e9ddff', soil: '#140824',
+  breathCol: '#F000A8', dyeK: 0.9, glowK: 1.1, exposure: 1.0,
+  // the garden
+  lifeSpeed: 8, lifeGlow: 1.3, lifeBreath: 0.22, bpm: 54, groves: 7, palShift: 0,
+  // the moth
+  flapRate: 1.0, glyph: 1.0, mothScale: 0.75, breathEvery: 7, sow: 1.0,
+  // camera / quality
+  pitch: 19, dist: 7.5, steps: 44, mapRes: 256,
+};
+const WORLDS = {
+  'Fractal Gardens': {},
+  'Jelly Sea shallows': { species: 'Gooform', moonCol: '#9fffe4', sky: '#03201f', albedo: '#c8fff1', soil: '#021412', breathCol: '#E8FF65', palShift: 0.62, wind: 0.6, height: 1.9, swirl: 18 },
+  'Crystal Courts frost': { species: 'Crystalwing', moonCol: '#dfe8ff', moonPow: 1.2, sky: '#0d1230', albedo: '#f4f6ff', soil: '#0b0c1c', breathCol: '#25D9FF', palShift: 0.78, fog: 1.1, height: 1.2, wind: 0.15, swirl: 8, lifeGlow: 1.1 },
+  'Dark Carnival': { species: 'Fractal Moth', moonCol: '#ffb36b', moonPow: 1.0, moonEl: 14, sky: '#2a0812', albedo: '#ffe2cf', soil: '#1a0507', breathCol: '#FFCB37', palShift: 0.3, swirl: 24, wind: 0.5, groves: 10 },
+};
+const P = Object.assign({}, DEF);
+const PANEL = [
+  ['Fog · source rows', [
+    { k: 'fog', label: 'Fog', min: 0, max: 1.4, step: 0.01 }, { k: 'height', label: 'Height', min: 0.5, max: 3, step: 0.01 },
+    { k: 'wind', label: 'Wind', min: 0, max: 2.5, step: 0.01 }, { k: 'trail', label: 'Trail', min: 1, max: 30, step: 0.1 },
+    { k: 'swirl', label: 'Swirl', min: 0, max: 35, step: 0.1 }]],
+  ['Garden', [
+    { k: 'lifeSpeed', label: 'gen / s', min: 1, max: 24, step: 1 }, { k: 'lifeGlow', label: 'glow', min: 0, max: 3, step: 0.01 },
+    { k: 'glowK', label: 'glow into fog', min: 0, max: 4, step: 0.01 }, { k: 'lifeBreath', label: 'heartbeat depth', min: 0, max: 0.6, step: 0.01 },
+    { k: 'bpm', label: 'heartbeat bpm', min: 10, max: 120, step: 1 }, { k: 'groves', label: 'fractal groves', min: 0, max: 14, step: 1 },
+    { k: 'palShift', label: 'palette shift', min: 0, max: 1, step: 0.01 }]],
+  ['Moth', [
+    { k: 'species', label: 'form', type: 'select', opts: Object.keys(SPECIES) },
+    { k: 'flapRate', label: 'flap', min: 0.2, max: 2.5, step: 0.01 }, { k: 'glyph', label: 'scale letters', min: 0, max: 2, step: 0.01 },
+    { k: 'breathEvery', label: 'breath every s', min: 2, max: 20, step: 0.1 }, { k: 'dyeK', label: 'breath tint', min: 0, max: 1.5, step: 0.01 },
+    { k: 'breathCol', label: 'breath colour', type: 'color' }, { k: 'sow', label: 'sowing', min: 0, max: 3, step: 0.01 }]],
+  ['Night', [
+    { k: 'moonCol', label: 'moon', type: 'color' }, { k: 'moonPow', label: 'moon power', min: 0, max: 2.5, step: 0.01 },
+    { k: 'moonEl', label: 'moon elevation°', min: 4, max: 70, step: 1 }, { k: 'moonAz', label: 'moon azimuth°', min: 0, max: 360, step: 1 },
+    { k: 'sky', label: 'sky', type: 'color' }, { k: 'albedo', label: 'fog colour', type: 'color' }, { k: 'soil', label: 'soil', type: 'color' },
+    { k: 'exposure', label: 'exposure', min: 0.3, max: 3, step: 0.01 }]],
+  ['Camera & quality', [
+    { k: 'pitch', label: 'camera pitch°', min: 8, max: 70, step: 1 }, { k: 'dist', label: 'distance', min: 4, max: 20, step: 0.1 },
+    { k: 'windDir', label: 'wind heading°', min: 0, max: 360, step: 1 },
+    { k: 'steps', label: 'fog steps', min: 16, max: 80, step: 1 }, { k: 'mapRes', label: 'fog map', type: 'select', opts: [256, 512] }]],
+];
+
+// ───────────────────────── GL ─────────────────────────
+const stage = document.getElementById('stage'), cv = document.getElementById('gl'), errEl = document.getElementById('err');
+const gl = cv.getContext('webgl2', { antialias: false, alpha: false, preserveDrawingBuffer: QS.has('pdb') });
+function fail(m) { errEl.style.display = 'block'; errEl.textContent = m; window.__moorErr = m; console.error(m); }
+if (!gl) { fail('This garden needs WebGL2.'); return; }
+const cbf = gl.getExtension('EXT_color_buffer_float') || gl.getExtension('EXT_color_buffer_half_float');
+if (!cbf) { fail('This GPU cannot render to half-float textures, which the fog needs.'); return; }
+const PAR = gl.getExtension('KHR_parallel_shader_compile');
+
+const VS = `#version 300 es
+void main(){ vec2 p = vec2((gl_VertexID<<1)&2, gl_VertexID&2); gl_Position = vec4(p*2.-1., 0., 1.); }`;
+const FHEAD = `#version 300 es
+precision highp float; precision highp int; precision highp sampler3D;
+out vec4 o;
+`;
+
+// ── fog fluid: advect, moth wading + downwash + exhaled dye ──
+const FS_ADV = FHEAD + `
+uniform sampler2D uS;
+uniform float uR, uW, uDt, uTrail, uReset;
+uniform vec2 uO, uOp, uMoth, uMothV, uBreathP, uBreathV;
+uniform float uMothR, uWade, uWash, uBreath, uBreathR;
+vec2 airOf(vec2 u, vec2 O){ vec2 b = u*uW; return b + uW*ceil((O - 0.5*uW - b)/uW); }
+void main(){
+  vec2 u = gl_FragCoord.xy/uR;
+  vec2 a = airOf(u, uO), ap = airOf(u, uOp);
+  if (uReset > 0.5 || any(greaterThan(abs(a - ap), vec2(0.5*uW)))) { o = vec4(0., 0., 1., 0.); return; }
+  vec4 s = texture(uS, u);
+  vec4 adv = texture(uS, (a - s.xy*uDt)/uW);
+  vec2 vel = adv.xy*exp(-uDt/1.6);
+  float d = mix(adv.z, 1., 1. - exp(-uDt/uTrail));
+  float dye = adv.w*exp(-uDt/14.);
+  // the moth's body, when it wades: clears, drags the air, heaps ahead and beside
+  vec2 rel = a - uMoth; float rl = length(rel), r = rl/uMothR, spd = length(uMothV);
+  float foot = (1. - smoothstep(0.5, 1.4, r))*uWade;
+  vel = mix(vel, uMothV, foot*min(1., uDt*14.));
+  float c = 1.5;
+  d = mix(d, 0., (1. - smoothstep(0.5*c, c, r))*min(1., uDt*10.)*uWade);
+  if (spd > 0.05 && r > c*0.85 && r < 1.9*c) {
+    float side = dot(rel/max(rl, 1e-4), uMothV/spd);
+    d += 0.14*spd*uDt*smoothstep(-0.25, 0.15, side)*(1. - smoothstep(0., 1., abs(r - 1.4*c)/(0.5*c)))*uWade;
+  }
+  // wingbeat downwash: air blown outward under the wings
+  vel += rel/max(rl, 1e-3)*uWash*exp(-rl*rl/(uMothR*uMothR*1.6))*uDt*7.;
+  // exhaled breath: fog, dye and a jet
+  vec2 br = a - uBreathP; float bk = exp(-dot(br, br)/(uBreathR*uBreathR));
+  d += uBreath*bk*uDt*2.2; dye += uBreath*bk*uDt*1.8; vel += uBreathV*bk*uBreath*uDt*5.;
+  o = vec4(vel, clamp(d, 0., 1.9), clamp(dye, 0., 1.5));
+}`;
+const FS_CURL = FHEAD + `
+uniform sampler2D uS; uniform float uR, uH;
+void main(){ vec2 u = gl_FragCoord.xy/uR, e = vec2(1./uR, 0.);
+  float c = (texture(uS, u + e).y - texture(uS, u - e).y) - (texture(uS, u + e.yx).x - texture(uS, u - e.yx).x);
+  o = vec4(c/(2.*uH), 0., 0., 0.); }`;
+const FS_VORT = FHEAD + `
+uniform sampler2D uS, uC; uniform float uR, uH, uEps, uDt;
+void main(){ vec2 u = gl_FragCoord.xy/uR, e = vec2(1./uR, 0.);
+  vec2 g = vec2(abs(texture(uC, u + e).x) - abs(texture(uC, u - e).x), abs(texture(uC, u + e.yx).x) - abs(texture(uC, u - e.yx).x));
+  g /= length(g) + 1e-5;
+  vec4 s = texture(uS, u); s.xy += uEps*uH*vec2(g.y, -g.x)*texture(uC, u).x*uDt; o = s; }`;
+const FS_DIV = FHEAD + `
+uniform sampler2D uS; uniform float uR, uH;
+void main(){ vec2 u = gl_FragCoord.xy/uR, e = vec2(1./uR, 0.);
+  o = vec4(((texture(uS, u + e).x - texture(uS, u - e).x) + (texture(uS, u + e.yx).y - texture(uS, u - e.yx).y))/(2.*uH), 0., 0., 0.); }`;
+const FS_JAC = FHEAD + `
+uniform sampler2D uP, uD; uniform float uR, uH;
+void main(){ vec2 u = gl_FragCoord.xy/uR, e = vec2(1./uR, 0.);
+  float p = texture(uP, u + e).x + texture(uP, u - e).x + texture(uP, u + e.yx).x + texture(uP, u - e.yx).x;
+  o = vec4((p - texture(uD, u).x*uH*uH)*0.25, 0., 0., 0.); }`;
+const FS_SUB = FHEAD + `
+uniform sampler2D uS, uP; uniform float uR, uH;
+void main(){ vec2 u = gl_FragCoord.xy/uR, e = vec2(1./uR, 0.);
+  vec4 s = texture(uS, u);
+  s.xy -= vec2(texture(uP, u + e).x - texture(uP, u - e).x, texture(uP, u + e.yx).x - texture(uP, u - e.yx).x)/(2.*uH);
+  o = s; }`;
+
+// shared camera ray (both passes must agree pixel for pixel)
+const RAY = `
+uniform vec2 uRes, uTan; uniform vec3 uCam, uFwd, uRight, uUp;
+vec3 camRay(vec2 frag){ vec2 ndc = frag/uRes*2. - 1.; return normalize(uFwd + uRight*ndc.x*uTan.x + uUp*ndc.y*uTan.y); }
+`;
+
+// ── the moth (oracle-creature 03), rendered to a colour + distance target ──
+const FS_MOTH = FHEAD + RAY + `
+uniform float uTime, uScale;
+uniform vec3  uCenter; uniform mat3 uBody;
+uniform float uFlap, uBend;
+uniform vec4  uPoke[8]; uniform float uAmp[8];
+uniform vec3  uLight, uLightC, uMoon, uMoonC;
+uniform vec2  uLook;
+uniform float uRoll, uFly, uHue, uGlow;
+uniform float uFoil, uWaveSpeed, uGlyph, uSpiral, uFuzz, uFractal, uIdle;
+uniform vec3  uColA, uColB, uColC;
+uniform sampler2D uAtlas; uniform float uGlyphN;
+#define TAU 6.2831853
+const vec3 HINGE = vec3(0.1, 0.4, 0.0);
+const vec3 EYEC = vec3(0.15, 0.86, 0.1);
+const float ER = 0.15;
+mat2 rot(float a){ float c = cos(a), s = sin(a); return mat2(c, s, -s, c); }
+vec3 hueRot(vec3 c, float a){ const vec3 k = vec3(0.57735); float ca = cos(a); return c*ca + cross(k, c)*sin(a) + k*dot(k, c)*(1.0 - ca); }
+float hash21(vec2 p){ p = fract(p*vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x*p.y); }
+float smin(float a, float b, float k){ float h = max(k - abs(a - b), 0.0)/k; return min(a, b) - h*h*k*0.25; }
+float sdEll(vec3 p, vec3 r){ float k0 = length(p/r), k1 = length(p/(r*r)); return k0*(k0 - 1.0)/max(k1, 1e-5); }
+float sdE2(vec2 p, vec2 r){ float k0 = length(p/r), k1 = length(p/(r*r)); return k0*(k0 - 1.0)/max(k1, 1e-5); }
+float sdSeg(vec3 p, vec3 a, vec3 b){ vec3 pa = p - a, ba = b - a; float h = clamp(dot(pa, ba)/dot(ba, ba), 0., 1.); return length(pa - ba*h); }
+vec3 toLocal(vec3 p){ return transpose(uBody)*(p - uCenter)/uScale; }
+vec3 wingFrame(vec3 a){ vec3 w = a - HINGE; w.xz = rot(uFlap)*w.xz; return w; }
+float wing2D(vec2 u){
+  vec2 f = rot(-0.5)*(u - vec2(0.78, 0.36));
+  float fw = sdE2(f, vec2(0.88, 0.40));
+  vec2 h = rot(0.55)*(u - vec2(0.5, -0.36));
+  float hw = sdE2(h, vec2(0.58, 0.44)) + 0.014*sin(atan(h.y, h.x)*14.0);
+  vec2 t = rot(-0.3)*(u - vec2(0.58, -0.92));
+  float tw = sdE2(t, vec2(0.10, 0.24));
+  return max(smin(smin(fw, hw, 0.07), tw, 0.1), -u.x - 0.02);
+}
+float wingWaves(vec2 u, float side, out float trail){
+  float d = 0.0; trail = 0.0;
+  for (int i = 0; i < 8; i++){
+    float age = uTime - uPoke[i].w;
+    if (age < 0.0 || age > 4.0) continue;
+    float s = uPoke[i].z;
+    if (s != 0.0 && s != side) continue;
+    float x = length(u - uPoke[i].xy) - age*uWaveSpeed;
+    float env = uAmp[i]*exp(-age*1.3);
+    d += env*exp(-x*x/0.02);
+    trail += env*smoothstep(-0.9, -0.04, x)*(1.0 - smoothstep(-0.04, 0.08, x))*exp(-age*0.5);
+  }
+  return d;
+}
+vec2 map(vec3 p){
+  vec3 q = toLocal(p);
+  float side = q.x < 0.0 ? -1.0 : 1.0;
+  vec3 a = vec3(abs(q.x), q.y, q.z);
+  vec3 w = wingFrame(a);
+  float tr; float wv = wingWaves(w.xy, side, tr);
+  float wz = w.z - (0.05*w.x*w.x + uBend*w.x*w.x*0.18 + wv*0.07 + 0.012*sin(w.x*6.0 + uTime*2.0)*uIdle);
+  float wd = wing2D(w.xy);
+  vec2 e = vec2(max(wd, 0.0), max(abs(wz) - 0.009, 0.0));
+  float dW = length(e) + min(max(wd, abs(wz) - 0.009), 0.0) - 0.004;
+  vec3 qb = q - vec3(0.0, -0.38, 0.0);
+  qb.x -= sin(uTime*1.3)*0.09*min(qb.y, 0.0)*min(qb.y, 0.0);
+  float abd = sdEll(qb, vec3(0.17, 0.62, 0.16)) - 0.012*(1.0 - abs(sin(qb.y*11.0)));
+  float tho = sdEll(q - vec3(0.0, 0.42, 0.0), vec3(0.2, 0.27, 0.19));
+  float head = length(q - vec3(0.0, 0.8, 0.03)) - 0.17;
+  float bd = smin(smin(head, tho, 0.07), abd, 0.08);
+  bd -= uFuzz*0.012*sin(q.x*61.0)*sin(q.y*57.0)*sin(q.z*59.0);
+  // feathered antennae (new in this composite): two curved shafts sweeping forward and up
+  float sway = 0.05*sin(uTime*2.3);
+  float ant = min(sdSeg(a, vec3(0.06, 0.93, 0.08), vec3(0.2, 1.2, 0.2 + sway)), sdSeg(a, vec3(0.2, 1.2, 0.2 + sway), vec3(0.42, 1.38, 0.16 + sway*1.5))) - 0.014;
+  ant -= 0.012*smoothstep(1.0, 1.35, a.y)*abs(sin(a.y*90.0));
+  bd = min(bd, ant);
+  float ed = length(a - EYEC) - ER;
+  vec2 r = vec2(dW, 0.0);
+  if (bd < r.x) r = vec2(bd, 1.0);
+  if (ed < r.x) r = vec2(ed, 2.0);
+  return vec2(r.x*0.6*uScale, r.y);
+}
+vec3 calcNormal(vec3 p){
+  const vec2 k = vec2(1.0, -1.0); float e = 0.0012*uScale;
+  return normalize(k.xyy*map(p + k.xyy*e).x + k.yyx*map(p + k.yyx*e).x + k.yxy*map(p + k.yxy*e).x + k.xxx*map(p + k.xxx*e).x);
+}
+vec3 gut(vec3 p, vec3 d, float h){
+  vec3 ad = abs(d);
+  int cax = (ad.x >= ad.y && ad.x >= ad.z) ? 0 : (ad.y >= ad.z ? 1 : 2);
+  vec3 acc = vec3(0.0); float att = 1.0, travel = 0.0;
+  float px = uTan.y*2.0/uRes.y;
+  const float W0 = 0.008;
+  for (int b = 0; b < 10; b++){
+    vec3 sd = vec3(d.x >= 0.0 ? 1.0 : -1.0, d.y >= 0.0 ? 1.0 : -1.0, d.z >= 0.0 ? 1.0 : -1.0);
+    vec3 tt = (sd*h - p)/max(abs(d), vec3(1e-5))*sd;
+    float T = max(min(tt.x, min(tt.y, tt.z)), 0.0);
+    int ax = (tt.x <= tt.y && tt.x <= tt.z) ? 0 : (tt.y <= tt.z ? 1 : 2);
+    vec3 col = mix(uColA, uColB, (b % 2 == 1) ? 0.75 : 0.0);
+    float g = 0.0;
+    for (int a = 0; a < 3; a++){
+      vec2 q0; vec2 dq; float pa; float da;
+      if (a == 0){ q0 = p.yz; dq = d.yz; pa = p.x; da = d.x; }
+      else if (a == 1){ q0 = p.xz; dq = d.xz; pa = p.y; da = d.y; }
+      else { q0 = p.xy; dq = d.xy; pa = p.z; da = d.z; }
+      float den = max(dot(dq, dq), 1e-6);
+      for (int m = 0; m < 4; m++){
+        vec2 c = vec2((m % 2 == 0) ? h : -h, (m < 2) ? h : -h);
+        float t = clamp(dot(c - q0, dq)/den, 0.0, T);
+        vec2 df = q0 + dq*t - c;
+        float d2 = dot(df, df);
+        float w = W0 + (travel + t)*px*3.0;
+        float s = pa + da*t;
+        float wave = 0.5 + 0.5*sin(s*3.0 - uTime*2.6 + c.x*5.1 + c.y*8.3 + float(a)*2.0);
+        g += (0.45 + 2.2*pow(wave, 12.0))*(exp(-d2/(w*w))*(W0/w) + 0.035*0.0007/(d2 + 0.0007));
+      }
+    }
+    acc += col*g*att;
+    p += d*T; travel += T;
+    float tw = (ax == cax) ? uSpiral*0.07 : 0.0;
+    if (ax == 0){ d.x = -d.x; p.yz = rot(tw)*p.yz; d.yz = rot(tw)*d.yz; }
+    else if (ax == 1){ d.y = -d.y; p.xz = rot(tw)*p.xz; d.xz = rot(tw)*d.xz; }
+    else { d.z = -d.z; p.xy = rot(tw)*p.xy; d.xy = rot(tw)*d.xy; }
+    p = clamp(p, vec3(-h*0.9999), vec3(h*0.9999));
+    att *= (ax == cax) ? 0.86 : 0.3;
+    if (att < 0.015) break;
+  }
+  return acc*2.4;
+}
+vec3 spot(vec2 d, float R){
+  float r = length(d);
+  return vec3(smoothstep(R*0.3, R*0.24, r), smoothstep(R*0.62, R*0.55, r)*smoothstep(R*0.26, R*0.32, r), smoothstep(R, R*0.9, r)*smoothstep(R*0.58, R*0.66, r));
+}
+vec3 wingPattern(vec2 u, float wd){
+  float L = length(u), an = atan(u.y, u.x + 0.05);
+  vec3 col = mix(uColA*0.22, uColA*0.85, smoothstep(0.0, 1.3, L));
+  float vein = exp(-pow(sin(an*6.0 + 0.3)*L*10.0, 2.0))*smoothstep(0.05, 0.3, L);
+  float band = smoothstep(0.03, 0.0, abs(wd + 0.15 + 0.025*sin(an*40.0)));
+  vec3 s = spot(u - vec2(1.0, 0.48), 0.25) + spot(u - vec2(0.6, -0.44), 0.19);
+  if (uFractal > 0.01){
+    for (int k = 0; k < 6; k++){
+      float a = float(k)*TAU/6.0 + uTime*0.08;
+      vec2 c = vec2(1.0, 0.48) + 0.17*vec2(cos(a), sin(a));
+      s += spot(u - c, 0.055)*min(uFractal, 1.0);
+      if (uFractal > 1.01){
+        for (int j = 0; j < 4; j++){ float b = float(j)*TAU/4.0 - uTime*0.15; s += spot(u - c - 0.035*vec2(cos(b), sin(b)), 0.014)*(uFractal - 1.0); }
+      }
+    }
+  }
+  s = clamp(s, 0.0, 1.0);
+  col = mix(col, uColB, s.z*0.9);
+  col = mix(col, uColC, s.y);
+  col = mix(col, vec3(0.01, 0.005, 0.02), s.x);
+  col = mix(col, uColB*1.1, vein*0.45);
+  col = mix(col, uColC*0.9, band*0.7);
+  col *= mix(1.0, 0.35, smoothstep(-0.07, -0.015, wd));
+  return col;
+}
+void main(){
+  vec3 ro = uCam, rd = camRay(gl_FragCoord.xy);
+  vec3 oc = ro - uCenter;
+  float R = 1.95*uScale, bb = dot(oc, rd), cc = dot(oc, oc) - R*R, disc = bb*bb - cc;
+  o = vec4(0.);
+  if (disc <= 0.0) return;
+  float t = max(0.0, -bb - sqrt(disc)), tmax = -bb + sqrt(disc);
+  bool hit = false;
+  for (int i = 0; i < 100; i++){
+    float d = map(ro + rd*t).x;
+    if (d < 0.0008*t) { hit = true; break; }
+    t += d;
+    if (t > tmax) break;
+  }
+  if (!hit) return;
+  vec3 p = ro + rd*t;
+  float id = map(p).y;
+  vec3 n = calcNormal(p);
+  if (dot(n, rd) > 0.0) n = -n;
+  vec3 q = toLocal(p);
+  float side = q.x < 0.0 ? -1.0 : 1.0;
+  vec3 a = vec3(abs(q.x), q.y, q.z);
+  vec3 V = -rd, L = normalize(uLight - p);
+  float ld = length(uLight - p), att = 1.0/(1.0 + ld*ld*0.25);
+  vec3 LC = uLightC*att;                                   // the garden's glow, from below
+  vec3 Lm = uMoon;
+  float difM = max(dot(n, Lm), 0.0)*0.6 + 0.15, dif = abs(dot(n, L));
+  float NdV = clamp(dot(n, V), 0.0, 1.0), NdH = max(dot(n, normalize(L + V)), 0.0);
+  float fres = pow(1.0 - NdV, 2.0);
+  float cosT = sqrt(max(1.0 - (1.0 - NdV*NdV)/2.1025, 0.0));
+  vec3 gd = normalize(cross(n, vec3(0.0, 1.0, 0.0)) + vec3(1e-4));
+  vec3 col;
+  float lumL = dot(LC, vec3(0.33));
+  if (id < 0.5){
+    vec3 w = wingFrame(a);
+    vec2 u = w.xy;
+    float wd = wing2D(u), trail; wingWaves(u, side, trail);
+    vec3 pat = wingPattern(u, wd);
+    float thick = 320.0 + 200.0*sin(u.x*4.0 + uTime*0.2)*sin(u.y*5.0 - u.x*2.0) + 600.0*trail;
+    float opd = 2.0*1.45*thick*cosT + uFoil*650.0*dot(V + L, gd);
+    vec3 film = pow(0.5 + 0.5*cos(TAU*opd/vec3(650.0, 532.0, 450.0)), vec3(1.4));
+    vec2 g = u/0.042; g.x += 0.5*mod(floor(g.y), 2.0);
+    vec2 cell = floor(g), f = fract(g);
+    float lum = dot(pat, vec3(0.3, 0.5, 0.2));
+    float churn = floor(uTime*(0.6 + 12.0*trail) + hash21(cell)*7.0);
+    float hs = hash21(cell + churn);
+    float idx = floor(clamp(0.12 + lum*1.2 + trail*0.4 + (hs - 0.5)*0.22, 0.0, 0.999)*uGlyphN);
+    float gA = texture(uAtlas, vec2((idx + 0.08 + f.x*0.84)/uGlyphN, 0.06 + f.y*0.88)).a;
+    vec3 scales = pat*(0.4 + 1.25*gA*uGlyph) + (film*0.8 + uColC*0.4)*gA*trail*1.6;
+    float trans = pow(max(dot(rd, L), 0.0), 3.0);
+    col = scales*(difM*uMoonC*1.6 + dif*LC*1.6)*1.3;
+    col += film*(0.08 + 0.9*fres + 0.7*pow(NdH, 24.0)*(0.3 + lumL))*uFoil*(0.5 + trail);
+    col += pat*LC*trans*2.4 + uColB*smoothstep(-0.012, 0.0, wd)*0.22;
+  } else if (id < 1.5){
+    float stripe = (0.5 + 0.5*sin(q.y*11.0 + 1.2))*step(q.y, 0.12);
+    vec3 base = mix(uColA*0.16, uColA*0.55, stripe);
+    base = mix(base, uColB*0.45, 0.45*smoothstep(0.55, 0.62, q.y)*smoothstep(0.75, 0.68, q.y));
+    float sheen = pow(1.0 - NdV, 1.5);
+    float opd = 2.0*1.45*380.0*cosT + uFoil*500.0*dot(V + L, gd);
+    vec3 film = pow(0.5 + 0.5*cos(TAU*opd/vec3(650.0, 532.0, 450.0)), vec3(1.4));
+    col = base*(difM*uMoonC*1.6 + dif*LC*1.4)*1.6 + sheen*mix(uColB, uColA, 0.4)*(0.35 + 0.8*lumL) + film*sheen*0.35*uFoil;
+    col += vec3(hash21(floor(q.xy*220.0))*0.05)*uFuzz;
+  } else {
+    vec2 lookS = vec2(uLook.x*side, uLook.y);
+    vec3 ev = normalize(a - EYEC);
+    vec2 euv = vec2(atan(ev.x, ev.z), asin(clamp(ev.y, -1.0, 1.0)))*11.0;
+    const vec2 hs2 = vec2(1.0, 1.7320508);
+    vec4 hC = floor(vec4(euv, euv - vec2(0.5, 1.0))/hs2.xyxy) + 0.5;
+    vec4 hh = vec4(euv - hC.xy*hs2, euv - (hC.zw + 0.5)*hs2);
+    vec2 hx = dot(hh.xy, hh.xy) < dot(hh.zw, hh.zw) ? hh.xy : hh.zw;
+    vec2 fc = (euv - hx)/11.0;
+    vec2 ah = abs(hx);
+    float edge = smoothstep(0.4, 0.5, max(dot(ah, hs2*0.5), ah.x));
+    vec2 dir2 = rot(uRoll)*(fc*1.7 + hx*0.22) - lookS*0.3;
+    vec3 dl = normalize(vec3(dir2, -1.0));
+    float hb = 0.4;
+    vec3 pl = vec3(lookS*0.05, hb*(1.0 - 2.0*fract(uFly))*0.999);
+    vec3 inv = 1.0/dl;
+    vec3 t0s = (-vec3(hb) - pl)*inv, t1s = (vec3(hb) - pl)*inv;
+    vec3 tmin = min(t0s, t1s), tmx = max(t0s, t1s);
+    float tn = max(max(tmin.x, tmin.y), tmin.z), tf = min(min(tmx.x, tmx.y), tmx.z);
+    vec3 inside = uColA*0.05;
+    if (tf > max(tn, 0.0)) inside += gut(clamp(pl + dl*max(tn, 0.0), vec3(-hb*0.9999), vec3(hb*0.9999)), dl, hb)*exp(-max(tn, 0.0)*0.8);
+    inside = hueRot(inside, uHue)*(0.7 + 0.6*uGlow);
+    vec2 pp = fc - vec2(lookS.x*0.35, lookS.y*0.3);
+    inside *= 1.0 - 0.75*exp(-dot(pp, pp)/0.012);
+    col = inside*(1.0 - edge) + uColA*0.12*edge;
+    col += uMoonC*pow(max(dot(n, normalize(Lm + V)), 0.0), 200.0)*1.2 + LC*pow(NdH, 90.0)*0.8;
+    col += uColB*fres*0.25;
+  }
+  o = vec4(col, t);                                        // linear colour + hit distance
+}`;
+
+// ── the world pass: endless Life floor, fog march, moth composited at its depth ──
+const FS_RENDER = FHEAD + RAY + `
+uniform sampler2D uS, uMothT, uLA, uLC, uPal; uniform sampler3D uN;
+uniform vec2 uAirOff, uWin, uWdir, uMothXZ, uLure;
+uniform vec3 uMoon, uMoonC, uSky, uAlbedo, uSoil, uDyeC, uMothC, uLureP, uLureC;
+uniform float uT, uFrame, uW, uMR, uHeight, uFogK, uSteps, uExposure, uSlab;
+uniform float uLN, uCell, uLF, uLifeGlow, uGlowK, uLBreath, uBpm, uDyeK, uMothR, uPalShift;
+#define TAU 6.2831853
+float hash21(vec2 p){ p = fract(p*vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x*p.y); }
+vec4 mapAt(vec2 xz){
+  vec2 g = (xz - uAirOff)/uW*uMR + 0.5, i = floor(g), f = fract(g);
+  f = f*f*f*(f*(f*6. - 15.) + 10.);
+  vec4 m = texture(uS, (i + f - 0.5)/uMR);
+  vec2 q = abs(xz - uWin);
+  float k = 1. - smoothstep(0.5*uW - 6., 0.5*uW - 1., max(q.x, q.y));
+  return vec4(m.xy*k, mix(1., m.z, k), m.w*k);
+}
+float density(vec3 p, out float top, out float dye){
+  vec4 m = mapAt(p.xz);
+  vec2 air = p.xz - uAirOff - m.xy*0.35;
+  vec4 broad = texture(uN, vec3(air.x*0.7, uT*0.004, air.y*0.7)/18.);
+  vec2 s = vec2(dot(air, uWdir)*0.6, dot(air, vec2(-uWdir.y, uWdir.x)));
+  vec3 q = vec3(s.x, p.y*1.3 - uT*0.18, s.y)/18.;
+  q.xz += (broad.gb - 0.5)*0.9;
+  float n = texture(uN, q).r, fine = texture(uN, q*3.1 + vec3(0., uT*0.012, 0.)).r;
+  top = uHeight*m.z*(0.55 + 0.7*broad.a);
+  dye = m.w;
+  float shape = (top - p.y)/0.85 + (n - 0.5)*1.6 + (fine - 0.5)*0.7;
+  return clamp(shape, 0., 1.)*smoothstep(0.2, 0.8, 0.8*n + 0.2*fine)*clamp(m.z*3., 0., 1.);
+}
+vec3 gardenGlow(vec2 xz, float lod){ vec4 g = textureLod(uLC, xz/(uCell*uLN), lod); return g.rgb; }
+float mothShadow(vec3 p){
+  vec3 oc = uMothC - p; float b = dot(oc, uMoon);
+  if (b < 0.) return 1.;
+  return mix(0.35, 1., smoothstep(uMothR*0.3, uMothR*(1.1 + b*0.15), length(oc - uMoon*b)));
+}
+vec3 lightAt(vec3 p, float top, vec3 rd){
+  float depth = max(top - p.y, 0.), t2, d2y;
+  float d2 = density(p + uMoon*0.4, t2, d2y);
+  float tau = (d2*0.4 + depth*0.75/max(uMoon.y, 0.25))*1.5*uFogK;
+  float beam = 0.7*exp(-tau) + 0.3*exp(-tau/4.);
+  float g = 0.55, cs = dot(uMoon, rd);
+  float hg = (1. - g*g)/pow(1. + g*g - 2.*g*cs, 1.5);
+  vec3 L = uMoonC*beam*(0.5*hg + 0.5)*mothShadow(p);
+  L += uSky*(0.3 + 0.8*exp(-depth*1.5));
+  L += gardenGlow(p.xz, 2.6)*uGlowK*exp(-p.y*1.15);         // the colonies light the fog from below
+  vec3 dl = uLureP - p; L += uLureC/(0.12 + dot(dl, dl)*3.);
+  return L;
+}
+vec3 palette(float h){ return texture(uPal, vec2(fract(h + uPalShift), 0.5)).rgb; }
+vec3 sky(vec3 rd){
+  float h = clamp(rd.y*2.5 + 0.2, 0., 1.);
+  vec3 col = mix(uAlbedo*uMoonC*0.35 + uSky*2.5, uSky*0.6, h);
+  vec2 sg = vec2(atan(rd.x, -rd.z), rd.y)*150.0; vec2 sc = floor(sg); float sh = hash21(sc);
+  if (sh > 0.991 && rd.y > 0.02) col += vec3(0.95, 0.9, 1.0)*smoothstep(0.35, 0.0, length(fract(sg) - 0.5))*(0.45 + 0.55*sin(uT*2.0 + sh*80.0))*0.8;
+  for (int k = 0; k < 3; k++){                                // the three moons, waxing · full · waning
+    float az = radians(-14. + 14.*float(k)) + atan(uMoon.x, -uMoon.z);
+    vec3 md = normalize(vec3(sin(az), 0.06 + (k == 1 ? 0.025 : 0.0), -cos(az)));
+    float r = acos(clamp(dot(rd, md), -1.0, 1.0)), R = k == 1 ? 0.04 : 0.03;
+    float disc = smoothstep(R, R*0.9, r), cut = 0.0;
+    if (k != 1){ vec3 od = normalize(md + vec3(cos(az), 0., sin(az))*(k == 0 ? -0.02 : 0.02)); cut = smoothstep(R*1.02, R*0.92, acos(clamp(dot(rd, od), -1.0, 1.0))); }
+    col = mix(col, vec3(1.0, 0.96, 0.93)*1.4, clamp(disc - cut, 0.0, 1.0));
+    col += uMoonC*(k == 1 ? 0.25 : 0.1)*exp(-r*r*300.0);
+  }
+  return col;
+}
+// the living floor: cells breathe between generations; a heartbeat rings outward from the moth
+vec3 lifeFloor(vec3 p, vec2 dcx, vec2 dcy, vec3 rd){
+  vec2 c = p.xz/uCell;
+  ivec2 ci = ivec2(floor(c)), N = ivec2(int(uLN));
+  float e = smoothstep(0., 1., uLF);
+  float field = 0., wsum = 0.; vec3 csum = vec3(0.);
+  float beat = uT*uBpm/60.;
+  for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++){
+    ivec2 cc = ci + ivec2(i, j);
+    ivec2 w = cc - N*ivec2(floor(vec2(cc)/vec2(N)));
+    vec4 a = texelFetch(uLA, w, 0);
+    if (a.r + a.g < 0.5) continue;
+    float av = mix(a.g, a.r, e);
+    vec2 cw = (vec2(cc) + 0.5)*uCell;
+    float ph = fract(beat - length(cw - uMothXZ)*0.09);
+    float hb = exp(-pow((ph - 0.1)/0.06, 2.)) + 0.6*exp(-pow((ph - 0.3)/0.07, 2.));    // lub-dub
+    float s = av*(1. + uLBreath*(hb*1.6 - 0.35));
+    vec2 d = vec2(cc) + 0.5 - c;
+    float k = s*exp(-dot(d, d)/0.33);
+    field += k;
+    float young = exp(-a.b*255./6.);
+    vec3 col = palette(a.a)*(0.8 + 1.2*hb*uLBreath) + palette(a.a + 0.08)*young*0.5;
+    csum += col*k; wsum += k;
+  }
+  float fw = max(fwidth(field), 1e-3);
+  float m = smoothstep(0.45 - fw, 0.45 + fw, field);
+  vec3 cellC = wsum > 0. ? csum/wsum : vec3(0.);
+  float lod = smoothstep(0.35, 1.2, max(length(dcx), length(dcy)));      // far away: cells smaller than a pixel
+  vec3 halo = gardenGlow(p.xz, 0.0), soft = gardenGlow(p.xz, 2.0);
+  vec3 em = mix(cellC*m, halo*0.5, lod)*uLifeGlow*0.9 + soft*0.25*uLifeGlow;
+  // soil: faint moonlit tilth, glitter, the moth's shadow
+  float top; float dy; density(vec3(p.x, 0.05, p.z), top, dy);
+  float dim = exp(-top*0.45*1.5*uFogK/max(uMoon.y, 0.1));
+  vec3 soil = uSoil*(uMoonC*uMoon.y*dim*2.2*mothShadow(p) + uSky*1.6 + soft*uGlowK*0.6);
+  float gh = hash21(floor(p.xz*14.0));
+  soil += uMoonC*step(0.9975, gh)*(0.5 + 0.5*sin(uT*3.0 + gh*90.0))*0.6*dim;
+  vec3 dl = uLureP - p; float dd = dot(dl, dl); soil += uSoil*uLureC*12.*max(dl.y, 0.)*inversesqrt(dd)/(0.12 + dd*3.);
+  return soil + em;
+}
+vec3 aces(vec3 x){ return clamp((x*(2.51*x + 0.03))/(x*(2.43*x + 0.59) + 0.14), 0., 1.); }
+float ign(vec2 f){ return fract(52.9829189*fract(dot(f, vec2(0.06711056, 0.00583715)))); }
+
+void main(){
+  vec2 frag = gl_FragCoord.xy;
+  vec3 ro = uCam, rd = camRay(frag);
+  float tF = rd.y < -1e-4 ? -ro.y/rd.y : 1e6;
+  vec3 fp = ro + rd*min(tF, 600.);
+  vec2 cl = fp.xz/uCell, dcx = dFdx(cl), dcy = dFdy(cl);
+  vec4 mt = texelFetch(uMothT, ivec2(frag), 0);
+  float tM = mt.a > 0. ? mt.a : 1e6;
+  float tHit = min(tF, tM);
+  // lure wisp: closest approach along this ray
+  float tcw = max(dot(uLureP - ro, rd), 0.), Tw = 1.;
+  vec3 scat = vec3(0.); float T = 1.;
+  float t0 = 0., t1 = min(tHit, 46.);
+  if (ro.y > uSlab) { if (rd.y >= 0.) t1 = -1.; else t0 = (uSlab - ro.y)/rd.y; }
+  else if (rd.y > 0.) t1 = min(t1, (uSlab - ro.y)/rd.y);
+  if (t1 > t0) {
+    float dt = (t1 - t0)/uSteps, j = fract(ign(frag) + uFrame*0.618);
+    for (int i = 0; i < 80; i++) {
+      if (float(i) >= uSteps) break;
+      float t = t0 + (float(i) + j)*dt; vec3 p = ro + rd*t;
+      float top, dye, dens = density(p, top, dye);
+      if (dens > 0.002) {
+        float sig = dens*1.5*uFogK, a = exp(-sig*dt);
+        vec3 alb = mix(uAlbedo, uDyeC, clamp(dye*uDyeK, 0., 1.));
+        scat += T*(1. - a)*(lightAt(p, top, rd)*alb + uDyeC*dye*uDyeK*0.25);   // the breath glows a little
+        T *= a;
+      }
+      if (t < tcw) Tw = T;
+      if (T < 0.01) break;
+    }
+  }
+  vec3 surf;
+  if (tM < tF) surf = mt.rgb;
+  else if (tF < 1e5) surf = lifeFloor(fp, dcx, dcy, rd);
+  else surf = sky(rd);
+  vec3 col = scat + T*surf;
+  float far = smoothstep(26., 46., min(tHit, 1e4));
+  vec3 farFog = (uMoonC*0.55 + uSky*3.)*uAlbedo + gardenGlow(ro.xz + normalize(rd.xz + 1e-4)*18., 5.)*uGlowK*0.2;   // anchored near the camera: no far-floor aliasing
+  if (tF < 1e5 && tM >= tF) col = mix(col, farFog, far);
+  if (tF > 1e5) col = mix(farFog*T + scat, col, smoothstep(0.0, 0.08, rd.y));
+  vec3 c = ro + rd*tcw - uLureP; float d2 = dot(c, c);
+  col += uLureC*(exp(-d2/0.0016)*3. + 0.05/(0.03 + d2))*Tw*(tM < tcw ? 0. : 1.);
+  col = aces(col*uExposure);
+  col = pow(col, vec3(1./2.2)) + (fract(sin(dot(frag, vec2(12.9898, 78.233)) + uFrame)*43758.5453) - 0.5)/255.;
+  o = vec4(col, 1.);
+}`;
+
+// ───────────────────────── programs ─────────────────────────
+function compile(type, src) { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; }
+const vsh = compile(gl.VERTEX_SHADER, VS), progs = {}, fshs = {};
+const SRC = { adv: FS_ADV, curl: FS_CURL, vort: FS_VORT, div: FS_DIV, jac: FS_JAC, sub: FS_SUB, moth: FS_MOTH, render: FS_RENDER };
+for (const k in SRC) { const f = compile(gl.FRAGMENT_SHADER, SRC[k]); fshs[k] = f; const p = gl.createProgram(); gl.attachShader(p, vsh); gl.attachShader(p, f); gl.linkProgram(p); progs[k] = p; }
+let ready = false;
+function checkReady() {
+  if (PAR && !Object.values(progs).every(p => gl.getProgramParameter(p, PAR.COMPLETION_STATUS_KHR))) { requestAnimationFrame(checkReady); return; }
+  for (const k in progs) if (!gl.getProgramParameter(progs[k], gl.LINK_STATUS)) return fail(k + ': ' + (gl.getShaderInfoLog(fshs[k]) || gl.getProgramInfoLog(progs[k])));
+  ready = true;
+}
+const ulocs = new Map();
+function U(p, n) { let m = ulocs.get(p); if (!m) ulocs.set(p, m = {}); return n in m ? m[n] : (m[n] = gl.getUniformLocation(p, n)); }
+const u1 = (p, n, v) => gl.uniform1f(U(p, n), v), u2 = (p, n, a, b) => gl.uniform2f(U(p, n), a, b), u3 = (p, n, v) => gl.uniform3fv(U(p, n), v), ui = (p, n, v) => gl.uniform1i(U(p, n), v);
+const vao = gl.createVertexArray();
+function bindTex(unit, tex, kind = gl.TEXTURE_2D) { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(kind, tex); }
+function pass(prog, out, set) { gl.useProgram(prog); gl.bindFramebuffer(gl.FRAMEBUFFER, out ? out.f : null); set(prog); gl.drawArrays(gl.TRIANGLES, 0, 3); }
+function tex2D(w, h, ifmt, fmt, type, filter, wrap, data = null) {
+  const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+  gl.texImage2D(gl.TEXTURE_2D, 0, ifmt, w, h, 0, fmt, type, data);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter === gl.LINEAR_MIPMAP_LINEAR ? gl.LINEAR : filter);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap);
+  return t;
+}
+function fbo(t) { const f = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, f); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0); return f; }
+const lin = h => [1, 3, 5].map(i => { const c = parseInt(h.substr(i, 2), 16) / 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); });
+
+// noise (push-fog bake)
+let noiseTex;
+function bakeNoise() {
+  const { data, N } = FOGNOISE.bake(64, 7);
+  noiseTex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_3D, noiseTex);
+  gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA8, N, N, N, 0, gl.RGBA, gl.UNSIGNED_BYTE, data); gl.generateMipmap(gl.TEXTURE_3D);
+  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  for (const w of [gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T, gl.TEXTURE_WRAP_R]) gl.texParameteri(gl.TEXTURE_3D, w, gl.REPEAT);
+}
+// fog targets
+let MR = 0, FT = {}, resetMap = true;
+function makeFog(R) {
+  for (const k in FT) { gl.deleteTexture(FT[k].t); gl.deleteFramebuffer(FT[k].f); }
+  MR = R; const mk = f => { const t = tex2D(R, R, gl.RGBA16F, gl.RGBA, gl.HALF_FLOAT, f, gl.REPEAT); return { t, f: fbo(t) }; };
+  FT = { s0: mk(gl.LINEAR), s1: mk(gl.LINEAR), c: mk(gl.NEAREST), d: mk(gl.NEAREST), p0: mk(gl.NEAREST), p1: mk(gl.NEAREST) };
+  resetMap = true;
+}
+// moth target (same size as the canvas)
+let mothT = null;
+function makeMothTarget() {
+  if (mothT) { gl.deleteTexture(mothT.t); gl.deleteFramebuffer(mothT.f); }
+  const t = tex2D(cv.width, cv.height, gl.RGBA16F, gl.RGBA, gl.HALF_FLOAT, gl.NEAREST, gl.CLAMP_TO_EDGE);
+  mothT = { t, f: fbo(t), w: cv.width, h: cv.height };
+}
+// garden textures
+const LN = 256, CELL = 0.12;
+const life = new MOORLIFE.Floor(LN, 11);
+const texLA = tex2D(LN, LN, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, gl.NEAREST, gl.REPEAT);
+const texLC = tex2D(LN, LN, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, gl.LINEAR_MIPMAP_LINEAR, gl.REPEAT);
+const PAL_STOPS = ['#B000FF', '#F000A8', '#FF4BBF', '#FFCB37', '#E8FF65', '#00F0C8', '#25D9FF', '#7200C9'];
+const palData = new Uint8Array(256 * 4), palLin = new Float32Array(256 * 3);
+for (let i = 0; i < 256; i++) {
+  const x = i / 256 * PAL_STOPS.length, k = Math.floor(x), f = x - k, a = lin(PAL_STOPS[k % 8]), b = lin(PAL_STOPS[(k + 1) % 8]);
+  for (let c = 0; c < 3; c++) { const v = a[c] + (b[c] - a[c]) * (f * f * (3 - 2 * f)); palLin[i * 3 + c] = v; palData[i * 4 + c] = Math.round(Math.pow(v, 1 / 2.2) * 255); }
+  palData[i * 4 + 3] = 255;
+}
+// palette stored gamma-encoded in RGBA8 for precision; decoded back to linear when uploaded as SRGB8_ALPHA8
+const texPal = (() => { const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.texImage2D(gl.TEXTURE_2D, 0, gl.SRGB8_ALPHA8, 256, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, palData);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT); return t; })();
+const bufLA = new Uint8Array(LN * LN * 4), bufLC = new Uint8Array(LN * LN * 4);
+function uploadLife() {
+  const { cur, prev, age, hue, heat } = life, sh = Math.floor(P.palShift * 256);
+  for (let i = 0, j = 0; i < cur.length; i++, j += 4) {
+    bufLA[j] = cur[i] * 255; bufLA[j + 1] = prev[i] * 255; bufLA[j + 2] = age[i]; bufLA[j + 3] = hue[i];
+    const h = ((hue[i] + sh) & 255) * 3, q = heat[i];
+    bufLC[j] = Math.min(255, palLin[h] * q * 255 * 1.6); bufLC[j + 1] = Math.min(255, palLin[h + 1] * q * 255 * 1.6); bufLC[j + 2] = Math.min(255, palLin[h + 2] * q * 255 * 1.6); bufLC[j + 3] = q * 255;
+  }
+  gl.bindTexture(gl.TEXTURE_2D, texLA); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, LN, LN, 0, gl.RGBA, gl.UNSIGNED_BYTE, bufLA);
+  gl.bindTexture(gl.TEXTURE_2D, texLC); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, LN, LN, 0, gl.RGBA, gl.UNSIGNED_BYTE, bufLC); gl.generateMipmap(gl.TEXTURE_2D);
+}
+// glyph atlas for the wing scales
+const atlasTex = tex2D(1, 1, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, gl.LINEAR, gl.CLAMP_TO_EDGE, new Uint8Array(4));
+let glyphN = 1;
+function buildAtlas() {
+  const chars = Array.from('·:+*×∞✧◇◆GOAE5SLURPYMTH☾◐◑○●');
+  const cw = 40, ch = 56, c = document.createElement('canvas'); c.width = cw * chars.length; c.height = ch;
+  const x = c.getContext('2d', { willReadFrequently: true });
+  x.font = '700 44px ui-monospace, Menlo, Consolas, monospace'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = '#fff';
+  chars.forEach((g, i) => x.fillText(g, i * cw + cw / 2, ch / 2 + 2));
+  const d = x.getImageData(0, 0, c.width, c.height).data;
+  const order = chars.map((g, i) => { let s = 0; for (let yy = 0; yy < ch; yy++) for (let xx = i * cw; xx < (i + 1) * cw; xx++) s += d[(yy * c.width + xx) * 4 + 3]; return { i, s }; }).filter(g => g.s > 0).sort((p, q) => p.s - q.s);
+  const out = document.createElement('canvas'); out.width = cw * order.length; out.height = ch; const ox = out.getContext('2d');
+  order.forEach((g, k) => ox.drawImage(c, g.i * cw, 0, cw, ch, k * cw, 0, cw, ch));
+  glyphN = order.length; gl.bindTexture(gl.TEXTURE_2D, atlasTex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, out);
+}
+
+// ───────────────────────── the garden's starting state ─────────────────────────
+const OSC = ['pulsar', 'penta', 'beacon', 'toad', 'figure8', 'queenbee', 'pulsar', 'penta'];
+function plantColony(cx, cy, hue, R = life.R) {          // an oscillator choir: a small polyrhythm
+  const n = 3 + ((R() * 3) | 0), sp = 17;
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) if (R() < 0.75) life.stamp(OSC[(R() * OSC.length) | 0], cx + (i - (n - 1) / 2) * sp, cy + (j - (n - 1) / 2) * sp, (hue + (i + j) * 9) & 255);
+}
+function seedGarden(seed) {
+  life.R = MOORLIFE.rng(seed); const R = life.R;
+  life.cur.fill(0); life.prev.fill(0); life.zone.fill(0); life.groves = []; life.heat.fill(0);
+  for (let k = 0; k < 7; k++) plantColony((R() * LN) | 0, (R() * LN) | 0, (R() * 256) | 0);
+  for (let k = 0; k < 6; k++) life.soup((R() * LN) | 0, (R() * LN) | 0, 7 + ((R() * 6) | 0), 0.32, (R() * 256) | 0);
+  for (let k = 0; k < 8; k++) { const h = (R() * 256) | 0, x = (R() * LN) | 0, y = (R() * LN) | 0; for (let s = 0; s < 4; s++) life.stamp('glider', x + s * 6, y + s * 3, h, 0); }
+  syncGroves(true);
+}
+function syncGroves(fresh) {
+  const want = Math.round(P.groves), R = life.R;
+  let alive = life.groves.filter(g => g.alive && g.life === Infinity);
+  while (alive.length > want) { const g = alive.pop(); g.alive = false; life.paintZone(g, 0); }
+  while (alive.length < want) {
+    const per = [8, 16, 16, 32][(R() * 4) | 0], rad = per === 8 ? 10 : per === 16 ? 18 : 26;
+    const g = life.addGrove((R() * LN) | 0, (R() * LN) | 0, rad, per, (R() * 256) | 0); if (!g) break; alive.push(g);
+  }
+}
+
+// ───────────────────────── moth, camera, fog window ─────────────────────────
+const W = 48;
+const moth = { x: 0, y: 1.6, z: 0, vx: 0, vy: 0, vz: -1.2, yaw: 0, bank: 0, pitch: 0, flapPh: 0, flapAmp: 0.5, flap: 0, bend: 0, prevFlap: 0 };
+let goal = null, lure = null, lureT = 0, idle = 0, wanderT = 0, wanderC = null;
+let cam = { x: 0, z: 0, yaw: 0, y: 0.6 }, airOff = { x: 0, z: 0 }, Op = null, time = 0, frame = 0;
+let breath = 0, breathT = 0, nextBreath = 4, breathDir = [0, -1], squeeze = 0, sowT = 0, mood = 'DRIFTING', lastTouch = 0;
+let look = [0, 0], lookT = [0, 0], nextSacc = 1, roll = 0, fly = 0, hue = 0, excite = 0;
+const pokes = Array.from({ length: 8 }, () => ({ u: [0, 0], side: 0, t0: -99, amp: 0 })); let pokeI = 0;
+function poke(u, side, amp) { const p = pokes[pokeI]; pokeI = (pokeI + 1) % 8; p.u = u; p.side = side; p.t0 = time; p.amp = amp; excite = Math.min(1.5, excite + amp * 0.3); }
+function bodyBasis() {
+  const sp = Math.hypot(moth.vx, moth.vz);
+  const F0 = [Math.sin(moth.yaw), 0, -Math.cos(moth.yaw)];
+  const cp = Math.cos(moth.pitch), spch = Math.sin(moth.pitch);
+  const F = [F0[0] * cp, spch, F0[2] * cp];                 // head
+  let Uv = [-F0[0] * spch, cp, -F0[2] * spch];               // dorsal
+  const Rv0 = [F[1] * Uv[2] - F[2] * Uv[1], F[2] * Uv[0] - F[0] * Uv[2], F[0] * Uv[1] - F[1] * Uv[0]];
+  const cb = Math.cos(moth.bank), sb = Math.sin(moth.bank);
+  const Rv = [Rv0[0] * cb + Uv[0] * sb, Rv0[1] * cb + Uv[1] * sb, Rv0[2] * cb + Uv[2] * sb];
+  Uv = [Uv[0] * cb - Rv0[0] * sb, Uv[1] * cb - Rv0[1] * sb, Uv[2] * cb - Rv0[2] * sb];
+  return { R: Rv, F, U: Uv, sp };
+}
+function camBasis() {
+  const pt = P.pitch * Math.PI / 180, yw = cam.yaw;
+  const fwd = [Math.sin(yw) * Math.cos(pt), -Math.sin(pt), -Math.cos(yw) * Math.cos(pt)];
+  const right = [Math.cos(yw), 0, Math.sin(yw)];
+  const up = [right[1] * fwd[2] - right[2] * fwd[1], right[2] * fwd[0] - right[0] * fwd[2], right[0] * fwd[1] - right[1] * fwd[0]];
+  const pos = [cam.x - fwd[0] * P.dist, cam.y - fwd[1] * P.dist, cam.z - fwd[2] * P.dist];
+  const r = stage.getBoundingClientRect(), asp = r.width / Math.max(1, r.height);
+  let ty = Math.tan(25 * Math.PI / 180), tx = ty * asp;
+  if (asp < 1) { tx = Math.tan(25 * Math.PI / 180); ty = tx / asp; }
+  return { fwd, right, up, pos, tx, ty };
+}
+function screenRay(clientX, clientY) {
+  const r = cv.getBoundingClientRect(), B = camBasis();
+  const nx = ((clientX - r.left) / r.width) * 2 - 1, ny = 1 - ((clientY - r.top) / r.height) * 2;
+  const d = [0, 1, 2].map(i => B.fwd[i] + B.right[i] * nx * B.tx + B.up[i] * ny * B.ty), l = Math.hypot(...d);
+  return { o: B.pos, d: d.map(v => v / l) };
+}
+function floorAt(cx, cy) { const { o, d } = screenRay(cx, cy); if (d[1] > -1e-3) return null; const t = -o[1] / d[1]; return { x: o[0] + d[0] * t, z: o[2] + d[2] * t }; }
+function mothHit(cx, cy) { // ray vs the moth's dorsal plane, then wing/body test in local coordinates
+  const { o, d } = screenRay(cx, cy), B = bodyBasis(), s = P.mothScale;
+  const c = [moth.x, moth.y, moth.z], den = d[0] * B.U[0] + d[1] * B.U[1] + d[2] * B.U[2];
+  if (Math.abs(den) < 1e-4) return null;
+  const t = ((c[0] - o[0]) * B.U[0] + (c[1] - o[1]) * B.U[1] + (c[2] - o[2]) * B.U[2]) / den;
+  const p = [o[0] + d[0] * t - c[0], o[1] + d[1] * t - c[1], o[2] + d[2] * t - c[2]];
+  const qx = (p[0] * B.R[0] + p[1] * B.R[1] + p[2] * B.R[2]) / s, qy = (p[0] * B.F[0] + p[1] * B.F[1] + p[2] * B.F[2]) / s;
+  const ux = (Math.abs(qx) - 0.1) / Math.max(0.3, Math.cos(moth.flap)), uy = qy - 0.4;
+  const onWing = wing2D(ux, uy) < 0.05, onBody = Math.abs(qx) < 0.25 && qy > -1.05 && qy < 1.0;
+  return onWing || onBody ? { u: [ux, uy], side: Math.sign(qx) || 1, body: !onWing } : null;
+}
+function sdE2(px, py, rx, ry) { const k0 = Math.hypot(px / rx, py / ry), k1 = Math.hypot(px / (rx * rx), py / (ry * ry)); return k0 * (k0 - 1) / Math.max(k1, 1e-5); }
+function rot2(a, x, y) { const c = Math.cos(a), s = Math.sin(a); return [c * x - s * y, s * x + c * y]; }
+function smin(a, b, k) { const h = Math.max(k - Math.abs(a - b), 0) / k; return Math.min(a, b) - h * h * k * 0.25; }
+function wing2D(x, y) { // JS port of the shader's wing outline (GLSL mat2(c,s,-s,c)*v = (c·x − s·y, s·x + c·y))
+  const f = rot2(-0.5, x - 0.78, y - 0.36), fw = sdE2(f[0], f[1], 0.88, 0.40);
+  const h = rot2(0.55, x - 0.5, y + 0.36), hw = sdE2(h[0], h[1], 0.58, 0.44) + 0.014 * Math.sin(Math.atan2(h[1], h[0]) * 14);
+  const t = rot2(-0.3, x - 0.58, y + 0.92), tw = sdE2(t[0], t[1], 0.10, 0.24);
+  return Math.max(smin(smin(fw, hw, 0.07), tw, 0.1), -x - 0.02);
+}
+
+// ───────────────────────── input ─────────────────────────
+const ptrs = new Map(); let pinch0 = 0, dist0 = 8.5, gesture = null;
+stage.addEventListener('pointerdown', e => {
+  try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  lastTouch = time;
+  if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch0 = Math.hypot(a.x - b.x, a.y - b.y); dist0 = P.dist; gesture = null; return; }
+  const h = mothHit(e.clientX, e.clientY);
+  gesture = { x: e.clientX, y: e.clientY, t0: time, moved: false, moth: h };
+  if (!h) { const f = floorAt(e.clientX, e.clientY); if (f) { lure = f; lureT = time; } }
+});
+stage.addEventListener('pointermove', e => {
+  if (!ptrs.has(e.pointerId)) return;
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y); if (pinch0 > 0) P.dist = Math.max(4, Math.min(20, dist0 * pinch0 / d)); return; }
+  if (!gesture) return;
+  if (Math.hypot(e.clientX - gesture.x, e.clientY - gesture.y) > 10) gesture.moved = true;
+  if (gesture.moved) { const f = floorAt(e.clientX, e.clientY); if (f) { lure = f; lureT = time; } }
+  lastTouch = time;
+});
+const upFn = e => {
+  ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch0 = 0;
+  if (!gesture) return;
+  const held = time - gesture.t0;
+  if (gesture.moth && !gesture.moved) {
+    if (held > 0.45) exhale(Math.min(1.6, 0.6 + held / 1.2));
+    else poke(gesture.moth.u, gesture.moth.body ? 0 : gesture.moth.side, 1.1);
+  } else if (!gesture.moved) {
+    const f = floorAt(gesture.x, gesture.y); if (f) plantAt(f.x, f.z);
+  }
+  squeeze = 0; gesture = null;
+};
+stage.addEventListener('pointerup', upFn); stage.addEventListener('pointercancel', upFn);
+stage.addEventListener('wheel', e => { e.preventDefault(); P.dist = Math.max(4, Math.min(20, P.dist * Math.exp(e.deltaY * 0.001))); }, { passive: false });
+const cellOf = (x, z) => [Math.floor(x / CELL), Math.floor(z / CELL)];
+let plantI = 0;
+function plantAt(x, z) {
+  const [cx, cy] = cellOf(x, z), h = (Math.random() * 256) | 0, kind = plantI++ % 4;
+  if (kind === 0) plantColony(cx, cy, h, Math.random);
+  else if (kind === 1) life.addGrove(cx, cy, 14, 16, h, 6);
+  else if (kind === 2) life.soup(cx, cy, 8, 0.33, h);
+  else for (let s = 0; s < 5; s++) life.stamp('glider', cx + s * 5, cy - s * 5, h, 0);
+  lure = { x, z }; lureT = time; uploadLife();
+}
+function exhale(power = 1) {
+  breath = Math.max(breath, power); breathT = time; nextBreath = time + P.breathEvery * (0.7 + Math.random() * 0.6);
+  const B = bodyBasis(); breathDir = [B.F[0], B.F[2]];
+  poke([0.4, 0.1], 0, 0.9 * power); excite = 1.5;
+  // a small fractal grove opens under every breath
+  const hx = moth.x + B.F[0] * 1.2, hz = moth.z + B.F[2] * 1.2, [cx, cy] = cellOf(hx, hz);
+  life.addGrove(cx, cy, 10, 8, (Math.random() * 256) | 0, 3 + Math.round(power * 2));
+}
+
+// ───────────────────────── behaviour ─────────────────────────
+function stepMoth(dt) {
+  idle = time - lastTouch;
+  const following = lure && time - lureT < 4;
+  // where it wants to be: the lure (skimming low), or an ambient loop that dips into the fog and rises again
+  let tx, ty, tz;
+  if (following) { tx = lure.x; tz = lure.z; ty = 0.62; wanderC = null; }
+  else {
+    if (!wanderC) { wanderC = { x: moth.x, z: moth.z }; wanderT = 0; }
+    wanderT += dt;
+    const a = wanderT * (idle > 25 ? 0.07 : 0.11);
+    tx = wanderC.x + Math.sin(a) * 9 + Math.sin(a * 2.3) * 2.5;
+    tz = wanderC.z - Math.sin(a * 0.5) * 14 - Math.cos(a * 1.7) * 3;
+    ty = 1.9 + 1.4 * Math.sin(a * 1.3 + 1);                   // 0.5 … 3.3: wading, then gliding above
+  }
+  const dx = tx - moth.x, dy = ty - moth.y, dz = tz - moth.z, dh = Math.hypot(dx, dz);
+  const vmax = following ? 4.2 : 2.4, s = Math.min(vmax, dh * 1.4 + 0.6);
+  const tvx = dh > 0.2 ? dx / dh * s : 0, tvz = dh > 0.2 ? dz / dh * s : 0, tvy = Math.max(-1.5, Math.min(1.5, dy * 1.5));
+  const k = 1 - Math.exp(-dt * 1.6);
+  moth.vx += (tvx - moth.vx) * k; moth.vz += (tvz - moth.vz) * k; moth.vy += (tvy - moth.vy) * (1 - Math.exp(-dt * 2.2));
+  moth.x += moth.vx * dt; moth.y = Math.max(0.42, moth.y + moth.vy * dt); moth.z += moth.vz * dt;
+  const sp = Math.hypot(moth.vx, moth.vz);
+  if (sp > 0.15) { let dyaw = Math.atan2(moth.vx, -moth.vz) - moth.yaw; dyaw = Math.atan2(Math.sin(dyaw), Math.cos(dyaw)); moth.yaw += dyaw * Math.min(1, dt * 2.5); moth.bank += (Math.max(-0.6, Math.min(0.6, dyaw * 1.4)) - moth.bank) * Math.min(1, dt * 3); }
+  else moth.bank *= 1 - Math.min(1, dt * 2);
+  moth.pitch += (Math.max(-0.35, Math.min(0.35, moth.vy * 0.25)) - moth.pitch) * Math.min(1, dt * 3);
+  // wings: beat harder when climbing or squeezed, glide when sinking
+  const climb = Math.max(0, moth.vy), glide = Math.max(0, -moth.vy);
+  const rate = P.flapRate * (2.1 + climb * 1.5 + squeeze * 2 + excite * 0.6) * (idle > 25 ? 0.7 : 1);
+  moth.flapPh += dt * rate * TAU;
+  const ampT = Math.max(0.12, 0.55 + climb * 0.25 - glide * 0.35 + squeeze * 0.2);
+  moth.flapAmp += (ampT - moth.flapAmp) * Math.min(1, dt * 3);
+  moth.prevFlap = moth.flap;
+  moth.flap = 0.12 + moth.flapAmp * Math.sin(moth.flapPh) - squeeze * 0.5;
+  moth.bend = Math.cos(moth.flapPh) * moth.flapAmp * 0.8;
+  // breathing
+  if (!reduced && time > nextBreath) exhale(0.8 + Math.random() * 0.5);
+  breath = Math.max(0, breath - dt * 0.8);
+  // sowing: life sprouts where it skims the fog
+  const wade = 1 - smoothstep(0.75, 1.9, moth.y);
+  sowT += dt * P.sow * wade * Math.min(1, sp / 1.5);
+  if (sowT > 0.9) {
+    sowT = 0; const B = bodyBasis(), [cx, cy] = cellOf(moth.x - B.F[0] * 0.6, moth.z - B.F[2] * 0.6);
+    life.stamp(['acorn', 'rpent', 'glider', 'glider', 'lwss'][(Math.random() * 5) | 0], cx, cy, (Math.floor(time * 7) * 13) & 255);
+  }
+  // eyes
+  if (time > nextSacc) { nextSacc = time + 0.6 + Math.random() * 2; lookT = [(Math.random() - 0.5) * 1.4, (Math.random() - 0.5) * 0.9]; }
+  look = look.map((v, i) => v + (lookT[i] - v) * Math.min(1, dt * 10));
+  excite = Math.max(0, excite - dt * 0.4);
+  roll += dt * (0.12 + excite * 0.9); fly += dt * (0.09 + excite * 0.5); hue += dt * (0.2 + excite * 1.6 + breath * 2);
+  if (gesture && gesture.moth && !gesture.moved) { squeeze = Math.min(1, (time - gesture.t0) / 1.2); if (squeeze > 0.3 && Math.random() < dt * 8) poke([0.3 + Math.random() * 0.9, Math.random() - 0.5], Math.random() < 0.5 ? 1 : -1, 0.4); }
+  if (!reduced && Math.random() < dt * 0.18) poke([0.3 + Math.random() * 0.9, Math.random() * 1.2 - 0.6], Math.random() < 0.5 ? 1 : -1, 0.35);
+  mood = squeeze > 0.2 ? 'SQUEEZED' : breath > 0.3 ? 'EXHALING' : following ? 'FOLLOWING' : idle > 25 ? 'DREAMING' : moth.y < 1.0 ? 'WADING' : moth.y > 2.4 ? 'GLIDING' : 'DRIFTING';
+}
+function smoothstep(a, b, x) { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
+function stepCamera(dt) {
+  const k = 1 - Math.exp(-dt * 1.6);
+  cam.x += (moth.x - cam.x) * k; cam.z += (moth.z - cam.z) * k; cam.y += (Math.min(moth.y, 1.8) * 0.6 - cam.y) * k;
+  let dyaw = moth.yaw - cam.yaw; dyaw = Math.atan2(Math.sin(dyaw), Math.cos(dyaw));
+  if (Math.hypot(moth.vx, moth.vz) > 0.6) cam.yaw += dyaw * Math.min(1, dt * 0.25);   // drift round behind it, slowly
+}
+
+// ───────────────────────── frame ─────────────────────────
+let scale = matchMedia('(pointer: coarse)').matches ? 0.5 : 0.7, ft = 16, last = performance.now(), gov = 0, lifeAcc = 0;
+function resize() {
+  const r = stage.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+  let w = r.width * dpr * scale, h = r.height * dpr * scale; const cap = 1.6e6, k = Math.min(1, Math.sqrt(cap / Math.max(1, w * h)));
+  w = Math.max(2, Math.round(w * k)); h = Math.max(2, Math.round(h * k));
+  if (cv.width !== w || cv.height !== h || !mothT) { cv.width = w; cv.height = h; makeMothTarget(); }
+}
+new ResizeObserver(resize).observe(stage);
+function fluid(dt) {
+  if (+P.mapRes !== MR) makeFog(+P.mapRes);
+  const R = MR, h = W / R, B = camBasis();
+  const fl = Math.hypot(B.fwd[0], B.fwd[2]) || 1, ax = B.fwd[0] / fl, az = B.fwd[2] / fl;
+  const win = [cam.x + ax * 7, cam.z + az * 7];
+  const O = [win[0] - airOff.x, win[1] - airOff.z]; if (!Op) Op = O.slice();
+  const wr = P.windDir * Math.PI / 180, wx = Math.cos(wr) * P.wind, wz = Math.sin(wr) * P.wind;
+  const wade = 1 - smoothstep(0.7, 1.9, moth.y), wash = Math.abs(moth.flap - moth.prevFlap) / Math.max(dt, 1e-3) * 0.35 * (1 - smoothstep(0.8, 3.6, moth.y));
+  const Bm = bodyBasis(), s = P.mothScale;
+  const bp = [moth.x + Bm.F[0] * 1.0 * s * 2 - airOff.x, moth.z + Bm.F[2] * 1.0 * s * 2 - airOff.z];
+  const bReach = 1 - smoothstep(1.5, 4, moth.y);
+  gl.viewport(0, 0, R, R); gl.bindVertexArray(vao);
+  pass(progs.adv, FT.s1, p => {
+    bindTex(0, FT.s0.t); ui(p, 'uS', 0);
+    u1(p, 'uR', R); u1(p, 'uW', W); u1(p, 'uDt', dt); u1(p, 'uTrail', P.trail); u1(p, 'uReset', resetMap ? 1 : 0);
+    u2(p, 'uO', O[0], O[1]); u2(p, 'uOp', Op[0], Op[1]);
+    u2(p, 'uMoth', moth.x - airOff.x, moth.z - airOff.z); u2(p, 'uMothV', moth.vx - wx, moth.vz - wz);
+    u1(p, 'uMothR', 0.95 * s / 0.55); u1(p, 'uWade', wade); u1(p, 'uWash', wash);
+    u2(p, 'uBreathP', bp[0], bp[1]); u2(p, 'uBreathV', breathDir[0] * 1.6, breathDir[1] * 1.6); u1(p, 'uBreath', breath * bReach + 0.0001); u1(p, 'uBreathR', 0.9);
+  });
+  resetMap = false; Op = O; fluid.win = win;
+  pass(progs.curl, FT.c, p => { bindTex(0, FT.s1.t); ui(p, 'uS', 0); u1(p, 'uR', R); u1(p, 'uH', h); });
+  pass(progs.vort, FT.s0, p => { bindTex(0, FT.s1.t); bindTex(1, FT.c.t); ui(p, 'uS', 0); ui(p, 'uC', 1); u1(p, 'uR', R); u1(p, 'uH', h); u1(p, 'uEps', P.swirl); u1(p, 'uDt', dt); });
+  pass(progs.div, FT.d, p => { bindTex(0, FT.s0.t); ui(p, 'uS', 0); u1(p, 'uR', R); u1(p, 'uH', h); });
+  gl.bindFramebuffer(gl.FRAMEBUFFER, FT.p0.f); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+  let pa = FT.p0, pb = FT.p1;
+  for (let i = 0; i < 20; i++) { pass(progs.jac, pb, p => { bindTex(0, pa.t); bindTex(1, FT.d.t); ui(p, 'uP', 0); ui(p, 'uD', 1); u1(p, 'uR', R); u1(p, 'uH', h); }); [pa, pb] = [pb, pa]; }
+  pass(progs.sub, FT.s1, p => { bindTex(0, FT.s0.t); bindTex(1, pa.t); ui(p, 'uS', 0); ui(p, 'uP', 1); u1(p, 'uR', R); u1(p, 'uH', h); });
+  [FT.s0, FT.s1] = [FT.s1, FT.s0];
+}
+function setCam(p, B) {
+  u2(p, 'uRes', cv.width, cv.height); u2(p, 'uTan', B.tx, B.ty);
+  u3(p, 'uCam', B.pos); u3(p, 'uFwd', B.fwd); u3(p, 'uRight', B.right); u3(p, 'uUp', B.up);
+}
+function moonDir() { const az = P.moonAz * Math.PI / 180 + cam.yaw * 0, el = P.moonEl * Math.PI / 180; return [Math.cos(el) * Math.cos(az), Math.sin(el), Math.cos(el) * Math.sin(az)]; }
+function gardenUnder(x, z) { // CPU sample of the garden glow under the moth → the light that comes up through its wings
+  const [cx, cy] = cellOf(x, z); let r = 0, g = 0, b = 0;
+  for (let j = -6; j <= 6; j += 2) for (let i = -6; i <= 6; i += 2) { const k = life.idx(cx + i, cy + j), q = life.heat[k]; if (q < 0.05) continue; const hh = ((life.hue[k] + Math.floor(P.palShift * 256)) & 255) * 3; r += palLin[hh] * q; g += palLin[hh + 1] * q; b += palLin[hh + 2] * q; }
+  const s = 0.12 * P.lifeGlow * P.glowK; return [0.03 + r * s, 0.02 + g * s, 0.05 + b * s];
+}
+function render() {
+  const B = camBasis(), Bm = bodyBasis(), S = SPECIES[P.species], mc = lin(P.moonCol).map(v => v * P.moonPow), md = moonDir();
+  const glowC = gardenUnder(moth.x, moth.z);
+  // pass 1: the moth into its own colour + distance target
+  gl.viewport(0, 0, cv.width, cv.height);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, mothT.f); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+  pass(progs.moth, mothT, p => {
+    setCam(p, B);
+    u1(p, 'uTime', time); u1(p, 'uScale', P.mothScale); u3(p, 'uCenter', [moth.x, moth.y, moth.z]);
+    gl.uniformMatrix3fv(U(p, 'uBody'), false, [...Bm.R, ...Bm.F, ...Bm.U]);
+    u1(p, 'uFlap', moth.flap); u1(p, 'uBend', moth.bend);
+    const pk = new Float32Array(32), am = new Float32Array(8);
+    pokes.forEach((q, i) => { pk.set([q.u[0], q.u[1], q.side, q.t0], i * 4); am[i] = q.amp; });
+    gl.uniform4fv(U(p, 'uPoke'), pk); gl.uniform1fv(U(p, 'uAmp'), am);
+    u3(p, 'uLight', [moth.x, moth.y - 1.6, moth.z]); u3(p, 'uLightC', glowC.map(v => v * 9)); u3(p, 'uMoon', md); u3(p, 'uMoonC', mc);
+    u2(p, 'uLook', look[0], look[1]); u1(p, 'uRoll', roll); u1(p, 'uFly', fly); u1(p, 'uHue', hue); u1(p, 'uGlow', 0.6 + excite * 0.4);
+    u1(p, 'uFoil', S.foil); u1(p, 'uWaveSpeed', 1.6); u1(p, 'uGlyph', P.glyph * (1 + squeeze)); u1(p, 'uSpiral', 1.4); u1(p, 'uFuzz', S.fuzz); u1(p, 'uFractal', S.fractal); u1(p, 'uIdle', 1);
+    u3(p, 'uColA', lin(S.A)); u3(p, 'uColB', lin(S.B)); u3(p, 'uColC', lin(S.C));
+    bindTex(0, atlasTex); ui(p, 'uAtlas', 0); u1(p, 'uGlyphN', glyphN);
+  });
+  // pass 2: garden, fog, moth at its depth, sky
+  pass(progs.render, null, p => {
+    setCam(p, B);
+    bindTex(0, FT.s0.t); bindTex(1, noiseTex, gl.TEXTURE_3D); bindTex(2, mothT.t); bindTex(3, texLA); bindTex(4, texLC); bindTex(5, texPal);
+    ui(p, 'uS', 0); ui(p, 'uN', 1); ui(p, 'uMothT', 2); ui(p, 'uLA', 3); ui(p, 'uLC', 4); ui(p, 'uPal', 5);
+    u2(p, 'uAirOff', airOff.x, airOff.z); u2(p, 'uWin', fluid.win[0], fluid.win[1]);
+    const wr = P.windDir * Math.PI / 180; u2(p, 'uWdir', Math.cos(wr), Math.sin(wr));
+    u2(p, 'uMothXZ', moth.x, moth.z); u3(p, 'uMothC', [moth.x, moth.y, moth.z]); u1(p, 'uMothR', 0.9 * P.mothScale / 0.55);
+    u3(p, 'uMoon', md); u3(p, 'uMoonC', mc); u3(p, 'uSky', lin(P.sky)); u3(p, 'uAlbedo', lin(P.albedo)); u3(p, 'uSoil', lin(P.soil)); u3(p, 'uDyeC', lin(P.breathCol));
+    const lureOn = lure ? Math.max(0, 1 - (time - lureT) / 4) : 0, lc = lin(SPECIES[P.species].C).map(v => v * 0.5 * lureOn);
+    u3(p, 'uLureP', lure ? [lure.x, 0.7 + 0.1 * Math.sin(time * 3), lure.z] : [0, -50, 0]); u3(p, 'uLureC', lc);
+    u1(p, 'uT', time); u1(p, 'uFrame', frame % 1000); u1(p, 'uW', W); u1(p, 'uMR', MR);
+    u1(p, 'uHeight', P.height); u1(p, 'uFogK', P.fog); u1(p, 'uSteps', P.steps); u1(p, 'uExposure', P.exposure); u1(p, 'uSlab', Math.min(7, 3.4 * P.height / 1.7 + 0.5));
+    u1(p, 'uLN', LN); u1(p, 'uCell', CELL); u1(p, 'uLF', Math.min(1, lifeAcc)); u1(p, 'uLifeGlow', P.lifeGlow); u1(p, 'uGlowK', P.glowK);
+    u1(p, 'uLBreath', reduced ? P.lifeBreath * 0.3 : P.lifeBreath); u1(p, 'uBpm', P.bpm); u1(p, 'uDyeK', P.dyeK); u1(p, 'uPalShift', P.palShift);
+  });
+}
+const hud = document.getElementById('hud'), moodEl = document.getElementById('mood');
+let paused = false;
+function loop(now) {
+  const dt = Math.min(1 / 30, (now - last) / 1000); last = now; ft += (dt * 1000 - ft) * 0.05;
+  if (ready && noiseTex) {
+    if (!paused) {
+      const sdt = reduced ? dt * 0.6 : dt; time += sdt;
+      stepMoth(sdt); stepCamera(sdt);
+      const wr = P.windDir * Math.PI / 180; airOff.x += Math.cos(wr) * P.wind * sdt; airOff.z += Math.sin(wr) * P.wind * sdt;
+      fluid(sdt);
+      lifeAcc += sdt * P.lifeSpeed;
+      let n = 0; while (lifeAcc >= 1 && n < 3) { life.step(); lifeAcc -= 1; n++; }
+      if (n) { if (life.births < LN * LN * 0.0015 && Math.random() < 0.3) { const [cx, cy] = cellOf(moth.x + (Math.random() - 0.5) * 16, moth.z + (Math.random() - 0.5) * 16); plantColony(cx, cy, (Math.random() * 256) | 0, Math.random); } uploadLife(); }
+    }
+    render(); frame++;
+    if (++gov > 30) { gov = 0; const s0 = scale; if (ft > 26 && scale > 0.3) scale *= 0.88; else if (ft < 15 && scale < 0.9) scale = Math.min(0.9, scale * 1.05); if (s0 !== scale) resize(); }
+    if (html.dataset.mode === 'dev') {
+      hud.textContent = `${(1000 / ft).toFixed(0)} fps · scale ${scale.toFixed(2)} · ${cv.width}×${cv.height}\nmoth alt ${moth.y.toFixed(2)} · speed ${Math.hypot(moth.vx, moth.vz).toFixed(1)}\ngarden gen ${life.gen} · pop ${life.pop} · groves ${life.groves.filter(g => g.alive).length}`;
+      if (moodEl.textContent !== 'MOOD · ' + mood) moodEl.textContent = 'MOOD · ' + mood;
+    }
+  }
+  requestAnimationFrame(loop);
+}
+
+// ───────────────────────── dev bench ─────────────────────────
+const bench = document.getElementById('bench'), ctl = {};
+let worldName = 'Fractal Gardens';
+function el(tag, attrs = {}, kids = []) { const e = document.createElement(tag); for (const k in attrs) { if (k === 'on') for (const ev in attrs.on) e.addEventListener(ev, attrs.on[ev]); else if (k === 'text') e.textContent = attrs[k]; else e.setAttribute(k, attrs[k]); } for (const c of kids) e.append(c); return e; }
+function control(it) {
+  let inp; const out = el('output');
+  if (it.type === 'color') inp = el('input', { type: 'color' });
+  else if (it.type === 'select') { inp = el('select'); for (const o of it.opts) inp.append(el('option', { value: o, text: o })); }
+  else inp = el('input', { type: 'range', min: it.min, max: it.max, step: it.step });
+  inp.addEventListener('input', () => { P[it.k] = it.type === 'color' || (it.type === 'select' && isNaN(+inp.value)) ? inp.value : parseFloat(inp.value); worldName = 'custom'; if (it.k === 'groves') syncGroves(); if (it.k === 'palShift') uploadLife(); syncUI(); });
+  ctl[it.k] = { inp, out, it };
+  return el('div', { class: 'ctl' }, [el('label', { text: it.label }), inp, out]);
+}
+function buildBench() {
+  bench.innerHTML = '';
+  bench.append(el('h3', { text: 'Worlds' }));
+  const wr = el('div', { class: 'row' });
+  for (const n in WORLDS) wr.append(el('button', { text: n, 'data-world': n, on: { click: () => applyWorld(n) } }));
+  wr.append(el('button', { text: 'Mutate ✶', on: { click: mutate } }));
+  bench.append(wr);
+  bench.append(el('h3', { text: 'Do things' }));
+  const pz = el('button', { text: '❚❚ pause', on: { click: () => { paused = !paused; pz.textContent = paused ? '▶ play' : '❚❚ pause'; } } });
+  bench.append(el('div', { class: 'row' }, [
+    el('button', { text: 'exhale', on: { click: () => exhale(1.3) } }),
+    el('button', { text: 'ripple wings', on: { click: () => poke([0.7, 0.1], 0, 1.2) } }),
+    el('button', { text: 'plant here', on: { click: () => plantAt(moth.x, moth.z - 2) } }),
+    el('button', { text: 'reseed garden', on: { click: () => { seedGarden((Math.random() * 1e9) | 0); uploadLife(); } } }),
+    el('button', { text: 'refill fog', on: { click: () => { resetMap = true; } } }), pz]));
+  for (const [title, items] of PANEL) { bench.append(el('h3', { text: title })); for (const it of items) bench.append(control(it)); }
+  bench.append(el('h3', { text: 'Recipe JSON' }));
+  const ta = el('textarea', { spellcheck: 'false' }); ctl.recipe = ta;
+  bench.append(ta, el('div', { class: 'row' }, [
+    el('button', { text: 'copy', on: { click: () => { try { navigator.clipboard.writeText(ta.value); } catch (_) {} } } }),
+    el('button', { text: 'apply', on: { click: () => { try { const j = JSON.parse(ta.value); delete j.modality; Object.assign(P, DEF, j); worldName = 'custom'; syncGroves(); syncUI(); } catch (_) { ta.style.borderColor = '#f66'; } } } }),
+  ]));
+}
+function syncUI() {
+  for (const k in ctl) { const c = ctl[k]; if (!c.it) continue; c.inp.value = P[k]; c.out.textContent = c.it.type ? '' : (+P[k]).toFixed(Number.isInteger(+c.it.step) ? 0 : 2); }
+  bench.querySelectorAll('[data-world]').forEach(b => b.classList.toggle('on', b.dataset.world === worldName));
+  if (ctl.recipe) ctl.recipe.value = JSON.stringify(Object.assign({ modality: 'oracle-creature · moth fog garden', composes: ['oracle-creature', 'push-fog', 'life-pulse'] }, P), null, 1);
+}
+function applyWorld(n) { worldName = n; Object.assign(P, DEF, WORLDS[n]); P.world = n; syncGroves(); uploadLife(); syncUI(); }
+function mutate() {
+  const r = Math.random;
+  for (const [, items] of PANEL) for (const it of items) {
+    if (it.type || ['steps', 'pitch', 'dist'].includes(it.k)) continue;
+    P[it.k] = +(it.min + r() * (it.max - it.min)).toFixed(3);
+  }
+  P.species = Object.keys(SPECIES)[(r() * 4) | 0]; P.fog = 0.5 + r() * 0.7; P.exposure = 0.9 + r() * 0.6; P.lifeSpeed = Math.round(4 + r() * 10); P.groves = Math.round(P.groves);
+  const hsl = (h, s, l) => { const a = s * Math.min(l, 1 - l), f = n => { const k = (n + h * 12) % 12; return Math.round(255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)))); }; return '#' + [f(0), f(8), f(4)].map(v => v.toString(16).padStart(2, '0')).join(''); };
+  const h = r(); P.sky = hsl(h, 0.6, 0.08); P.soil = hsl(h, 0.5, 0.06); P.moonCol = hsl(h + 0.5, 0.6, 0.78); P.albedo = hsl(h + 0.1 + r() * 0.3, 0.5, 0.88); P.breathCol = hsl(r(), 0.95, 0.6);
+  worldName = 'mutant'; syncGroves(); uploadLife(); syncUI();
+}
+
+// ───────────────────────── toy / dev ─────────────────────────
+const devbtn = document.getElementById('devbtn');
+function setMode(m) { html.dataset.mode = m; devbtn.setAttribute('aria-pressed', m === 'dev'); devbtn.textContent = m === 'dev' ? 'DEV MODE · ON' : 'DEV MODE'; requestAnimationFrame(resize); }
+devbtn.addEventListener('click', () => setMode(html.dataset.mode === 'dev' ? 'toy' : 'dev'));
+
+// ───────────────────────── boot ─────────────────────────
+buildBench();
+const wq = QS.get('world'), wn = wq && Object.keys(WORLDS).find(k => k.toLowerCase().replace(/[^a-z]/g, '').startsWith(wq.toLowerCase().replace(/[^a-z]/g, '')));
+Object.assign(P, DEF, WORLDS[wn || 'Fractal Gardens']); worldName = wn || 'Fractal Gardens';
+for (const k of ['steps', 'mapRes']) if (QS.has(k)) P[k] = +QS.get(k);
+if (QS.has('scale')) scale = +QS.get('scale');
+if (location.hash === '#dev' || QS.has('dev')) setMode('dev');
+seedGarden(11); for (let i = 0; i < 30; i++) life.step();
+buildAtlas(); bakeNoise(); makeFog(+P.mapRes); resize(); uploadLife(); syncUI(); checkReady();
+requestAnimationFrame(loop);
+window.__moor = { P, moth, life, exhale, poke, plantAt, applyWorld, setMode, mutate, get ready() { return ready; }, get time() { return time; },
+  pause: v => { paused = v; }, setLure: (x, z) => { lure = { x, z }; lureT = time; lastTouch = time; }, fixScale: s => { scale = s; gov = -1e9; resize(); }, get mood() { return mood; } };
+})();
+/*APP-END*/
+
+</script>
+</body>
+</html>

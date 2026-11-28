@@ -1,0 +1,144 @@
+/* GOOAE foundation tokens + starter components.
+   Token values are canon (codex §8.1); component styles are a starting point to mutate. */
+
+:root {
+  /* VOID */
+  --goo-void: #100817;
+  --goo-abyss: #25072F;
+  --goo-night: #171020;
+  /* SIGNATURE */
+  --goo-purple: #7200C9;
+  --goo-neon: #B000FF;
+  --goo-magenta: #F000A8;
+  --goo-pink: #FF4BBF;
+  /* MUTATION */
+  --goo-cyan: #25D9FF;
+  --goo-toxic: #00F0C8;
+  --goo-lime: #E8FF65;
+  --goo-gold: #FFCB37;
+  /* LIGHT */
+  --goo-fae: #D9A5FF;
+  --goo-milk: #F4E9FF;
+  /* SURFACES */
+  --goo-glass: rgba(255, 255, 255, .08);
+  --goo-border: rgba(255, 255, 255, .20);
+  --goo-glow: rgba(176, 0, 255, .45);
+  /* SHAPE */
+  --goo-radius-sm: 12px;
+  --goo-radius-md: 22px;
+  --goo-radius-lg: 32px;
+  --goo-radius-organic: 42% 58% 61% 39%;
+  /* MOTION */
+  --goo-fast: 140ms;
+  --goo-medium: 280ms;
+  --goo-slow: 650ms;
+  --goo-ease-squish: cubic-bezier(.34, 1.56, .64, 1); /* proposed: springy overshoot */
+
+  /* Derived */
+  --goo-rainbow: linear-gradient(120deg, var(--goo-magenta), var(--goo-neon), var(--goo-cyan), var(--goo-toxic), var(--goo-lime), var(--goo-gold), var(--goo-pink));
+  --goo-text: var(--goo-milk);
+  --goo-text-soft: var(--goo-fae);
+}
+
+/* Void background */
+.goo-void {
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(114, 0, 201, .45), transparent 55%),
+    radial-gradient(ellipse at 85% 80%, rgba(240, 0, 168, .30), transparent 50%),
+    linear-gradient(180deg, var(--goo-abyss), var(--goo-void));
+  color: var(--goo-text);
+  min-height: 100vh;
+}
+
+/* Goo Glass card */
+.goo-glass {
+  background: var(--goo-glass);
+  border: 1px solid var(--goo-border);
+  border-radius: var(--goo-radius-lg);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  box-shadow: 0 0 40px var(--goo-glow), inset 0 1px 0 rgba(255, 255, 255, .15);
+  padding: 1.25rem;
+}
+
+/* Bubble Button: inflated glossy object */
+.goo-bubble {
+  position: relative;
+  border: 0;
+  border-radius: 999px;
+  padding: .85em 1.6em;
+  font: inherit;
+  font-weight: 800;
+  color: var(--goo-void);
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255, 255, 255, .85), transparent 30%),
+    linear-gradient(160deg, var(--goo-pink), var(--goo-magenta) 55%, var(--goo-neon));
+  box-shadow: 0 6px 0 var(--goo-purple), 0 0 24px var(--goo-glow);
+  cursor: pointer;
+  transition: transform var(--goo-fast) var(--goo-ease-squish), box-shadow var(--goo-fast);
+}
+.goo-bubble:hover { transform: scale(1.06); }                /* soft inflation */
+.goo-bubble:active { transform: scale(1.08, .88); box-shadow: 0 2px 0 var(--goo-purple); } /* squish */
+.goo-bubble:focus-visible { outline: 3px solid var(--goo-lime); outline-offset: 4px; }
+
+/* Breathing blob (avatars, decorations) */
+.goo-blob {
+  border-radius: var(--goo-radius-organic);
+  background: var(--goo-rainbow);
+  animation: goo-breathe 6s ease-in-out infinite;
+}
+@keyframes goo-breathe {
+  0%, 100% { border-radius: 42% 58% 61% 39% / 45% 40% 60% 55%; }
+  50%      { border-radius: 58% 42% 39% 61% / 60% 55% 45% 40%; }
+}
+
+/* Filling-slime progress bar */
+.goo-slime-track {
+  height: 18px;
+  border-radius: 999px;
+  background: var(--goo-night);
+  border: 1px solid var(--goo-border);
+  overflow: hidden;
+}
+.goo-slime-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--goo-toxic), var(--goo-lime));
+  box-shadow: 0 0 14px var(--goo-toxic);
+  transition: width var(--goo-slow) var(--goo-ease-squish);
+}
+
+/* Holographic foil text */
+.goo-holo-text {
+  background: var(--goo-rainbow);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: goo-shimmer 8s linear infinite;
+}
+@keyframes goo-shimmer { to { background-position: 300% 0; } }
+
+/* Reduced motion: replace continuous movement with static states */
+@media (prefers-reduced-motion: reduce) {
+  .goo-blob, .goo-holo-text { animation: none; }
+  .goo-bubble, .goo-slime-fill { transition-duration: 1ms; }
+  .goo-bubble:hover, .goo-bubble:active { transform: none; }
+}
+
+/* High-contrast option: add class="goo-contrast" to <html> */
+.goo-contrast {
+  --goo-glass: rgba(16, 8, 23, .92);
+  --goo-border: rgba(244, 233, 255, .7);
+  --goo-text-soft: var(--goo-milk);
+}
+
+/* Gooey metaball filter — put once in the page, then apply filter:url(#goo) to a container:
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="goo">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur"/>
+    <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="goo"/>
+    <feBlend in="SourceGraphic" in2="goo"/>
+  </filter>
+</svg>
+*/

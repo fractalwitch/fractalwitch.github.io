@@ -1,0 +1,516 @@
+{
+  "version": 1,
+  "updated": "2026-11-28",
+  "worlds": {
+    "VB": {
+      "name": "Voidbloom",
+      "glyph": "✺",
+      "tint": [
+        "#B000FF",
+        "#100817"
+      ]
+    },
+    "FG": {
+      "name": "Fractal Gardens",
+      "glyph": "❦",
+      "tint": [
+        "#00F0C8",
+        "#E8FF65"
+      ]
+    },
+    "DC": {
+      "name": "Dark Carnival",
+      "glyph": "♛",
+      "tint": [
+        "#FF2D55",
+        "#FFCB37"
+      ]
+    },
+    "JS": {
+      "name": "Jelly Sea",
+      "glyph": "≋",
+      "tint": [
+        "#25D9FF",
+        "#D9A5FF"
+      ]
+    },
+    "CC": {
+      "name": "Crystal Courts",
+      "glyph": "◇",
+      "tint": [
+        "#F4E9FF",
+        "#9FE8FF"
+      ]
+    },
+    "PC": {
+      "name": "Pixel City",
+      "glyph": "▦",
+      "tint": [
+        "#E8FF65",
+        "#F000A8"
+      ]
+    },
+    "AE": {
+      "name": "Aeternalis",
+      "glyph": "✧",
+      "tint": [
+        "#FFCB37",
+        "#FF4BBF"
+      ]
+    },
+    "XX": {
+      "name": "Unmapped",
+      "glyph": "◎",
+      "tint": [
+        "#D9A5FF",
+        "#25D9FF"
+      ]
+    }
+  },
+  "toys": [
+    {
+      "id": "GOO-JS-TOY-FLOOD-ORACLE-V001",
+      "slug": "flood-oracle",
+      "title": "Flood Oracle",
+      "blurb": "An egg that breathes a storm of sparks in and out, and robs you if you hoard them.",
+      "world": "JS",
+      "order": 1,
+      "path": "toys/flood-oracle/",
+      "poster": "toys/flood-oracle/poster.webp",
+      "frame": "device",
+      "previewSafe": true,
+      "renderer": "webgl2",
+      "inputs": [
+        "touch",
+        "pointer"
+      ],
+      "modalities": [
+        "oracle-creature",
+        "tide-swarm"
+      ],
+      "sources": [
+        "index.html"
+      ],
+      "tags": [
+        "oracle",
+        "menagerie"
+      ],
+      "canonStatus": "PROPOSED",
+      "status": "prototype",
+      "added": "2026-11-28",
+      "oldPaths": [
+        "modules/oracle-flood.html"
+      ]
+    },
+    {
+      "id": "GOO-AE-TOY-STORM-JAR-V001",
+      "slug": "storm-jar",
+      "title": "Storm Jar",
+      "blurb": "Charge piles into a cloud, breaks into rainbow lightning and grows glass that remembers.",
+      "world": "AE",
+      "order": 2,
+      "path": "toys/storm-jar/",
+      "poster": "toys/storm-jar/poster.webp",
+      "frame": "device",
+      "previewSafe": true,
+      "renderer": "webgl2",
+      "inputs": [
+        "touch",
+        "pointer"
+      ],
+      "modalities": [
+        "charge-storm",
+        "light-paint",
+        "push-fog",
+        "holo-foil",
+        "life-pulse"
+      ],
+      "sources": [
+        "index.html"
+      ],
+      "tags": [
+        "birth",
+        "weather"
+      ],
+      "canonStatus": "PROPOSED",
+      "status": "prototype",
+      "added": "2026-11-28",
+      "oldPaths": [
+        "modules/storm-jar.html"
+      ]
+    },
+    {
+      "id": "GOO-FG-TOY-SLURPY-MOTH-ORACLE-V001",
+      "slug": "slurpy-moth-oracle",
+      "title": "Slurpy Moth Oracle",
+      "blurb": "Poke, squeeze and feed the Slurpy Moth until it spits out a prophecy.",
+      "world": "FG",
+      "order": 3,
+      "path": "toys/slurpy-moth-oracle/",
+      "poster": "toys/slurpy-moth-oracle/poster.webp",
+      "frame": "device",
+      "previewSafe": true,
+      "renderer": "webgl2",
+      "inputs": [
+        "touch",
+        "pointer"
+      ],
+      "modalities": [
+        "oracle-creature",
+        "holo-foil",
+        "ripple-bloom",
+        "glyph-field",
+        "mirror-vault",
+        "ticket-press"
+      ],
+      "sources": [
+        "index.html"
+      ],
+      "tags": [
+        "oracle",
+        "menagerie"
+      ],
+      "canonStatus": "PROPOSED",
+      "status": "prototype",
+      "added": "2026-11-28",
+      "oldPaths": [
+        "modules/slurpy-moth-encounter-01.html"
+      ]
+    },
+    {
+      "id": "GOO-AE-TOY-MULTIVERSE-V001",
+      "slug": "multiverse",
+      "title": "GOOAE Multiverse",
+      "blurb": "Five-second microgames that flip the multiverse and hand each other cursed objects.",
+      "world": "AE",
+      "order": 4,
+      "path": "toys/multiverse/",
+      "poster": "toys/multiverse/poster.webp",
+      "frame": "full",
+      "previewSafe": true,
+      "renderer": "canvas2d",
+      "inputs": [
+        "touch",
+        "pointer",
+        "keyboard"
+      ],
+      "modalities": [],
+      "sources": [
+        "index.html"
+      ],
+      "tags": [
+        "arcade",
+        "microgames",
+        "batch-003"
+      ],
+      "canonStatus": "PROPOSED",
+      "status": "prototype",
+      "added": "2026-11-28",
+      "oldPaths": [
+        "modules/bloomwave03.html",
+        "modules/bloomwave02.html",
+        "modules/gooae-multiverse.html"
+      ]
+    },
+    {
+      "id": "GOO-JS-TOY-JELLY-SEA-ORACLE-V001",
+      "slug": "jelly-sea-oracle",
+      "title": "Jelly Sea Oracle",
+      "blurb": "A drifting jellyfish oracle from the Jelly Sea that eats tickets and answers back.",
+      "world": "JS",
+      "order": 5,
+      "path": "toys/jelly-sea-oracle/",
+      "poster": "toys/jelly-sea-oracle/poster.webp",
+      "frame": "device",
+      "previewSafe": true,
+      "renderer": "webgl2",
+      "inputs": [
+        "touch",
+        "pointer"
+      ],
+      "modalities": [
+        "oracle-creature",
+        "holo-foil",
+        "ripple-bloom",
+        "glyph-field",
+        "mirror-vault",
+        "ticket-press"
+      ],
+      "sources": [
+        "index.html"
+      ],
+      "tags": [
+        "oracle",
+        "menagerie"
+      ],
+      "canonStatus": "PROPOSED",
+      "status": "prototype",
+      "added": "2026-11-28",
+      "oldPaths": [
+        "modules/jellyfish-encounter-01.html"
+      ]
+    },
+    {
+      "id": "GOO-XX-TOY-STRATA-WORLD-V001",
+      "slug": "strata-world",
+      "title": "Strata World",
+      "blurb": "A maximal candy world on a floor of living goo: press it, pour it, ride an orb across it.",
+      "world": "XX",
+      "order": 6,
+      "path": "toys/strata-world/",
+      "poster": "toys/strata-world/poster.webp",
+      "frame": "full",
+      "previewSafe": false,
+      "renderer": "webgpu",
+      "inputs": [
+        "touch",
+        "pointer"
+      ],
+      "modalities": [
+        "strata-world",
+        "oracle-creature",
+        "bubble-world",
+        "life-pulse"
+      ],
+      "sources": [
+        "index.html",
+        "src/main.js",
+        "src/world.js",
+        "src/goo.js",
+        "src/gooworld.js",
+        "src/jelly.js",
+        "src/life.js",
+        "src/materials.js",
+        "src/post.js",
+        "src/recipes.js",
+        "src/atlas.js",
+        "src/core.js"
+      ],
+      "tags": [
+        "world",
+        "goo"
+      ],
+      "canonStatus": "PROPOSED",
+      "status": "prototype",
+      "added": "2026-11-28",
+      "oldPaths": [
+        "modules/strata-world/index.html",
+        "modules/strata-world/",
+        "modules/world-bubbles.html",
+        "modules/world-bubbles2.html"
+      ]
+    },
+    {
+      "id": "GOO-VB-TOY-RAINBOW-SERPENT-ORACLE-V001",
+      "slug": "rainbow-serpent-oracle",
+      "title": "Rainbow Serpent Oracle",
+      "blurb": "The Rainbow Serpent coils up out of the Voidbloom to read your fortune.",
+      "world": "VB",
+      "order": 7,
+      "path": "toys/rainbow-serpent-oracle/",
+      "poster": "toys/rainbow-serpent-oracle/poster.webp",
+      "frame": "device",
+      "previewSafe": true,
+      "renderer": "webgl2",
+      "inputs": [
+        "touch",
+        "pointer"
+      ],
+      "modalities": [
+        "oracle-creature",
+        "holo-foil",
+        "ripple-bloom",
+        "glyph-field",
+        "mirror-vault",
+        "ticket-press"
+      ],
+      "sources": [
+        "index.html"
+      ],
+      "tags": [
+        "oracle",
+        "menagerie"
+      ],
+      "canonStatus": "PROPOSED",
+      "status": "prototype",
+      "added": "2026-11-28",
+      "oldPaths": [
+        "modules/rainbow-snek-encounter-01.html"
+      ]
+    },
+    {
+      "id": "GOO-FG-TOY-FRACTAL-FLUTTER-V001",
+      "slug": "fractal-flutter",
+      "title": "Fractal Flutter",
+      "blurb": "Slurpy Moth dashes along fractal circle-chain paths, half Snake, half Frogger.",
+      "world": "FG",
+      "order": 8,
+      "path": "toys/fractal-flutter/",
+      "poster": "toys/fractal-flutter/poster.webp",
+      "frame": "device",
+      "previewSafe": true,
+      "renderer": "canvas2d",
+      "inputs": [
+        "touch",
+        "pointer",
+        "keyboard"
+      ],
+      "modalities": [
+        "light-paint",
+        "push-fog",
+        "holo-foil",
+        "ripple-bloom"
+      ],
+      "sources": [
+        "index.html"
+      ],
+      "tags": [
+        "game",
+        "slurpy-moth"
+      ],
+      "canonStatus": "PROPOSED",
+      "status": "prototype",
+      "added": "2026-11-28",
+      "oldPaths": [
+        "fractal-flutter.html"
+      ]
+    },
+    {
+      "id": "GOO-XX-TOY-SPECTRAL-SHIMMER-V001",
+      "slug": "spectral-shimmer",
+      "title": "Spectral Shimmer",
+      "blurb": "Paint with streaks, bursts and halos of spectral light on a fading exposure.",
+      "world": "XX",
+      "order": 9,
+      "path": "toys/spectral-shimmer/",
+      "poster": "toys/spectral-shimmer/poster.webp",
+      "frame": "device",
+      "previewSafe": true,
+      "renderer": "canvas2d",
+      "inputs": [
+        "touch",
+        "pointer",
+        "keyboard"
+      ],
+      "modalities": [
+        "light-paint"
+      ],
+      "sources": [
+        "index.html"
+      ],
+      "tags": [
+        "instrument",
+        "light"
+      ],
+      "canonStatus": "PROPOSED",
+      "status": "prototype",
+      "added": "2026-11-28",
+      "oldPaths": [
+        "modules/spectral-shimmer.html"
+      ]
+    },
+    {
+      "id": "GOO-FG-TOY-SLURPY-FOG-GARDEN-V001",
+      "slug": "slurpy-fog-garden",
+      "title": "Slurpy Moth · Fog Garden",
+      "blurb": "Slurpy Moth drifts through moonlit fog in the Fractal Gardens; push the fog and watch it remember.",
+      "world": "FG",
+      "order": 10,
+      "path": "toys/slurpy-fog-garden/",
+      "poster": "toys/slurpy-fog-garden/poster.webp",
+      "frame": "device",
+      "previewSafe": true,
+      "renderer": "webgl2",
+      "inputs": [
+        "touch",
+        "pointer"
+      ],
+      "modalities": [
+        "push-fog",
+        "oracle-creature"
+      ],
+      "sources": [
+        "index.html"
+      ],
+      "tags": [
+        "slurpy-moth",
+        "fog"
+      ],
+      "canonStatus": "PROPOSED",
+      "status": "prototype",
+      "added": "2026-11-28",
+      "oldPaths": [
+        "modules/slurpy-fog.html"
+      ]
+    },
+    {
+      "id": "GOO-PC-TOY-PHONE-PHYSICS-LAB-V001",
+      "slug": "phone-physics-lab",
+      "title": "Phone Physics Lab",
+      "blurb": "Every channel your phone can feel melts a goo field, and something behind the glass touches back.",
+      "world": "PC",
+      "order": 11,
+      "path": "toys/phone-physics-lab/",
+      "poster": "toys/phone-physics-lab/poster.webp",
+      "frame": "device",
+      "previewSafe": true,
+      "renderer": "webgl2",
+      "inputs": [
+        "touch",
+        "pointer",
+        "tilt",
+        "mic",
+        "camera"
+      ],
+      "modalities": [],
+      "sources": [
+        "index.html"
+      ],
+      "tags": [
+        "lab",
+        "sensors",
+        "haptics"
+      ],
+      "canonStatus": "PROPOSED",
+      "status": "prototype",
+      "added": "2026-11-28",
+      "oldPaths": [
+        "modules/goo-the-goo.html"
+      ]
+    },
+    {
+      "id": "GOO-XX-TOY-HONEY-HEART-HIVE-V001",
+      "slug": "honey-heart-hive",
+      "title": "Honey Heart Hive",
+      "blurb": "A living honey world: send waves across the comb and feed heart bubbles back to the glass heart.",
+      "world": "XX",
+      "order": 12,
+      "path": "toys/honey-heart-hive/",
+      "poster": "toys/honey-heart-hive/poster.webp",
+      "frame": "device",
+      "previewSafe": true,
+      "renderer": "webgl2",
+      "inputs": [
+        "touch",
+        "pointer"
+      ],
+      "modalities": [
+        "ripple-bloom",
+        "oracle-creature"
+      ],
+      "sources": [
+        "index.html"
+      ],
+      "tags": [
+        "creature",
+        "honey"
+      ],
+      "canonStatus": "PROPOSED",
+      "status": "prototype",
+      "added": "2026-11-28",
+      "oldPaths": [
+        "modules/honey-goo.html"
+      ]
+    }
+  ]
+}

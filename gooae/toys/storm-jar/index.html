@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="/gooae/shell/gooae-shell.css">
+<script src="/gooae/shell/gooae-shell.js" data-toy="storm-jar" data-top="#title" data-dev="#devBtn" data-bar="#bar" data-panel=".devonly" data-frame="device"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Storm Jar</title>
+<style>
+  :root { --gold: #f3d27a; --vio: #b88cff; --ink: #e9e3ff; --panel: rgba(14,8,28,.82); }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; background: #05020b; overflow: hidden; color: var(--ink);
+    font: 12px/1.35 ui-monospace, "SF Mono", Menlo, Consolas, monospace; overscroll-behavior: none; }
+  #stage { position: fixed; inset: 0; touch-action: none; }
+  #stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #film, #bloom { mix-blend-mode: screen; pointer-events: none; }
+  #bloom { filter: blur(2px); }
+  #touch { position: absolute; inset: 0; touch-action: none; }
+  .devonly { display: none !important; }
+  body.devmode .devonly { display: block !important; }
+  #title { position: fixed; top: max(14px, env(safe-area-inset-top)); left: 16px; right: 16px; pointer-events: none; text-shadow: 0 0 12px #000; }
+  #title h1 { margin: 0; font-size: 22px; letter-spacing: .32em; color: var(--gold); font-weight: 700; }
+  #title p { margin: 4px 0 0; max-width: 300px; opacity: .78; }
+  #bar { position: fixed; left: 50%; bottom: max(12px, env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; gap: 6px;
+    padding: 5px; border-radius: 999px; background: rgba(12,6,24,.55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(243,210,122,.22); z-index: 5; }
+  #bar button, #panel button { font: inherit; letter-spacing: .14em; color: var(--ink); background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14);
+    border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+  #bar button.on { color: #120a20; background: var(--gold); border-color: var(--gold); }
+  #panel { position: fixed; right: 10px; top: 10px; bottom: 64px; width: min(330px, calc(100vw - 20px)); overflow-y: auto; background: var(--panel);
+    border: 1px solid rgba(184,140,255,.25); border-radius: 14px; padding: 10px 12px 14px; z-index: 4; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  body.devmode #panel.devonly { display: block !important; }
+  @media (max-width: 640px) { #panel { top: auto; height: 46vh; bottom: 64px; } #title p { display: none; } }
+  #panel h2 { font-size: 11px; letter-spacing: .22em; color: var(--gold); margin: 12px 0 6px; font-weight: 600; }
+  #panel h2:first-child { margin-top: 2px; }
+  .row { display: grid; grid-template-columns: 82px 1fr 46px; align-items: center; gap: 6px; margin: 3px 0; }
+  .row input[type=range] { width: 100%; accent-color: var(--vio); }
+  .row span:last-child { text-align: right; opacity: .8; }
+  select { font: inherit; color: var(--ink); background: #1a1030; border: 1px solid rgba(255,255,255,.18); border-radius: 8px; padding: 4px 6px; width: 100%; }
+  .btns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .led { display: grid; grid-template-columns: 58px 1fr 52px; gap: 6px; align-items: center; margin: 2px 0; }
+  .led i { display: block; height: 7px; border-radius: 4px; }
+  #chart { width: 100%; height: 86px; display: block; border-radius: 8px; background: rgba(0,0,0,.35); }
+  #metrics { white-space: pre-wrap; opacity: .9; }
+  #recipe { width: 100%; height: 120px; font: 11px/1.3 ui-monospace, Menlo, monospace; color: var(--ink); background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.14); border-radius: 8px; padding: 6px; resize: vertical; }
+  #anatomy p { margin: 6px 0; opacity: .85; }
+  #anatomy b { color: var(--gold); font-weight: 600; }
+  #toast { position: fixed; left: 50%; bottom: calc(max(12px, env(safe-area-inset-bottom)) + 56px); transform: translateX(-50%); letter-spacing: .26em; color: var(--gold); opacity: 0; transition: opacity .5s; pointer-events: none; text-shadow: 0 0 10px #000; }
+  #verdict { color: var(--gold); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="gl"></canvas>
+  <canvas id="film"></canvas>
+  <canvas id="bloom"></canvas>
+  <div id="touch"></div>
+</div>
+<div id="title" class="devonly">
+  <h1>STORM JAR</h1>
+  <p>A charge-storm: light-paint × push-fog × holo-foil × life-pulse, with no host. One soap-film jar holds 100 units of charge. The fog carries it up into a cloud; the cloud breaks down into bolts; the light settles into scar; scar quickens glass tissue; tissue dies into foil; foil evaporates back into fog. Drag to stir · hold to be a lightning rod · tap to spark · double-tap outside the jar for the next world.</p>
+</div>
+<div id="panel" class="devonly">
+  <h2>LEDGER · CHARGE</h2>
+  <div id="ledger"></div>
+  <div id="ledsum" style="margin-top:4px;opacity:.85"></div>
+  <h2>CLOCK · MEASURED, NOT WRITTEN</h2>
+  <canvas id="chart"></canvas>
+  <div id="metrics"></div>
+  <div id="verdict"></div>
+  <h2>WORLD</h2>
+  <div class="row"><span>world</span><select id="world"><option value="storm">Storm Jar (cloud → ground)</option><option value="globe">Plasma Globe (glass → core)</option><option value="fulgurite">Fulgurite Garden (many small bolts)</option><option value="supercell">Supercell (rare huge bolts)</option></select><span></span></div>
+  <div class="row"><span>tissue rule</span><select id="rule"><option value="maze">Maze B3/S12345</option><option value="coral">Coral B3/S45678 (sparse)</option><option value="life">Life B3/S23 (sparse)</option><option value="daynight">Day&amp;Night (sparse)</option></select><span></span></div>
+  <div class="btns"><button id="reseed">RESEED</button><button id="pause">PAUSE</button><button id="mutate">MUTATE</button></div>
+  <h2>COUPLING</h2>
+  <div id="sliders"></div>
+  <h2>RECIPE</h2>
+  <textarea id="recipe" spellcheck="false"></textarea>
+  <div class="btns"><button id="copy">COPY</button><button id="apply">APPLY</button></div>
+  <h2>ANATOMY</h2>
+  <div id="anatomy">
+    <p><b>One conserved quantity.</b> 100 units of charge live in five stores (fog, bolt, scar, tissue, foil). Every rule moves charge from one store to the next; nothing mints or loses it. The ledger is summed every frame and float drift is renormalised into the fog.</p>
+    <p><b>The fog carries and piles it.</b> A small stable fluid (buoyancy, vorticity confinement, Jacobi projection) moves charge by exactly conservative donor-cell flux, plus a drift relative to the air that piles it against the jar's top (or its glass, in the globe).</p>
+    <p><b>Breakdown.</b> When a cell passes the threshold it drains a Gaussian disc and fires a bolt: a stochastic walker toward the ground, the core or a held finger, pulled toward live tissue, with forks. Thunder kicks vortex pairs along the channel.</p>
+    <p><b>Light becomes scar.</b> The bolt's charge is light on the exposure; as the film fades (the same decay), the faded share settles along the channel, heaviest at the strike point and branch tips.</p>
+    <p><b>Scar quickens tissue.</b> A B/S rule runs on the jar; a birth must pay its cost from the local scar pool, so glass grows only where lightning fell. Tissue leaks charge into foil and dies when starved.</p>
+    <p><b>Foil returns it.</b> A thin-film slick whose thickness is the charge it holds evaporates back into the fog.</p>
+    <p><b>Hue is lineage.</b> Every share of charge carries a hue vector through every store; each trip through a bolt advances it by spectral × channel length.</p>
+  </div>
+</div>
+<div id="toast"></div>
+<div id="bar"><button id="devBtn" aria-pressed="false">DEV MODE</button></div>
+
+<script>
+// Storm Jar simulation: one soap-film jar, one conserved quantity (charge), four parent rules.
+// Stores: FOG (push-fog: air carries it, drift piles it into a cloud), BOLT (light-paint: a strike
+// spends it as light that fades off the exposure), SCAR (faded light settles along the channel),
+// TISSUE (life-pulse: cells are born on thick scar and hold charge, then die), FOIL (holo-foil: a
+// slick whose thickness = charge, evaporating back into the fog). Nothing mints or loses charge.
+// Hue is lineage: every share of charge carries a hue vector, and each lap through a bolt advances it.
+(function (root) {
+  'use strict';
+  var TAU = Math.PI * 2;
+
+  var DEF = {
+    world: 'storm',      // storm: cloud above, ground below. globe: charge drifts to the glass, bolts hit the core
+    total: 100,          // conserved charge
+    threshK: 40,         // breakdown threshold, in multiples of the mean fog charge per cell
+    drainR: 12,          // radius (cells) a bolt drains
+    drainFrac: 0.75,     // share of each drained cell's charge a bolt takes
+    drift: 3.2,          // cells/s: charge migrates relative to the air (up, or out to the glass)
+    buoy: 26,            // lift on charged air
+    swirl: 6,            // vorticity confinement
+    thunder: 1,          // vortex kick along a fresh channel
+    decay: 0.05,         // exposure fade per 1/60 s (also how fast bolt light settles into scar)
+    jag: 0.55, branch: 0.6,
+    spectral: 0.9,       // hue degrees advanced per cell of channel
+    cost: 0.01,        // charge a birth takes from the scar
+    spawnE: 0.012,      // scar this thick quickens cells on its own
+    leak: 0.1,          // per s: living tissue leaks charge into foil
+    rule: 'maze',        // B/S rule for the tissue
+    genHz: 9,
+    evap: 0.16,          // per s: foil evaporates back into charged fog
+    cool: 0.12,         // per s: unclaimed scar cools into foil
+    rodPull: 1
+  };
+  var RULES = {
+    maze:  { B: [3], S: [1, 2, 3, 4, 5] },
+    coral: { B: [3], S: [4, 5, 6, 7, 8] },
+    life:  { B: [3], S: [2, 3] },
+    daynight: { B: [3, 6, 7, 8], S: [3, 4, 6, 7, 8] }
+  };
+
+  function makeSim(opt) {
+    opt = opt || {};
+    var NX = opt.nx || 96, NY = opt.ny || 144, N = NX * NY;
+    var P = Object.assign({}, DEF, opt.params || {});
+    var rng = opt.rng || Math.random;
+    function rand(a, b) { return a + rng() * (b - a); }
+
+    // ---- the jar: a superellipse mask ----
+    var solid = new Uint8Array(N), fluidIdx = [];
+    var ax = NX / 2 - 1.5, by = NY / 2 - 1.5, cx = (NX - 1) / 2, cy = (NY - 1) / 2;
+    for (var j = 0; j < NY; j++) for (var i = 0; i < NX; i++) {
+      var u = Math.abs((i - cx) / ax), v = Math.abs((j - cy) / by);
+      var s = Math.pow(u, 2.6) + Math.pow(v, 2.6) > 1; solid[j * NX + i] = s ? 1 : 0; if (!s) fluidIdx.push(j * NX + i);
+    }
+    var NF = fluidIdx.length;
+    var bottomY = new Int16Array(NX).fill(-1), topY = new Int16Array(NX).fill(-1);
+    for (i = 0; i < NX; i++) for (j = 0; j < NY; j++) if (!solid[j * NX + i]) { if (topY[i] < 0) topY[i] = j; bottomY[i] = j; }
+
+    // ---- fields ----
+    var vx = new Float32Array(N), vy = new Float32Array(N), tvx = new Float32Array(N), tvy = new Float32Array(N);
+    var pr = new Float32Array(N), pr2 = new Float32Array(N), div = new Float32Array(N), curl = new Float32Array(N);
+    var q = new Float64Array(N), qx = new Float64Array(N), qy = new Float64Array(N);     // fog charge + hue vector
+    var dq = new Float64Array(N), dqx = new Float64Array(N), dqy = new Float64Array(N);
+    var E = new Float64Array(N), ex = new Float64Array(N), ey = new Float64Array(N);     // scar
+    var F = new Float64Array(N), fx = new Float64Array(N), fy = new Float64Array(N);     // foil
+    var alive = new Uint8Array(N), nalive = new Uint8Array(N), c = new Float64Array(N), hue = new Float32Array(N), age = new Float32Array(N);
+    var born = new Float32Array(N); // flash on birth, for the renderer
+    var bolts = [], events = [], rods = {}, t = 0, genAcc = 0, lastBolt = -1, qLog = [], boltLog = [], cloudLog = [];
+
+    function seed() {
+      q.fill(0); qx.fill(0); qy.fill(0); E.fill(0); ex.fill(0); ey.fill(0); F.fill(0); fx.fill(0); fy.fill(0);
+      alive.fill(0); c.fill(0); vx.fill(0); vy.fill(0); bolts.length = 0;
+      var per = P.total / NF;
+      for (var k = 0; k < NF; k++) {
+        var id = fluidIdx[k], h = ((id % NX) / NX * 360 + rand(-20, 20)) * Math.PI / 180;
+        q[id] = per; qx[id] = per * Math.cos(h); qy[id] = per * Math.sin(h);
+      }
+    }
+    seed();
+
+    function I(i, j) { return j * NX + i; }
+    function sampleV(arr, x, y) { // bilinear, solid cells read as 0
+      x = Math.max(0, Math.min(NX - 1.001, x)); y = Math.max(0, Math.min(NY - 1.001, y));
+      var i0 = x | 0, j0 = y | 0, fx_ = x - i0, fy_ = y - j0, a = I(i0, j0);
+      return (arr[a] * (1 - fx_) + arr[a + 1] * fx_) * (1 - fy_) + (arr[a + NX] * (1 - fx_) + arr[a + NX + 1] * fx_) * fy_;
+    }
+
+    // ---- push-fog's rule: the air carries, swirls and keeps the charge ----
+    function fluid(dt) {
+      var k, id, i, j, it;
+      var damp = Math.exp(-dt / 1.6), sgn = P.world === 'globe' ? 1 : 0;
+      var mean = P.total / NF;
+      for (k = 0; k < NF; k++) {
+        id = fluidIdx[k];
+        // buoyancy: charged air rises (or, in the globe, presses outward)
+        var lift = P.buoy * Math.min(q[id] / mean, 6) * mean * 8 * dt;
+        if (sgn) { i = id % NX; j = (id / NX) | 0; var rx = i - cx, ry = j - cy, rl = Math.hypot(rx, ry) || 1; vx[id] += rx / rl * lift * 0.5; vy[id] += ry / rl * lift * 0.5; }
+        else vy[id] -= lift;
+        vx[id] *= damp; vy[id] *= damp;
+      }
+      // vorticity confinement
+      for (k = 0; k < NF; k++) { id = fluidIdx[k]; curl[id] = (vy[id + 1] - vy[id - 1] - vx[id + NX] + vx[id - NX]) * 0.5; }
+      for (k = 0; k < NF; k++) {
+        id = fluidIdx[k];
+        var gx = (Math.abs(curl[id + 1]) - Math.abs(curl[id - 1])) * 0.5, gy = (Math.abs(curl[id + NX]) - Math.abs(curl[id - NX])) * 0.5, gl = Math.hypot(gx, gy) + 1e-5;
+        vx[id] += P.swirl * (gy / gl) * curl[id] * dt; vy[id] -= P.swirl * (gx / gl) * curl[id] * dt;
+      }
+      // semi-Lagrangian advection of velocity
+      for (k = 0; k < NF; k++) {
+        id = fluidIdx[k]; i = id % NX; j = (id / NX) | 0;
+        var bx = i - vx[id] * dt, byy = j - vy[id] * dt;
+        tvx[id] = sampleV(vx, bx, byy); tvy[id] = sampleV(vy, bx, byy);
+      }
+      for (k = 0; k < NF; k++) { id = fluidIdx[k]; var sp = Math.hypot(tvx[id], tvy[id]); var cap = sp > 26 ? 26 / sp : 1; vx[id] = tvx[id] * cap; vy[id] = tvy[id] * cap; }
+      // projection
+      for (k = 0; k < NF; k++) {
+        id = fluidIdx[k];
+        var r = solid[id + 1] ? 0 : vx[id + 1], l = solid[id - 1] ? 0 : vx[id - 1], d = solid[id + NX] ? 0 : vy[id + NX], uu = solid[id - NX] ? 0 : vy[id - NX];
+        div[id] = 0.5 * (r - l + d - uu); pr[id] = 0;
+      }
+      for (it = 0; it < 22; it++) {
+        for (k = 0; k < NF; k++) {
+          id = fluidIdx[k]; var pc = pr[id];
+          var pR = solid[id + 1] ? pc : pr[id + 1], pL = solid[id - 1] ? pc : pr[id - 1], pD = solid[id + NX] ? pc : pr[id + NX], pU = solid[id - NX] ? pc : pr[id - NX];
+          pr2[id] = (pR + pL + pD + pU - div[id]) * 0.25;
+        }
+        var tmp = pr; pr = pr2; pr2 = tmp;
+      }
+      for (k = 0; k < NF; k++) {
+        id = fluidIdx[k]; var p0 = pr[id];
+        var qR = solid[id + 1] ? p0 : pr[id + 1], qL = solid[id - 1] ? p0 : pr[id - 1], qD = solid[id + NX] ? p0 : pr[id + NX], qU = solid[id - NX] ? p0 : pr[id - NX];
+        vx[id] -= 0.5 * (qR - qL); vy[id] -= 0.5 * (qD - qU);
+      }
+    }
+
+    // donor-cell (flux-form) advection: exactly conservative, walls pass no flux
+    function driftAt(id, axis) {
+      if (P.world === 'globe') { var i = id % NX, j = (id / NX) | 0, rx = i - cx, ry = j - cy, rl = Math.hypot(rx, ry) || 1; return P.drift * (axis ? ry : rx) / rl; }
+      return axis ? -P.drift : 0;
+    }
+    function advectCharge(dt) {
+      var k, id, maxu = 1;
+      for (k = 0; k < NF; k++) { id = fluidIdx[k]; maxu = Math.max(maxu, Math.abs(vx[id]) + P.drift, Math.abs(vy[id]) + P.drift); }
+      var nsub = Math.max(1, Math.ceil(maxu * dt / 0.22)), h = dt / nsub;
+      for (var sI = 0; sI < nsub; sI++) {
+        dq.fill(0); dqx.fill(0); dqy.fill(0);
+        for (k = 0; k < NF; k++) {
+          id = fluidIdx[k];
+          // east face and south face of each cell (each face once)
+          var e = id + 1;
+          if (!solid[e]) { var ue = 0.5 * (vx[id] + vx[e] + driftAt(id, 0) + driftAt(e, 0)) * h; flux(id, e, ue); }
+          var so = id + NX;
+          if (!solid[so]) { var us = 0.5 * (vy[id] + vy[so] + driftAt(id, 1) + driftAt(so, 1)) * h; flux(id, so, us); }
+        }
+        for (k = 0; k < NF; k++) { id = fluidIdx[k]; q[id] += dq[id]; qx[id] += dqx[id]; qy[id] += dqy[id]; if (q[id] < 0) q[id] = 0; }
+      }
+    }
+    function flux(a, b, u) { // u>0 moves content a->b
+      var src = u > 0 ? a : b, dst = u > 0 ? b : a, f = Math.min(Math.abs(u), 0.24);
+      var m = q[src] * f, mx = qx[src] * f, my = qy[src] * f;
+      dq[src] -= m; dq[dst] += m; dqx[src] -= mx; dqx[dst] += mx; dqy[src] -= my; dqy[dst] += my;
+    }
+    function diffuse(A, AX, AY, kdt) { // conservative neighbour exchange
+      dq.fill(0); dqx.fill(0); dqy.fill(0);
+      for (var k = 0; k < NF; k++) {
+        var id = fluidIdx[k], nb = [id + 1, id + NX];
+        for (var n = 0; n < 2; n++) {
+          var o = nb[n]; if (solid[o]) continue;
+          var m = (A[id] - A[o]) * kdt, mx = (AX[id] - AX[o]) * kdt, my = (AY[id] - AY[o]) * kdt;
+          dq[id] -= m; dq[o] += m; dqx[id] -= mx; dqx[o] += mx; dqy[id] -= my; dqy[o] += my;
+        }
+      }
+      for (k = 0; k < NF; k++) { id = fluidIdx[k]; A[id] += dq[id]; AX[id] += dqx[id]; AY[id] += dqy[id]; }
+    }
+    function moveShare(A, AX, AY, B, BX, BY, id, frac) { // move a fraction of store A's content in cell id to store B
+      var m = A[id] * frac; if (m <= 0) return 0;
+      var mx = AX[id] * frac, my = AY[id] * frac;
+      A[id] -= m; AX[id] -= mx; AY[id] -= my; B[id] += m; BX[id] += mx; BY[id] += my; return m;
+    }
+
+    // ---- light-paint's rule: a bolt spends charge as light that fades from the exposure ----
+    function cellOf(x, y) { var i = Math.round(x), j = Math.round(y); if (i < 0 || j < 0 || i >= NX || j >= NY) return -1; var id = I(i, j); return solid[id] ? -1 : id; }
+    function walk(x0, y0, x1, y1, maxSteps, jag, pull) {
+      var pts = [[x0, y0]], x = x0, y = y0, off = 0;
+      for (var s = 0; s < maxSteps; s++) {
+        var dx = x1 - x, dy = y1 - y, d = Math.hypot(dx, dy); if (d < 1.4) { pts.push([x1, y1]); break; }
+        var ang = Math.atan2(dy, dx);
+        off = off * 0.55 + rand(-1, 1) * jag * 1.25; off = Math.max(-1.25, Math.min(1.25, off));
+        // conductive pull toward live tissue (old channels remember)
+        var tx = 0, ty = 0, n = 0;
+        if (pull > 0) for (var a = 0; a < 6; a++) {
+          var aa = ang + (a - 2.5) * 0.45, rr = 3.5, cid = cellOf(x + Math.cos(aa) * rr, y + Math.sin(aa) * rr);
+          if (cid >= 0 && (alive[cid] || E[cid] > P.spawnE)) { tx += Math.cos(aa); ty += Math.sin(aa); n++; }
+        }
+        var dirx = Math.cos(ang + off), diry = Math.sin(ang + off);
+        if (n) { dirx += tx / n * 0.6 * pull; diry += ty / n * 0.6 * pull; var dl = Math.hypot(dirx, diry); dirx /= dl; diry /= dl; }
+        var nx = x + dirx * 1.3, ny = y + diry * 1.3;
+        if (cellOf(nx, ny) < 0) { nx = x + Math.cos(ang) * 1.3; ny = y + Math.sin(ang) * 1.3; if (cellOf(nx, ny) < 0) break; }
+        x = nx; y = ny; pts.push([x, y]);
+      }
+      return pts;
+    }
+    function strikeTarget(sx, sy) {
+      var ids = Object.keys(rods);
+      if (ids.length) { var best = null, bd = 1e9; ids.forEach(function (k) { var r = rods[k], d = Math.hypot(r.x - sx, r.y - sy); if (d < bd) { bd = d; best = r; } }); return [best.x, best.y, true]; }
+      if (P.world === 'globe') { var a = rand(0, TAU); return [cx + Math.cos(a) * 3, cy + Math.sin(a) * 3, false]; }
+      var tx = Math.round(Math.max(4, Math.min(NX - 5, sx + rand(-0.22, 0.22) * NX)));
+      return [tx, bottomY[tx] - 0.5, false];
+    }
+    function fire(sx, sy, opts) {
+      opts = opts || {};
+      var R = opts.r || P.drainR, frac = opts.frac || P.drainFrac, Q = 0, hx = 0, hy = 0;
+      var i0 = Math.round(sx), j0 = Math.round(sy);
+      var Rc = Math.ceil(R);
+      for (var j = j0 - Rc; j <= j0 + Rc; j++) for (var i = i0 - Rc; i <= i0 + Rc; i++) {
+        if (i < 0 || j < 0 || i >= NX || j >= NY) continue; var id = I(i, j); if (solid[id]) continue;
+        var d2 = (i - sx) * (i - sx) + (j - sy) * (j - sy); if (d2 > R * R) continue;
+        var w = frac * Math.exp(-d2 / (R * R * 0.45));
+        var m = q[id] * w; Q += m; hx += qx[id] * w; hy += qy[id] * w; q[id] -= m; qx[id] -= qx[id] * w; qy[id] -= qy[id] * w;
+      }
+      if (Q <= 0) return null;
+      var tg = opts.target || strikeTarget(sx, sy);
+      var main = walk(sx, sy, tg[0], tg[1], 420, P.jag, P.rodPull);
+      var branches = [], plen = main.length;
+      for (var k = 2; k < plen - 3; k++) {
+        if (rng() > 0.045 * P.branch * (opts.power || 1)) continue;
+        var p = main[k], qn = main[k + 1], ang = Math.atan2(qn[1] - p[1], qn[0] - p[0]) + (rng() < 0.5 ? -1 : 1) * rand(0.35, 0.95);
+        var L = (plen - k) * rand(0.12, 0.4) * 1.3;
+        branches.push(walk(p[0], p[1], p[0] + Math.cos(ang) * L, p[1] + Math.sin(ang) * L, Math.round(L / 1.3) + 2, P.jag * 1.2, 0));
+      }
+      // deposit kernel: channel cells, heavier at the strike point and branch tips
+      var dep = {}, tot = 0;
+      function add(x, y, w) { for (var dj = -1; dj <= 1; dj++) for (var di = -1; di <= 1; di++) { var id = cellOf(x + di, y + dj); if (id < 0) continue; var ww = w * (di || dj ? 0.35 : 1); dep[id] = (dep[id] || 0) + ww; tot += ww; } }
+      main.forEach(function (pp) { add(pp[0], pp[1], 1); });
+      branches.forEach(function (b) { b.forEach(function (pp) { add(pp[0], pp[1], 0.6); }); add(b[b.length - 1][0], b[b.length - 1][1], 3); });
+      var end = main[main.length - 1]; add(end[0], end[1], main.length * 0.35);
+      var depIds = Object.keys(dep).map(Number), depW = new Float64Array(depIds.length);
+      depIds.forEach(function (id, n) { depW[n] = dep[id] / tot; });
+      var baseHue = Math.atan2(hy, hx), h = baseHue + (plen * P.spectral) * Math.PI / 180;
+      var b = { main: main, branches: branches, glow: Q, Q: Q, hue: h, sat: Math.min(1, Math.hypot(hx, hy) / Q), ids: depIds, w: depW, t: 0, power: opts.power || 1, rod: !!tg[2] };
+      bolts.push(b); events.push({ type: 'bolt', bolt: b, t: t });
+      if (b.power >= 1) { lastBolt = t; boltLog.push(t); qLog.push(Q); if (qLog.length > 600) qLog.shift(); if (boltLog.length > 600) boltLog.shift(); }
+      // thunder: vortex kicks along the fresh channel
+      if (P.thunder > 0) for (k = 3; k < plen - 1; k += 5) {
+        var pp = main[k], pq = main[k - 1], tdx = pp[0] - pq[0], tdy = pp[1] - pq[1], tl = Math.hypot(tdx, tdy) || 1, sg = (k / 5) % 2 ? 1 : -1;
+        var ox = pp[0] - tdy / tl * 2.5 * sg, oy = pp[1] + tdx / tl * 2.5 * sg;
+        vortex(ox, oy, 4, sg * P.thunder * 9 * Math.min(2, b.power * Math.sqrt(Q / 2)));
+      }
+      return b;
+    }
+    function vortex(x, y, r, s) {
+      for (var j = Math.floor(y - r); j <= y + r; j++) for (var i = Math.floor(x - r); i <= x + r; i++) {
+        var id = cellOf(i, j); if (id < 0) continue; var dx = i - x, dy = j - y, d2 = dx * dx + dy * dy; if (d2 > r * r) continue;
+        var f = Math.exp(-d2 / (r * r * 0.4)) * s; vx[id] += -dy * f * 0.4; vy[id] += dx * f * 0.4;
+      }
+    }
+    function settleBolts(dt) {
+      var f = 1 - Math.pow(1 - P.decay, dt * 60);
+      for (var n = bolts.length - 1; n >= 0; n--) {
+        var b = bolts[n]; b.t += dt;
+        var d = b.glow * f; if (b.glow < 1e-7) d = b.glow;
+        var cx_ = Math.cos(b.hue) * b.sat, cy_ = Math.sin(b.hue) * b.sat;
+        for (var k = 0; k < b.ids.length; k++) { var id = b.ids[k], m = d * b.w[k]; E[id] += m; ex[id] += m * cx_; ey[id] += m * cy_; }
+        b.glow -= d; if (b.glow <= 0) { b.glow = 0; bolts.splice(n, 1); }
+      }
+    }
+
+    // ---- life-pulse's rule: cells are born where the scar is thick and die back (into foil) ----
+    function generation() {
+      var R = RULES[P.rule] || RULES.maze, Bs = R.B, Ss = R.S, k, id;
+      for (k = 0; k < NF; k++) {
+        id = fluidIdx[k];
+        var n = alive[id - 1] + alive[id + 1] + alive[id - NX] + alive[id + NX] + alive[id - NX - 1] + alive[id - NX + 1] + alive[id + NX - 1] + alive[id + NX + 1];
+        if (alive[id]) nalive[id] = Ss.indexOf(n) >= 0 ? 1 : 0;
+        else {
+          var pool = E[id] + 0.5 * (E[id - 1] + E[id + 1] + E[id - NX] + E[id + NX]), can = pool >= P.cost;
+          nalive[id] = can && (Bs.indexOf(n) >= 0 || (pool > P.spawnE && rng() < 0.12 * Math.min(4, pool / P.spawnE))) ? 2 : 0;
+        }
+      }
+      for (k = 0; k < NF; k++) {
+        id = fluidIdx[k]; var na = nalive[id];
+        if (na === 2) { // birth: pay the cost from the scar, inherit hue
+          // pay the cost from the scar pool (own cell full weight, 4 neighbours half), proportionally
+          var nb4 = [id, id - 1, id + 1, id - NX, id + NX], pw = [1, 0.5, 0.5, 0.5, 0.5], pool2 = 0, hx = 0, hy = 0, z;
+          for (z = 0; z < 5; z++) pool2 += E[nb4[z]] * pw[z];
+          if (pool2 < P.cost) { nalive[id] = 0; continue; }
+          var frac = P.cost / pool2;
+          for (z = 0; z < 5; z++) { var o4 = nb4[z], f4 = frac * pw[z]; hx += ex[o4] * f4; hy += ey[o4] * f4; E[o4] -= E[o4] * f4; ex[o4] -= ex[o4] * f4; ey[o4] -= ey[o4] * f4; }
+          // lineage: blend parents' hue with the scar's
+          var px = 0, py = 0;
+          [id - 1, id + 1, id - NX, id + NX, id - NX - 1, id - NX + 1, id + NX - 1, id + NX + 1].forEach(function (o) { if (alive[o]) { px += Math.cos(hue[o]); py += Math.sin(hue[o]); } });
+          c[id] = P.cost; hue[id] = Math.atan2(hy + py * P.cost * 0.15, hx + px * P.cost * 0.15); age[id] = 0; born[id] = 1; nalive[id] = 1;
+        } else if (alive[id] && !na) die(id);
+      }
+      for (k = 0; k < NF; k++) { id = fluidIdx[k]; if (nalive[id] === 1) alive[id] = 1; }
+    }
+    function die(id) {
+      var m = c[id]; F[id] += m; fx[id] += m * Math.cos(hue[id]); fy[id] += m * Math.sin(hue[id]); c[id] = 0; alive[id] = 0;
+    }
+    function tissue(dt) {
+      var lf = 1 - Math.exp(-P.leak * dt), k, id;
+      for (k = 0; k < NF; k++) {
+        id = fluidIdx[k]; if (born[id] > 0) born[id] = Math.max(0, born[id] - dt * 3);
+        if (!alive[id]) continue;
+        age[id] += dt; var m = c[id] * lf; c[id] -= m; F[id] += m; fx[id] += m * Math.cos(hue[id]); fy[id] += m * Math.sin(hue[id]);
+        if (c[id] < P.cost * 0.22) die(id);
+      }
+    }
+
+    // ---- holo-foil's rule: foil shimmers by how much it holds, and evaporates into fog ----
+    function foil(dt) {
+      var ef = 1 - Math.exp(-P.evap * dt), cf = 1 - Math.exp(-P.cool * dt);
+      for (var k = 0; k < NF; k++) {
+        var id = fluidIdx[k];
+        moveShare(F, fx, fy, q, qx, qy, id, ef);
+        if (E[id] > 0) moveShare(E, ex, ey, F, fx, fy, id, cf);
+      }
+    }
+
+    // ---- breakdown ----
+    var rodAcc = 0;
+    function breakdown(dt) {
+      var mean = P.total / NF, th = P.threshK * mean, best = -1, bq = th;
+      if (t - lastBolt > 0.04) {
+        for (var k = 0; k < NF; k++) { var id = fluidIdx[k]; if (q[id] > bq) { bq = q[id]; best = id; } }
+        if (best >= 0) fire(best % NX, (best / NX) | 0);
+      }
+      // a held finger is a lightning rod: small arcs reach for the nearest charge
+      rodAcc += dt;
+      if (rodAcc > 0.1) {
+        rodAcc = 0;
+        Object.keys(rods).forEach(function (key) {
+          var r = rods[key], bi = -1, bv = mean * 1.2, R = 55;
+          for (var j = Math.max(0, Math.round(r.y - R)); j <= Math.min(NY - 1, r.y + R); j++) for (var i = Math.max(0, Math.round(r.x - R)); i <= Math.min(NX - 1, r.x + R); i++) {
+            var id2 = I(i, j); if (solid[id2]) continue; var d2 = (i - r.x) * (i - r.x) + (j - r.y) * (j - r.y); if (d2 > R * R || d2 < 16) continue;
+            var sc = q[id2] * (1 - Math.sqrt(d2) / R * 0.5); if (sc > bv) { bv = sc; bi = id2; }
+          }
+          if (bi >= 0) fire(bi % NX, (bi / NX) | 0, { r: 2.5, frac: 0.35, power: 0.6, target: [r.x, r.y, true] });
+        });
+      }
+    }
+
+    function ledger() {
+      var s = { fog: 0, bolt: 0, scar: 0, tissue: 0, foil: 0 };
+      for (var k = 0; k < NF; k++) { var id = fluidIdx[k]; s.fog += q[id]; s.scar += E[id]; s.tissue += c[id]; s.foil += F[id]; }
+      bolts.forEach(function (b) { s.bolt += b.glow; });
+      s.total = s.fog + s.bolt + s.scar + s.tissue + s.foil; return s;
+    }
+    function cloudCharge() { // how much fog sits in the charging region (top quarter, or the outer rim)
+      var s = 0;
+      for (var k = 0; k < NF; k++) {
+        var id = fluidIdx[k], j = (id / NX) | 0, i = id % NX;
+        if (P.world === 'globe') { var u = (i - cx) / ax, v = (j - cy) / by; if (u * u + v * v > 0.6) s += q[id]; }
+        else if (j < cy - by * 0.5) s += q[id];
+      }
+      return s;
+    }
+    var logAcc = 0;
+    function step(dt) {
+      t += dt;
+      fluid(dt);
+      advectCharge(dt);
+      diffuse(q, qx, qy, 0.6 * dt);
+      diffuse(F, fx, fy, 0.25 * dt);
+      diffuse(E, ex, ey, 0.08 * dt);
+      breakdown(dt);
+      settleBolts(dt);
+      genAcc += dt; var gp = 1 / P.genHz; while (genAcc >= gp) { genAcc -= gp; generation(); }
+      tissue(dt);
+      foil(dt);
+      logAcc += dt; if (logAcc >= 1 / 20) { logAcc = 0; cloudLog.push(cloudCharge()); if (cloudLog.length > 1200) cloudLog.shift(); }
+    }
+    // correct the float drift of the ledger (rescale the medium to the conserved total)
+    function renorm() {
+      var s = ledger(), err = P.total - s.total; if (!(s.total === s.total)) { seed(); return ledger(); } if (s.fog <= 0) return s;
+      var k = 1 + err / s.fog; for (var n = 0; n < NF; n++) { var id = fluidIdx[n]; q[id] *= k; qx[id] *= k; qy[id] *= k; }
+      return s;
+    }
+
+    function stir(x, y, dx, dy, r) {
+      r = r || 5;
+      for (var j = Math.floor(y - r); j <= y + r; j++) for (var i = Math.floor(x - r); i <= x + r; i++) {
+        var id = cellOf(i, j); if (id < 0) continue; var d2 = (i - x) * (i - x) + (j - y) * (j - y); if (d2 > r * r) continue;
+        var f = Math.exp(-d2 / (r * r * 0.35)); vx[id] += dx * f; vy[id] += dy * f;
+      }
+    }
+    function spark(x, y) { // tap: discharge the nearest charge onto the tap
+      var mean = P.total / NF, bi = -1, bv = mean * 1.5, R = 90;
+      for (var j = Math.max(0, Math.round(y - R)); j <= Math.min(NY - 1, y + R); j++) for (var i = Math.max(0, Math.round(x - R)); i <= Math.min(NX - 1, x + R); i++) {
+        var id = I(i, j); if (solid[id]) continue; var d2 = (i - x) * (i - x) + (j - y) * (j - y); if (d2 > R * R || d2 < 9) continue;
+        var sc = q[id] * (1 - Math.sqrt(d2) / R * 0.5); if (sc > bv) { bv = sc; bi = id; }
+      }
+      if (bi < 0) return null;
+      return fire(bi % NX, (bi / NX) | 0, { target: [x, y, true], frac: 0.85 });
+    }
+    function setRod(key, x, y) { if (x === null) delete rods[key]; else rods[key] = { x: x, y: y }; }
+    function inside(x, y) { return cellOf(x, y) >= 0; }
+
+    return {
+      NX: NX, NY: NY, N: N, NF: NF, P: P, DEF: DEF, RULES: RULES, solid: solid,
+      fields: { vx: vx, vy: vy, q: q, qx: qx, qy: qy, E: E, ex: ex, ey: ey, F: F, fx: fx, fy: fy, alive: alive, c: c, hue: hue, born: born, age: age },
+      bolts: bolts, rods: rods, step: step, renorm: renorm, ledger: ledger, seed: seed, stir: stir, spark: spark, setRod: setRod, inside: inside,
+      takeEvents: function () { var e = events.slice(); events.length = 0; return e; },
+      time: function () { return t; }, qLog: qLog, boltLog: boltLog, cloudLog: cloudLog, mean: function () { return P.total / NF; },
+      set: function (o) { Object.keys(o).forEach(function (k) { if (k in P) P[k] = o[k]; }); }
+    };
+  }
+
+  // ---- clock metrics: is a rhythm emerging? ----
+  function metrics(boltLog, cloudLog, now) {
+    var iv = [];
+    var recent = boltLog.filter(function (x) { return x > now - 60; });
+    for (var i = 1; i < recent.length; i++) iv.push(recent[i] - recent[i - 1]);
+    var m = 0, s = 0; iv.forEach(function (x) { m += x; }); m /= iv.length || 1;
+    iv.forEach(function (x) { s += (x - m) * (x - m); }); s = Math.sqrt(s / (iv.length || 1));
+    var B = iv.length > 3 ? (s - m) / (s + m) : 0;
+    // autocorrelation of the cloud store (20 Hz samples, last 40 s)
+    var x = cloudLog.slice(-800), n = x.length, mu = 0, best = 0, lag = 0;
+    x.forEach(function (v) { mu += v; }); mu /= n || 1;
+    var den = 0; x.forEach(function (v) { den += (v - mu) * (v - mu); });
+    var ac = [];
+    for (var L = 2; L < Math.min(400, n / 2); L++) { var num = 0; for (var k = 0; k + L < n; k++) num += (x[k] - mu) * (x[k + L] - mu); ac.push(num / (den || 1)); }
+    // first local max after the first dip below zero
+    var dipped = false;
+    for (var a = 1; a < ac.length - 1; a++) { if (ac[a] < 0) dipped = true; if (dipped && ac[a] > ac[a - 1] && ac[a] >= ac[a + 1] && ac[a] > best) { best = ac[a]; lag = (a + 2) / 20; } }
+    return { bolts: recent.length, rate: recent.length / Math.min(60, Math.max(1, now)), meanIv: m, cv: m ? s / m : 0, burst: B, acPeak: best, period: lag };
+  }
+
+  var api = { makeSim: makeSim, metrics: metrics, DEF: DEF, RULES: RULES };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.StormSim = api;
+})(this);
+
+</script>
+<script>
+(function () {
+  'use strict';
+  var TAU = Math.PI * 2;
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var sim = StormSim.makeSim({});
+  var NX = sim.NX, NY = sim.NY, N = sim.N, Fd = sim.fields;
+  var stage = document.getElementById('stage'), glc = document.getElementById('gl'), film = document.getElementById('film'), bloom = document.getElementById('bloom'), touch = document.getElementById('touch');
+  var W = 1, H = 1, dprG = 1, dprF = 1, box = { x: 0, y: 0, cs: 1 };
+
+  // ================= WebGL2: the jar (fog, foil, tissue, scar, soap-film skin) =================
+  var gl = glc.getContext('webgl2', { antialias: false, premultipliedAlpha: false, alpha: false });
+  var VS = '#version 300 es\nvoid main(){vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);gl_Position=vec4(p*2.0-1.0,0.0,1.0);}';
+  var FS = [
+    '#version 300 es',
+    'precision highp float;',
+    'uniform sampler2D uA,uB,uC,uD;',
+    'uniform vec2 uGrid,uRes; uniform vec3 uBox; uniform float uTime,uThr,uCost,uWorld,uMean; uniform vec4 uShape; uniform vec2 uLight; uniform vec4 uFlash;',
+    'out vec4 o;',
+    '#define TAU 6.2831853',
+    'float h21(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}',
+    'float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(h21(i),h21(i+vec2(1,0)),f.x),mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),f.x),f.y);}',
+    'float fbm(vec2 p){float a=0.5,s=0.0;for(int i=0;i<4;i++){s+=a*vn(p);p=p*2.03+vec2(1.7,9.2);a*=0.5;}return s;}',
+    'vec3 hsv(float h,float s,float v){vec3 k=clamp(abs(fract(h+vec3(0.0,2.0/3.0,1.0/3.0))*6.0-3.0)-1.0,0.0,1.0);return v*mix(vec3(1.0),k,s);}',
+    'vec3 film(float nm,float ct){float opd=2.0*1.38*nm*ct;return 0.5+0.5*cos(TAU*opd/vec3(650.0,532.0,450.0));}',
+    'void main(){',
+    '  vec2 px=vec2(gl_FragCoord.x,uRes.y-gl_FragCoord.y);',
+    '  vec2 pc=(px-uBox.xy)/uBox.z; vec2 tc=pc/uGrid; vec2 cc=pc-0.5;',
+    '  vec2 uv=(cc-uShape.zw)/uShape.xy; float s=pow(abs(uv.x),2.6)+pow(abs(uv.y),2.6);',
+    '  float aa=2.6/(uShape.x*uBox.z)*1.6;',
+    '  float inside=1.0-smoothstep(1.0-aa*2.0,1.0,s);',
+    // background: Aeternalis void, faint gold dust
+    '  vec2 sp=px/uRes.y; vec3 col=mix(vec3(0.02,0.008,0.05),vec3(0.06,0.02,0.09),smoothstep(1.2,0.0,length(sp-vec2(uRes.x/uRes.y*0.5,0.45))));',
+    '  float st=h21(floor(px/2.0)); col+=vec3(1.0,0.85,0.6)*step(0.9985,st)*(0.4+0.6*sin(uTime*2.0+st*80.0));',
+    '  vec4 A=texture(uA,tc),B=texture(uB,tc),C=texture(uC,tc),D=texture(uD,tc);',
+    '  vec2 e1=vec2(1.0/uGrid.x,0.0),e2=vec2(0.0,1.0/uGrid.y);',
+    '  float q=A.x/uThr;',
+    // fog: charge-weighted lineage hue, noise dragged by the flow
+    '  vec2 np=pc*0.085-D.yz*0.012+vec2(0.0,uTime*0.12);',
+    '  float n=fbm(np+fbm(np*0.7+uTime*0.03)*1.3);',
+    '  float hq=atan(B.y,B.x)/TAU; float sq=clamp(length(B.xy),0.0,1.0);',
+    '  vec3 fogc=hsv(hq,0.35+0.5*sq,1.0);',
+    '  float rel=A.x/uMean; float dens=(0.24*pow(clamp(rel,0.0,12.0),0.6)+0.9*pow(clamp(q,0.0,2.0),1.2))*(0.3+1.1*n);',
+    '  vec3 inner=vec3(0.012,0.008,0.03)+fogc*dens*0.5;',
+    '  float cor=smoothstep(0.6,1.0,q);',
+    '  inner+=fogc*cor*0.25*(0.5+0.5*sin(uTime*30.0+n*20.0));',
+    '  inner+=vec3(0.9,0.85,1.0)*cor*step(0.982,h21(floor(px/2.0)+floor(uTime*20.0)));',
+    '  inner+=uFlash.rgb*uFlash.a*(0.05+dens*0.9);',
+    // scar: embers along fresh channels
+    '  float eS=A.z/(uCost*1.4); float em=clamp(eS,0.0,1.5);',
+    '  vec3 ec=hsv(atan(C.w,C.z)/TAU,0.7,1.0);',
+    '  inner+=mix(ec,vec3(1.0,0.96,0.9),clamp(em-0.5,0.0,1.0))*em*0.55*(0.8+0.2*sin(uTime*13.0+pc.x));',
+    // foil: thin-film slick, thickness = charge held
+    '  float fS=A.y/(uCost*0.6);',
+    '  float fL=texture(uA,tc-e1).y,fR=texture(uA,tc+e1).y,fU=texture(uA,tc-e2).y,fD=texture(uA,tc+e2).y;',
+    '  vec3 fn=normalize(vec3((fL-fR)/(uCost*0.6)*1.5,(fU-fD)/(uCost*0.6)*1.5,1.0));',
+    '  float fthick=160.0+900.0*clamp(fS,0.0,1.6)/1.6+60.0*n;',
+    '  vec3 fcol=pow(film(fthick,0.55+0.45*fn.z),vec3(1.6));',
+    '  float fa=smoothstep(0.08,0.7,fS)*0.5;',
+    '  vec2 Ld=uLight-pc; vec3 L=normalize(vec3(Ld,22.0)); float lI=0.35+uFlash.a*1.6;',
+    '  vec3 fl=fcol*(0.12+0.7*max(dot(fn,L),0.0)*lI+dens*0.5)+vec3(1.0)*pow(max(dot(reflect(-L,fn),vec3(0,0,1)),0.0),30.0)*0.4*lI;',
+    '  inner=mix(inner,inner*0.6+fl,fa);',
+    // tissue: glass fulgurite, foil skin whose thickness is the charge it holds, facet glitter
+    '  ivec2 gb=ivec2(floor(cc)); float fld=0.0; vec2 grd=vec2(0.0); ivec2 gmax=ivec2(uGrid)-1;',
+    '  for(int dy=-1;dy<=2;dy++)for(int dx=-1;dx<=2;dx++){ivec2 ce=clamp(gb+ivec2(dx,dy),ivec2(0),gmax);float a=texelFetch(uD,ce,0).w;if(a<0.5)continue;vec2 dd=cc-vec2(ce);float w=exp(-dot(dd,dd)/0.8);fld+=w;grd-=w*dd*2.5;}',
+    '  float goo=smoothstep(0.55,0.85,fld);',
+    '  if(goo>0.001){',
+    '    float cw=0.0,csum=0.0,bsum=0.0; vec2 hsum=vec2(0.0);',
+    '    for(int dy=-1;dy<=2;dy++)for(int dx=-1;dx<=2;dx++){ivec2 ce=clamp(gb+ivec2(dx,dy),ivec2(0),gmax);vec4 dD=texelFetch(uD,ce,0);if(dD.w<0.5)continue;vec2 dd=cc-vec2(ce);float w=exp(-dot(dd,dd)/0.8);cw+=w;csum+=texelFetch(uA,ce,0).w*w;hsum+=texelFetch(uB,ce,0).zw*w;bsum+=dD.x*w;}',
+    '    vec3 tn=normalize(vec3(-grd*0.45,1.0));',
+    '    float cS=clamp(csum/max(cw,1e-4)/uCost,0.0,1.2);',
+    '    float tth=230.0+760.0*cS+70.0*n;',
+    '    float ct=clamp(dot(tn,vec3(0,0,1)),0.0,1.0);',
+    '    vec3 tf=pow(film(tth,0.4+0.6*ct),vec3(1.5));',
+    '    vec3 lin=hsv(atan(hsum.y,hsum.x)/TAU,0.75,1.0);',
+    '    float df=max(dot(tn,L),0.0), sp2=pow(max(dot(reflect(-L,tn),vec3(0,0,1)),0.0),44.0);',
+    '    vec3 tc2=mix(tf,lin,0.3)*(0.16+0.85*df*lI+dens*0.6)+lin*cS*0.22+vec3(1.0)*sp2*0.9*lI;',
+    '    tc2+=tf*(1.0-ct)*0.6+tf*0.22+lin*0.12;',
+    // glitter: one facet per 3px cell
+    '    vec2 gcell=floor(px/3.0); float gr=h21(gcell); vec3 gnv=normalize(vec3(h21(gcell+7.1)-0.5,h21(gcell+3.3)-0.5,0.9));',
+    '    float gl2=pow(max(dot(reflect(-L,gnv),vec3(0,0,1)),0.0),110.0)*step(0.55,gr)*(0.5+0.5*sin(uTime*6.0+gr*40.0));',
+    '    tc2+=vec3(1.0,0.97,0.9)*gl2*(0.6+lI);',
+    '    tc2+=vec3(1.0)*clamp(bsum/max(cw,1e-4),0.0,1.0)*0.9;',
+    '    inner=mix(inner,tc2,goo*0.94);',
+    '  }',
+    // plasma-globe core electrode
+    '  if(uWorld>0.5){float r=length(cc-uShape.zw); inner+=vec3(0.85,0.75,1.0)*smoothstep(4.0,1.5,r)*1.2+vec3(0.6,0.4,1.0)*0.5/(1.0+r*r*0.08);}',
+    // soap-film skin of the jar
+    '  float ang=atan(uv.y,uv.x);',
+    '  float rim=exp(-pow((s-0.965)*16.0,2.0));',
+    '  float near=texture(uA,clamp(tc*0.94+0.03,0.0,1.0)).x/uThr;',
+    '  float sth=420.0+170.0*sin(ang*3.0+uTime*0.35)+110.0*sin(ang*7.0-uTime*0.6)+90.0*fbm(vec2(ang*3.0,uTime*0.2))+220.0*clamp(near,0.0,1.0);',
+    '  vec3 skin=pow(film(sth,0.6),vec3(1.4));',
+    '  float hl=smoothstep(0.6,1.0,cos(ang+2.3))*exp(-pow((s-0.86)*9.0,2.0));',
+    '  inner+=skin*rim*(0.35+uFlash.a*0.8)+vec3(1.0)*hl*0.12;',
+    '  col=mix(col,inner,inside);',
+    // outer halo from the skin
+    '  float out1=max(s-1.0,0.0); col+=skin*exp(-out1*14.0)*(1.0-inside)*0.14+uFlash.rgb*uFlash.a*exp(-out1*5.0)*(1.0-inside)*0.12;',
+    '  col=1.0-exp(-col*1.35);',
+    '  col+=(h21(px+fract(uTime))-0.5)/255.0;',
+    '  o=vec4(col,1.0);',
+    '}'
+  ].join('\n');
+  function sh(type, src) { var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
+  var prog = gl.createProgram(); gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+  gl.useProgram(prog); gl.bindVertexArray(gl.createVertexArray());
+  var U = {}; ['uA', 'uB', 'uC', 'uD', 'uGrid', 'uRes', 'uBox', 'uTime', 'uThr', 'uCost', 'uWorld', 'uMean', 'uShape', 'uLight', 'uFlash'].forEach(function (k) { U[k] = gl.getUniformLocation(prog, k); });
+  var TEX = [], BUF = [];
+  for (var ti = 0; ti < 4; ti++) {
+    var tx = gl.createTexture(); gl.activeTexture(gl.TEXTURE0 + ti); gl.bindTexture(gl.TEXTURE_2D, tx);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, NX, NY, 0, gl.RGBA, gl.FLOAT, null);
+    TEX.push(tx); BUF.push(new Float32Array(N * 4)); gl.uniform1i(U[['uA', 'uB', 'uC', 'uD'][ti]], ti);
+  }
+  function upload() {
+    var a = BUF[0], b = BUF[1], c = BUF[2], d = BUF[3];
+    for (var i = 0, k = 0; i < N; i++, k += 4) {
+      var q = Fd.q[i], F = Fd.F[i], E = Fd.E[i];
+      a[k] = q; a[k + 1] = F; a[k + 2] = E; a[k + 3] = Fd.c[i];
+      if (q > 1e-9) { b[k] = Fd.qx[i] / q; b[k + 1] = Fd.qy[i] / q; } else { b[k] = b[k + 1] = 0; }
+      b[k + 2] = Math.cos(Fd.hue[i]); b[k + 3] = Math.sin(Fd.hue[i]);
+      if (F > 1e-9) { c[k] = Fd.fx[i] / F; c[k + 1] = Fd.fy[i] / F; } else { c[k] = c[k + 1] = 0; }
+      if (E > 1e-9) { c[k + 2] = Fd.ex[i] / E; c[k + 3] = Fd.ey[i] / E; } else { c[k + 2] = c[k + 3] = 0; }
+      d[k] = Fd.born[i]; d[k + 1] = Fd.vx[i]; d[k + 2] = Fd.vy[i]; d[k + 3] = Fd.alive[i];
+    }
+    for (var t = 0; t < 4; t++) { gl.activeTexture(gl.TEXTURE0 + t); gl.bindTexture(gl.TEXTURE_2D, TEX[t]); gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, NX, NY, gl.RGBA, gl.FLOAT, BUF[t]); }
+  }
+  var flash = [1, 1, 1, 0], light = [NX / 2, NY * 0.7];
+  function drawGL(time) {
+    gl.viewport(0, 0, glc.width, glc.height);
+    var ax = NX / 2 - 1.5, by = NY / 2 - 1.5;
+    gl.uniform2f(U.uGrid, NX, NY); gl.uniform2f(U.uRes, glc.width, glc.height); gl.uniform3f(U.uBox, box.x * dprG, box.y * dprG, box.cs * dprG);
+    gl.uniform1f(U.uTime, time); gl.uniform1f(U.uThr, sim.P.threshK * sim.mean()); gl.uniform1f(U.uCost, sim.P.cost); gl.uniform1f(U.uMean, sim.mean());
+    gl.uniform1f(U.uWorld, sim.P.world === 'globe' ? 1 : 0); gl.uniform4f(U.uShape, ax, by, (NX - 1) / 2, (NY - 1) / 2);
+    gl.uniform2f(U.uLight, light[0] + 0.5, light[1] + 0.5); gl.uniform4f(U.uFlash, flash[0], flash[1], flash[2], flash[3]);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+
+  // ================= light-paint: pens of light on a fading exposure =================
+  var g = film.getContext('2d'), bx = bloom.getContext('2d'), tmp = document.createElement('canvas'), tx2 = tmp.getContext('2d');
+  function rand(a, b) { return a + Math.random() * (b - a); }
+  function sprite(h) {
+    var c = document.createElement('canvas'); c.width = c.height = 64; var x = c.getContext('2d'), gr = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.22, h === null ? 'rgba(255,255,255,.8)' : 'hsla(' + h + ',100%,70%,.85)'); gr.addColorStop(1, h === null ? 'rgba(255,255,255,0)' : 'hsla(' + h + ',100%,55%,0)');
+    x.fillStyle = gr; x.fillRect(0, 0, 64, 64); return c;
+  }
+  var SPR = []; for (var si = 0; si < 24; si++) SPR.push(sprite(si * 15)); var WHITE = sprite(null);
+  function spr(h) { return SPR[((Math.round(h / 15) % 24) + 24) % 24]; }
+  function paint(h, a, l) { return 'hsla(' + h + ',100%,' + (60 + (l || 0) * 30) + '%,' + a + ')'; }
+  function ln(x0, y0, x1, y1) { g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke(); }
+  var DISP = 1;
+  function pen(x0, y0, x1, y1, w, h, a, coreA, gm) {
+    if (a <= 0.004) return; g.lineCap = 'round'; gm = gm === undefined ? 1 : gm;
+    g.strokeStyle = paint(h, a * 0.12 * gm); g.lineWidth = w * 4; ln(x0, y0, x1, y1);
+    var dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy) || 1, o = Math.max(w * 0.7, 1.2) * DISP, nx = -dy / L * o, ny = dx / L * o;
+    g.lineWidth = Math.max(0.8, w * 0.5);
+    g.strokeStyle = paint(h - 55, a * 0.4); ln(x0 + nx, y0 + ny, x1 + nx, y1 + ny);
+    g.strokeStyle = paint(h + 55, a * 0.4); ln(x0 - nx, y0 - ny, x1 - nx, y1 - ny);
+    g.strokeStyle = paint(h, a * 0.6); g.lineWidth = w; ln(x0, y0, x1, y1);
+    if (coreA > 0) { g.strokeStyle = 'rgba(255,255,255,' + (a * coreA * 0.8) + ')'; g.lineWidth = Math.max(0.7, w * 0.3); ln(x0, y0, x1, y1); }
+  }
+  var sparks = [];
+  function addSpark(x, y, vx, vy, h, s, life, flashy) { sparks.push({ x: x, y: y, px: x, py: y, vx: vx, vy: vy, h: h, s: s, life: life, t: 0, tw: rand(0, TAU), flash: !!flashy }); if (sparks.length > 900) sparks.splice(0, sparks.length - 900); }
+  function stepSpark(s, dt) {
+    s.t += dt; if (s.t >= s.life) return false;
+    s.px = s.x; s.py = s.y; var dmp = Math.pow(0.95, dt * 60); s.x += s.vx * dt; s.y += s.vy * dt; s.vx *= dmp; s.vy = s.vy * dmp + 60 * dt;
+    var k = s.t / s.life, al = 1 - k, tw = reduce ? 1 : 1 - 0.35 * 0.5 * (1 + Math.sin(s.tw + s.t * 18));
+    if (s.flash) { g.globalAlpha = al * 0.55; var z = s.s * (1 - k * 0.4); g.drawImage(WHITE, s.x - z, s.y - z, z * 2, z * 2); g.globalAlpha = 1; return true; }
+    pen(s.px, s.py, s.x, s.y, Math.max(0.8, s.s * 0.22), s.h, al * 0.8 * tw, 0.6, 0.6);
+    g.globalAlpha = al * tw * 0.5; var sz = s.s * 0.9; g.drawImage(spr(s.h), s.x - sz, s.y - sz, sz * 2, sz * 2); g.globalAlpha = 1;
+    return true;
+  }
+  function toPx(p) { return [box.x + (p[0] + 0.5) * box.cs, box.y + (p[1] + 0.5) * box.cs]; }
+  function toCell(x, y) { return [(x - box.x) / box.cs - 0.5, (y - box.y) / box.cs - 0.5]; }
+  var vbolts = [];
+  function jitterPath(pts, amt) { // each re-strike regenerates the channel's fine shape
+    var out = [], off = 0;
+    for (var i = 0; i < pts.length; i++) {
+      var p = toPx(pts[i]), a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1;
+      off = off * 0.5 + rand(-1, 1) * amt; var e = (i === 0 || i === pts.length - 1) ? 0 : off;
+      out.push([p[0] - dy / L * e, p[1] + dx / L * e]);
+    }
+    return out;
+  }
+  function strike(vb) {
+    var b = vb.b, w = vb.w, endHue = b.hue * 180 / Math.PI, n = b.main.length, h0 = endHue - n * sim.P.spectral;
+    var main = jitterPath(b.main, box.cs * 0.45);
+    for (var i = 1; i < main.length; i++) pen(main[i - 1][0], main[i - 1][1], main[i][0], main[i][1], w, h0 + i * sim.P.spectral, 0.95, 1, 0.8);
+    if (vb.power >= 1) b.branches.forEach(function (br) {
+      var pp = jitterPath(br, box.cs * 0.35), k0 = 0;
+      for (var j = 1; j < pp.length; j++) pen(pp[j - 1][0], pp[j - 1][1], pp[j][0], pp[j][1], w * 0.45, h0 + 25 + j * sim.P.spectral, 0.7 * (1 - j / pp.length * 0.6), 0.6, 0.8);
+    });
+    var s0 = main[0], s1 = main[main.length - 1];
+    (vb.power < 1 ? [[s1, 0.45]] : [[s0, 0.3], [s1, 0.75]]).forEach(function (e) { addSpark(e[0][0], e[0][1], 0, 0, null, 34 * vb.power * e[1] * Math.min(1.2, 0.6 + Math.sqrt(b.Q) * 0.3), 0.18, true); });
+  }
+  function onBolt(b) {
+    var power = b.power, w = (power < 1 ? 1.1 : 1.6 + 1.4 * Math.sqrt(b.Q)) * Math.max(0.8, box.cs / 4);
+    var vb = { b: b, w: w, power: power, times: power < 1 ? [0] : [0, rand(0.06, 0.075), rand(0.14, 0.17)], t: 0 };
+    vbolts.push(vb);
+    var end = toPx(b.main[b.main.length - 1]), eh = b.hue * 180 / Math.PI;
+    if (power >= 1) {
+      var ns = Math.round(10 + 10 * Math.min(2, b.Q));
+      for (var k = 0; k < ns; k++) { var a = rand(Math.PI, TAU); var sp = rand(60, 260); addSpark(end[0], end[1], Math.cos(a) * sp, Math.sin(a) * sp, eh + rand(-30, 30), rand(4, 8), rand(0.4, 1)); }
+      var rgb = hsl2rgb(((eh % 360) + 360) % 360, 1, 0.75); flash = [rgb[0], rgb[1], rgb[2], Math.min(1, 0.45 + 0.25 * b.Q)];
+      light = b.main[b.main.length - 1].slice();
+    }
+  }
+  function hsl2rgb(h, s, l) { var c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l - c / 2, r = 0, gg = 0, bb = 0;
+    if (h < 60) { r = c; gg = x; } else if (h < 120) { r = x; gg = c; } else if (h < 180) { gg = c; bb = x; } else if (h < 240) { gg = x; bb = c; } else if (h < 300) { r = x; bb = c; } else { r = c; bb = x; }
+    return [r + m, gg + m, bb + m]; }
+  function stepFilm(dt) {
+    var d = 1 - Math.pow(1 - sim.P.decay, dt * 60);
+    g.globalCompositeOperation = 'source-over'; g.fillStyle = 'rgba(0,0,0,' + d + ')'; g.fillRect(0, 0, W, H);
+    g.globalCompositeOperation = 'difference'; g.fillStyle = 'rgb(2,2,2)'; g.fillRect(0, 0, W, H);
+    g.globalCompositeOperation = 'lighter';
+    for (var i = vbolts.length - 1; i >= 0; i--) { var vb = vbolts[i]; vb.t += dt; while (vb.times.length && vb.times[0] <= vb.t) { vb.times.shift(); strike(vb); } if (!vb.times.length) vbolts.splice(i, 1); }
+    for (i = sparks.length - 1; i >= 0; i--) if (!stepSpark(sparks[i], dt)) sparks.splice(i, 1);
+    // the rod: a pinpoint of light at each held finger
+    Object.keys(ptrs).forEach(function (id) { var p = ptrs[id]; if (!p.rod) return; g.globalAlpha = 0.18 + 0.1 * Math.sin(perfNow * 0.02); g.drawImage(spr(270), p.x - 14, p.y - 14, 28, 28); g.globalAlpha = 1; });
+    g.globalCompositeOperation = 'source-over';
+    // cheap bloom: shrink and grow
+    var bw = bloom.width, bh = bloom.height;
+    bx.globalCompositeOperation = 'copy'; bx.drawImage(film, 0, 0, bw, bh);
+    bx.globalCompositeOperation = 'lighter'; tx2.globalCompositeOperation = 'copy'; tx2.drawImage(film, 0, 0, tmp.width, tmp.height); bx.drawImage(tmp, 0, 0, bw, bh);
+    bx.globalCompositeOperation = 'source-over';
+  }
+
+  // ================= layout =================
+  function resize() {
+    W = stage.clientWidth; H = stage.clientHeight;
+    dprG = Math.min(window.devicePixelRatio || 1, 1.5); dprF = Math.min(window.devicePixelRatio || 1, 1.5);
+    glc.width = Math.round(W * dprG); glc.height = Math.round(H * dprG);
+    film.width = Math.round(W * dprF); film.height = Math.round(H * dprF); g.setTransform(dprF, 0, 0, dprF, 0, 0);
+    g.fillStyle = '#000'; g.fillRect(0, 0, W, H);
+    bloom.width = Math.max(8, Math.round(W / 6)); bloom.height = Math.max(8, Math.round(H / 6)); tmp.width = Math.max(4, Math.round(W / 20)); tmp.height = Math.max(4, Math.round(H / 20));
+    bloom.style.opacity = 0.55;
+    var wide = document.body.classList.contains('devmode') && W > 900, x0 = wide ? 330 : 0, x1 = wide ? W - 350 : W;
+    var availH = H - 70, cs = Math.min((x1 - x0) * 0.94 / NX, availH * 0.95 / NY);
+    box.cs = cs; box.x = x0 + (x1 - x0 - NX * cs) / 2; box.y = Math.max(6, (availH - NY * cs) / 2 + 4);
+  }
+  new ResizeObserver(resize).observe(stage); resize();
+
+  // ================= touch grammar: drag stirs · hold is a rod · tap sparks =================
+  var ptrs = {}, perfNow = 0, lastOutTap = 0;
+  touch.addEventListener('pointerdown', function (e) {
+    try { touch.setPointerCapture(e.pointerId); } catch (_) {}
+    ptrs[e.pointerId] = { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, t0: perfNow, lt: perfNow, drag: false, rod: false };
+  });
+  touch.addEventListener('pointermove', function (e) {
+    var p = ptrs[e.pointerId]; if (!p) return;
+    var dx = e.clientX - p.x, dy = e.clientY - p.y, ddt = Math.max(0.008, (perfNow - p.lt) / 1000);
+    if (!p.drag && Math.hypot(e.clientX - p.sx, e.clientY - p.sy) > 10) { p.drag = true; if (p.rod) { p.rod = false; sim.setRod(e.pointerId, null); } }
+    if (p.drag) { var c = toCell(e.clientX, e.clientY), vx = dx / box.cs / ddt, vy = dy / box.cs / ddt, sp = Math.hypot(vx, vy), cap = sp > 60 ? 60 / sp : 1; sim.stir(c[0], c[1], vx * cap * 0.5, vy * cap * 0.5, 6); }
+    else if (p.rod) { var c2 = toCell(e.clientX, e.clientY); sim.setRod(e.pointerId, c2[0], c2[1]); }
+    p.x = e.clientX; p.y = e.clientY; p.lt = perfNow;
+  });
+  function release(e) {
+    var p = ptrs[e.pointerId]; if (!p) return;
+    if (!p.drag && !p.rod && perfNow - p.t0 < 260) {
+      var c = toCell(p.x, p.y);
+      if (sim.inside(c[0], c[1])) { var b = sim.spark(c[0], c[1]); if (!b) fizzle(p.x, p.y); }
+      else if (perfNow - lastOutTap < 350) { lastOutTap = 0; var nw = WORLDS[(WORLDS.indexOf(worldName) + 1) % WORLDS.length]; applyWorld(nw); toast(WORLD_NAME[nw]); }
+      else { lastOutTap = perfNow; fizzle(p.x, p.y); }
+    }
+    if (p.rod) sim.setRod(e.pointerId, null);
+    delete ptrs[e.pointerId];
+  }
+  touch.addEventListener('pointerup', release); touch.addEventListener('pointercancel', release);
+  function fizzle(x, y) { for (var k = 0; k < 8; k++) { var a = rand(0, TAU); addSpark(x, y, Math.cos(a) * 70, Math.sin(a) * 70, 270 + rand(-30, 30), 3, 0.35); } }
+  function checkRods() {
+    Object.keys(ptrs).forEach(function (id) {
+      var p = ptrs[id]; if (p.drag || p.rod || perfNow - p.t0 < 260) return;
+      var c = toCell(p.x, p.y); if (!sim.inside(c[0], c[1])) return; p.rod = true; sim.setRod(id, c[0], c[1]);
+    });
+  }
+
+  // ================= DEV MODE =================
+  var devBtn = document.getElementById('devBtn');
+  function setDev(on) { document.body.classList.toggle('devmode', on); devBtn.classList.toggle('on', on); devBtn.setAttribute('aria-pressed', on ? 'true' : 'false'); devBtn.textContent = on ? 'DEV MODE · ON' : 'DEV MODE'; if (on) writeRecipe(); resize(); }
+  devBtn.onclick = function () { setDev(!document.body.classList.contains('devmode')); };
+  var SL = [
+    ['threshK', 'threshold', 10, 120, 1], ['drainR', 'drain r', 3, 20, 1], ['drainFrac', 'drain', 0.2, 1, 0.01], ['drift', 'drift', 0, 8, 0.1], ['buoy', 'buoyancy', 0, 60, 1],
+    ['swirl', 'swirl', 0, 20, 0.5], ['thunder', 'thunder', 0, 3, 0.05], ['decay', 'fade', 0.01, 0.2, 0.005], ['jag', 'jag', 0, 1, 0.01], ['branch', 'branch', 0, 1.5, 0.01],
+    ['spectral', 'spectral', 0, 3, 0.05], ['cost', 'birth cost', 0.002, 0.02, 0.0005], ['leak', 'leak', 0, 0.2, 0.005], ['evap', 'evaporate', 0.02, 0.5, 0.01], ['cool', 'scar cool', 0, 0.4, 0.01], ['genHz', 'gen hz', 2, 20, 1]
+  ];
+  var slBox = document.getElementById('sliders'), slEls = {};
+  SL.forEach(function (s) {
+    var row = document.createElement('div'); row.className = 'row';
+    row.innerHTML = '<span>' + s[1] + '</span><input type="range" min="' + s[2] + '" max="' + s[3] + '" step="' + s[4] + '"><span></span>';
+    var inp = row.children[1], val = row.children[2];
+    inp.value = sim.P[s[0]]; val.textContent = fmt(sim.P[s[0]]);
+    inp.oninput = function () { var o = {}; o[s[0]] = +inp.value; sim.set(o); val.textContent = fmt(+inp.value); if (typeof writeRecipe === 'function') writeRecipe(); };
+    slEls[s[0]] = [inp, val]; slBox.appendChild(row);
+  });
+  function fmt(v) { return Math.abs(v) < 0.1 ? v.toFixed(4) : Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(0); }
+  function syncSliders() { SL.forEach(function (s) { slEls[s[0]][0].value = sim.P[s[0]]; slEls[s[0]][1].textContent = fmt(sim.P[s[0]]); }); }
+  var worldSel = document.getElementById('world'), ruleSel = document.getElementById('rule');
+  var WORLDS = ['storm', 'globe', 'fulgurite', 'supercell'];
+  var WORLD_NAME = { storm: 'STORM JAR', globe: 'PLASMA GLOBE', fulgurite: 'FULGURITE GARDEN', supercell: 'SUPERCELL' };
+  var WORLD_P = {
+    storm: {},
+    globe: { world: 'globe', drift: 3.6, buoy: 10 },
+    fulgurite: { threshK: 18, drainR: 7, leak: 0.08, spectral: 2.2, decay: 0.03, branch: 1.1, jag: 0.7, cost: 0.005, spawnE: 0.006, cool: 0.2 },
+    supercell: { threshK: 80, drainR: 16, drainFrac: 0.95, decay: 0.08, spectral: 0.4, thunder: 2.5, swirl: 12 }
+  };
+  var worldName = 'storm';
+  function applyWorld(name, reseed) {
+    worldName = name; var p = Object.assign({}, StormSim.DEF, WORLD_P[name]); sim.set(p);
+    if (reseed !== false) sim.seed(); worldSel.value = name; ruleSel.value = sim.P.rule; syncSliders(); writeRecipe();
+  }
+  worldSel.onchange = function () { applyWorld(worldSel.value); };
+  ruleSel.onchange = function () { sim.set({ rule: ruleSel.value }); writeRecipe(); };
+  // Mutate: random within a safer band than the sliders, keeping every invariant
+  var MUT = { threshK: [14, 70], drainR: [5, 15], drainFrac: [0.5, 0.95], drift: [1.5, 5], buoy: [8, 40], swirl: [2, 14], thunder: [0.3, 2.5], decay: [0.025, 0.1],
+    jag: [0.3, 0.85], branch: [0.3, 1.2], spectral: [0.3, 2.5], cost: [0.005, 0.012], leak: [0.05, 0.14], evap: [0.08, 0.3], cool: [0.06, 0.25], genHz: [5, 14] };
+  document.getElementById('mutate').onclick = function () {
+    var o = {}; Object.keys(MUT).forEach(function (k) { var r = MUT[k]; o[k] = r[0] + Math.random() * (r[1] - r[0]); if (k === 'drainR' || k === 'genHz' || k === 'threshK') o[k] = Math.round(o[k]); });
+    o.rule = 'maze'; /* the other rules starve the glass; keep them as a hand choice */
+    sim.set(o); ruleSel.value = sim.P.rule; syncSliders(); writeRecipe();
+  };
+  var recipeEl = document.getElementById('recipe');
+  function writeRecipe() { var o = {}; Object.keys(StormSim.DEF).forEach(function (k) { var v = sim.P[k]; o[k] = typeof v === 'number' ? +v.toFixed(4) : v; }); recipeEl.value = JSON.stringify(o, null, 1); }
+  document.getElementById('copy').onclick = function () { writeRecipe(); try { navigator.clipboard.writeText(recipeEl.value).catch(function () {}); } catch (_) {} recipeEl.select(); };
+  document.getElementById('apply').onclick = function () { try { var o = JSON.parse(recipeEl.value); var w = sim.P.world; sim.set(o); if (sim.P.world !== w) sim.seed(); ruleSel.value = sim.P.rule; syncSliders(); } catch (_) { recipeEl.style.borderColor = '#ff6b8a'; setTimeout(function () { recipeEl.style.borderColor = ''; }, 900); } };
+  var toastEl = document.getElementById('toast'), toastT = 0;
+  function toast(t) { toastEl.textContent = t; toastEl.style.opacity = 1; clearTimeout(toastT); toastT = setTimeout(function () { toastEl.style.opacity = 0; }, 1300); }
+  var paused = false;
+  document.getElementById('reseed').onclick = function () { sim.seed(); };
+  document.getElementById('pause').onclick = function (e) { paused = !paused; e.target.textContent = paused ? 'PLAY' : 'PAUSE'; };
+  var STORES = [['fog', '#8f7cff'], ['bolt', '#ffffff'], ['scar', '#ffb36b'], ['tissue', '#6bf0ff'], ['foil', '#f37ad8']];
+  var ledBox = document.getElementById('ledger'), ledEls = {};
+  STORES.forEach(function (s) { var r = document.createElement('div'); r.className = 'led'; r.innerHTML = '<span>' + s[0] + '</span><i style="background:' + s[1] + '"></i><span></span>'; ledBox.appendChild(r); ledEls[s[0]] = r; });
+  var chart = document.getElementById('chart'), cx2 = chart.getContext('2d'), lastErr = 0;
+  function drawDev() {
+    var L = sim.ledger();
+    STORES.forEach(function (s) { var r = ledEls[s[0]]; r.children[1].style.width = Math.max(1, L[s[0]] / sim.P.total * 100) + '%'; r.children[2].textContent = L[s[0]].toFixed(2); });
+    document.getElementById('ledsum').textContent = 'total ' + L.total.toFixed(4) + ' / ' + sim.P.total + '   drift before renorm ' + (lastErr * 100).toExponential(1) + '%';
+    var cw = chart.clientWidth, ch = chart.clientHeight; if (chart.width !== cw * 2) { chart.width = cw * 2; chart.height = ch * 2; }
+    cx2.setTransform(2, 0, 0, 2, 0, 0); cx2.clearRect(0, 0, cw, ch);
+    var log = sim.cloudLog.slice(-800), mx = 1e-6; log.forEach(function (v) { mx = Math.max(mx, v); });
+    cx2.strokeStyle = '#b88cff'; cx2.lineWidth = 1.2; cx2.beginPath();
+    log.forEach(function (v, i) { var x = cw - (log.length - 1 - i) * cw / 800, y = ch - 6 - v / mx * (ch - 14); if (i) cx2.lineTo(x, y); else cx2.moveTo(x, y); }); cx2.stroke();
+    var now = sim.time(); cx2.strokeStyle = 'rgba(243,210,122,.8)';
+    sim.boltLog.forEach(function (tb) { if (tb < now - 40) return; var x = cw - (now - tb) * cw / 40; cx2.beginPath(); cx2.moveTo(x, 0); cx2.lineTo(x, 7); cx2.stroke(); });
+    cx2.fillStyle = 'rgba(233,227,255,.6)'; cx2.fillText('cloud charge, last 40 s · ticks = bolts', 6, ch - 4);
+    var m = StormSim.metrics(sim.boltLog, sim.cloudLog, now);
+    document.getElementById('metrics').textContent = 'bolts/min ' + (m.rate * 60).toFixed(0) + '   interval CV ' + m.cv.toFixed(2) + '\nburstiness ' + m.burst.toFixed(2) + ' (periodic −1 · random 0 · bursty +)\ncloud autocorr peak ' + m.acPeak.toFixed(2) + (m.period ? ' @ ' + m.period.toFixed(1) + ' s' : '');
+    var v = m.bolts < 5 ? 'listening…' : m.burst < -0.3 ? 'relaxation: periodic discharges' : m.burst < -0.06 ? 'leaning regular: weak relaxation' : m.burst <= 0.08 ? 'random, Poisson-like' : 'bursty: avalanches';
+    document.getElementById('verdict').textContent = '→ ' + v;
+  }
+
+  // ================= loop =================
+  var last = performance.now(), devAcc = 0, uploadSkip = 0;
+  function frame(now) {
+    perfNow = now; var dt = Math.min(1 / 30, (now - last) / 1000); last = now;
+    checkRods();
+    if (!paused) {
+      sim.step(dt);
+      var L = sim.renorm(); lastErr = Math.abs(L.total - sim.P.total) / sim.P.total;
+      sim.takeEvents().forEach(function (ev) { if (ev.type === 'bolt') onBolt(ev.bolt); });
+    }
+    flash[3] *= Math.exp(-dt * 7);
+    upload(); drawGL(now / 1000); stepFilm(paused ? 0 : dt);
+    devAcc += dt; if (document.body.classList.contains('devmode') && devAcc > 0.2) { devAcc = 0; drawDev(); }
+    requestAnimationFrame(frame);
+  }
+  writeRecipe(); if (location.hash === '#dev') setDev(true);
+  requestAnimationFrame(frame);
+  window.__storm = { sim: sim, box: box, ptrs: ptrs, bolts: 0,
+    advance: function (sec) { for (var f = 0; f < sec * 60; f++) { sim.step(1 / 60); sim.renorm(); sim.takeEvents(); } },
+    pause: function (v) { paused = v; }, toPx: toPx, world: function (n) { applyWorld(n); }, mutate: function () { document.getElementById('mutate').click(); } };
+  var _onBolt = onBolt; onBolt = function (b) { window.__storm.bolts++; _onBolt(b); };
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en" data-mode="toy">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="/gooae/shell/gooae-shell.css">
+<script src="/gooae/shell/gooae-shell.js" data-toy="honey-heart-hive" data-top="header" data-dev="#devBtn" data-bar=".devbar" data-panel="header, .bench" data-frame="device"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Honey Heart Hive</title>
+<style>
+:root{--acid:#ffd23f;--ink:#fff3e0;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#12021a;color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+body{overflow:hidden}
+#tank{position:fixed;inset:0;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;z-index:1}
+#tank canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.err{position:absolute;inset:0;display:grid;place-items:center;padding:2rem;text-align:center;font:500 15px/1.5 var(--mono)}
+header,.bench{display:none}
+html[data-mode="dev"] header{display:block;position:fixed;top:calc(12px + env(safe-area-inset-top,0px));left:16px;right:16px;z-index:5;pointer-events:none;max-width:560px}
+header h1{margin:0;font:800 clamp(22px,4vw,34px)/1 ui-sans-serif,system-ui,sans-serif;letter-spacing:.06em;color:#ffd27a;text-shadow:0 0 18px rgba(255,160,30,.55)}
+header p{margin:.45rem 0 0;font:400 12px/1.45 var(--mono);color:rgba(255,236,210,.82)}
+header .mood{color:#4ff3ff;letter-spacing:.08em}
+html[data-mode="dev"] .bench{display:block;position:fixed;z-index:6;top:12px;right:12px;bottom:calc(70px + env(safe-area-inset-bottom,0px));width:min(320px,calc(100vw - 24px));overflow:auto;padding:14px 14px 18px;border-radius:16px;background:rgba(18,4,26,.72);border:1px solid rgba(255,190,90,.22);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+@media (max-aspect-ratio:3/4){html[data-mode="dev"] .bench{top:auto;height:44vh;right:12px;left:12px;width:auto}}
+.bench h2{margin:14px 0 6px;font:700 11px/1 var(--mono);letter-spacing:.14em;color:#ffb347;text-transform:uppercase}
+.btns,.chips{display:flex;flex-wrap:wrap;gap:6px}
+.bench button{font:500 12px/1 var(--mono);color:var(--ink);background:rgba(255,170,40,.12);border:1px solid rgba(255,190,90,.35);border-radius:999px;padding:8px 11px;cursor:pointer}
+.bench button[aria-pressed="true"]{background:#ffb347;color:#1a0420}
+.bench button:focus-visible,.devbar button:focus-visible{outline:2px solid var(--acid);outline-offset:2px}
+.row{display:grid;grid-template-columns:1fr auto;gap:2px 8px;margin:8px 0}
+.row label{font:400 12px/1.2 var(--mono);color:rgba(255,236,210,.85)}
+.row output{font:500 11px/1.2 var(--mono);color:#4ff3ff}
+.row input{grid-column:1/-1;width:100%;accent-color:#ffb347}
+.anat{margin:0;padding-left:16px;font:400 11.5px/1.5 var(--mono);color:rgba(255,236,210,.78)}
+.anat b{color:#ffd27a;font-weight:600}
+.devbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:20;display:flex;gap:6px;padding:4px;border-radius:999px;background:rgba(18,4,26,.55);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.devbar button{font:600 11px/1 var(--mono);letter-spacing:.08em;color:rgba(255,240,220,.85);background:transparent;border:0;border-radius:999px;padding:10px 15px;cursor:pointer}
+.devbar button[aria-pressed="true"]{background:var(--acid);color:#1a0420}
+</style>
+</head>
+<body>
+<div id="tank" aria-label="Honey Heart Hive: a living honey world. Tap or drag across the honeycomb to send waves, tap the glass heart to poke it, press and hold the heart then let go to spit a heart bubble, drag bubbles back into the heart to feed it, tap bubbles to pop them, flick the honey drips.">
+  <canvas id="gl"></canvas>
+  <canvas id="fx"></canvas>
+</div>
+
+<header>
+  <h1>HONEY HEART HIVE</h1>
+  <p>A liveable honey world. The honeycomb is a ripple-bloom graph and the glass heart is an oracle creature. Its gut is a mirror vault, its skin is honey foil, and its scars are letters.</p>
+  <p class="mood" id="mood">MOOD: CURIOUS</p>
+  <p>tap comb · wave &nbsp; drag · trace &nbsp; tap heart · poke &nbsp; hold heart · squeeze/spit &nbsp; bubble → heart · feed &nbsp; tap bubble · pop &nbsp; flick drips</p>
+</header>
+
+<aside class="bench" id="bench" aria-label="Controls">
+  <div class="btns">
+    <button type="button" id="bSpit">Spit bubble</button>
+    <button type="button" id="bPoke">Poke heart</button>
+    <button type="button" id="bFeed">Feed</button>
+    <button type="button" id="bWave">Comb wave</button>
+    <button type="button" id="bDrip">Drip</button>
+  </div>
+  <h2>Species</h2><div id="pals" class="chips"></div>
+  <h2>Heart (oracle creature)</h2><div id="slHeart"></div>
+  <h2>Comb (ripple bloom)</h2><div id="slComb"></div>
+  <h2>Anatomy</h2>
+  <ul class="anat">
+    <li><b>Comb</b>: every hex cell is a node with six neighbours. Waves hop from cell to cell and each cell rings like a spring. Cells lift, shift hue, glow cyan, and fill with honey.</li>
+    <li><b>Heart body</b>: a raymarched SDF heart that beats, squashes and jiggles, with glass that refracts the comb behind it.</li>
+    <li><b>Nerves</b>: pokes travel across the heart's surface, and each one also kicks a wave out into the comb.</li>
+    <li><b>Skin</b>: thin-film honey foil over marbled gold and magenta swirl, stirred by the waves.</li>
+    <li><b>Scars</b>: churning glyphs trail each wave. Their alphabet grows with everything the heart eats.</li>
+    <li><b>Eye and gut</b>: an almond window looks into an infinite mirror corridor, tinted by the last meal.</li>
+    <li><b>Voice</b>: squeeze and release to spit a glass heart bubble that carries a glyph.</li>
+    <li><b>World</b>: drips grow, fall and splash into the pool, which sends waves through the comb or pokes the heart.</li>
+  </ul>
+</aside>
+
+<nav class="devbar" aria-label="Mode"><button id="devBtn" type="button" aria-pressed="false">DEV MODE</button></nav>
+
+<script id="fs" type="x-shader/x-fragment">#version 300 es
+precision highp float;
+uniform vec2  uRes;
+uniform float uTime;
+uniform vec3  uCamPos;
+uniform mat3  uCamRot;
+uniform float uFov;
+uniform mat3  uBody;
+uniform vec3  uCenter;
+uniform vec3  uSquash;
+uniform vec2  uJig;
+uniform vec4  uPoke[8];
+uniform float uAmp[8];
+uniform vec3  uLight;
+uniform vec3  uEye;
+uniform float uLid;
+uniform vec2  uLook;
+uniform float uEyeSize, uZoom, uRoll, uFly, uHue, uExcite;
+uniform float uFoil, uWaveSpeed, uGlyph, uSpiral, uIdle;
+uniform vec3  uColA, uColB, uColC, uBg0, uBg1, uWall, uFed;
+uniform float uFedOn;
+uniform sampler2D uAtlas;
+uniform float uGlyphN;
+uniform sampler2D uComb;
+uniform ivec2 uCombN;
+uniform float uCombScale;
+uniform float uHueSwing;
+uniform float uPoolY;
+uniform vec4  uSplash[6];
+out vec4 o;
+
+#define TAU 6.2831853
+mat2 rot(float a){ float c = cos(a), s = sin(a); return mat2(c, s, -s, c); }
+vec3 hueRot(vec3 c, float a){ const vec3 k = vec3(0.57735); float ca = cos(a); return c * ca + cross(k, c) * sin(a) + k * dot(k, c) * (1.0 - ca); }
+float hash21(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+
+// ---------------- honey marble (the image's swirls) ----------------
+vec3 marble(vec2 p, float t, float stir){
+  vec2 q = p;
+  for (int i = 0; i < 4; i++){
+    float fi = float(i);
+    q += (0.32 + 0.22 * stir) * vec2(sin(q.y * 1.9 + t * 0.27 + fi * 1.3), cos(q.x * 1.7 - t * 0.23 + fi * 2.1));
+  }
+  float b  = 0.5 + 0.5 * sin(q.x * 4.0 + q.y * 3.0 + sin(q.y * 2.0) * 1.5);
+  float b2 = 0.5 + 0.5 * sin(q.y * 7.0 - q.x * 2.0 + t * 0.2);
+  vec3 magc = mix(uColB, uFed, uFedOn * 0.6);
+  vec3 c = mix(uColA * 0.22, uColA * 1.05, smoothstep(0.2, 0.8, b));
+  c = mix(c, magc * 0.85, smoothstep(0.72, 0.95, b2) * 0.85);
+  c = mix(c, uBg1 * 0.55, smoothstep(0.85, 1.0, 1.0 - b) * 0.7);
+  c += uColA * pow(1.0 - abs(b * 2.0 - 1.0), 18.0) * 0.8;
+  c += uColC * pow(1.0 - abs(b2 * 2.0 - 1.0), 40.0) * 0.45;
+  return c;
+}
+
+// ---------------- honeycomb: one hex cell per graph node ----------------
+vec4 hexCell(vec2 p){
+  const vec2 r = vec2(1.0, 1.7320508); const vec2 h = r * 0.5;
+  vec2 a = mod(p, r) - h, b = mod(p - h, r) - h;
+  vec2 g = dot(a, a) < dot(b, b) ? a : b;
+  return vec4(g, p - g);
+}
+float hexD(vec2 g){ g = abs(g); return max(dot(g, vec2(0.5, 0.8660254)), g.x); }
+vec4 combNode(vec2 c){
+  float row = floor(c.y / 0.8660254 + 0.5);
+  float odd = mod(row, 2.0);
+  float col = floor(c.x - 0.5 * odd + 0.5);
+  ivec2 id = clamp(ivec2(int(col), int(row)), ivec2(0), uCombN - 1);
+  return texelFetch(uComb, id, 0);
+}
+
+float poolSurface(float x){
+  float y = uPoolY + 0.007 * sin(x * 6.0 + uTime * 1.3) + 0.004 * sin(x * 13.0 - uTime * 2.1);
+  for (int i = 0; i < 6; i++){
+    float age = uTime - uSplash[i].y;
+    if (age < 0.0 || age > 4.0) continue;
+    float dx = abs(x - uSplash[i].x);
+    y += uSplash[i].z * exp(-age * 1.3) * exp(-dx * 2.2) * sin(dx * 30.0 - age * 9.0) * 0.012;
+  }
+  return y;
+}
+
+// sp: screen point in units of screen height, y down
+vec3 world(vec2 sp){
+  float t = uTime;
+  vec2 p = sp * uCombScale + 1.0;
+  vec4 h = hexCell(p);
+  vec4 nd = combNode(h.zw);
+  float x = nd.r, e = nd.g, hon = nd.b;
+  float lift = clamp(x, -1.0, 1.0);
+  vec2 g = h.xy;
+  float hd = hexD(g);
+  float inner = 0.425 + 0.035 * lift;
+  float rr = clamp(hd / inner, 0.0, 1.0);
+  vec2 gn = g / max(length(g), 1e-4);
+  float dome = sqrt(max(1.0 - rr * rr, 0.0));
+  vec3 n = normalize(vec3(gn * rr * (0.6 + 0.6 * abs(lift)), dome + 0.25));
+  vec3 L = normalize(vec3(-0.4, -0.6, 0.7));
+  float sh = max(dot(n, L), 0.0);
+
+  vec3 c1 = uBg1 * 1.5, c2 = mix(uBg1, uColB, 0.7) * 1.1, c3 = uColA * 1.05, c4 = mix(uColA, vec3(1.0, 0.85, 0.45), 0.45) * 1.5;
+  vec3 cell = hon < 0.35 ? mix(c1, c2, hon / 0.35) : hon < 0.65 ? mix(c2, c3, (hon - 0.35) / 0.3) : mix(c3, c4, (hon - 0.65) / 0.35);
+  cell *= (0.35 + 1.15 * (1.0 - rr) * (0.45 + 0.7 * hon)) * (1.0 + e * 0.45);
+  cell = hueRot(cell, lift * uHueSwing);
+  cell *= 0.55 + 0.7 * sh;
+  cell += vec3(1.0, 0.85, 0.6) * pow(max(dot(reflect(-L, n), vec3(0.0, 0.0, 1.0)), 0.0), 28.0) * 0.4 * (0.25 + hon);
+  cell += uColC * e * 0.55 * smoothstep(0.7, 1.0, rr) + uColB * e * 0.12 * (1.0 - rr);
+
+  vec3 wall = mix(uBg1 * 0.4, uWall * 0.75, hon * 0.85 + 0.05) * (0.5 + 0.5 * smoothstep(0.5, inner, hd));
+  wall += uColA * 0.3 * e + uColC * 0.3 * e * e;
+  wall *= 1.0 - 0.6 * smoothstep(0.47, 0.5, hd);
+  float wallM = smoothstep(inner - 0.012, inner + 0.012, hd);
+  vec3 col = mix(cell, wall, wallM);
+
+  // depth haze toward the edges so the heart reads first
+  col *= 0.88;
+
+  // honey pool
+  float ps = poolSurface(sp.x);
+  if (sp.y > ps){
+    float depth = sp.y - ps;
+    vec3 m = marble(sp * vec2(2.2, 3.2) + vec2(0.0, -t * 0.03), t, 0.4 + e * 0.6);
+    col = mix(col * uColA * 0.6, m, 0.78);
+    col *= 1.0 - 0.45 * smoothstep(0.0, 0.3, depth);
+    col += vec3(1.0, 0.9, 0.6) * exp(-depth * 260.0) * 0.9;
+    col += uColA * exp(-depth * 40.0) * 0.25;
+  } else {
+    col += uColA * exp(-(ps - sp.y) * 18.0) * 0.12;
+  }
+  return col;
+}
+
+// ---------------- the heart creature ----------------
+vec3 toLocal(vec3 p){
+  vec3 q = transpose(uBody) * (p - uCenter);
+  float k = (q.y + 1.1) * 0.5;
+  q.x -= uJig.x * k; q.z -= uJig.y * k;
+  return q / uSquash;
+}
+
+float waves(vec3 qn, out float trail){
+  float d = 0.0; trail = 0.0;
+  for (int i = 0; i < 8; i++){
+    float age = uTime - uPoke[i].w;
+    if (age < 0.0 || age > 5.0) continue;
+    float ang = acos(clamp(dot(qn, uPoke[i].xyz), -1.0, 1.0));
+    float x = ang - age * uWaveSpeed;
+    float env = uAmp[i] * exp(-age * 1.1);
+    d += env * exp(-x * x / 0.035);
+    trail += env * smoothstep(-1.2, -0.06, x) * (1.0 - smoothstep(-0.06, 0.1, x)) * exp(-age * 0.35);
+  }
+  return d;
+}
+
+float heartSDF(vec3 q){
+  vec3 p = q * 15.0;
+  p.y += 1.2;
+  p.z *= 2.0 - p.y / 15.0;
+  p.y = 4.0 + 1.2 * p.y - abs(p.x) * sqrt(max((20.0 - abs(p.x)) / 15.0, 0.0));
+  return (length(p) - 15.0) / 15.0;
+}
+
+float map(vec3 p){
+  vec3 q = toLocal(p);
+  vec3 qn = q / max(length(q), 1e-4);
+  float tr;
+  float disp = waves(qn, tr) * 0.07;
+  float goo = (0.012 * sin(uTime * 1.6 + q.y * 2.0) + 0.01 * sin(3.1 * q.x + uTime * 1.3) * sin(2.3 * q.y - uTime * 0.9) * sin(2.7 * q.z + uTime)) * uIdle;
+  float d = heartSDF(q) - disp - goo;
+  return d * 0.3 * min(uSquash.x, min(uSquash.y, uSquash.z));
+}
+
+vec3 calcNormal(vec3 p){
+  const vec2 k = vec2(1.0, -1.0); const float e = 0.0015;
+  return normalize(k.xyy * map(p + k.xyy * e) + k.yyx * map(p + k.yyx * e) + k.yxy * map(p + k.yxy * e) + k.xxx * map(p + k.xxx * e));
+}
+
+vec3 gut(vec3 p, vec3 d, float h){
+  vec3 ad = abs(d);
+  int cax = (ad.x >= ad.y && ad.x >= ad.z) ? 0 : (ad.y >= ad.z ? 1 : 2);
+  vec3 acc = vec3(0.0); float att = 1.0, travel = 0.0;
+  float px = uFov * 2.0 / uRes.y;
+  const float W0 = 0.006;
+  vec3 ca = mix(uColA, uFed, uFedOn * 0.5), cb = mix(uColB, uFed, uFedOn * 0.35);
+  for (int b = 0; b < 16; b++){
+    vec3 sd = vec3(d.x >= 0.0 ? 1.0 : -1.0, d.y >= 0.0 ? 1.0 : -1.0, d.z >= 0.0 ? 1.0 : -1.0);
+    vec3 tt = (sd * h - p) / max(abs(d), vec3(1e-5)) * sd;
+    float T = max(min(tt.x, min(tt.y, tt.z)), 0.0);
+    int ax = (tt.x <= tt.y && tt.x <= tt.z) ? 0 : (tt.y <= tt.z ? 1 : 2);
+    vec3 col = mix(ca, cb, (b % 2 == 1) ? 0.75 : 0.0);
+    float g = 0.0;
+    for (int a = 0; a < 3; a++){
+      vec2 q0; vec2 dq; float pa; float da;
+      if (a == 0){ q0 = p.yz; dq = d.yz; pa = p.x; da = d.x; }
+      else if (a == 1){ q0 = p.xz; dq = d.xz; pa = p.y; da = d.y; }
+      else { q0 = p.xy; dq = d.xy; pa = p.z; da = d.z; }
+      float den = max(dot(dq, dq), 1e-6);
+      for (int m = 0; m < 4; m++){
+        vec2 c = vec2((m % 2 == 0) ? h : -h, (m < 2) ? h : -h);
+        float t = clamp(dot(c - q0, dq) / den, 0.0, T);
+        vec2 df = q0 + dq * t - c;
+        float d2 = dot(df, df);
+        float w = W0 + (travel + t) * px * 0.7;
+        float s = pa + da * t;
+        float wave = 0.5 + 0.5 * sin(s * 3.0 - uTime * 2.6 + c.x * 5.1 + c.y * 8.3 + float(a) * 2.0);
+        g += (0.45 + 2.2 * pow(wave, 12.0)) * (exp(-d2 / (w * w)) * (W0 / w) + 0.035 * 0.0007 / (d2 + 0.0007));
+      }
+    }
+    acc += col * g * att;
+    p += d * T; travel += T;
+    float tw = (ax == cax) ? uSpiral * 0.07 : 0.0;
+    if (ax == 0){ d.x = -d.x; p.yz = rot(tw) * p.yz; d.yz = rot(tw) * d.yz; }
+    else if (ax == 1){ d.y = -d.y; p.xz = rot(tw) * p.xz; d.xz = rot(tw) * d.xz; }
+    else { d.z = -d.z; p.xy = rot(tw) * p.xy; d.xy = rot(tw) * d.xy; }
+    p = clamp(p, vec3(-h * 0.9999), vec3(h * 0.9999));
+    att *= (ax == cax) ? 0.86 : 0.3;
+    if (att < 0.015) break;
+  }
+  return acc * 2.4;
+}
+
+void main(){
+  vec2 fc = gl_FragCoord.xy;
+  vec2 sp = vec2(fc.x, uRes.y - fc.y) / uRes.y;
+  vec3 col = world(sp);
+
+  vec2 uv = (fc - 0.5 * uRes) / uRes.y;
+  vec3 rd = normalize(uCamRot * vec3(uv * 2.0 * uFov, -1.0));
+  vec3 ro = uCamPos;
+
+  // warm halo around the heart
+  float cd = length(cross(rd, uCenter - ro));
+  col += uColA * 0.16 * exp(-max(cd - 0.75, 0.0) * 2.6) + uColB * 0.05 * exp(-max(cd - 0.9, 0.0) * 1.2);
+
+  vec3 oc = ro - uCenter;
+  float bb = dot(oc, rd), cc = dot(oc, oc) - 1.5 * 1.5, disc = bb * bb - cc;
+  if (disc > 0.0){
+    float t = max(0.0, -bb - sqrt(disc)), tmax = -bb + sqrt(disc);
+    bool hit = false;
+    for (int i = 0; i < 120; i++){
+      float d = map(ro + rd * t);
+      if (d < 0.0006 * t){ hit = true; break; }
+      t += d;
+      if (t > tmax) break;
+    }
+    if (hit){
+      vec3 p = ro + rd * t, n = calcNormal(p);
+      vec3 q = toLocal(p), qn = normalize(q);
+      float trail; waves(qn, trail);
+      vec3 V = -rd, L = normalize(uLight - p), H = normalize(L + V), R = reflect(rd, n);
+      float NdV = clamp(dot(n, V), 0.0, 1.0), NdL = max(dot(n, L), 0.0), NdH = max(dot(n, H), 0.0);
+
+      // glass: peek at the comb through the honey
+      vec3 nv = transpose(uCamRot) * n;
+      vec2 rfc = fc - nv.xy * uRes.y * 0.11;
+      vec3 behind = world(vec2(rfc.x, uRes.y - rfc.y) / uRes.y);
+      vec3 marb = marble(q.xy * 1.7 + vec2(q.z * 0.9, 0.0) + vec2(2.3, 1.1), uTime * 0.7, trail * 1.5 + 0.2);
+      float edge = pow(1.0 - NdV, 1.5);
+      vec3 bodyC = mix(behind * uColA * 1.5, marb * 1.25, 0.45 + 0.4 * edge);
+      bodyC *= 0.6 + 0.55 * NdL;
+
+      // honey thin film, thickness stirred by the passing waves
+      float thick = 300.0 + 220.0 * (0.5 + 0.5 * sin(qn.x * 5.0 + uTime * 0.3) * sin(qn.y * 6.0 - uTime * 0.2)) + 520.0 * trail;
+      float cosT = sqrt(max(1.0 - (1.0 - NdV * NdV) / 2.1025, 0.0));
+      vec3 gd = normalize(cross(n, vec3(0.0, 1.0, 0.0)) + vec3(1e-4));
+      float opd = 2.0 * 1.45 * thick * cosT + uFoil * 650.0 * dot(V + L, gd);
+      vec3 film = pow(0.5 + 0.5 * cos(TAU * opd / vec3(650.0, 532.0, 450.0)), vec3(1.4));
+      vec3 filmT = mix(film, film * uColA * 1.6, 0.35);
+      vec3 skin = bodyC;
+      skin += filmT * (0.06 + 0.3 * max(R.y, 0.0) + 0.85 * pow(NdH, 16.0)) * uFoil;
+      skin += film * pow(1.0 - NdV, 4.0) * 0.7 * uFoil;
+      skin += uColA * 0.35 * smoothstep(-0.2, 0.6, -dot(n, L));
+      skin += uColB * 0.14 * edge;
+      skin += vec3(1.0, 0.95, 0.85) * smoothstep(0.55, 0.75, R.y) * smoothstep(0.15, -0.1, abs(R.x) - 0.35) * 0.3;
+      skin += vec3(1.0) * pow(NdH, 240.0) * 2.0 + vec3(1.0, 0.9, 0.7) * pow(NdH, 40.0) * 0.25;
+
+      // cyan glitter
+      vec2 suv = vec2(atan(qn.x, qn.z) / TAU + 0.5, acos(clamp(qn.y, -1.0, 1.0)) / 3.14159265);
+      vec2 gg = suv * vec2(120.0, 60.0); vec2 gcell = floor(gg); float gh = hash21(gcell + 7.0);
+      if (gh > 0.9){ vec2 gf = fract(gg) - 0.5; float tw = 0.5 + 0.5 * sin(uTime * (3.0 + gh * 6.0) + gh * 40.0); skin += uColC * exp(-dot(gf, gf) * 45.0) * tw * (0.35 + NdL + trail * 2.0); }
+
+      // glyph scars
+      vec2 grid = vec2(60.0, 28.0);
+      vec2 cell = floor(suv * grid), f = fract(suv * grid);
+      float lum = dot(film, vec3(0.333));
+      float hs = hash21(cell + floor(uTime * 7.0 + hash21(cell) * 5.0));
+      float idx = floor(clamp(0.25 + lum * 0.6 + trail * 0.3 + (hs - 0.5) * 0.45, 0.0, 0.999) * uGlyphN);
+      float gA = texture(uAtlas, vec2((idx + 0.08 + f.x * 0.84) / uGlyphN, 0.06 + f.y * 0.88)).a;
+      float drift = smoothstep(0.62, 0.95, (sin(qn.x * 3.0 + uTime * 0.4) * sin(qn.y * 2.5 - uTime * 0.31) * sin(qn.z * 3.2 + uTime * 0.5)) * 0.5 + 0.5);
+      float gm = clamp((trail * 1.7 + drift * 0.45 * uIdle) * uGlyph, 0.0, 1.0);
+
+      // the eye
+      vec3 E = uEye, Ex = normalize(cross(vec3(0.0, 1.0, 0.0), E)), Ey = cross(E, Ex);
+      vec2 a = vec2(dot(qn, Ex), dot(qn, Ey));
+      float front = dot(qn, E), lid = max(uLid, 0.025);
+      float es = uEyeSize * 0.78;
+      vec2 ae = vec2(a.x, a.y / lid) / es;
+      float eyeD = (max(length(ae - vec2(0.0, -0.3)), length(ae - vec2(0.0, 0.3))) - 0.57) * es;
+      float onFront = smoothstep(0.25, 0.4, front);
+      float eyeM = (1.0 - smoothstep(-0.01, 0.01, eyeD)) * onFront;
+      gm *= 1.0 - eyeM;
+
+      vec3 c = mix(skin, skin * 0.2, gm * 0.7) + (filmT * 1.4 + uColC * 0.5) * gA * gm * 1.5;
+
+      if (eyeM > 0.001){
+        vec3 rdl = transpose(uBody) * rd;
+        vec2 ea = rot(uRoll) * (a / (0.48 * es));
+        vec3 dl = normalize(vec3(ea * (1.05 / uZoom) - uLook * 0.3 + vec2(dot(rdl, Ex), dot(rdl, Ey)) * 0.5, -1.0));
+        float hb = 0.4;
+        vec3 pl = vec3(uLook * 0.06, hb * (1.0 - 2.0 * fract(uFly)) * 0.999);
+        vec3 inv = 1.0 / dl;
+        vec3 t0s = (-vec3(hb) - pl) * inv, t1s = (vec3(hb) - pl) * inv;
+        vec3 tmin = min(t0s, t1s), tmx = max(t0s, t1s);
+        float tn = max(max(tmin.x, tmin.y), tmin.z), tf = min(min(tmx.x, tmx.y), tmx.z);
+        vec3 inside = uColA * 0.04;
+        if (tf > max(tn, 0.0)) inside += gut(clamp(pl + dl * max(tn, 0.0), vec3(-hb * 0.9999), vec3(hb * 0.9999)), dl, hb) * exp(-max(tn, 0.0) * 0.8);
+        inside = hueRot(inside, uHue);
+        float ang = atan(a.y, a.x);
+        float iris = smoothstep(-0.07 - 0.03 * uExcite, -0.004, eyeD);
+        float stri = 0.5 + 0.5 * sin(ang * 26.0 + uTime * 2.2 + eyeD * 110.0 - uHue * 3.0);
+        vec3 irisCol = hueRot(filmT, uHue * 0.6) * (0.45 + 0.9 * stri) + uColB * 0.25 * stri * uExcite;
+        float core = exp(-dot(ea, ea) / (0.035 * uZoom * uZoom));
+        inside = inside * (1.0 - 0.55 * core) + hueRot(uColB, uHue) * core * 0.35 * (0.5 + 0.5 * sin(uTime * 3.0));
+        vec3 eyeCol = inside * (1.0 - 0.4 * iris) + irisCol * iris * 0.8;
+        eyeCol += vec3(1.0) * pow(max(dot(n, H), 0.0), 320.0) * 2.4;
+        c = mix(c, eyeCol, eyeM);
+      }
+      c *= 1.0 - 0.7 * exp(-pow(eyeD / 0.013, 2.0)) * onFront;
+      col = c;
+    }
+  }
+  vec2 vq = fc / uRes - 0.5;
+  col *= 1.0 - 0.7 * dot(vq, vq);
+  col = 1.0 - exp(-max(col, vec3(0.0)) * 1.2);
+  o = vec4(pow(col, vec3(1.0 / 2.2)), 1.0);
+}
+</script>
+
+<script>
+(() => {
+'use strict';
+const $ = (id) => document.getElementById(id);
+const tank = $('tank'), cv = $('gl'), fx = $('fx'), g2 = fx.getContext('2d');
+let devMode = location.hash === '#dev';
+function setMode(dev){ devMode = dev; document.documentElement.dataset.mode = dev ? 'dev' : 'toy'; $('devBtn').setAttribute('aria-pressed', String(dev)); $('devBtn').textContent = dev ? 'DEV MODE · ON' : 'DEV MODE'; }
+setMode(devMode);
+$('devBtn').onclick = () => setMode(!devMode);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const coarse = matchMedia('(pointer: coarse)').matches;
+const buzz = (ms) => { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (_) {} };
+
+// ================= species + knobs =================
+const SPECIES = {
+  'Honey':        { A:'#ffa31a', B:'#c2189a', C:'#4ff3ff', bg0:'#12021a', bg1:'#5a0c62', wall:'#ff8a1f' },
+  'Rose Nectar':  { A:'#ffb46b', B:'#ff3f9e', C:'#ffffff', bg0:'#1a0410', bg1:'#62143e', wall:'#ff9a6b' },
+  'Night Comb':   { A:'#ffcc33', B:'#7b2cff', C:'#a6ff3a', bg0:'#06020f', bg1:'#2a1258', wall:'#e0a800' },
+};
+let species = 'Honey';
+const K = { foil: 1.0, glyph: 0.7, waveSpeed: 1.25, spiral: 1.4, wobble: 1.0, beat: 0.6,
+            combSpeed: 14, falloff: 0.86, hue: 50, afterglow: 1.0, trace: 1.0, breeze: 0.5 };
+const SL_HEART = [['foil','Honey foil',0,2,0.01],['glyph','Letter scars',0,2,0.01],['waveSpeed','Shockwave speed',0.4,3,0.01],['spiral','Gut spiral',-3,3,0.01],['wobble','Goo wobble',0,2.5,0.01],['beat','Heartbeat into comb',0,1.5,0.01]];
+const SL_COMB = [['combSpeed','Wave hops / s',3,40,0.5],['falloff','Falloff per hop',0.75,0.98,0.005],['hue','Hue swing °',0,180,1],['afterglow','Afterglow (s)',0.1,4,0.05],['trace','Touch strength',0,3,0.05],['breeze','Breeze',0,2,0.05]];
+const lin = (h) => [1, 3, 5].map((i) => { const c = parseInt(h.substr(i, 2), 16) / 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); });
+
+// ================= GL =================
+const gl = cv.getContext('webgl2', { antialias: false, alpha: false, preserveDrawingBuffer: /[?&]shot/.test(location.search) });
+if (!gl){ tank.insertAdjacentHTML('beforeend', '<div class="err">This honey world needs WebGL2. Try a current Chrome, Safari or Firefox.</div>'); return; }
+function sh(type, src){ const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
+const prog = gl.createProgram();
+gl.attachShader(prog, sh(gl.VERTEX_SHADER, '#version 300 es\nin vec2 aPos; void main(){ gl_Position = vec4(aPos, 0.0, 1.0); }'));
+gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, $('fs').textContent.trim())); gl.linkProgram(prog);
+if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+gl.useProgram(prog);
+const vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vb); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+const aLoc = gl.getAttribLocation(prog, 'aPos'); gl.enableVertexAttribArray(aLoc); gl.vertexAttribPointer(aLoc, 2, gl.FLOAT, false, 0, 0);
+const U = {};
+['uRes','uTime','uCamPos','uCamRot','uFov','uBody','uCenter','uSquash','uJig','uPoke','uAmp','uLight','uEye','uLid','uLook','uEyeSize','uZoom','uRoll','uFly','uHue','uExcite','uFoil','uWaveSpeed','uGlyph','uSpiral','uIdle','uColA','uColB','uColC','uBg0','uBg1','uWall','uFed','uFedOn','uAtlas','uGlyphN','uComb','uCombN','uCombScale','uHueSwing','uPoolY','uSplash'].forEach((n) => U[n] = gl.getUniformLocation(prog, n));
+function makeTex(filter){ const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); return t; }
+const atlasTex = makeTex(gl.LINEAR), combTex = makeTex(gl.NEAREST);
+gl.bindTexture(gl.TEXTURE_2D, atlasTex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]));
+const mk = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; };
+
+// ---------- glyph alphabet: grows with what it eats ----------
+const GLYPH_FONT = '700 44px ui-monospace, "SF Mono", Menlo, "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols 2", "DejaVu Sans", sans-serif';
+let alphabet = new Set(Array.from('·:+*✧♡♥◇∞✦⬡'));
+let glyphN = 1;
+function buildAtlas(){
+  const chars = Array.from(alphabet).filter((ch) => ch.trim());
+  const cw = 40, ch = 56, c = mk(cw * chars.length, ch), x = c.getContext('2d', { willReadFrequently: true });
+  x.font = GLYPH_FONT; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = '#fff';
+  chars.forEach((g, i) => x.fillText(g, i * cw + cw / 2, ch / 2 + 2));
+  const d = x.getImageData(0, 0, c.width, c.height).data;
+  const order = chars.map((g, i) => { let s = 0; for (let yy = 0; yy < ch; yy++) for (let xx = i * cw; xx < (i + 1) * cw; xx++) s += d[(yy * c.width + xx) * 4 + 3]; return { i, s }; }).filter((g) => g.s > 0).sort((p, q) => p.s - q.s);
+  const out = mk(cw * Math.max(1, order.length), ch), ox = out.getContext('2d');
+  order.forEach((g, k) => ox.drawImage(c, g.i * cw, 0, cw, ch, k * cw, 0, cw, ch));
+  glyphN = Math.max(1, order.length);
+  gl.bindTexture(gl.TEXTURE_2D, atlasTex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, out);
+}
+
+// ================= camera + projection =================
+let W = 1, H = 1, dpr = 1, scale = coarse ? 0.55 : 0.8, frameAvg = 16, poolFrac = 0.8;
+const FOV = Math.tan(32 * Math.PI / 360);
+const cam = { pos: [0, 0.25, 6.6], target: [0, 0.05, 0] };
+const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const norm = (a) => { const l = Math.hypot(...a) || 1; return a.map((v) => v / l); };
+let CF, CR, CU;
+function camBasis(){ CF = norm(sub(cam.target, cam.pos)); CR = norm(cross(CF, [0, 1, 0])); CU = cross(CR, CF); }
+function project(p){ const v = sub(p, cam.pos), z = dot(v, CF); return [W / 2 + dot(v, CR) / (z * 2 * FOV) * H, H / 2 - dot(v, CU) / (z * 2 * FOV) * H, z]; }
+function rayAt(px, py){ const ux = (px - W / 2) / H * 2 * FOV, uy = (H / 2 - py) / H * 2 * FOV; return norm([CR[0] * ux + CU[0] * uy + CF[0], CR[1] * ux + CU[1] * uy + CF[1], CR[2] * ux + CU[2] * uy + CF[2]]); }
+
+// ================= the comb: ripple-bloom on a hex graph =================
+const comb = { C: 0, R: 0, scale: 0, N: 0 };
+let seenI, X, Vv, E, F, BASE, lastWave, adjStart, adjJ, CX, CY, nearHeart, combData;
+let events = [], waveSeq = 1, simT = 0, simAcc = 0;
+const KICK = 4.2;
+function buildComb(force){
+  const sc = W / H < 0.75 ? 9 : 9.5;
+  const C = Math.ceil(W / H * sc) + 3, R = Math.ceil(sc / 0.8660254) + 3;
+  if (!force && C === comb.C && R === comb.R && sc === comb.scale) return;
+  Object.assign(comb, { C, R, scale: sc, N: C * R });
+  const N = C * R;
+  X = new Float32Array(N); Vv = new Float32Array(N); E = new Float32Array(N); F = new Float32Array(N); BASE = new Float32Array(N);
+  lastWave = new Int32Array(N * 6); seenI = new Uint8Array(N); CX = new Float32Array(N); CY = new Float32Array(N); nearHeart = new Uint8Array(N); combData = new Float32Array(N * 4);
+  const starts = [], js = [];
+  for (let r = 0; r < R; r++) for (let c = 0; c < C; c++){
+    const i = r * C + c, odd = r & 1;
+    CX[i] = ((c + 0.5 * odd) - 1) / sc * H; CY[i] = (r * 0.8660254 - 1) / sc * H;
+    const fx_ = CX[i] / W, fy_ = CY[i] / H;
+    const b = 0.1 + 0.62 * smooth(0.15, 0.95, fx_) * (0.6 + 0.4 * Math.sin(fy_ * 4 + 1.2)) + 0.22 * Math.max(0, Math.sin(fx_ * 9 + fy_ * 7)) + 0.18 * (Math.random() - 0.5);
+    BASE[i] = F[i] = Math.max(0.03, Math.min(1, b));
+    starts.push(js.length);
+    const nb = odd ? [[-1,0],[1,0],[0,-1],[1,-1],[0,1],[1,1]] : [[-1,0],[1,0],[-1,-1],[0,-1],[-1,1],[0,1]];
+    for (const [dc, dr] of nb){ const cc = c + dc, rr = r + dr; if (cc >= 0 && cc < C && rr >= 0 && rr < R) js.push(rr * C + cc); }
+  }
+  starts.push(js.length);
+  adjStart = Int32Array.from(starts); adjJ = Int32Array.from(js);
+  events = [];
+}
+function smooth(a, b, x){ const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
+function cellAt(px, py){
+  const sc = comb.scale, py_ = py / H * sc + 1, px_ = px / H * sc + 1;
+  let best = -1, bd = 1e9;
+  const r0 = Math.round(py_ / 0.8660254);
+  for (let r = r0 - 1; r <= r0 + 1; r++){
+    if (r < 0 || r >= comb.R) continue;
+    const odd = r & 1, c0 = Math.round(px_ - 0.5 * odd);
+    for (let c = c0 - 1; c <= c0 + 1; c++){
+      if (c < 0 || c >= comb.C) continue;
+      const i = r * comb.C + c, d = Math.hypot(CX[i] - px, CY[i] - py);
+      if (d < bd){ bd = d; best = i; }
+    }
+  }
+  return best;
+}
+function emit(i, strength, sign = 1){ if (i >= 0) events.push({ i, t: simT, s: strength, sign, w: waveSeq++ }); }
+let lastCombHeart = -9;
+function seen(i, w){ const b = i * 6; return lastWave[b] === w || lastWave[b + 1] === w || lastWave[b + 2] === w || lastWave[b + 3] === w || lastWave[b + 4] === w || lastWave[b + 5] === w; }
+function processEvents(){
+  if (!events.length) return;
+  events.sort((a, b) => a.t - b.t);
+  let k = 0;
+  while (k < events.length && events[k].t <= simT){
+    const ev = events[k++], i = ev.i;
+    if (seen(i, ev.w)) continue;
+    lastWave[i * 6 + seenI[i]] = ev.w; seenI[i] = (seenI[i] + 1) % 6;
+    Vv[i] = Math.max(-8, Math.min(8, Vv[i] + ev.sign * ev.s * KICK * (1 - 0.6 * Math.min(1, Math.abs(X[i]) / 1.5))));
+    E[i] = Math.max(E[i], Math.min(ev.s, 1.5));
+    if (ev.s > 0.45 && Math.random() < 0.05) sparkle(CX[i], CY[i], 1, 'c', 60);
+    if (nearHeart[i] && ev.s > 0.5 && T - lastCombHeart > 0.6){ lastCombHeart = T; pokeFromScreen(CX[i], CY[i], Math.min(0.4, ev.s * 0.3), false); }
+    const ns = ev.s * K.falloff;
+    if (ns < 0.05) continue;
+    for (let e = adjStart[i]; e < adjStart[i + 1]; e++){
+      const j = adjJ[e];
+      if (!seen(j, ev.w)) events.push({ i: j, t: ev.t + 1 / K.combSpeed, s: ns, sign: ev.sign, w: ev.w });
+    }
+  }
+  events = k ? events.slice(k) : events;
+  if (events.length > 20000) events.length = 20000;
+}
+function combStep(dt){
+  const N = comb.N, decay = Math.exp(-dt / K.afterglow), stiff = 40, damp = 4.6;
+  simT += dt;
+  processEvents();
+  for (let i = 0; i < N; i++){
+    const a = -stiff * X[i] - damp * Vv[i];
+    Vv[i] += a * dt; X[i] += Vv[i] * dt;
+    if (X[i] > 2.5){ X[i] = 2.5; Vv[i] *= -0.3; } else if (X[i] < -2.5){ X[i] = -2.5; Vv[i] *= -0.3; }
+    E[i] = Math.max(E[i] * decay, Math.min(Math.abs(X[i]), 1.5) * 0.8);
+  }
+}
+function honeyAround(i, amt){
+  if (i < 0) return;
+  F[i] = Math.min(1, F[i] + amt);
+  for (let e = adjStart[i]; e < adjStart[i + 1]; e++) F[adjJ[e]] = Math.min(1, F[adjJ[e]] + amt * 0.5);
+}
+let lastTraceEmit = 0;
+function traceComb(px, py, vx, vy, gain){
+  const speed = Math.hypot(vx, vy), imp = K.trace * gain * Math.min(speed / 1400, 1.2);
+  if (imp < 0.02) return;
+  const r = 0.055 * Math.min(W, H) + 24;
+  let best = -1, bd = 1e9;
+  for (let i = 0; i < comb.N; i++){
+    const d = Math.hypot(CX[i] - px, CY[i] - py);
+    if (d < r){ Vv[i] += imp * (1 - d / r) * 7 * (vy > 0 ? 1 : -1); if (d < bd){ bd = d; best = i; } }
+  }
+  const now = performance.now();
+  if (best >= 0 && now - lastTraceEmit > 70){ lastTraceEmit = now; emit(best, 0.3 + imp * 0.45); }
+}
+
+// ================= the heart creature =================
+const body = { yaw: 0, pitch: 0.02, vyaw: 0, vpitch: 0, jig: [0, 0], vjig: [0, 0], sq: 0, vsq: 0, pump: 0, vpump: 0, hold: 0 };
+const pokes = Array.from({ length: 8 }, () => ({ d: [0, 0, 1], t0: -99, amp: 0 })); let pokeI = 0;
+let T = 0, lid = 1, nextBlink = 2.5, blinkT = -1, happy = 0, look = [0, 0], light = [1.6, 1.8, 3], lightT = [1.6, 1.8, 3];
+let excite = 0, eyeSize = 1, zoom = 1, roll = 0, fly = 0, hue = 0, rollDir = 1, lookT = [0, 0], nextSaccade = 1, lastPointer = -9, constrict = 0;
+let fed = 0, spat = 0, popped = 0, hunger = 0.3, nextIdlePoke = 3, fedOn = 0, fedCol = [1, 0.4, 0.02], mood = 'CURIOUS', lastTouch = 0;
+let beatPhase = 0, dubAt = -1, nextBreeze = 3;
+const EYE = norm([0, 0.12, 1]);
+const ry = (a) => [Math.cos(a), 0, Math.sin(a), 0, 1, 0, -Math.sin(a), 0, Math.cos(a)];
+const rx = (a) => [1, 0, 0, 0, Math.cos(a), -Math.sin(a), 0, Math.sin(a), Math.cos(a)];
+const m3 = (A, B) => { const C = new Array(9); for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) C[r * 3 + c] = A[r * 3] * B[c] + A[r * 3 + 1] * B[3 + c] + A[r * 3 + 2] * B[6 + c]; return C; };
+const mv = (M, v) => [M[0] * v[0] + M[1] * v[1] + M[2] * v[2], M[3] * v[0] + M[4] * v[1] + M[5] * v[2], M[6] * v[0] + M[7] * v[1] + M[8] * v[2]];
+const mtv = (M, v) => [M[0] * v[0] + M[3] * v[1] + M[6] * v[2], M[1] * v[0] + M[4] * v[1] + M[7] * v[2], M[2] * v[0] + M[5] * v[1] + M[8] * v[2]];
+let BODY = ry(0);
+const CENTER = [0, 0.15, 0];
+
+function heartScreen(){ const c = project(CENTER), e = project([CENTER[0] + CR[0], CENTER[1] + CR[1], CENTER[2] + CR[2]]); return { x: c[0], y: c[1], r: Math.hypot(e[0] - c[0], e[1] - c[1]) }; }
+function eyeScreen(){ const l = [look[0] * 0.1, 0.12 + look[1] * 0.06, 0.45], w = mv(BODY, l); return project([CENTER[0] + w[0], CENTER[1] + w[1], CENTER[2] + w[2]]); }
+function poke(localDir, amp, toComb = true){
+  const p = pokes[pokeI]; pokeI = (pokeI + 1) % 8;
+  p.d = norm(localDir); p.t0 = T; p.amp = amp;
+  const wd = mv(BODY, p.d);
+  excite = Math.min(1.5, excite + amp * 0.25); constrict = Math.min(1, constrict + amp * 0.5);
+  body.vjig[0] -= wd[0] * amp * 1.4; body.vjig[1] -= wd[2] * amp * 1.4;
+  if (toComb && comb.N){
+    const s = project([CENTER[0] + wd[0] * 0.85, CENTER[1] + wd[1] * 0.85, CENTER[2] + wd[2] * 0.85]);
+    emit(cellAt(s[0], s[1]), Math.min(1.4, amp * 0.9));
+  }
+}
+function hitHeart(px, py){
+  const d = rayAt(px, py), oc = sub(cam.pos, CENTER), b = dot(oc, d), c = dot(oc, oc) - 0.95 * 0.95, disc = b * b - c;
+  if (disc < 0) return null;
+  const t = -b - Math.sqrt(disc), p = [cam.pos[0] + d[0] * t, cam.pos[1] + d[1] * t, cam.pos[2] + d[2] * t];
+  return mtv(BODY, norm(sub(p, CENTER)));
+}
+function pokeFromScreen(px, py, amp, toComb){
+  let hd = hitHeart(px, py);
+  if (!hd){ const hs = heartScreen(); const v = [(px - hs.x), -(py - hs.y), hs.r * 0.6]; hd = mtv(BODY, norm(v)); }
+  poke(hd, amp, toComb);
+}
+
+// ================= overlay world: bubbles, drips, drops, sparkles =================
+const HEART = (() => { const p = new Path2D(); for (let k = 0; k <= 48; k++){ const t = k / 48 * Math.PI * 2, x = 16 * Math.pow(Math.sin(t), 3), y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)); if (k) p.lineTo(x / 17, y / 17 + 0.1); else p.moveTo(x / 17, y / 17 + 0.1); } p.closePath(); return p; })();
+const BUBBLE_GLYPHS = Array.from('♥♡✧⬡∞❀☾✶Æ✦❦◇★☼♫5☆39');
+const BUBBLE_COLS = ['#ffb21f', '#ffd24a', '#ff4fb8', '#c24bff', '#4ff3ff', '#ff8a3a'];
+let bubbles = [], drips = [], drops = [], sparks = [];
+const splashes = Array.from({ length: 6 }, () => [0, -99, 0, 0]); let splashI = 0;
+
+function spit(power = 1){
+  const e = eyeScreen(), hs = heartScreen();
+  const col = BUBBLE_COLS[Math.floor(Math.random() * BUBBLE_COLS.length)];
+  const b = { x: e[0], y: e[1], vx: (Math.random() < 0.5 ? -1 : 1) * (160 + Math.random() * 260), vy: -(380 + 320 * power),
+    r: Math.max(18, hs.r * (0.16 + Math.random() * 0.08)), s: 0.15, a: (Math.random() - 0.5) * 0.5, va: (Math.random() - 0.5) * 3,
+    col, glyph: BUBBLE_GLYPHS[Math.floor(Math.random() * BUBBLE_GLYPHS.length)], ph: Math.random() * 6, state: 'fly', born: T };
+  bubbles.push(b); spat++;
+  if (bubbles.length > 9){ const old = bubbles.find((x) => x.state === 'fly'); if (old) pop(old, true); }
+  poke(EYE, 1.3); poke(norm([0, 1, 0.2]), 0.8, false);
+  body.vsq -= 5 * power; lidWide = 1.25; excite = 1.5;
+  hunger = Math.min(1, hunger + 0.2);
+  sparkle(e[0], e[1], 14, 'g', 260);
+  buzz(15);
+}
+function pop(b, quiet){
+  bubbles = bubbles.filter((x) => x !== b);
+  sparkle(b.x, b.y, quiet ? 8 : 22, 'mix', 320);
+  if (!quiet){
+    drops.push({ x: b.x, y: b.y + b.r * 0.4, vx: b.vx * 0.2, vy: 60, r: Math.max(5, b.r * 0.28), col: b.col });
+    popped++; buzz(8);
+  }
+  const i = cellAt(b.x, b.y); emit(i, quiet ? 0.6 : 1.15); honeyAround(i, 0.35);
+}
+function feed(b){ if (b.state !== 'eaten'){ b.state = 'eaten'; b.eat = 0; } }
+function digest(b){
+  bubbles = bubbles.filter((x) => x !== b);
+  fedCol = lin(b.col); fedOn = 0.0001;
+  alphabet.add(b.glyph); buildAtlas();
+  fed++; hunger = Math.max(0, hunger - 0.45); happy = 2.2; excite = 1.5;
+  poke(EYE, 1.1); poke(norm([0.6, -0.3, 0.5]), 0.8, false); poke(norm([-0.6, -0.3, 0.5]), 0.8, false);
+  body.vsq += 4; body.vpump += 1.4;
+  const hs = heartScreen(), i = cellAt(hs.x, hs.y); emit(i, 1.7); honeyAround(i, 0.5);
+  const e = eyeScreen(); sparkle(e[0], e[1], 26, 'mix', 300);
+  buzz([10, 40, 18]);
+}
+function sparkle(x, y, n, kind, spd){
+  for (let k = 0; k < n; k++){
+    const a = Math.random() * Math.PI * 2, v = spd * (0.3 + Math.random() * 0.7);
+    const c = kind === 'c' ? 'c' : kind === 'g' ? 'g' : (Math.random() < 0.5 ? 'c' : Math.random() < 0.6 ? 'g' : 'm');
+    sparks.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - spd * 0.2, life: 0, max: 0.5 + Math.random() * 0.8, sz: 2 + Math.random() * 4, c });
+  }
+  if (sparks.length > 500) sparks.splice(0, sparks.length - 500);
+}
+function buildDrips(){
+  const n = Math.max(4, Math.min(11, Math.round(W / 150)));
+  if (drips.length === n){ drips.forEach((d, k) => d.x = (k + 0.5 + d.jx) / n * W); return; }
+  drips = Array.from({ length: n }, (_, k) => { const jx = (Math.random() - 0.5) * 0.6; return { x: (k + 0.5 + jx) / n * W, jx, len: 20 + Math.random() * 80, max: 80 + Math.random() * 140, w: 7 + Math.random() * 7, ang: 0, av: 0, rate: 3 + Math.random() * 6 }; });
+}
+function dripTip(d){ return [d.x + Math.sin(d.ang) * d.len, 10 + Math.cos(d.ang) * d.len]; }
+function releaseDrip(d){
+  const [tx, ty] = dripTip(d);
+  drops.push({ x: tx, y: ty, vx: d.av * d.len * 0.6, vy: 40, r: d.w * 0.72, col: '#ffb21f' });
+  d.len *= 0.4; d.max = 80 + Math.random() * 150;
+}
+function splash(x, amp){
+  const s = splashes[splashI]; splashI = (splashI + 1) % 6;
+  s[0] = x / H; s[1] = T; s[2] = amp;
+}
+function poolPx(){ return H * poolFrac; }
+
+function stepWorld(dt){
+  const hs = heartScreen(), eye = eyeScreen(), pool = poolPx();
+  // drips grow, sway and fall
+  for (const d of drips){
+    d.av += (-14 * d.ang - 2.2 * d.av) * dt; d.ang += d.av * dt;
+    d.len += d.rate * (1 + excite * 0.8) * dt * (reduceMotion ? 0.3 : 1);
+    if (d.len > d.max) releaseDrip(d);
+  }
+  for (let k = drops.length - 1; k >= 0; k--){
+    const p = drops[k];
+    p.vy += 1400 * dt; p.x += p.vx * dt; p.y += p.vy * dt;
+    if (Math.hypot(p.x - hs.x, (p.y - hs.y) * 1.1) < hs.r * 0.8){
+      pokeFromScreen(p.x, p.y, 0.65, Math.random() < 0.5); sparkle(p.x, p.y, 10, 'g', 200); drops.splice(k, 1); continue;
+    }
+    if (p.y > pool){
+      splash(p.x, Math.min(1.6, p.r / 8)); emit(cellAt(p.x, pool + 4), 0.6); sparkle(p.x, pool, 12, 'mix', 220); drops.splice(k, 1); continue;
+    }
+    if (p.x < -40 || p.x > W + 40) drops.splice(k, 1);
+  }
+  // bubbles
+  for (const b of bubbles){
+    if (b.state === 'grab') continue;
+    if (b.state === 'eaten'){
+      b.eat = Math.min(1, b.eat + dt / 0.6);
+      b.x += (eye[0] - b.x) * Math.min(1, dt * 7); b.y += (eye[1] - b.y) * Math.min(1, dt * 7); b.s = Math.max(0.02, 1 - b.eat); b.a += dt * 8;
+      if (b.eat >= 1) digest(b);
+      continue;
+    }
+    b.s = Math.min(1, b.s + dt * 2.2);
+    b.vy -= 90 * dt;
+    b.vx += Math.sin(T * 1.7 + b.ph) * 30 * dt;
+    const drag = Math.exp(-1.5 * dt); b.vx *= drag; b.vy *= drag; b.va *= drag;
+    b.x += b.vx * dt; b.y += b.vy * dt; b.a += b.va * dt; b.a += (Math.sin(T * 1.3 + b.ph) * 0.2 - b.a) * dt;
+    const r = b.r * b.s;
+    if (b.y < r + 14){ b.y = r + 14; b.vy = Math.abs(b.vy) * 0.4; }
+    if (b.y > pool - r){ b.y = pool - r; b.vy = -Math.abs(b.vy) * 0.5; }
+    if (b.x < r){ b.x = r; b.vx = Math.abs(b.vx) * 0.5; } if (b.x > W - r){ b.x = W - r; b.vx = -Math.abs(b.vx) * 0.5; }
+    // keep out of the heart unless fed, and out of each other
+    const dx = b.x - hs.x, dy = b.y - hs.y, dd = Math.hypot(dx, dy) || 1, minD = hs.r * 0.95 + r;
+    if (T - b.born > 0.6 && dd < minD){ b.vx += dx / dd * 260 * dt * 3; b.vy += dy / dd * 260 * dt * 3; }
+    for (const o of bubbles){ if (o === b || o.state !== 'fly') continue; const ex = b.x - o.x, ey = b.y - o.y, ed = Math.hypot(ex, ey) || 1, md = r + o.r * o.s; if (ed < md){ b.vx += ex / ed * 200 * dt; b.vy += ey / ed * 200 * dt; } }
+  }
+  for (let k = sparks.length - 1; k >= 0; k--){
+    const s = sparks[k]; s.life += dt; if (s.life > s.max){ sparks.splice(k, 1); continue; }
+    s.vy += 160 * dt; s.vx *= Math.exp(-2 * dt); s.vy *= Math.exp(-2 * dt); s.x += s.vx * dt; s.y += s.vy * dt;
+  }
+}
+
+const SPARK_COL = { c: [79, 243, 255], g: [255, 200, 80], m: [255, 90, 200] };
+function drawWorld(){
+  const g = g2;
+  // honey ceiling + drips
+  g.save();
+  const grd = g.createLinearGradient(0, 0, 0, 22);
+  grd.addColorStop(0, 'rgba(255,190,60,0.95)'); grd.addColorStop(1, 'rgba(230,120,10,0.85)');
+  g.fillStyle = grd;
+  g.beginPath(); g.moveTo(0, 0); g.lineTo(W, 0);
+  for (let x = W; x >= 0; x -= 12) g.lineTo(x, 9 + 3 * Math.sin(x * 0.045 + T * 0.8) + 2 * Math.sin(x * 0.13 - T * 1.1));
+  g.closePath(); g.fill();
+  for (const d of drips){
+    const [tx, ty] = dripTip(d), br = d.w * (0.5 + 0.35 * Math.min(1, d.len / d.max));
+    const L = [], Rr = [];
+    for (let k = 0; k <= 10; k++){
+      const t = k / 10, u = 1 - t;
+      const x = u * u * d.x + 2 * u * t * d.x + t * t * tx, y = u * u * 6 + 2 * u * t * (6 + d.len * 0.5) + t * t * ty;
+      const w = d.w * (1 - 0.7 * Math.pow(t, 0.7)) * 0.5 + 0.6;
+      L.push([x - w, y]); Rr.push([x + w, y]);
+    }
+    const dg = g.createLinearGradient(d.x - d.w, 0, d.x + d.w, 0);
+    dg.addColorStop(0, 'rgba(200,90,5,0.95)'); dg.addColorStop(0.45, 'rgba(255,185,45,0.95)'); dg.addColorStop(1, 'rgba(170,60,10,0.95)');
+    g.fillStyle = dg;
+    g.beginPath(); g.moveTo(L[0][0] - d.w * 0.5, 4); L.forEach(([x, y]) => g.lineTo(x, y)); for (let k = Rr.length - 1; k >= 0; k--) g.lineTo(Rr[k][0], Rr[k][1]); g.lineTo(Rr[0][0] + d.w * 0.5, 4); g.closePath(); g.fill();
+    const bg = g.createRadialGradient(tx - br * 0.35, ty - br * 0.35, br * 0.1, tx, ty, br * 1.1);
+    bg.addColorStop(0, 'rgba(255,245,200,0.98)'); bg.addColorStop(0.35, 'rgba(255,180,40,0.97)'); bg.addColorStop(1, 'rgba(180,70,5,0.95)');
+    g.fillStyle = bg; g.beginPath(); g.arc(tx, ty, br, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = 'rgba(255,240,190,0.55)'; g.lineWidth = Math.max(1, d.w * 0.18);
+    g.beginPath(); g.moveTo(d.x - d.w * 0.2, 8); g.quadraticCurveTo(d.x - d.w * 0.2, 6 + d.len * 0.5, tx - br * 0.45, ty - br * 0.5); g.stroke();
+  }
+  for (const p of drops){
+    const bg = g.createRadialGradient(p.x - p.r * 0.35, p.y - p.r * 0.4, p.r * 0.1, p.x, p.y, p.r * 1.2);
+    bg.addColorStop(0, 'rgba(255,245,200,0.98)'); bg.addColorStop(0.4, 'rgba(255,175,35,0.96)'); bg.addColorStop(1, 'rgba(170,60,5,0.95)');
+    g.fillStyle = bg; g.beginPath();
+    const st = Math.min(2.2, 1 + p.vy / 900);
+    g.ellipse(p.x, p.y, p.r / Math.sqrt(st), p.r * st, 0, 0, Math.PI * 2); g.fill();
+  }
+  // heart bubbles
+  for (const b of bubbles){
+    const r = b.r * b.s * (1 + 0.05 * Math.sin(T * 3 + b.ph));
+    g.save(); g.translate(b.x, b.y); g.rotate(b.a); g.scale(r, r * (1 - 0.04 * Math.sin(T * 3 + b.ph)));
+    const rg = g.createRadialGradient(-0.3, -0.35, 0.05, 0, 0, 1.15);
+    rg.addColorStop(0, 'rgba(255,255,255,0.4)'); rg.addColorStop(0.35, hexA(b.col, 0.14)); rg.addColorStop(0.8, hexA(b.col, 0.42)); rg.addColorStop(1, 'rgba(255,200,90,0.85)');
+    g.fillStyle = rg; g.fill(HEART);
+    g.lineWidth = 0.07; g.strokeStyle = 'rgba(255,215,130,0.9)'; g.stroke(HEART);
+    g.lineWidth = 0.03; g.strokeStyle = 'rgba(79,243,255,0.55)'; g.stroke(HEART);
+    g.fillStyle = 'rgba(255,255,255,0.85)'; g.beginPath(); g.ellipse(-0.42, -0.38, 0.16, 0.08, -0.6, 0, Math.PI * 2); g.fill();
+    g.restore();
+    g.save(); g.globalAlpha = 0.85 * b.s; g.fillStyle = '#fff3d6'; g.font = `700 ${Math.round(r * 0.75)}px ui-sans-serif, system-ui, "Segoe UI Symbol", "Apple Symbols", sans-serif`;
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.shadowColor = b.col; g.shadowBlur = 10; g.fillText(b.glyph, b.x, b.y + r * 0.1); g.restore();
+  }
+  // sparkles
+  g.globalCompositeOperation = 'lighter';
+  for (const s of sparks){
+    const a = 1 - s.life / s.max, c = SPARK_COL[s.c], z = s.sz * (0.6 + a);
+    g.fillStyle = `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+    g.beginPath(); g.moveTo(s.x, s.y - z * 1.6); g.lineTo(s.x + z * 0.35, s.y - z * 0.35); g.lineTo(s.x + z * 1.6, s.y); g.lineTo(s.x + z * 0.35, s.y + z * 0.35);
+    g.lineTo(s.x, s.y + z * 1.6); g.lineTo(s.x - z * 0.35, s.y + z * 0.35); g.lineTo(s.x - z * 1.6, s.y); g.lineTo(s.x - z * 0.35, s.y - z * 0.35); g.closePath(); g.fill();
+  }
+  g.restore();
+}
+function hexA(h, a){ const n = parseInt(h.slice(1), 16); return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`; }
+
+function drawHud(){
+  const g = g2, e = eyeScreen(), hs = heartScreen();
+  g.save(); g.font = '500 10px ui-monospace, Menlo, monospace'; g.textBaseline = 'top';
+  g.strokeStyle = 'rgba(255,236,210,0.5)'; g.fillStyle = 'rgba(255,236,210,0.9)'; g.lineWidth = 1;
+  const lx = Math.max(14, hs.x - hs.r * 2.1), ly = Math.max(150, hs.y - hs.r * 0.9);
+  g.beginPath(); g.moveTo(e[0] - 14, e[1] - 4); g.lineTo(lx + 120, ly + 7); g.stroke();
+  g.beginPath(); g.arc(e[0] - 14, e[1] - 4, 2, 0, Math.PI * 2); g.fill();
+  g.fillText('GUT DEPTH ∞', lx, ly); g.fillText(`ALPHABET ${glyphN} · FED ${fed}`, lx, ly + 13);
+  g.fillStyle = 'rgba(255,210,140,0.8)'; g.font = '500 9px ui-monospace, Menlo, monospace';
+  let live = 0; for (let i = 0; i < comb.N; i++) if (E[i] > 0.15) live++;
+  g.fillText(`COMB ${comb.C}×${comb.R} · LIT ${live} · FRONTS ${events.length}`, 14, H - 92);
+  g.fillText(`BPM ${Math.round(62 + excite * 40)} · HUNGER ${hunger.toFixed(2)} · SPAT ${spat} · POPPED ${popped}`, 14, H - 80);
+  g.fillText(`${Math.round(1000 / frameAvg)} FPS · RENDER ${scale.toFixed(2)} · ${species.toUpperCase()}`, 14, H - 68);
+  g.restore();
+}
+
+// ================= input =================
+let ptr = null, lastStroke = 0;
+const pos = (e) => { const r = tank.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top, t: performance.now() }; };
+function bubbleAt(p){ for (let i = bubbles.length - 1; i >= 0; i--){ const b = bubbles[i]; if (b.state === 'eaten') continue; if (Math.hypot(p.x - b.x, p.y - b.y) < b.r * b.s * 1.15 + 6) return b; } return null; }
+function dripAt(p){ for (const d of drips){ const [tx, ty] = dripTip(d); if (Math.hypot(p.x - tx, p.y - ty) < d.w + 18) return d; } return null; }
+function nudgeDrips(p, vx){ for (const d of drips){ const [tx, ty] = dripTip(d); if (p.y < ty + 24 && Math.abs(p.x - (d.x + tx) / 2) < 26 + d.w) d.av += vx * 0.00035; } }
+tank.addEventListener('pointerdown', (e) => {
+  const p = pos(e); try { tank.setPointerCapture(e.pointerId); } catch (_) {}
+  ptr = { start: p, last: p, vx: 0, vy: 0, moved: false, mode: 'comb', t0: T };
+  lastTouch = T;
+  const b = bubbleAt(p);
+  if (b){ ptr.mode = 'bubble'; ptr.b = b; b.state = 'grab'; b.gx = b.x - p.x; b.gy = b.y - p.y; bubbles.splice(bubbles.indexOf(b), 1); bubbles.push(b); return; }
+  const d = dripAt(p); if (d){ ptr.mode = 'drip'; ptr.d = d; return; }
+  const hd = hitHeart(p.x, p.y); if (hd){ ptr.mode = 'heart'; ptr.hd = hd; }
+});
+tank.addEventListener('pointermove', (e) => {
+  const p = pos(e), hs = heartScreen();
+  lookT = [Math.max(-1, Math.min(1, (p.x - hs.x) / (hs.r * 2))), Math.max(-1, Math.min(1, -(p.y - hs.y) / (hs.r * 2)))];
+  lastPointer = T;
+  const ey = eyeScreen(); if (Math.hypot(p.x - ey[0], p.y - ey[1]) < hs.r * 0.4) excite = Math.min(1.2, excite + 0.02);
+  lightT = [(p.x / W - 0.5) * 6, 2.4 - (p.y / H) * 3, 3.2];
+  const prev = ptr ? ptr.last : (pos.hover || p);
+  const dt = Math.max((p.t - prev.t) / 1000, 1 / 240);
+  const vx = (p.x - prev.x) / dt, vy = (p.y - prev.y) / dt;
+  nudgeDrips(p, vx);
+  if (!ptr){
+    pos.hover = p;
+    if (e.pointerType === 'mouse' && !hitHeart(p.x, p.y)) traceComb(p.x, p.y, vx, vy, 0.45);
+    return;
+  }
+  ptr.vx = ptr.vx * 0.5 + 0.5 * vx; ptr.vy = ptr.vy * 0.5 + 0.5 * vy;
+  if (Math.hypot(p.x - ptr.start.x, p.y - ptr.start.y) > 10) ptr.moved = true;
+  if (ptr.mode === 'bubble'){ ptr.b.x = p.x + ptr.b.gx; ptr.b.y = p.y + ptr.b.gy; ptr.b.a += (Math.max(-0.5, Math.min(0.5, ptr.vx * 0.0006)) - ptr.b.a) * 0.2; }
+  else if (ptr.mode === 'drip'){ ptr.d.av += (p.x - ptr.last.x) * 0.02; if (p.y > dripTip(ptr.d)[1] + 70){ releaseDrip(ptr.d); ptr.mode = 'comb'; } }
+  else if (ptr.mode === 'heart'){
+    if (ptr.moved){
+      body.vyaw = (p.x - ptr.last.x) * 0.006; body.vpitch = (p.y - ptr.last.y) * 0.004;
+      body.yaw += body.vyaw; body.pitch = Math.max(-0.6, Math.min(0.6, body.pitch + body.vpitch));
+      if (p.t - lastStroke > 110){ const hd = hitHeart(p.x, p.y); if (hd){ lastStroke = p.t; poke(hd, 0.5 + Math.min(Math.hypot(ptr.vx, ptr.vy) / 2500, 0.6), Math.random() < 0.4); } }
+    }
+  } else traceComb(p.x, p.y, ptr.vx, ptr.vy, 1);
+  ptr.last = p;
+});
+const endPtr = () => {
+  if (!ptr) return;
+  const held = T - ptr.t0;
+  if (ptr.mode === 'bubble'){
+    const b = ptr.b, hs = heartScreen();
+    if (!ptr.moved && held < 0.3){ b.state = 'fly'; pop(b); }
+    else if (Math.hypot(b.x - hs.x, b.y - hs.y) < hs.r * 0.95) feed(b);
+    else { b.state = 'fly'; b.vx = ptr.vx * 0.7; b.vy = ptr.vy * 0.7; b.va = ptr.vx * 0.003; b.born = T; }
+  } else if (ptr.mode === 'drip'){
+    if (!ptr.moved) releaseDrip(ptr.d);
+  } else if (ptr.mode === 'heart' && !ptr.moved){
+    if (held > 0.45) spit(Math.min(1.5, held / 1.2)); else poke(ptr.hd, 1.0);
+  } else if (ptr.mode === 'comb' && !ptr.moved && held < 0.35){
+    const i = cellAt(ptr.start.x, ptr.start.y); emit(i, 1.35); honeyAround(i, 0.15); sparkle(ptr.start.x, ptr.start.y, 10, 'c', 180);
+  }
+  body.hold = 0; ptr = null;
+};
+tank.addEventListener('pointerup', endPtr); tank.addEventListener('pointercancel', endPtr);
+tank.addEventListener('pointerleave', () => { lightT = [1.6, 1.8, 3]; });
+$('bSpit').onclick = () => spit(1.1);
+$('bPoke').onclick = () => poke(norm([Math.random() - 0.5, Math.random() - 0.3, 0.8]), 1.0);
+$('bFeed').onclick = () => { const b = bubbles.filter((x) => x.state === 'fly').pop(); if (b) feed(b); else spit(1); };
+$('bWave').onclick = () => emit(cellAt(W * 0.08, H * 0.5), 1.6);
+$('bDrip').onclick = () => releaseDrip(drips[Math.floor(Math.random() * drips.length)]);
+let lidWide = 1;
+
+// ================= resize =================
+function resize(){
+  dpr = Math.min(devicePixelRatio || 1, 2); W = tank.clientWidth; H = tank.clientHeight;
+  let w = W * dpr * scale, h = H * dpr * scale; const cap = 1.2e6; if (w * h > cap){ const k = Math.sqrt(cap / (w * h)); w *= k; h *= k; }
+  cv.width = Math.max(2, Math.round(w)); cv.height = Math.max(2, Math.round(h));
+  fx.width = Math.round(W * dpr); fx.height = Math.round(H * dpr);
+  const portrait = W / H < 0.75;
+  cam.pos[2] = portrait ? 9.6 : 6.6; poolFrac = portrait ? 0.84 : 0.8;
+  camBasis(); buildComb(false); buildDrips();
+}
+new ResizeObserver(() => resize()).observe(tank);
+
+// ================= loop =================
+function setMood(){
+  const m = body.hold > 0.2 ? 'SQUEEZED' : happy > 0 ? 'DELIGHTED' : fedOn > 0 && fedOn < 1 ? 'DIGESTING' : hunger > 0.7 ? 'HUNGRY' : T - lastTouch > 14 ? 'DREAMING' : 'CURIOUS';
+  if (m !== mood){ mood = m; $('mood').textContent = 'MOOD: ' + m; }
+}
+let prevNow = performance.now(), nearT = 0;
+function frame(now){
+  const dt = Math.min((now - prevNow) / 1000, 0.05); prevNow = now;
+  frameAvg = frameAvg * 0.95 + dt * 1000 * 0.05;
+  T += reduceMotion ? dt * 0.3 : dt;
+  if (ptr) lastTouch = T;
+  const dreaming = T - lastTouch > 14;
+
+  // heart floats and bobs above the pool
+  CENTER[0] = Math.sin(T * 0.37) * 0.1; CENTER[1] = 0.15 + Math.sin(T * 0.71) * 0.06;
+
+  // squeeze
+  if (ptr && ptr.mode === 'heart' && !ptr.moved){
+    body.hold = Math.min(1, (T - ptr.t0) / 1.2);
+    if (body.hold > 0.25 && Math.random() < dt * 9) poke(norm([Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5]), 0.25 + body.hold * 0.5, false);
+  }
+  // heartbeat: lub-dub, faster when excited, slow when dreaming
+  const bpm = dreaming ? 44 : 62 + excite * 40 + body.hold * 30;
+  const bp = beatPhase; beatPhase += dt * bpm / 60;
+  if (Math.floor(beatPhase) !== Math.floor(bp)){
+    body.vpump += 0.9; dubAt = T + 0.2;
+    if (K.beat > 0.02){ const hs = heartScreen(); emit(cellAt(hs.x, hs.y), 0.2 * K.beat, Math.floor(beatPhase) % 2 ? 1 : -1); }
+  }
+  if (dubAt > 0 && T > dubAt){ body.vpump += 0.5; dubAt = -1; }
+  body.vpump += (-130 * body.pump - 10 * body.vpump) * dt; body.pump += body.vpump * dt;
+  const sqT = -0.2 * body.hold;
+  body.vsq += (90 * (sqT - body.sq) - 7 * body.vsq) * dt; body.sq += body.vsq * dt;
+  for (let k = 0; k < 2; k++){ body.vjig[k] += (-55 * body.jig[k] - 4 * body.vjig[k]) * dt; body.jig[k] += body.vjig[k] * dt; }
+  if (!ptr || !ptr.moved || ptr.mode !== 'heart'){
+    body.yaw += body.vyaw; body.pitch += body.vpitch; body.vyaw *= 0.93; body.vpitch *= 0.93;
+    body.yaw += (look[0] * 0.35 + Math.sin(T * 0.23) * 0.12 - body.yaw) * Math.min(1, dt * 0.8);
+    body.pitch += (0.02 - look[1] * 0.15 - body.pitch) * Math.min(1, dt * 0.8);
+  }
+  BODY = m3(ry(body.yaw), rx(body.pitch));
+
+  // the eye is alive
+  if (T - lastPointer > 2 && T > nextSaccade){
+    nextSaccade = T + 0.5 + Math.random() * 2.2;
+    lookT = Math.random() < 0.25 ? [0, 0] : [(Math.random() - 0.5) * 1.5, (Math.random() - 0.5) * 1.0];
+    if (Math.random() < 0.3) rollDir *= -1;
+  }
+  look = look.map((v, i) => v + (lookT[i] - v) * Math.min(1, dt * (T - lastPointer > 2 ? 14 : 8)));
+  excite = Math.min(1.5, Math.max(0, excite - dt * 0.35) + body.hold * dt * 1.5);
+  constrict = Math.max(0, constrict - dt * 1.8);
+  const eyeSizeT = 1 + 0.06 * Math.sin(T * 1.3) + excite * 0.2 + body.hold * 0.16 - (happy > 0 ? 0.08 : 0) - (hunger > 0.7 ? 0.06 * (0.5 + 0.5 * Math.sin(T * 6)) : 0);
+  eyeSize += (eyeSizeT - eyeSize) * Math.min(1, dt * 5);
+  const zoomT = (1 + 0.28 * Math.sin(T * 0.45) + 0.12 * Math.sin(T * 1.7)) * (1 + excite * 0.55) * (1 - constrict * 0.45);
+  zoom += (zoomT - zoom) * Math.min(1, dt * 4);
+  const digesting = fedOn > 0 && fedOn < 1 ? 1 : 0;
+  hue += dt * (0.22 + excite * 1.8 + digesting * 3 + (happy > 0 ? 1.5 : 0));
+  roll += dt * rollDir * (0.12 + excite * 0.9);
+  const flyPrev = Math.floor(fly); fly += dt * (0.09 + excite * 0.55 + digesting * 0.4);
+  if (Math.floor(fly) !== flyPrev) roll += K.spiral * 0.07;
+  happy = Math.max(0, happy - dt); lidWide += (1 - lidWide) * Math.min(1, dt * 1.5);
+  if (T > nextBlink){ blinkT = T; nextBlink = T + 2.5 + Math.random() * 4; }
+  const bl = blinkT > 0 ? Math.max(0, 1 - Math.abs(T - blinkT - 0.08) / 0.08) : 0;
+  const lidT = (happy > 0 ? 0.42 : lidWide) * (1 - bl) * (1 - body.hold * 0.5) * (dreaming ? 0.55 + 0.1 * Math.sin(T) : 1);
+  lid += (lidT - lid) * Math.min(1, dt * 14);
+  if (!reduceMotion && T > nextIdlePoke){ nextIdlePoke = T + 3.5 + Math.random() * 4; poke(norm([Math.random() - 0.5, Math.random() * 0.8 - 0.3, Math.random() - 0.5]), 0.35 * K.wobble, Math.random() < 0.5); }
+  if (!reduceMotion && K.breeze > 0 && T > nextBreeze){ nextBreeze = T + (7 - 3 * Math.min(K.breeze, 2)) * (0.6 + Math.random() * 0.8); emit(Math.floor(Math.random() * comb.N), 0.4 + 0.3 * K.breeze, Math.random() < 0.5 ? 1 : -1); }
+  light = light.map((v, i) => v + (lightT[i] - v) * Math.min(1, dt * 3));
+  if (fedOn > 0) fedOn = Math.min(1, fedOn + dt / 1.5);
+  hunger = Math.min(1, hunger + dt * 0.008);
+
+  // comb simulation (fixed step)
+  if (T - nearT > 0.3){ nearT = T; const hs = heartScreen(); for (let i = 0; i < comb.N; i++) nearHeart[i] = Math.hypot(CX[i] - hs.x, (CY[i] - hs.y) * 1.1) < hs.r * 0.75 ? 1 : 0; }
+  simAcc += reduceMotion ? dt * 0.4 : dt;
+  let steps = 0;
+  while (simAcc >= 1 / 240 && steps < 24){ combStep(1 / 240); simAcc -= 1 / 240; steps++; }
+  if (steps >= 24) simAcc = 0;
+  for (let i = 0; i < comb.N; i++){
+    F[i] += (BASE[i] - F[i]) * Math.min(1, dt * 0.04);
+    combData[i * 4] = X[i]; combData[i * 4 + 1] = E[i]; combData[i * 4 + 2] = Math.min(1, F[i] + E[i] * 0.22); combData[i * 4 + 3] = 0;
+  }
+  stepWorld(dt); setMood();
+
+  if (frameAvg > 45 && scale > 0.35){ scale *= 0.85; frameAvg = 30; resize(); }
+  else if (frameAvg < 18 && scale < 0.9){ scale = Math.min(0.9, scale * 1.06); frameAvg = 24; resize(); }
+
+  // ---- shader ----
+  camBasis();
+  const S = SPECIES[species];
+  gl.viewport(0, 0, cv.width, cv.height);
+  gl.uniform2f(U.uRes, cv.width, cv.height); gl.uniform1f(U.uTime, T);
+  gl.uniform3fv(U.uCamPos, cam.pos); gl.uniformMatrix3fv(U.uCamRot, false, [CR[0], CR[1], CR[2], CU[0], CU[1], CU[2], -CF[0], -CF[1], -CF[2]]);
+  gl.uniform1f(U.uFov, FOV);
+  gl.uniformMatrix3fv(U.uBody, false, [BODY[0], BODY[3], BODY[6], BODY[1], BODY[4], BODY[7], BODY[2], BODY[5], BODY[8]]);
+  gl.uniform3fv(U.uCenter, CENTER);
+  const sq = body.sq, pu = body.pump; gl.uniform3f(U.uSquash, 1 - sq * 0.55 + pu, 1 + sq + pu, 1 - sq * 0.55 + pu);
+  gl.uniform2f(U.uJig, body.jig[0] * 0.25, body.jig[1] * 0.25);
+  const pk = new Float32Array(32), am = new Float32Array(8);
+  pokes.forEach((p, i) => { pk.set([...p.d, p.t0], i * 4); am[i] = p.amp; });
+  gl.uniform4fv(U.uPoke, pk); gl.uniform1fv(U.uAmp, am);
+  gl.uniform3fv(U.uLight, light); gl.uniform3fv(U.uEye, norm([EYE[0] + look[0] * 0.28, EYE[1] + look[1] * 0.2, EYE[2]])); gl.uniform1f(U.uLid, lid); gl.uniform2f(U.uLook, look[0], look[1]);
+  gl.uniform1f(U.uEyeSize, eyeSize); gl.uniform1f(U.uZoom, zoom); gl.uniform1f(U.uRoll, roll); gl.uniform1f(U.uFly, fly); gl.uniform1f(U.uHue, hue); gl.uniform1f(U.uExcite, Math.min(1, excite));
+  gl.uniform1f(U.uFoil, K.foil); gl.uniform1f(U.uWaveSpeed, K.waveSpeed); gl.uniform1f(U.uGlyph, K.glyph * (1 + body.hold)); gl.uniform1f(U.uSpiral, K.spiral); gl.uniform1f(U.uIdle, K.wobble);
+  gl.uniform3fv(U.uColA, lin(S.A)); gl.uniform3fv(U.uColB, lin(S.B)); gl.uniform3fv(U.uColC, lin(S.C)); gl.uniform3fv(U.uBg0, lin(S.bg0)); gl.uniform3fv(U.uBg1, lin(S.bg1)); gl.uniform3fv(U.uWall, lin(S.wall));
+  gl.uniform3fv(U.uFed, fedCol); gl.uniform1f(U.uFedOn, fed ? Math.max(fedOn, 0.0) : 0);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, atlasTex); gl.uniform1i(U.uAtlas, 0); gl.uniform1f(U.uGlyphN, glyphN);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, combTex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, comb.C, comb.R, 0, gl.RGBA, gl.FLOAT, combData);
+  gl.uniform1i(U.uComb, 1); gl.uniform2i(U.uCombN, comb.C, comb.R); gl.uniform1f(U.uCombScale, comb.scale); gl.uniform1f(U.uHueSwing, K.hue * Math.PI / 180);
+  gl.uniform1f(U.uPoolY, poolFrac);
+  const sp = new Float32Array(24); splashes.forEach((s, i) => sp.set(s, i * 4)); gl.uniform4fv(U.uSplash, sp);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+  g2.setTransform(dpr, 0, 0, dpr, 0, 0); g2.clearRect(0, 0, W, H);
+  drawWorld();
+  if (devMode) drawHud();
+  requestAnimationFrame(frame);
+}
+
+// ================= bench =================
+function renderSpecies(){
+  const el = $('pals'); el.innerHTML = '';
+  for (const n of Object.keys(SPECIES)){ const b = document.createElement('button'); b.type = 'button'; b.textContent = n; b.setAttribute('aria-pressed', String(n === species)); b.onclick = () => { species = n; renderSpecies(); poke(EYE, 1.2); }; el.append(b); }
+}
+function sliders(list, host){
+  for (const [key, label, min, max, step] of list){
+    const row = document.createElement('div'); row.className = 'row';
+    row.innerHTML = `<label for="s-${key}">${label}</label><output id="o-${key}" for="s-${key}">${(+K[key]).toFixed(2)}</output><input type="range" id="s-${key}" min="${min}" max="${max}" step="${step}" value="${K[key]}">`;
+    $(host).append(row);
+    const s = row.querySelector('input'), o = row.querySelector('output');
+    s.oninput = () => { K[key] = +s.value; o.textContent = (+K[key]).toFixed(2); };
+  }
+}
+sliders(SL_HEART, 'slHeart'); sliders(SL_COMB, 'slComb');
+
+resize(); camBasis(); renderSpecies(); buildAtlas();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(buildAtlas).catch(() => {});
+setTimeout(() => { poke(EYE, 1.0); emit(cellAt(W * 0.5, H * 0.45), 1.2); }, 500);
+window.__hive = { poke: (a) => poke(EYE, a || 1), spit, feed: () => { const b = bubbles.filter((x) => x.state === 'fly').pop(); if (b) feed(b); }, wave: (x, y) => emit(cellAt(x, y), 1.5), setMode, pop: () => { const b = bubbles[0]; if (b) pop(b); }, drip: () => releaseDrip(drips[0]), state: () => ({ bubbles: bubbles.length, fed, glyphN, mood, events: events.length }), stats: () => { let e = 0, x = 0, f = 0; for (let i = 0; i < comb.N; i++){ e += E[i]; x += Math.abs(X[i]); f += F[i]; } return { N: comb.N, meanE: e / comb.N, meanX: x / comb.N, meanF: f / comb.N, fps: 1000 / frameAvg, scale, ev: events.length }; } };
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
