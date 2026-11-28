@@ -1,0 +1,1015 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Spectral Shimmer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen&family=Nunito:wght@400;700;800&display=swap">
+<style>
+/* Layout: toy = one edge-to-edge light table with a single DEV MODE pill; dev = stage left, bench right, anatomy below. Single look: the GOOAE void (ink medium swaps in paper). */
+:root {
+  --void: #100817; --abyss: #25072F; --night: #171020; --lime: #E8FF65; --fae: #D9A5FF; --milk: #F4E9FF;
+  --magenta: #F000A8; --pink: #FF4BBF; --purple: #7200C9; --neon: #B000FF; --cyan: #25D9FF;
+  --glass: rgba(16, 8, 23, .78); --line: rgba(244, 233, 255, .5); --hair: rgba(255, 255, 255, .14);
+  --font-pixel: "Press Start 2P", ui-monospace, monospace;
+  --font-label: Silkscreen, ui-monospace, monospace;
+  --font-body: Nunito, ui-rounded, system-ui, sans-serif;
+  --scan: .5; --bloom: .3;
+  color-scheme: dark;
+}
+html { height: 100%; box-sizing: border-box; background: var(--void); }
+*, *::before, *::after { box-sizing: border-box; }
+body { min-height: 100%; margin: 0; background: var(--void); color: var(--milk); font-family: var(--font-body); font-size: 16px; line-height: 1.5; }
+html[data-mode="toy"] body { height: 100%; overflow: hidden; }
+[hidden] { display: none !important; }
+
+.stage { position: fixed; inset: 0; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; background: var(--void); }
+.stage canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
+#fx { mix-blend-mode: screen; }
+#bloom { mix-blend-mode: screen; opacity: var(--bloom); pointer-events: none; }
+html[data-medium="ink"] #fx, html[data-medium="ink"] #bloom { mix-blend-mode: multiply; }
+#ui { pointer-events: none; }
+.scan { position: absolute; inset: 0; pointer-events: none; opacity: var(--scan);
+  background: repeating-linear-gradient(0deg, rgba(255,255,255,.06) 0 1px, transparent 1px 3px), radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.55) 100%); }
+html[data-medium="ink"] .scan { display: none; }
+.stage.flicker #fx, .stage.flicker #bloom { animation: holo 5s steps(1) infinite; }
+@keyframes holo { 0%, 100% { opacity: 1; } 37% { opacity: .9; } 38% { opacity: 1; } 71% { opacity: .95; } 72% { opacity: 1; } }
+.stage.flicker #bloom { animation-name: holob; }
+@keyframes holob { 0%, 100% { opacity: var(--bloom); } 37% { opacity: calc(var(--bloom) * .8); } 38% { opacity: var(--bloom); } }
+
+.hud { position: absolute; left: 12px; top: 12px; pointer-events: none; font-family: var(--font-label); font-size: 12px; letter-spacing: .05em; color: var(--lime);
+  background: rgba(16,8,23,.7); border: 1px solid var(--hair); border-radius: 12px; padding: 6px 10px; text-transform: uppercase; font-variant-numeric: tabular-nums; }
+html[data-medium="ink"] .hud { color: #1c1a40; background: rgba(241,238,228,.85); border-color: rgba(28,26,64,.2); }
+
+.toolbar { position: fixed; left: 50%; transform: translateX(-50%); bottom: max(14px, env(safe-area-inset-bottom, 0px)); z-index: 30; display: flex; gap: 6px; padding: 6px; border-radius: 999px;
+  background: var(--glass); border: 1px solid var(--hair); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.pill { min-height: 44px; padding: 0 18px; border-radius: 999px; border: 2px solid var(--line); background: transparent; color: var(--milk);
+  font-family: var(--font-label); font-size: 13px; letter-spacing: .08em; cursor: pointer; white-space: nowrap; }
+.pill[aria-pressed="true"] { background: var(--lime); border-color: var(--lime); color: var(--void); }
+:focus-visible { outline: 3px solid var(--lime); outline-offset: 3px; }
+
+.dev { display: none; }
+html[data-mode="dev"] .dev { display: block; }
+html[data-mode="dev"] .page { max-width: 1320px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 110px;
+  display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; align-items: start; }
+html[data-mode="dev"] .head { grid-column: 1 / -1; }
+html[data-mode="dev"] .stage { position: relative; inset: auto; height: min(74vh, 800px); border-radius: 24px; border: 1px solid var(--hair); position: sticky; top: 16px; }
+html[data-mode="dev"] .anatomy { grid-column: 1 / -1; }
+@media (max-width: 880px) {
+  html[data-mode="dev"] .page { grid-template-columns: minmax(0, 1fr); }
+  html[data-mode="dev"] .stage { height: 62vh; position: relative; top: auto; }
+}
+.head h1 { margin: 0 0 8px; font-family: var(--font-pixel); font-weight: 400; font-size: clamp(16px, 3.2vw, 24px); line-height: 1.4; text-wrap: balance;
+  background: linear-gradient(120deg, #F000A8, #B000FF, #25D9FF, #00F0C8, #E8FF65, #FFCB37, #FF4BBF); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.head p { margin: 0; max-width: 70ch; color: var(--fae); }
+.bench { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.box { border: 1px solid var(--hair); border-radius: 20px; background: rgba(255,255,255,.04); padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.box h2 { margin: 0; font-family: var(--font-label); font-weight: 400; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--lime); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1.5px solid var(--line); background: transparent; color: var(--milk); font-family: var(--font-label); font-size: 12px; letter-spacing: .04em; cursor: pointer; }
+.chip[aria-checked="true"] { background: var(--lime); border-color: var(--lime); color: var(--void); }
+.row { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center; }
+.row label { font-size: 14px; color: var(--milk); }
+.row output { font-family: var(--font-label); font-size: 12px; color: var(--fae); font-variant-numeric: tabular-nums; }
+.row input[type="range"] { grid-column: 1 / -1; width: 100%; accent-color: #E8FF65; }
+.row select { grid-column: 1 / -1; width: 100%; min-height: 36px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--night); color: var(--milk); font: inherit; font-size: 14px; padding: 0 8px; }
+.row.tog { grid-template-columns: 1fr auto; }
+.row.tog input { width: 22px; height: 22px; accent-color: #E8FF65; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn { min-height: 44px; padding: 0 18px; border-radius: 999px; border: 0; cursor: pointer; font-family: var(--font-label); font-size: 13px; letter-spacing: .06em; color: var(--void);
+  background: radial-gradient(circle at 28% 22%, rgba(255,255,255,.85), rgba(255,255,255,0) 28%), linear-gradient(160deg, var(--pink), var(--magenta)); box-shadow: 0 4px 0 var(--purple); }
+.btn.ghost { background: transparent; color: var(--milk); border: 2px solid var(--line); box-shadow: none; }
+textarea { width: 100%; min-height: 180px; resize: vertical; border-radius: 12px; border: 1.5px solid var(--line); background: var(--night); color: var(--milk); font-family: ui-monospace, Menlo, monospace; font-size: 12px; padding: 10px; }
+.msg { margin: 0; font-size: 14px; color: var(--fae); min-height: 1.5em; }
+.anatomy { border-top: 1px solid var(--hair); padding-top: 18px; }
+.anatomy h2 { font-family: var(--font-label); font-weight: 400; font-size: 14px; letter-spacing: .12em; text-transform: uppercase; color: var(--lime); margin: 0 0 10px; }
+.anatomy ol, .anatomy ul { margin: 0 0 16px; padding-left: 22px; max-width: 80ch; color: var(--milk); }
+.anatomy li { margin-bottom: 6px; }
+.anatomy p { max-width: 80ch; color: var(--fae); }
+.anatomy table { border-collapse: collapse; font-size: 14px; }
+.anatomy td, .anatomy th { border-bottom: 1px solid var(--hair); padding: 6px 10px; text-align: left; vertical-align: top; }
+.anatomy .tw { overflow-x: auto; max-width: 100%; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .stage.flicker #fx, .stage.flicker #bloom { animation: none; } }
+</style>
+
+<div class="page">
+  <header class="head dev">
+    <h1>SPECTRAL SHIMMER · LIGHT PAINT LAB</h1>
+    <p>Every mark is a moving pen of light, and the ground is the exposure. Drag, tap and cast on the stage; pick a world, a tool, or Mutate. Double-tap the stage in toy mode to flip worlds.</p>
+  </header>
+
+  <div class="stage" id="stage">
+    <canvas id="bg" aria-hidden="true"></canvas>
+    <canvas id="fx" aria-label="Light canvas. Drag to paint light. In dev mode, press Space on the stage to cast the current tool at the center." tabindex="0"></canvas>
+    <canvas id="bloom" aria-hidden="true"></canvas>
+    <canvas id="ui" aria-hidden="true"></canvas>
+    <div class="scan" aria-hidden="true"></div>
+    <div class="hud dev" id="hud" aria-hidden="true"></div>
+  </div>
+
+  <aside class="bench dev" aria-label="Lab controls">
+    <div class="box">
+      <h2>World</h2>
+      <div class="chips" role="radiogroup" aria-label="World" id="worlds"></div>
+    </div>
+    <div class="box">
+      <h2>Tool</h2>
+      <div class="chips" role="radiogroup" aria-label="Tool" id="tools"></div>
+      <div class="actions">
+        <button type="button" class="btn" id="mutate">Mutate</button>
+        <button type="button" class="btn ghost" id="clear">Clear</button>
+        <button type="button" class="btn ghost" id="cast">Cast at center</button>
+      </div>
+    </div>
+    <div id="knobs"></div>
+    <div class="box">
+      <h2>Recipe</h2>
+      <label class="sr" for="recipe">Recipe JSON</label>
+      <textarea id="recipe" spellcheck="false"></textarea>
+      <div class="actions">
+        <button type="button" class="btn ghost" id="copy">Copy</button>
+        <button type="button" class="btn ghost" id="apply">Apply edited recipe</button>
+      </div>
+      <p class="msg" id="msg" role="status"></p>
+    </div>
+  </aside>
+
+  <section class="anatomy dev" aria-labelledby="anat-h">
+    <h2 id="anat-h">Anatomy · what makes it this</h2>
+    <ol>
+      <li><strong>Moving light pens.</strong> Every mark is a pen that draws only its newest piece each frame: ribbons along the drag, rays growing out from a point, sparks flying, rings tracing round, hairs chasing the hand. Nothing is redrawn whole.</li>
+      <li><strong>The ground is the exposure.</strong> Pens add light onto a black film; each frame the film fades by the afterglow amount. Short fade is a live shimmer, long fade is a long exposure, zero is a drawing.</li>
+      <li><strong>White-hot core, spectral body.</strong> Each stroke is a soft wide glow, a coloured body and a thin white core. Hue comes from a colour law: distance travelled, angle, speed, a palette or one laser hue.</li>
+      <li><strong>Dispersion.</strong> Two thin copies offset to either side, shifted down and up the spectrum, split every edge like light through a prism.</li>
+      <li><strong>Sparkle.</strong> Glowing sprites twinkle on flung sparks and on needle tips; a bloom pass blurs the whole exposure back over itself.</li>
+    </ol>
+    <h2>Seeds this lab grew from</h2>
+    <div class="tw"><table>
+      <thead><tr><th>Seed</th><th>What it gave</th><th>Tool</th></tr></thead>
+      <tbody>
+        <tr><td>Spectral Shimmer v1</td><td>Spectral ribbon, side rays, flung sparks, flick burst</td><td>Streak</td></tr>
+        <tr><td>Notebook sketch: the horizontal smear and spikes</td><td>A burst that smears sideways, with short dashes radiating out</td><td>Burst (smear)</td></tr>
+        <tr><td>Notebook sketch: the stacked V's below it</td><td>Feather tail of chevrons dripping down</td><td>Burst (tail)</td></tr>
+        <tr><td>Notebook sketch: the scribbled O</td><td>Many loose overlapping ellipses traced by a pen</td><td>Halo</td></tr>
+        <tr><td>Notebook sketch: the looping line at the top</td><td>Cursive loops riding along the drag</td><td>Coil</td></tr>
+        <tr><td>Notebook sketch: the long arc ending in a hook</td><td>A bundle of hairs on springs that sweep and curl on release</td><td>Comet</td></tr>
+        <tr><td>Starburst reference image</td><td>Scattered per-ray hues, beams that fade at constant width, white needles tipped with a glowing dot</td><td>Burst (wedge + needle)</td></tr>
+        <tr><td>Remix axis from the first study: two frequencies around the hand</td><td>A pen orbiting the finger on a precessing Lissajous figure that grows out of the touch and collapses to a point on release</td><td>Lissajous</td></tr>
+        <tr><td>Remix axis from the first study: midpoint displacement</td><td>Plasma arcs that flicker between the touch and the finger while held, a forked bolt that re-strikes on release, a strike from the sky on tap</td><td>Lightning</td></tr>
+        <tr><td>Remix axis from the second study: two decaying Lissajous pens summed</td><td>Pull a pendulum back from its pivot and let go: four damped, slightly detuned pendulums swing a figure that turns and spirals in to the pivot</td><td>Harmonograph</td></tr>
+        <tr><td>The "hologram sim" wish</td><td>Wireframe shapes cast on a beam, spinning, split cyan and magenta, flickering</td><td>Holo</td></tr>
+      </tbody>
+    </table></div>
+    <h2>Failure modes</h2>
+    <ul>
+      <li>Redrawing a lasting shape every frame on an additive ground: it piles up to a white donut. Draw it once as a pen, or scale its alpha by the fade (steady brightness = alpha ÷ fade).</li>
+      <li>Fading with a low-alpha fill alone: 8-bit rounding leaves a ghost floor. A tiny difference pass each frame clears it.</li>
+      <li>Hue as one rainbow ramp over the whole canvas: reads as a gradient sticker, not light. Tie hue to the pen's own path, angle or speed.</li>
+      <li>Too many simultaneous wide glows: everything blows out to white. Keep glow passes faint and let overlap make the white.</li>
+    </ul>
+  </section>
+</div>
+
+<div class="toolbar"><button type="button" class="pill" id="devBtn" aria-pressed="false">DEV MODE</button></div>
+<div class="sr" aria-live="polite" id="live"></div>
+
+<script>
+/*ENGINE-START*/
+// Light Paint engine: every mark is a moving pen of light; the ground is the exposure.
+// makeLightPaint({ bg, fx, bloom, ui, still }) -> api. Canvases share one CSS-pixel space.
+function makeLightPaint(opt) {
+  'use strict';
+  var TAU = Math.PI * 2;
+  var bgc = opt.bg, fx = opt.fx, bl = opt.bloom, uic = opt.ui;
+  var b = bgc.getContext('2d'), g = fx.getContext('2d'), u = uic.getContext('2d'), bx = bl.getContext('2d');
+  var tmp = document.createElement('canvas'), tx = tmp.getContext('2d'), tmp2 = document.createElement('canvas'), tx2 = tmp2.getContext('2d');
+  var W = 1, H = 1, dpr = 1, still = !!opt.still;
+  function rand(a, c) { return a + Math.random() * (c - a); }
+  function clamp(v, a, c) { return Math.max(a, Math.min(c, v)); }
+
+  var DEF = {
+    medium: 'light', tool: 'streak', decay: 0.09, bloom: 0.3, scan: 0.5, flicker: true,
+    colorLaw: 'path', hue: 300, spectral: 0.55, dispersion: 1,
+    rayRate: 1, rayLen: 1, rayWidth: 1, rayShape: 'taper', anisotropy: 0.75, tail: 0,
+    sparks: 1, gravity: 30, twinkle: 0.35,
+    symmetry: 1, mirror: false, holoKind: 'cycle', autopilot: true,
+    lissaRatio: 'auto', lissaSpeed: 1, jag: 0.5, branch: 0.5, harmDamp: 0.22, harmDrift: 0.5
+  };
+  var P = Object.assign({}, DEF);
+  var rays = [], sparks = [], rings = [], holos = [], comets = [], segs = [], lissas = [], bolts = [], harmos = [];
+  var RATIOS = [[1, 2], [2, 3], [3, 4], [3, 5], [5, 4], [1, 3]];
+  var HRATIOS = [[2, 3], [3, 4], [1, 2], [3, 2], [2, 5], [4, 5], [1, 3], [3, 5]];
+  var CAP = { rays: 1500, sparks: 1500, rings: 160, holos: 8 };
+  var GOO = [320, 282, 192, 170, 70, 45, 330];
+  var HOLO_KINDS = ['torus', 'ico', 'helix', 'eye', 'crown', 'glyph', 'star'];
+  var holoNext = 0;
+
+  // ---- sprites: one glow per 15° of hue, plus white ----
+  function sprite(h) {
+    var c = document.createElement('canvas'); c.width = c.height = 64; var x = c.getContext('2d');
+    var gr = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gr.addColorStop(0, 'rgba(255,255,255,1)');
+    gr.addColorStop(0.22, h === null ? 'rgba(255,255,255,.8)' : 'hsla(' + h + ',100%,70%,.85)');
+    gr.addColorStop(1, h === null ? 'rgba(255,255,255,0)' : 'hsla(' + h + ',100%,55%,0)');
+    x.fillStyle = gr; x.fillRect(0, 0, 64, 64); return c;
+  }
+  var SPR = []; for (var si = 0; si < 24; si++) SPR.push(sprite(si * 15));
+  var WHITE = sprite(null);
+  function spr(h) { return SPR[((Math.round(h / 15) % 24) + 24) % 24]; }
+
+  // ---- colour laws ----
+  function hueFor(base, ang, speed) {
+    switch (P.colorLaw) {
+      case 'angle': return ang * 180 / Math.PI + rand(-50, 50);
+      case 'speed': return 280 * clamp(speed / 2200, 0, 1);
+      case 'gooae': return GOO[((Math.floor(base / 40) % GOO.length) + GOO.length) % GOO.length];
+      case 'laser': return P.hue + rand(-8, 8);
+      case 'holo': return (Math.floor(base / 60) % 2) ? 190 : 312;
+      default: return base;
+    }
+  }
+  function ink() { return P.medium === 'ink'; }
+  function paint(h, a, l) {
+    l = l || 0;
+    if (ink()) return P.colorLaw === 'ink' ? 'rgba(30,28,70,' + a + ')' : 'hsla(' + h + ',70%,' + (38 - l * 14) + '%,' + a + ')';
+    if (P.colorLaw === 'thermal') { var t = (((h % 360) + 360) % 360) / 360; return 'hsla(' + (t * 55) + ',100%,' + (45 + t * 35 + l * 15) + '%,' + a + ')'; }
+    return 'hsla(' + h + ',100%,' + (60 + l * 30) + '%,' + a + ')';
+  }
+  function ln(x0, y0, x1, y1) { g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke(); }
+
+  // ---- the pen: glow, dispersion pair, body, white core ----
+  var GAIN = 1, fadeAcc = 0; // GAIN: symmetric copies share the light so overlap doesn't blow out
+  function pen(x0, y0, x1, y1, w, h, a, coreA, gm) {
+    a *= GAIN; if (a <= 0.004) return;
+    g.lineCap = 'round';
+    if (ink()) { g.strokeStyle = paint(h, a * 0.75); g.lineWidth = Math.max(0.7, w * 0.55); ln(x0, y0, x1, y1); return; }
+    gm = gm === undefined ? 1 : gm;
+    g.strokeStyle = paint(h, a * 0.12 * gm); g.lineWidth = w * 4; ln(x0, y0, x1, y1);
+    if (P.dispersion > 0) {
+      var dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy) || 1, o = Math.max(w * 0.7, 1.2) * P.dispersion, nx = -dy / L * o, ny = dx / L * o;
+      g.lineWidth = Math.max(0.8, w * 0.5);
+      g.strokeStyle = paint(h - 55, a * 0.4); ln(x0 + nx, y0 + ny, x1 + nx, y1 + ny);
+      g.strokeStyle = paint(h + 55, a * 0.4); ln(x0 - nx, y0 - ny, x1 - nx, y1 - ny);
+    }
+    g.strokeStyle = paint(h, a * 0.6); g.lineWidth = w; ln(x0, y0, x1, y1);
+    if (coreA > 0) { g.strokeStyle = 'rgba(255,255,255,' + (a * coreA * 0.8) + ')'; g.lineWidth = Math.max(0.7, w * 0.3); ln(x0, y0, x1, y1); }
+  }
+
+  // ---- symmetry: rotate copies about the centre, optional mirror ----
+  function ops() {
+    var n = Math.max(1, P.symmetry | 0), o = [];
+    for (var k = 0; k < n; k++) { var th = TAU * k / n; o.push({ th: th, m: false }); if (P.mirror) o.push({ th: th, m: true }); }
+    return o;
+  }
+  function tp(op, x, y) { var cx = W / 2, cy = H / 2, dx = x - cx, dy = y - cy; if (op.m) dy = -dy; var c = Math.cos(op.th), s = Math.sin(op.th); return [cx + dx * c - dy * s, cy + dx * s + dy * c]; }
+  function tv(op, vx, vy) { if (op.m) vy = -vy; var c = Math.cos(op.th), s = Math.sin(op.th); return [vx * c - vy * s, vx * s + vy * c]; }
+  function ta(op, a) { return (op.m ? -a : a) + op.th; }
+
+  // ---- primitives ----
+  function addRay(x, y, a, len, w, h, grow, gap, shape) {
+    ops().forEach(function (op) {
+      var p = tp(op, x, y);
+      rays.push({ x: p[0], y: p[1], a: ta(op, a), len: len, w: w, h: h, grow: grow, gap: gap || 0, shape: shape, t: 0, d: 0 });
+    });
+    if (rays.length > CAP.rays) rays.splice(0, rays.length - CAP.rays);
+  }
+  function addSpark(x, y, vx, vy, h, s, life, raw) {
+    var list = raw ? [{ th: 0, m: false }] : ops();
+    list.forEach(function (op) {
+      var p = raw ? [x, y] : tp(op, x, y), v = raw ? [vx, vy] : tv(op, vx, vy);
+      sparks.push({ x: p[0], y: p[1], px: p[0], py: p[1], vx: v[0], vy: v[1], h: h, s: s, life: life, t: 0, tw: rand(0, TAU) });
+    });
+    if (sparks.length > CAP.sparks) sparks.splice(0, sparks.length - CAP.sparks);
+  }
+  function addSeg(x0, y0, x1, y1, h, w) {
+    ops().forEach(function (op) { var a = tp(op, x0, y0), c = tp(op, x1, y1); segs.push([a[0], a[1], c[0], c[1], h, w]); });
+  }
+  function shapeFor() { if (P.rayShape !== 'mix') return P.rayShape; return Math.random() < 0.7 ? 'wedge' : 'needle'; }
+  function sparkN(n) { var k = n * P.sparks, i = Math.floor(k); return i + (Math.random() < k - i ? 1 : 0); }
+
+  // Burst: anisotropic rays, a horizontal smear band, an optional feather tail, sparks and a flash.
+  function burst(x, y, scale, base) {
+    scale = scale || 1; base = base === undefined ? rand(0, 360) : base;
+    var n = Math.max(10, Math.round((still ? 30 : 56) * P.rayRate * (scale < 0.7 ? 0.6 : 1))), an = P.anisotropy, k, a;
+    for (k = 0; k < n; k++) {
+      a = Math.random() < an * 0.6 ? (Math.random() < 0.5 ? 0 : Math.PI) + rand(-0.35, 0.35) : rand(0, TAU);
+      var horiz = Math.abs(Math.cos(a));
+      var len = (45 + 70 * Math.random() + 240 * an * Math.pow(horiz, 3) * Math.random()) * scale * P.rayLen;
+      var h = P.colorLaw === 'path' ? base + rand(-90, 90) : hueFor(base, a, 0);
+      addRay(x, y, a, len, rand(1.2, 3.6) * scale * P.rayWidth, h, rand(0.3, 0.7), rand(3, 12) * scale, shapeFor());
+    }
+    var sm = Math.round(an * 8);
+    for (k = 0; k < sm; k++) {
+      var side = k % 2 ? 0 : Math.PI;
+      addRay(x, y + rand(-6, 6) * scale, side + rand(-0.04, 0.04), rand(110, 280) * scale * P.rayLen, rand(1.5, 4) * scale * P.rayWidth, base + rand(-40, 40), rand(0.35, 0.6), 0, 'taper');
+    }
+    if (P.tail > 0) {
+      var nt = Math.max(2, Math.round(P.tail * 7));
+      for (k = 0; k < nt; k++) {
+        var yi = y + (26 + k * 20) * scale, wi = (30 - k * 3) * scale * (0.6 + P.tail * 0.4), tipY = yi + 10 * scale;
+        [-1, 1].forEach(function (s) {
+          var sx = x + s * wi, sy = yi - 16 * scale, aa = Math.atan2(tipY - sy, x - sx), L = Math.hypot(x - sx, tipY - sy);
+          addRay(sx, sy, aa, L, rand(1.4, 2.6) * scale * P.rayWidth, base + 30 + k * 12, 0.25 + k * 0.05, 0, 'taper');
+        });
+      }
+      addRay(x, y + (26 + nt * 20) * scale, Math.PI / 2, 34 * scale, 2.4 * scale, base + 60, 0.5, 0, 'taper');
+    }
+    var ns = sparkN(still ? 12 : 34);
+    for (k = 0; k < ns; k++) { var bb = rand(0, TAU), sp = rand(80, 420) * scale; addSpark(x, y, Math.cos(bb) * sp, Math.sin(bb) * sp, hueFor(base + bb / TAU * 360, bb, sp), rand(6, 13), rand(0.6, 1.3)); }
+    if (!ink()) ops().forEach(function (op) { var p = tp(op, x, y); sparks.push({ x: p[0], y: p[1], px: p[0], py: p[1], vx: 0, vy: 0, h: null, s: 50 * scale, life: 0.3, t: 0, tw: 0, flash: true }); });
+    else ops().forEach(function (op) { var p = tp(op, x, y); g.fillStyle = 'rgba(30,28,70,.8)'; g.beginPath(); g.ellipse(p[0], p[1], 9 * scale, 4 * scale, 0, 0, TAU); g.fill(); });
+  }
+
+  // Halo: several loose ellipses, each traced by a pen, like a scribbled O.
+  function halo(x, y, R, base) {
+    base = base === undefined ? rand(0, 360) : base;
+    var n = 6;
+    ops().forEach(function (op) {
+      var p = tp(op, x, y);
+      for (var k = 0; k < n; k++) rings.push({ cx: p[0], cy: p[1], rx: R * rand(0.86, 1.12), ry: R * rand(0.84, 1.14), rot: ta(op, rand(0, TAU)), start: rand(0, TAU), sweep: rand(TAU * 0.8, TAU * 1.1),
+        dir: (Math.random() < 0.5 ? 1 : -1) * (op.m ? -1 : 1), delay: k * 0.07, dur: rand(0.45, 0.8), wob: rand(0.01, 0.05), ph: rand(0, TAU), h: hueFor(base + k * 55, k, 0), w: rand(1.4, 3) * P.rayWidth, t: 0, u: 0 });
+    });
+    if (rings.length > CAP.rings) rings.splice(0, rings.length - CAP.rings);
+    var ns = sparkN(still ? 12 : 30);
+    for (var j = 0; j < ns; j++) { var a = rand(0, TAU); addSpark(x + Math.cos(a) * R, y + Math.sin(a) * R, Math.cos(a) * rand(20, 120), Math.sin(a) * rand(20, 120), hueFor(base + a / TAU * 360, a, 0), rand(5, 10), rand(0.6, 1.3)); }
+  }
+  function ringPt(r, uu) {
+    var th = r.start + r.dir * r.sweep * uu, wob = 1 + r.wob * Math.sin(5 * th + r.ph);
+    var ex = Math.cos(th) * r.rx * wob, ey = Math.sin(th) * r.ry * wob, c = Math.cos(r.rot), s = Math.sin(r.rot);
+    return [r.cx + ex * c - ey * s, r.cy + ex * s + ey * c];
+  }
+
+  // Comet: a bundle of hairs on springs chasing the hand; on release it sweeps on and curls into a hook.
+  function makeComet(x, y, h) {
+    var c = { tx: x, ty: y, cvx: 0, cvy: 0, nx: 0, ny: -1, h: h, released: false, rt: 0, curl: 0, hairs: [] };
+    ops().forEach(function (op) {
+      var p = tp(op, x, y);
+      for (var i = 0; i < 7; i++) c.hairs.push({ x: p[0], y: p[1], vx: 0, vy: 0, off: (i - 3) * 5 * rand(0.8, 1.25), k: rand(70, 170), c: rand(9, 15), w: (0.8 + (1 - Math.abs(i - 3) / 3) * 2.2) * P.rayWidth, i: i, op: op });
+    });
+    comets.push(c); return c;
+  }
+  function stepComet(c, dt) {
+    if (c.released) {
+      c.rt += dt; var ang = c.curl * dt, cs = Math.cos(ang), sn = Math.sin(ang), vx = c.cvx * cs - c.cvy * sn, vy = c.cvx * sn + c.cvy * cs;
+      var damp = Math.pow(0.2, dt); c.cvx = vx * damp; c.cvy = vy * damp; c.tx += c.cvx * dt; c.ty += c.cvy * dt;
+    }
+    var sp = Math.hypot(c.cvx, c.cvy); if (sp > 20) { c.nx = -c.cvy / sp; c.ny = c.cvx / sp; }
+    c.h += sp * dt * P.spectral * 0.6;
+    var steps = 2, h2 = dt / steps;
+    c.hairs.forEach(function (hr) {
+      var ox = hr.x, oy = hr.y, tgt = tp(hr.op, c.tx + c.nx * hr.off, c.ty + c.ny * hr.off);
+      for (var s = 0; s < steps; s++) {
+        hr.vx += ((tgt[0] - hr.x) * hr.k - hr.vx * hr.c) * h2; hr.vy += ((tgt[1] - hr.y) * hr.k - hr.vy * hr.c) * h2;
+        hr.x += hr.vx * h2; hr.y += hr.vy * h2;
+      }
+      var fade = c.released ? clamp(1 - c.rt / 1.1, 0, 1) : 1;
+      pen(ox, oy, hr.x, hr.y, hr.w * (0.5 + 0.5 * fade), hueFor(c.h + hr.i * 7, Math.atan2(c.cvy, c.cvx), sp), 0.85 * fade, 0.6);
+    });
+    return !(c.released && c.rt > 1.1);
+  }
+
+  // Lissajous: a pen orbits the hand on x = R·sin(a·t + δ), y = 0.9R·sin(b·t); δ drifts so the figure precesses.
+  // It grows out of the finger, follows it, and collapses to a point on release.
+  function makeLissa(x, y, h) {
+    var r = P.lissaRatio === 'auto' ? RATIOS[Math.floor(Math.random() * RATIOS.length)] : String(P.lissaRatio).split(':').map(Number);
+    var L = { cx: x, cy: y, tx: x, ty: y, a: r[0], b: r[1], d: rand(0, TAU), t: rand(0, TAU), R: Math.min(W, H) * 0.16 * P.rayLen, h: h, grow: 0, released: false, rt: 0, ops: ops(), prev: null };
+    lissas.push(L); return L;
+  }
+  function lissaRaw(L, tt) { var R = L.R * L.grow; return [L.cx + R * Math.sin(L.a * tt + L.d), L.cy + R * 0.9 * Math.sin(L.b * tt)]; }
+  function stepLissa(L, dt) {
+    if (L.released) { L.rt += dt; L.grow = Math.max(0, L.grow - dt / 0.7); } else L.grow = Math.min(1, L.grow + dt / 0.4);
+    var f = Math.min(1, dt * 12); L.cx += (L.tx - L.cx) * f; L.cy += (L.ty - L.cy) * f;
+    L.d += dt * 0.35;
+    if (!L.prev) L.prev = L.ops.map(function (op) { var q = lissaRaw(L, L.t); return tp(op, q[0], q[1]); });
+    // the pen must close the whole figure within the exposure's persistence, like an oscilloscope beam
+    var n = 24, w = 1.6 * P.rayWidth, step = dt * 24 * P.lissaSpeed / n;
+    for (var s = 0; s < n; s++) {
+      L.t += step; var q = lissaRaw(L, L.t);
+      L.ops.forEach(function (op, i) {
+        var p = tp(op, q[0], q[1]), pr = L.prev[i];
+        L.h += Math.hypot(p[0] - pr[0], p[1] - pr[1]) * P.spectral * 0.25 / L.ops.length;
+        pen(pr[0], pr[1], p[0], p[1], w, hueFor(L.h, L.t, 0), 0.85, 0.7);
+        L.prev[i] = p;
+      });
+    }
+    if (Math.random() < 0.12 * P.sparks && L.grow > 0.5) L.prev.forEach(function (p) { addSpark(p[0], p[1], rand(-40, 40), rand(-40, 40), hueFor(L.h, L.t, 0), rand(4, 8), rand(0.3, 0.7), true); });
+    return !(L.released && L.grow <= 0);
+  }
+
+  // Harmonograph: four damped pendulums, two per axis, summed. Pull one back (drag out from the pivot),
+  // let go, and the amplitudes decay with e^(-damp·τ) so the figure spirals in while slight detuning
+  // turns it. While held nothing decays; the drag sets the swing size and the figure's rotation.
+  function makeHarmo(x, y, h) {
+    var r = HRATIOS[Math.floor(Math.random() * HRATIOS.length)], dz = 0.012 + P.harmDrift * 0.05, dm = P.harmDamp;
+    function pend(f, wgt, spread) { return { f: f + rand(-dz, dz), p: rand(0, TAU), d: dm * rand(1 - spread, 1 + spread), w: wgt }; }
+    var hm = { cx: x, cy: y, R: 0, tR: 0, rot: 0, h: h, t: rand(0, TAU), tau: 0, released: false, ops: ops(), prev: null,
+      px: [pend(r[0], 1, 0.2), pend(r[1], 0.5, 0.5)], py: [pend(r[1], 1, 0.2), pend(r[0], 0.5, 0.5)] };
+    harmos.push(hm); return hm;
+  }
+  function harmEnv(hm) { var e = 0; hm.px.concat(hm.py).forEach(function (q) { e = Math.max(e, Math.exp(-q.d * hm.tau)); }); return e; }
+  function harmRaw(hm, tt) {
+    var x = 0, y = 0, k;
+    for (k = 0; k < 2; k++) {
+      var a = hm.px[k], c = hm.py[k];
+      x += a.w * Math.exp(-a.d * hm.tau) * Math.sin(a.f * tt + a.p);
+      y += c.w * Math.exp(-c.d * hm.tau) * Math.sin(c.f * tt + c.p);
+    }
+    x /= 1.5; y /= 1.5;
+    var cs = Math.cos(hm.rot), sn = Math.sin(hm.rot);
+    return [hm.cx + hm.R * (x * cs - y * sn), hm.cy + hm.R * (x * sn + y * cs)];
+  }
+  function stepHarmo(hm, dt) {
+    if (hm.released) hm.tau += dt;
+    hm.R += (hm.tR - hm.R) * Math.min(1, dt * 10);
+    var env = harmEnv(hm), fade = clamp((env - 0.06) / 0.45, 0, 1); /* dims as it shrinks, so the end doesn't pile up into a white knot */
+    if (!hm.prev) hm.prev = hm.ops.map(function (op) { var q = harmRaw(hm, hm.t); return tp(op, q[0], q[1]); });
+    // like the Lissajous beam, the pen is fast enough to close loops inside the exposure's persistence
+    var n = 24, step = dt * 20 * P.lissaSpeed / n, w = 1.3 * P.rayWidth;
+    for (var s = 0; s < n; s++) {
+      hm.t += step; var q = harmRaw(hm, hm.t);
+      hm.ops.forEach(function (op, i) {
+        var p = tp(op, q[0], q[1]), pr = hm.prev[i];
+        hm.h += Math.hypot(p[0] - pr[0], p[1] - pr[1]) * P.spectral * 0.2 / hm.ops.length;
+        if (hm.R > 2) pen(pr[0], pr[1], p[0], p[1], w, hueFor(hm.h, hm.t, 0), 0.7 * fade, 0.6);
+        hm.prev[i] = p;
+      });
+    }
+    if (Math.random() < 0.1 * P.sparks * fade && hm.R > 20) hm.prev.forEach(function (p) { addSpark(p[0], p[1], rand(-30, 30), rand(-30, 30), hueFor(hm.h, hm.t, 0), rand(3, 7), rand(0.3, 0.6), true); });
+    return !(hm.released && (fade <= 0 || hm.tau > 40));
+  }
+
+  // Lightning: midpoint displacement between two points, with forks. Each strike regenerates the path,
+  // so a bolt re-strikes two or three times like real lightning; plasma arcs flicker while held.
+  function boltPath(x0, y0, x1, y1, levels) {
+    var pts = [[x0, y0], [x1, y1]], disp = Math.hypot(x1 - x0, y1 - y0) * 0.28 * P.jag;
+    for (var l = 0; l < levels; l++) {
+      var np = [pts[0]];
+      for (var i = 0; i < pts.length - 1; i++) {
+        var p = pts[i], q = pts[i + 1], dx = q[0] - p[0], dy = q[1] - p[1], Ln = Math.hypot(dx, dy) || 1, o = rand(-1, 1) * disp;
+        np.push([(p[0] + q[0]) / 2 - dy / Ln * o, (p[1] + q[1]) / 2 + dx / Ln * o], q);
+      }
+      pts = np; disp *= 0.55;
+    }
+    return pts;
+  }
+  function drawPoly(pts, w, h, a, coreA) { for (var i = 1; i < pts.length; i++) pen(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1], w, h, a, coreA, 0.8); }
+  function strike(b) {
+    var main = boltPath(b.x0, b.y0, b.x1, b.y1, b.levels), w = 2.2 * b.power * P.rayWidth, total = main.length;
+    drawPoly(main, w, b.h, 0.95, 1);
+    for (var i = 2; i < total - 2; i++) {
+      if (Math.random() > 0.05 * P.branch * (b.power > 0.8 ? 1 : 0.5)) continue;
+      var p = main[i], q = main[i + 1], ang = Math.atan2(q[1] - p[1], q[0] - p[0]) + (Math.random() < 0.5 ? -1 : 1) * rand(0.3, 0.9);
+      var len = Math.hypot(b.x1 - b.x0, b.y1 - b.y0) * rand(0.12, 0.38) * (1 - i / total);
+      var sub = boltPath(p[0], p[1], p[0] + Math.cos(ang) * len, p[1] + Math.sin(ang) * len, 4);
+      drawPoly(sub, w * 0.45, b.h + 25, 0.7, 0.6);
+    }
+    // full bolts flash at both ends; plasma arcs (power < 1) only at the tip, so held arcs don't pile up white
+    if (!ink()) (b.power < 1 ? [[b.x1, b.y1, 0.5]] : [[b.x0, b.y0, 0.5], [b.x1, b.y1, 1]]).forEach(function (e) { sparks.push({ x: e[0], y: e[1], px: e[0], py: e[1], vx: 0, vy: 0, h: null, s: 34 * b.power * e[2], life: 0.18, t: 0, tw: 0, flash: true }); });
+  }
+  function addBolt(x0, y0, x1, y1, h, power, times, levels) {
+    ops().forEach(function (op) { var a = tp(op, x0, y0), c = tp(op, x1, y1); bolts.push({ x0: a[0], y0: a[1], x1: c[0], y1: c[1], h: h, power: power, times: times.slice(), t: 0, levels: levels || 6 }); });
+  }
+  function stepBolt(b, dt) {
+    b.t += dt; while (b.times.length && b.times[0] <= b.t) { b.times.shift(); strike(b); }
+    return b.times.length > 0;
+  }
+  function boltHue(base) { return P.colorLaw === 'path' ? 250 + (base % 80) : hueFor(base, 0, 0); }
+  function skyStrike(x, y, base) {
+    var h = boltHue(base); addBolt(x + rand(-0.15, 0.15) * W, -10, x, y, h, 1, [0, 0.07, 0.16], 7);
+    var ns = sparkN(22); for (var k = 0; k < ns; k++) { var a = rand(Math.PI, TAU); addSpark(x, y, Math.cos(a) * rand(80, 300), Math.sin(a) * rand(80, 300), h + rand(-30, 30), rand(4, 9), rand(0.4, 1)); }
+  }
+
+  // ---- holograms: wireframe solids cast on a beam ----
+  var GEO = {};
+  function circle3(r, n, f) { var p = []; for (var i = 0; i <= n; i++) { var a = i / n * TAU; p.push(f(Math.cos(a) * r, Math.sin(a) * r)); } return p; }
+  function buildGeo(kind) {
+    var L = [], i, j;
+    if (kind === 'torus') {
+      for (i = 0; i < 12; i++) { var a = i / 12 * TAU; L.push(circle3(0.32, 14, function (x, y) { var R = 0.72 + x; return [Math.cos(a) * R, y, Math.sin(a) * R]; })); }
+      [-0.2, 0, 0.2].forEach(function (yy) { var rr = 0.72 + Math.sqrt(Math.max(0, 0.1 - yy * yy)); L.push(circle3(rr, 32, function (x, y) { return [x, yy, y]; })); });
+    } else if (kind === 'ico') {
+      var t = (1 + Math.sqrt(5)) / 2, V = [[-1, t, 0], [1, t, 0], [-1, -t, 0], [1, -t, 0], [0, -1, t], [0, 1, t], [0, -1, -t], [0, 1, -t], [t, 0, -1], [t, 0, 1], [-t, 0, -1], [-t, 0, 1]];
+      var s = 1 / Math.hypot(1, t); V = V.map(function (v) { return [v[0] * s, v[1] * s, v[2] * s]; });
+      for (i = 0; i < 12; i++) for (j = i + 1; j < 12; j++) { var d = Math.hypot(V[i][0] - V[j][0], V[i][1] - V[j][1], V[i][2] - V[j][2]); if (d < 1.1) L.push([V[i], V[j]]); }
+    } else if (kind === 'helix') {
+      [0, Math.PI].forEach(function (ph) { var p = []; for (i = 0; i <= 120; i++) { var u2 = i / 120, a2 = u2 * TAU * 3.5 + ph; p.push([Math.cos(a2) * 0.5, u2 * 2 - 1, Math.sin(a2) * 0.5]); } L.push(p); });
+      for (i = 0; i <= 120; i += 8) { var u3 = i / 120, a3 = u3 * TAU * 3.5; L.push([[Math.cos(a3) * 0.5, u3 * 2 - 1, Math.sin(a3) * 0.5], [-Math.cos(a3) * 0.5, u3 * 2 - 1, -Math.sin(a3) * 0.5]]); }
+    } else if (kind === 'eye') {
+      var up = [], lo = []; for (i = 0; i <= 24; i++) { var x = -1 + i / 12; up.push([x, -0.5 * (1 - x * x), 0]); lo.push([x, 0.42 * (1 - x * x), 0]); }
+      L.push(up, lo); L.push(circle3(0.36, 28, function (x, y) { return [x, y, 0.06]; })); L.push(circle3(0.15, 18, function (x, y) { return [x, y, 0.12]; }));
+      L.push(circle3(0.5, 28, function (x, y) { return [x, y * 0.6, -0.15]; }));
+      for (i = -3; i <= 3; i++) { var lx = i * 0.22, ly = -0.5 * (1 - lx * lx); L.push([[lx, ly, 0], [lx * 1.15, ly - 0.2, 0]]); }
+    } else if (kind === 'crown') {
+      L.push(circle3(0.8, 32, function (x, y) { return [x, 0.45, y]; })); L.push(circle3(0.8, 32, function (x, y) { return [x, 0.2, y]; }));
+      var top = []; for (i = 0; i <= 20; i++) { var a4 = i / 20 * TAU, hgt = i % 2 ? 0 : -0.65; top.push([Math.cos(a4) * 0.8, hgt, Math.sin(a4) * 0.8]); if (i % 2 === 0) L.push([[Math.cos(a4) * 0.8, hgt, Math.sin(a4) * 0.8], [Math.cos(a4) * 0.8, 0.45, Math.sin(a4) * 0.8]]); }
+      L.push(top);
+    } else if (kind === 'glyph') {
+      [-0.72, 0, 0.72].forEach(function (cx) { [0.1, -0.1].forEach(function (z) {
+        L.push([[cx - 0.25, -0.5, z], [cx + 0.25, -0.5, z], [cx + 0.25, 0.5, z], [cx - 0.25, 0.5, z]]);
+        L.push([[cx - 0.18, 0, z], [cx + 0.25, 0, z]]);
+      }); [[-0.25, -0.5], [0.25, -0.5], [0.25, 0.5], [-0.25, 0.5], [0.25, 0]].forEach(function (q) { L.push([[cx + q[0], q[1], 0.1], [cx + q[0], q[1], -0.1]]); }); });
+    } else {
+      [0.14, -0.14].forEach(function (z) { var p = []; for (i = 0; i <= 16; i++) { var a5 = i / 16 * TAU - Math.PI / 2, r5 = i % 2 ? 0.42 : 1; p.push([Math.cos(a5) * r5, Math.sin(a5) * r5, z]); } L.push(p); });
+      for (i = 0; i < 16; i += 2) { var a6 = i / 16 * TAU - Math.PI / 2; L.push([[Math.cos(a6), Math.sin(a6), 0.14], [Math.cos(a6), Math.sin(a6), -0.14]]); }
+    }
+    return L;
+  }
+  function geo(kind) { return GEO[kind] || (GEO[kind] = buildGeo(kind)); }
+  function castHolo(x, y, size, kind, base) {
+    if (!kind || kind === 'cycle') { kind = HOLO_KINDS[holoNext % HOLO_KINDS.length]; holoNext++; }
+    base = base === undefined ? rand(0, 360) : base;
+    ops().slice(0, 4).forEach(function (op) {
+      var p = tp(op, x, y);
+      holos.push({ kind: kind, x: p[0], y: p[1], size: size, yaw: rand(0, TAU), pitch: rand(-0.5, 0.5), vyaw: 0.9, vpitch: 0, t: 0, life: ink() ? 0.05 : 7, h: hueFor(base, 0, 0), drawn: false });
+    });
+    if (holos.length > CAP.holos) holos.splice(0, holos.length - CAP.holos);
+    var ns = sparkN(18); for (var j = 0; j < ns; j++) { var a = rand(0, TAU); addSpark(x, y + size * 1.4, Math.cos(a) * 40, -rand(60, 200), 190 + rand(-20, 120), rand(4, 8), rand(0.5, 1)); }
+    return kind;
+  }
+  function strokePoly(pts, w, h, a, dx) {
+    g.beginPath(); pts.forEach(function (p, i) { if (i) g.lineTo(p[0], p[1]); else g.moveTo(p[0], p[1]); });
+    if (ink()) { g.strokeStyle = paint(h, Math.min(0.9, a * 4)); g.lineWidth = Math.max(0.8, w * 0.7); g.stroke(); return; }
+    g.strokeStyle = paint(h, a * 0.15); g.lineWidth = w * 5; g.stroke();
+    if (dx) { g.save(); g.lineWidth = w; g.translate(dx, 0); g.strokeStyle = paint(190, a * 0.6); g.stroke(); g.translate(-2 * dx, 0); g.strokeStyle = paint(315, a * 0.6); g.stroke(); g.restore(); }
+    g.strokeStyle = paint(h, a); g.lineWidth = w; g.stroke();
+    g.strokeStyle = 'rgba(255,255,255,' + (a * 0.6) + ')'; g.lineWidth = Math.max(0.6, w * 0.35); g.stroke();
+  }
+  function stepHolo(o, dt) {
+    o.t += dt; if (ink() && o.drawn) return false;
+    o.yaw += o.vyaw * dt; o.pitch += o.vpitch * dt; o.vyaw += (0.9 - o.vyaw) * dt * 0.6; o.vpitch *= Math.pow(0.3, dt); o.pitch *= Math.pow(0.7, dt);
+    var fade = Math.min(1, o.t / 0.35) * clamp((o.life - o.t) / 0.8, 0, 1);
+    var flick = P.flicker && !still ? (Math.random() < 0.04 ? 0.25 : 1) : 1;
+    var a = ink() ? 0.25 : Math.min(1, 1.3 * Math.max(P.decay, 0.02)) * fade * flick;
+    var cy = Math.cos(o.yaw), sy = Math.sin(o.yaw), cp = Math.cos(o.pitch), sp = Math.sin(o.pitch), f = 3.4;
+    var glitchY = (P.flicker && !still && Math.random() < 0.07) ? o.y + rand(-1, 1) * o.size : null, glitchX = rand(-12, 12);
+    function proj(v) {
+      var x = v[0] * cy + v[2] * sy, z = -v[0] * sy + v[2] * cy, y = v[1] * cp - z * sp; z = v[1] * sp + z * cp;
+      var k = f / (f + z), sx = o.x + x * o.size * k, syy = o.y + y * o.size * k;
+      if (glitchY !== null && Math.abs(syy - glitchY) < 7) sx += glitchX;
+      return [sx, syy, z];
+    }
+    if (!ink()) {
+      var ex = o.x, ey = o.y + o.size * 1.55;
+      for (var i = -4; i <= 4; i++) { g.strokeStyle = paint(o.h, a * 0.18); g.lineWidth = 1; ln(ex, ey, o.x + i * o.size * 0.2, o.y + o.size * 0.75); }
+      g.globalAlpha = Math.min(1, a * 3); g.drawImage(spr(o.h), ex - 10, ey - 10, 20, 20); g.globalAlpha = 1;
+    }
+    geo(o.kind).forEach(function (poly, n) {
+      var pts = poly.map(proj), zz = pts[0][2];
+      strokePoly(pts, 1.3 * P.rayWidth, o.h + zz * 40 + n * 3, a * (zz > 0 ? 0.55 : 1), 1.6 * P.dispersion);
+    });
+    o.drawn = true;
+    return o.t < o.life;
+  }
+
+  // ---- per-frame steps ----
+  function stepRay(r, dt) {
+    r.t += dt; var k = Math.min(1, r.t / r.grow), e = 1 - Math.pow(1 - k, 3), Lr = r.len * e;
+    if (Lr > r.d + 0.4) {
+      var ca = Math.cos(r.a), sa = Math.sin(r.a), s0 = r.d, s1 = Lr, m = (s0 + s1) / 2 / r.len;
+      var x0 = r.x + ca * (r.gap + s0), y0 = r.y + sa * (r.gap + s0), x1 = r.x + ca * (r.gap + s1), y1 = r.y + sa * (r.gap + s1);
+      var al = Math.pow(1 - m, 1.2), w, coreA, gm = 1;
+      if (r.shape === 'wedge') { w = r.w * (0.7 + 2.2 * m); coreA = clamp(1 - m * 3, 0, 1); gm = 1.6; al *= 0.75; }
+      else if (r.shape === 'needle') { w = 0.9; coreA = 1; gm = 0.4; al = 0.9 - m * 0.3; }
+      else { w = r.w * (1 - 0.7 * m); coreA = clamp(1 - m * 4, 0, 1); }
+      pen(x0, y0, x1, y1, w, r.h + m * 40, al * 0.9, coreA, gm);
+      r.d = Lr;
+    }
+    if (k >= 1 && r.shape === 'needle' && !ink()) addSpark(r.x + Math.cos(r.a) * (r.gap + r.len), r.y + Math.sin(r.a) * (r.gap + r.len), 0, 0, r.h, 7, 0.6, true);
+    return k < 1;
+  }
+  function stepSpark(s, dt) {
+    s.t += dt; if (s.t >= s.life) return false;
+    s.px = s.x; s.py = s.y; var dmp = Math.pow(0.96, dt * 60);
+    s.x += s.vx * dt; s.y += s.vy * dt; s.vx *= dmp; s.vy = s.vy * dmp + P.gravity * dt;
+    var k = s.t / s.life, al = 1 - k, tw = still ? 1 : 1 - P.twinkle * 0.5 * (1 + Math.sin(s.tw + s.t * 18));
+    if (s.flash) { g.globalAlpha = al * 0.55 * GAIN; var z = s.s * (1 - k * 0.4); g.drawImage(WHITE, s.x - z, s.y - z, z * 2, z * 2); g.globalAlpha = 1; return true; }
+    if (s.vx || s.vy) pen(s.px, s.py, s.x, s.y, Math.max(0.8, s.s * 0.22), s.h, al * 0.8 * tw, 0.6, 0.6);
+    if (!ink()) { g.globalAlpha = al * tw * 0.5 * GAIN; var sz = s.s * 0.9; g.drawImage(spr(s.h), s.x - sz, s.y - sz, sz * 2, sz * 2); g.globalAlpha = 1; }
+    return true;
+  }
+  function stepRing(r, dt) {
+    r.t += dt; if (r.t < r.delay) return true;
+    var U = Math.min(1, (r.t - r.delay) / r.dur), steps = Math.max(1, Math.ceil((U - r.u) * 48)), prev = ringPt(r, r.u);
+    for (var i = 1; i <= steps; i++) { var uu = r.u + (U - r.u) * i / steps, p = ringPt(r, uu); pen(prev[0], prev[1], p[0], p[1], r.w, r.h + uu * 120, 0.8, 0.5); prev = p; }
+    r.u = U;
+    if (!ink() && U < 1) { g.globalAlpha = 0.5; g.drawImage(spr(r.h), prev[0] - 8, prev[1] - 8, 16, 16); g.globalAlpha = 1; }
+    return U < 1;
+  }
+  function filterStep(list, fn, dt) { var j = 0; for (var i = 0; i < list.length; i++) if (fn(list[i], dt)) list[j++] = list[i]; list.length = j; }
+
+  function step(dt) {
+    var copies = Math.max(1, P.symmetry | 0) * (P.mirror ? 2 : 1); GAIN = copies > 2 ? Math.min(1, 2.4 / Math.sqrt(copies)) : 1;
+    // decay is per 1/60 s, so the exposure is the same at any frame rate. Low decays are batched into steps of
+    // at least 5%: a tiny per-frame fade can't lower dim 8-bit pixels at all, and the ghost-killing subtract
+    // below would then erase long exposures within a second whatever the decay says.
+    if (P.decay > 0) fadeAcc = 1 - (1 - fadeAcc) * Math.pow(1 - P.decay, dt * 60);
+    if (P.decay > 0 && fadeAcc >= 0.05) {
+      var d = fadeAcc; fadeAcc = 0;
+      g.globalCompositeOperation = 'source-over';
+      g.fillStyle = ink() ? 'rgba(255,255,255,' + d + ')' : 'rgba(0,0,0,' + d + ')'; g.fillRect(0, 0, W, H);
+      g.globalCompositeOperation = ink() ? 'lighter' : 'difference'; g.fillStyle = ink() ? 'rgb(1,1,1)' : 'rgb(2,2,2)'; g.fillRect(0, 0, W, H);
+    }
+    g.globalCompositeOperation = ink() ? 'multiply' : 'lighter';
+    for (var i = 0; i < segs.length; i++) { var s = segs[i]; pen(s[0], s[1], s[2], s[3], s[5], s[4], 0.9, 0.9); }
+    segs.length = 0;
+    Object.keys(ptrs).forEach(function (id) {
+      var st = ptrs[id]; if (P.tool !== 'bolt' || !st.bolt) return;
+      st.arcT += dt; if (st.arcT >= 0.09 && Math.hypot(st.x - st.sx, st.y - st.sy) > 20) { st.arcT = 0; addBolt(st.sx, st.sy, st.x, st.y, boltHue(st.hue), 0.6, [0], 5); }
+    });
+    filterStep(comets, stepComet, dt);
+    filterStep(lissas, stepLissa, dt);
+    filterStep(harmos, stepHarmo, dt);
+    filterStep(bolts, stepBolt, dt);
+    filterStep(rays, stepRay, dt);
+    filterStep(sparks, stepSpark, dt);
+    filterStep(rings, stepRing, dt);
+    filterStep(holos, stepHolo, dt);
+    g.globalCompositeOperation = 'source-over';
+    if (P.bloom > 0) {
+      tx.globalCompositeOperation = 'source-over'; tx.drawImage(fx, 0, 0, tmp.width, tmp.height);
+      bx.globalCompositeOperation = 'source-over'; bx.drawImage(tmp, 0, 0, bl.width, bl.height);
+      tx2.drawImage(tmp, 0, 0, tmp2.width, tmp2.height);
+      bx.globalCompositeOperation = ink() ? 'multiply' : 'lighter'; bx.drawImage(tmp2, 0, 0, bl.width, bl.height);
+      bx.globalCompositeOperation = 'source-over';
+    }
+  }
+
+  // ---- ground ----
+  function paintGround() {
+    b.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (ink()) {
+      b.fillStyle = '#F1EEE4'; b.fillRect(0, 0, W, H);
+      for (var y = 34; y < H; y += 30) { b.fillStyle = 'rgba(80,80,120,.10)'; b.fillRect(0, y, W, 1); b.fillStyle = 'rgba(60,60,100,.30)'; for (var x = 4; x < W; x += 7) b.fillRect(x, y + 15, 1.2, 1.2); }
+    } else {
+      b.fillStyle = '#100817'; b.fillRect(0, 0, W, H);
+      var gr = b.createRadialGradient(W / 2, H / 2, 10, W / 2, H / 2, Math.max(W, H) * 0.7); gr.addColorStop(0, 'rgba(37,7,47,.9)'); gr.addColorStop(1, 'rgba(16,8,23,0)'); b.fillStyle = gr; b.fillRect(0, 0, W, H);
+    }
+  }
+  function clearFilm() {
+    g.setTransform(dpr, 0, 0, dpr, 0, 0); g.globalCompositeOperation = 'source-over'; g.fillStyle = ink() ? '#ffffff' : '#000000'; g.fillRect(0, 0, W, H);
+    rays.length = sparks.length = rings.length = holos.length = comets.length = segs.length = lissas.length = bolts.length = harmos.length = 0;
+    bx.clearRect(0, 0, bl.width, bl.height);
+  }
+  function resize(w, h, ratio) {
+    var keep = fx.width > 1 ? (function () { var c = document.createElement('canvas'); c.width = fx.width; c.height = fx.height; c.getContext('2d').drawImage(fx, 0, 0); return c; })() : null;
+    W = Math.max(1, w); H = Math.max(1, h); dpr = ratio;
+    [bgc, fx, uic].forEach(function (c) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); });
+    bl.width = Math.max(1, Math.round(W / 6)); bl.height = Math.max(1, Math.round(H / 6));
+    tmp.width = Math.max(1, Math.round(W / 6)); tmp.height = Math.max(1, Math.round(H / 6));
+    tmp2.width = Math.max(1, Math.round(W / 20)); tmp2.height = Math.max(1, Math.round(H / 20));
+    g.setTransform(dpr, 0, 0, dpr, 0, 0); u.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.fillStyle = ink() ? '#ffffff' : '#000000'; g.fillRect(0, 0, W, H);
+    if (keep) { g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(keep, 0, 0, fx.width, fx.height); g.setTransform(dpr, 0, 0, dpr, 0, 0); }
+    paintGround();
+  }
+
+  // ---- input: pointers drive tools ----
+  var ptrs = {};
+  function down(id, x, y) {
+    var st = { x: x, y: y, sx: x, sy: y, t: performance.now(), hue: rand(0, 360), acc: 0, speed: 0, moved: 0, ph: rand(0, TAU), cp: null, comet: null, grab: null };
+    ptrs[id] = st;
+    switch (P.tool) {
+      case 'streak': for (var k = 0; k < sparkN(8); k++) { var a = rand(0, TAU); addSpark(x, y, Math.cos(a) * 60, Math.sin(a) * 60, hueFor(st.hue + k * 30, a, 0), 8, 0.5); } break;
+      case 'burst': burst(x, y, 1, st.hue); break;
+      case 'coil': st.cp = [x, y]; break;
+      case 'comet': st.comet = makeComet(x, y, st.hue); break;
+      case 'lissa': st.lissa = makeLissa(x, y, st.hue); break;
+      case 'harmo': st.harmo = makeHarmo(x, y, st.hue); break;
+      case 'bolt': st.bolt = true; st.arcT = 0; break;
+      case 'holo':
+        var best = null, bd = 1e9; holos.forEach(function (o) { var d = Math.hypot(o.x - x, o.y - y); if (d < o.size * 1.4 && d < bd) { bd = d; best = o; } });
+        if (best) st.grab = best; else castHolo(x, y, Math.min(W, H) * 0.14, P.holoKind, st.hue);
+        break;
+    }
+  }
+  function move(id, x, y) {
+    var p = ptrs[id]; if (!p) return;
+    var now = performance.now(), dt = Math.max(0.008, (now - p.t) / 1000), dx = x - p.x, dy = y - p.y, d = Math.hypot(dx, dy);
+    if (d < 1) return;
+    var speed = d / dt; p.speed = p.speed * 0.6 + speed * 0.4; p.t = now; p.moved += d;
+    var ang = Math.atan2(dy, dx), k;
+    switch (P.tool) {
+      case 'halo': case 'bolt': break;
+      case 'lissa': if (p.lissa) { p.lissa.tx = x; p.lissa.ty = y; } break;
+      case 'harmo': if (p.harmo) { var hm = p.harmo, hr = Math.hypot(x - hm.cx, y - hm.cy); hm.tR = hr; if (hr > 8) hm.rot = Math.atan2(y - hm.cy, x - hm.cx); } break;
+      case 'holo': if (p.grab) { p.grab.vyaw += dx * 0.03; p.grab.vpitch += dy * 0.03; } break;
+      case 'streak':
+        p.hue += d * P.spectral;
+        addSeg(p.x, p.y, x, y, hueFor(p.hue, ang, p.speed), clamp(2 + p.speed * 0.004, 2, 10) * P.rayWidth);
+        var nr = (p.speed > 1200 ? 3 : p.speed > 400 ? 2 : (Math.random() < 0.6 ? 1 : 0)) * P.rayRate, ni = Math.floor(nr) + (Math.random() < nr % 1 ? 1 : 0);
+        for (k = 0; k < ni; k++) { var side = Math.random() < 0.5 ? 1 : -1, a = ang + side * Math.PI / 2 + rand(-0.7, 0.7); addRay(x, y, a, (24 + Math.min(180, p.speed * 0.11) * Math.random()) * P.rayLen, rand(1.5, 4.5) * P.rayWidth, hueFor(p.hue + rand(-30, 30), a, p.speed), rand(0.25, 0.55), 2, shapeFor()); }
+        var ns = sparkN(p.speed > 600 ? 3 : 1);
+        for (k = 0; k < ns; k++) { var bb = ang + Math.PI + rand(-1.2, 1.2), sp = rand(40, 160) + p.speed * 0.08; addSpark(x, y, Math.cos(bb) * sp, Math.sin(bb) * sp, hueFor(p.hue + rand(-40, 40), bb, sp), rand(4, 10), rand(0.5, 1.2)); }
+        break;
+      case 'burst':
+        p.hue += d * P.spectral; addSeg(p.x, p.y, x, y, hueFor(p.hue, ang, p.speed), 1.6 * P.rayWidth);
+        p.acc += d; if (p.acc > 46) { p.acc = 0; burst(x, y, 0.45, p.hue); }
+        break;
+      case 'coil':
+        var n = Math.max(1, Math.ceil(d / 4)), tx0 = dx / d, ty0 = dy / d, R = (16 + Math.min(22, p.speed * 0.01)) * P.rayLen;
+        for (k = 1; k <= n; k++) {
+          var qx = p.x + dx * k / n, qy = p.y + dy * k / n, before = Math.sin(p.ph); p.ph += (d / n) * 0.09; p.hue += (d / n) * P.spectral;
+          var cx2 = qx + tx0 * Math.cos(p.ph) * R - ty0 * Math.sin(p.ph) * R * 0.85, cy2 = qy + ty0 * Math.cos(p.ph) * R + tx0 * Math.sin(p.ph) * R * 0.85;
+          addSeg(p.cp[0], p.cp[1], cx2, cy2, hueFor(p.hue, ang, p.speed), (1.8 + Math.min(3, p.speed * 0.002)) * P.rayWidth);
+          if (before < 0.98 && Math.sin(p.ph) >= 0.98 && Math.random() < 0.7 * P.sparks) addSpark(cx2, cy2, rand(-60, 60), rand(-120, -30), hueFor(p.hue, ang, 0), rand(5, 9), rand(0.4, 0.9));
+          p.cp = [cx2, cy2];
+        }
+        break;
+      case 'comet':
+        var c = p.comet; c.tx = x; c.ty = y; c.cvx = c.cvx * 0.5 + (dx / dt) * 0.5; c.cvy = c.cvy * 0.5 + (dy / dt) * 0.5; c.h += d * P.spectral * 0.4;
+        if (p.speed > 700) { var ns2 = sparkN(1); for (k = 0; k < ns2; k++) { var b2 = ang + Math.PI + rand(-0.8, 0.8); addSpark(x, y, Math.cos(b2) * 120, Math.sin(b2) * 120, hueFor(c.h, b2, p.speed), rand(4, 8), rand(0.4, 0.9)); } }
+        break;
+    }
+    p.x = x; p.y = y;
+  }
+  function up(id) {
+    var p = ptrs[id]; if (!p) return;
+    if (P.tool === 'halo') halo(p.sx, p.sy, Math.max(36, Math.hypot(p.x - p.sx, p.y - p.sy)), p.hue);
+    else if (P.tool === 'streak' && p.speed > 900 && performance.now() - p.t < 80) burst(p.x, p.y, 0.55, p.hue);
+    else if (P.tool === 'comet' && p.comet) { p.comet.released = true; p.comet.curl = (Math.random() < 0.5 ? -1 : 1) * rand(2, 3.5); }
+    else if (P.tool === 'lissa' && p.lissa) p.lissa.released = true;
+    else if (P.tool === 'harmo' && p.harmo) { if (p.harmo.tR < 24) p.harmo.tR = Math.min(W, H) * 0.22 * P.rayLen; p.harmo.released = true; }
+    else if (P.tool === 'bolt' && p.bolt) {
+      if (Math.hypot(p.x - p.sx, p.y - p.sy) > 24) {
+        var h = boltHue(p.hue); addBolt(p.sx, p.sy, p.x, p.y, h, 1.2, [0, 0.06, 0.14], 7);
+        var ns = sparkN(16); for (var k = 0; k < ns; k++) { var a = rand(0, TAU); addSpark(p.x, p.y, Math.cos(a) * rand(60, 260), Math.sin(a) * rand(60, 260), h + rand(-30, 30), rand(4, 9), rand(0.4, 1)); }
+      } else skyStrike(p.sx, p.sy, p.hue);
+    }
+    if (p.lissa && P.tool !== 'lissa') p.lissa.released = true;
+    if (p.harmo && P.tool !== 'harmo') { if (p.harmo.tR < 24) p.harmo.tR = Math.min(W, H) * 0.22; p.harmo.released = true; }
+    if (p.comet && P.tool !== 'comet') p.comet.released = true;
+    delete ptrs[id];
+  }
+  function cast(x, y) {
+    var h = rand(0, 360);
+    switch (P.tool) {
+      case 'halo': halo(x, y, Math.min(W, H) * 0.2, h); break;
+      case 'holo': castHolo(x, y, Math.min(W, H) * 0.16, P.holoKind, h); break;
+      case 'bolt': skyStrike(x, y, h); break;
+      case 'lissa': var L = makeLissa(x, y, h); setTimeout(function () { L.released = true; }, 2400); break;
+      case 'harmo': var hm = makeHarmo(x, y, h); hm.tR = Math.min(W, H) * 0.22 * P.rayLen; hm.rot = rand(0, TAU); hm.released = true; break;
+      default: burst(x, y, 1, h);
+    }
+  }
+  function drawUi() {
+    u.clearRect(0, 0, W, H);
+    if (P.tool === 'harmo') {
+      // the pendulum string: a dashed line from the pivot to the finger
+      Object.keys(ptrs).forEach(function (id) {
+        var p = ptrs[id]; if (!p.harmo || Math.hypot(p.x - p.sx, p.y - p.sy) < 8) return;
+        var col = ink() ? 'rgba(30,28,70,.6)' : 'rgba(232,255,101,.7)';
+        u.setLineDash([4, 7]); u.strokeStyle = col; u.lineWidth = 1.5; u.beginPath(); u.moveTo(p.sx, p.sy); u.lineTo(p.x, p.y); u.stroke(); u.setLineDash([]);
+        u.fillStyle = col; u.beginPath(); u.arc(p.sx, p.sy, 3.5, 0, TAU); u.fill(); u.beginPath(); u.arc(p.x, p.y, 6, 0, TAU); u.stroke();
+      });
+      return;
+    }
+    if (P.tool !== 'halo') return;
+    Object.keys(ptrs).forEach(function (id) {
+      var p = ptrs[id], r = Math.max(36, Math.hypot(p.x - p.sx, p.y - p.sy)), col = ink() ? 'rgba(30,28,70,.7)' : 'rgba(232,255,101,.8)';
+      u.setLineDash([6, 8]); u.strokeStyle = col; u.lineWidth = 2; u.beginPath(); u.arc(p.sx, p.sy, r, 0, TAU); u.stroke(); u.setLineDash([]);
+      u.fillStyle = col; u.beginPath(); u.arc(p.sx, p.sy, 4, 0, TAU); u.fill();
+    });
+  }
+  function set(next) {
+    var oldMedium = P.medium; Object.keys(DEF).forEach(function (k) { if (next[k] !== undefined) P[k] = next[k]; });
+    P.symmetry = clamp(Math.round(P.symmetry), 1, 12);
+    if (P.medium !== oldMedium) { paintGround(); clearFilm(); }
+  }
+  return {
+    DEF: DEF, P: P, HOLO_KINDS: HOLO_KINDS, set: set, step: step, drawUi: drawUi, resize: resize, clear: clearFilm,
+    down: down, move: move, up: up, cast: cast, burst: burst, halo: halo, castHolo: castHolo,
+    pointers: function () { return ptrs; }, size: function () { return [W, H]; },
+    counts: function () { return { rays: rays.length, sparks: sparks.length, rings: rings.length, holos: holos.length, comets: comets.length, lissas: lissas.length, bolts: bolts.length, harmos: harmos.length }; },
+    setStill: function (v) { still = !!v; }
+  };
+}
+/*ENGINE-END*/
+
+(function () {
+  'use strict';
+  var root = document.documentElement, stage = document.getElementById('stage');
+  var still = false; try { still = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+  root.setAttribute('data-mode', 'toy'); root.setAttribute('data-medium', 'light');
+  var LP = makeLightPaint({ bg: document.getElementById('bg'), fx: document.getElementById('fx'), bloom: document.getElementById('bloom'), ui: document.getElementById('ui'), still: still });
+  var P = LP.P;
+  function rand(a, b) { return a + Math.random() * (b - a); }
+
+  var WORLDS = [
+    { name: 'Spectral Shimmer', p: {} },
+    { name: 'Prism Burst', p: { tool: 'burst', colorLaw: 'angle', rayShape: 'mix', anisotropy: 0.35, dispersion: 0.6, decay: 0.06, bloom: 0.55, sparks: 1.4, scan: 0.2, rayLen: 1.2 } },
+    { name: 'Notebook', p: { medium: 'ink', tool: 'burst', tail: 0.8, anisotropy: 1, decay: 0, colorLaw: 'ink', rayShape: 'taper', dispersion: 0, sparks: 0.4, gravity: 0, bloom: 0.2, scan: 0, flicker: false, rayLen: 0.9 } },
+    { name: 'Hologram Sim', p: { tool: 'holo', colorLaw: 'holo', dispersion: 2, scan: 0.9, flicker: true, decay: 0.14, bloom: 0.5, sparks: 0.6 } },
+    { name: 'Kaleido Mandala', p: { symmetry: 8, mirror: true, decay: 0.03, spectral: 1.2, bloom: 0.5, sparks: 0.6, scan: 0.3, rayRate: 0.7 } },
+    { name: 'Laser Show', p: { tool: 'comet', colorLaw: 'laser', hue: 85, rayShape: 'needle', dispersion: 0.3, decay: 0.05, bloom: 0.7, scan: 0.3, sparks: 0.8 } },
+    { name: 'Serpent Coil', p: { tool: 'coil', colorLaw: 'gooae', decay: 0.05, sparks: 0.8, bloom: 0.4, spectral: 0.8 } },
+    { name: 'Storm Glass', p: { tool: 'bolt', colorLaw: 'path', decay: 0.07, bloom: 0.65, scan: 0.4, dispersion: 0.8, sparks: 1, jag: 0.55, branch: 0.7 } },
+    { name: 'Oscilloscope', p: { tool: 'lissa', colorLaw: 'laser', hue: 135, decay: 0.035, bloom: 0.6, scan: 0.85, dispersion: 0.25, sparks: 0.3, rayWidth: 0.8, lissaRatio: 'auto' } },
+    { name: 'Pendulum', p: { tool: 'harmo', colorLaw: 'path', spectral: 0.35, decay: 0.008, bloom: 0.4, scan: 0.3, dispersion: 0.5, sparks: 0.3, rayWidth: 0.6, lissaSpeed: 0.6, harmDamp: 0.13, harmDrift: 0.4 } },
+    { name: 'Pendulum Ink', p: { medium: 'ink', tool: 'harmo', colorLaw: 'ink', decay: 0, dispersion: 0, sparks: 0, gravity: 0, bloom: 0, scan: 0, flicker: false, rayWidth: 0.6, harmDamp: 0.16, harmDrift: 0.3, lissaSpeed: 0.7 } }
+  ];
+  var TOOLS = [['streak', 'Streak'], ['burst', 'Burst'], ['halo', 'Halo'], ['coil', 'Coil'], ['comet', 'Comet'], ['lissa', 'Lissajous'], ['harmo', 'Harmonograph'], ['bolt', 'Lightning'], ['holo', 'Holo']];
+  var SCHEMA = [
+    { g: 'Light', k: 'medium', label: 'Medium', type: 'select', options: [['light', 'Light on void'], ['ink', 'Ink on paper']] },
+    { g: 'Light', k: 'decay', label: 'Afterglow fade', min: 0, max: 0.25, step: 0.005 },
+    { g: 'Light', k: 'bloom', label: 'Bloom', min: 0, max: 1, step: 0.05 },
+    { g: 'Light', k: 'scan', label: 'Scanlines', min: 0, max: 1, step: 0.05 },
+    { g: 'Light', k: 'flicker', label: 'Holo flicker', type: 'toggle' },
+    { g: 'Colour', k: 'colorLaw', label: 'Colour law', type: 'select', options: [['path', 'Spectrum by path'], ['angle', 'Spectrum by angle'], ['speed', 'Spectrum by speed'], ['gooae', 'GOOAE palette'], ['laser', 'Laser, one hue'], ['holo', 'Hologram cyan and magenta'], ['thermal', 'Thermal'], ['ink', 'Ballpoint ink']] },
+    { g: 'Colour', k: 'hue', label: 'Laser hue', min: 0, max: 360, step: 1 },
+    { g: 'Colour', k: 'spectral', label: 'Spectral rate', min: 0, max: 2, step: 0.05 },
+    { g: 'Colour', k: 'dispersion', label: 'Dispersion', min: 0, max: 3, step: 0.1 },
+    { g: 'Rays', k: 'rayShape', label: 'Ray shape', type: 'select', options: [['taper', 'Taper'], ['wedge', 'Wedge'], ['needle', 'Needle'], ['mix', 'Wedge and needle']] },
+    { g: 'Rays', k: 'rayRate', label: 'Ray rate', min: 0, max: 3, step: 0.1 },
+    { g: 'Rays', k: 'rayLen', label: 'Ray length', min: 0.2, max: 3, step: 0.05 },
+    { g: 'Rays', k: 'rayWidth', label: 'Line width', min: 0.3, max: 3, step: 0.05 },
+    { g: 'Rays', k: 'anisotropy', label: 'Horizontal smear', min: 0, max: 1, step: 0.05 },
+    { g: 'Rays', k: 'tail', label: 'Feather tail', min: 0, max: 1, step: 0.05 },
+    { g: 'Figures', k: 'lissaRatio', label: 'Lissajous ratio', type: 'select', options: [['auto', 'Random each stroke'], ['1:2', '1 : 2'], ['2:3', '2 : 3'], ['3:4', '3 : 4'], ['3:5', '3 : 5'], ['5:4', '5 : 4'], ['1:3', '1 : 3']] },
+    { g: 'Figures', k: 'lissaSpeed', label: 'Beam speed (Lissajous, Harmonograph)', min: 0.1, max: 2, step: 0.05 },
+    { g: 'Figures', k: 'harmDamp', label: 'Harmonograph decay', min: 0.05, max: 0.6, step: 0.01 },
+    { g: 'Figures', k: 'harmDrift', label: 'Harmonograph drift', min: 0, max: 1, step: 0.05 },
+    { g: 'Figures', k: 'jag', label: 'Lightning jaggedness', min: 0, max: 1, step: 0.05 },
+    { g: 'Figures', k: 'branch', label: 'Lightning forks', min: 0, max: 1, step: 0.05 },
+    { g: 'Sparks', k: 'sparks', label: 'Sparks', min: 0, max: 3, step: 0.1 },
+    { g: 'Sparks', k: 'gravity', label: 'Gravity', min: -200, max: 400, step: 10 },
+    { g: 'Sparks', k: 'twinkle', label: 'Twinkle', min: 0, max: 1, step: 0.05 },
+    { g: 'Space', k: 'symmetry', label: 'Symmetry', min: 1, max: 12, step: 1 },
+    { g: 'Space', k: 'mirror', label: 'Mirror copies', type: 'toggle' },
+    { g: 'Space', k: 'holoKind', label: 'Hologram shape', type: 'select', options: [['cycle', 'Cycle through all'], ['torus', 'Torus'], ['ico', 'Icosahedron'], ['helix', 'Serpent helix'], ['eye', 'Eye'], ['crown', 'Crown'], ['glyph', '333 glyph'], ['star', 'Star']] },
+    { g: 'Space', k: 'autopilot', label: 'Autopilot when idle', type: 'toggle' }
+  ];
+  var worldIx = 0, live = document.getElementById('live');
+  function say(s) { live.textContent = s; }
+
+  // ---- sizing ----
+  function resize() { var r = stage.getBoundingClientRect(); LP.resize(r.width, r.height, Math.min(window.devicePixelRatio || 1, 2)); }
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(stage); else window.addEventListener('resize', resize);
+  resize();
+
+  // ---- applying params ----
+  function sync() {
+    root.setAttribute('data-medium', P.medium);
+    root.style.setProperty('--scan', String(P.scan)); root.style.setProperty('--bloom', String(P.bloom));
+    stage.classList.toggle('flicker', !!P.flicker && !still);
+    SCHEMA.forEach(function (s) {
+      var el = document.getElementById('k-' + s.k); if (!el) return;
+      if (s.type === 'toggle') el.checked = !!P[s.k]; else el.value = P[s.k];
+      var out = document.getElementById('o-' + s.k); if (out) out.textContent = fmt(P[s.k]);
+    });
+    document.querySelectorAll('#tools .chip').forEach(function (c) { c.setAttribute('aria-checked', String(c.dataset.v === P.tool)); });
+    document.querySelectorAll('#worlds .chip').forEach(function (c) { c.setAttribute('aria-checked', String(+c.dataset.v === worldIx)); });
+    var rec = document.getElementById('recipe'); if (document.activeElement !== rec) rec.value = JSON.stringify(Object.assign({ world: worldIx >= 0 ? WORLDS[worldIx].name : 'Mutant' }, P), null, 1);
+  }
+  function fmt(v) { return typeof v === 'number' ? (Math.abs(v) >= 10 ? v.toFixed(0) : v.toFixed(2)) : String(v); }
+  function setWorld(i) {
+    worldIx = ((i % WORLDS.length) + WORLDS.length) % WORLDS.length;
+    var medium = P.medium; LP.set(Object.assign({}, LP.DEF, WORLDS[worldIx].p));
+    if (P.medium === medium) LP.clear();
+    sync(); idle = 0; ghost.on = false; startGhost(); say(WORLDS[worldIx].name);
+  }
+  function mutate() {
+    var next = {}, pick = function (a) { return a[Math.floor(Math.random() * a.length)]; };
+    SCHEMA.forEach(function (s) {
+      if (s.k === 'medium' || s.k === 'autopilot' || s.k === 'flicker') return;
+      if (s.type === 'select') next[s.k] = pick(s.options)[0];
+      else if (s.type === 'toggle') next[s.k] = Math.random() < 0.4;
+      else { var v = rand(s.min, s.max); next[s.k] = Math.round(v / s.step) * s.step; }
+    });
+    // Mutate stays inside a safer band than the sliders, so stacked intensity knobs can't blow the film out
+    var SAFE = { rayRate: [0.3, 1.8], rayLen: [0.4, 2], rayWidth: [0.5, 2], sparks: [0.2, 2], bloom: [0.15, 0.7], lissaSpeed: [0.6, 1.6], harmDamp: [0.12, 0.4] };
+    Object.keys(SAFE).forEach(function (k) { next[k] = Math.round(rand(SAFE[k][0], SAFE[k][1]) * 20) / 20; });
+    next.decay = Math.round(rand(0.03, 0.15) * 200) / 200;
+    next.symmetry = pick([1, 1, 1, 2, 3, 4, 6, 8]);
+    next.tool = pick(TOOLS)[0];
+    if (next.colorLaw === 'ink') next.colorLaw = 'path';
+    worldIx = -1; LP.set(next); sync(); LP.clear(); startGhost(); say('Mutant');
+  }
+
+  // ---- bench ----
+  function buildBench() {
+    var wl = document.getElementById('worlds');
+    WORLDS.forEach(function (w, i) { var b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.setAttribute('role', 'radio'); b.dataset.v = i; b.textContent = w.name; b.onclick = function () { setWorld(i); }; wl.appendChild(b); });
+    var tl = document.getElementById('tools');
+    TOOLS.forEach(function (t) { var b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.setAttribute('role', 'radio'); b.dataset.v = t[0]; b.textContent = t[1]; b.onclick = function () { LP.set({ tool: t[0] }); worldIx = -1; sync(); }; tl.appendChild(b); });
+    var knobs = document.getElementById('knobs'), groups = {};
+    SCHEMA.forEach(function (s) {
+      if (!groups[s.g]) { var box = document.createElement('div'); box.className = 'box'; box.innerHTML = '<h2></h2>'; box.firstChild.textContent = s.g; knobs.appendChild(box); groups[s.g] = box; knobs.appendChild(document.createTextNode('')); }
+      var row = document.createElement('div'); row.className = 'row' + (s.type === 'toggle' ? ' tog' : ''); var id = 'k-' + s.k, el;
+      var lab = document.createElement('label'); lab.setAttribute('for', id); lab.textContent = s.label; row.appendChild(lab);
+      if (s.type === 'select') { el = document.createElement('select'); s.options.forEach(function (o) { var op = document.createElement('option'); op.value = o[0]; op.textContent = o[1]; el.appendChild(op); }); }
+      else if (s.type === 'toggle') { el = document.createElement('input'); el.type = 'checkbox'; }
+      else { var out = document.createElement('output'); out.id = 'o-' + s.k; out.setAttribute('for', id); row.appendChild(out); el = document.createElement('input'); el.type = 'range'; el.min = s.min; el.max = s.max; el.step = s.step; }
+      el.id = id;
+      el.addEventListener('input', function () { var v = s.type === 'toggle' ? el.checked : s.type === 'select' ? el.value : parseFloat(el.value); var o = {}; o[s.k] = v; LP.set(o); worldIx = -1; sync(); });
+      row.appendChild(el); groups[s.g].appendChild(row);
+    });
+    document.getElementById('mutate').onclick = mutate;
+    document.getElementById('clear').onclick = function () { LP.clear(); say('Cleared'); };
+    document.getElementById('cast').onclick = function () { var s = LP.size(); LP.cast(s[0] / 2, s[1] / 2); idle = 0; };
+    document.getElementById('copy').onclick = function () {
+      var ta = document.getElementById('recipe'), msg = document.getElementById('msg');
+      try { navigator.clipboard.writeText(ta.value).then(function () { msg.textContent = 'Recipe copied.'; }, function () { ta.select(); msg.textContent = 'Copy blocked here. The recipe is selected; copy it by hand.'; }); }
+      catch (e) { ta.select(); msg.textContent = 'Copy blocked here. The recipe is selected; copy it by hand.'; }
+    };
+    document.getElementById('apply').onclick = function () {
+      var msg = document.getElementById('msg');
+      try { var o = JSON.parse(document.getElementById('recipe').value); LP.set(o); worldIx = -1; sync(); msg.textContent = 'Recipe applied.'; }
+      catch (e) { msg.textContent = 'That recipe is not valid JSON. Check for a missing comma or quote.'; }
+    };
+  }
+  buildBench();
+
+  // ---- mode toggle ----
+  var devBtn = document.getElementById('devBtn');
+  function setMode(dev) { root.setAttribute('data-mode', dev ? 'dev' : 'toy'); devBtn.setAttribute('aria-pressed', String(dev)); devBtn.textContent = dev ? 'DEV MODE · ON' : 'DEV MODE'; sync(); }
+  devBtn.onclick = function () { setMode(root.getAttribute('data-mode') !== 'dev'); };
+  if (location.hash === '#dev') setMode(true);
+
+  // ---- pointer input ----
+  var fx = document.getElementById('fx'), lastTap = { t: 0, x: 0, y: 0 }, downAt = {};
+  function local(e) { var r = fx.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+  fx.addEventListener('pointerdown', function (e) {
+    e.preventDefault(); idle = 0; if (ghost.on) endGhost();
+    var p = local(e), now = performance.now();
+    if (root.getAttribute('data-mode') === 'toy' && now - lastTap.t < 300 && Math.hypot(p[0] - lastTap.x, p[1] - lastTap.y) < 44) { lastTap.t = 0; setWorld(worldIx + 1); return; }
+    try { fx.setPointerCapture(e.pointerId); } catch (er) {}
+    downAt[e.pointerId] = { t: now, x: p[0], y: p[1], moved: 0 };
+    LP.down(e.pointerId, p[0], p[1]);
+  });
+  fx.addEventListener('pointermove', function (e) {
+    if (!LP.pointers()[e.pointerId]) return; idle = 0;
+    var evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e]; if (!evs.length) evs = [e];
+    evs.forEach(function (ev) { var p = local(ev); var d = downAt[e.pointerId]; if (d) d.moved = Math.max(d.moved, Math.hypot(p[0] - d.x, p[1] - d.y)); LP.move(e.pointerId, p[0], p[1]); });
+  });
+  function lift(e) {
+    var d = downAt[e.pointerId]; if (d && performance.now() - d.t < 250 && d.moved < 14) lastTap = { t: performance.now(), x: d.x, y: d.y };
+    delete downAt[e.pointerId]; LP.up(e.pointerId);
+  }
+  fx.addEventListener('pointerup', lift); fx.addEventListener('pointercancel', lift);
+  fx.addEventListener('keydown', function (e) { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); var s = LP.size(); LP.cast(s[0] / 2, s[1] / 2); idle = 0; } });
+
+  // ---- autopilot: a ghost hand that plays the current tool when the stage is idle ----
+  var idle = 0, ghost = { on: false, t: 0, kind: '', pts: null, i: 0 };
+  function startGhost() {
+    var s = LP.size(), W = s[0], H = s[1], tool = P.tool;
+    ghost.on = true; ghost.t = 0; ghost.i = 0; ghost.downed = false;
+    if (tool === 'burst' || tool === 'holo') { ghost.kind = 'taps'; ghost.pts = [0, 1, 2].map(function () { return [rand(0.25, 0.75) * W, rand(0.25, 0.7) * H]; }); ghost.dur = 2.4; }
+    else if (tool === 'lissa') { ghost.kind = 'hold'; ghost.c = [rand(0.35, 0.65) * W, rand(0.35, 0.6) * H]; ghost.dur = 3.2; }
+    else if (tool === 'harmo') { ghost.kind = 'pull'; ghost.c = [rand(0.35, 0.65) * W, rand(0.35, 0.6) * H]; ghost.r = Math.min(W, H) * rand(0.18, 0.28); ghost.a = rand(0, 6.28); ghost.dur = 1.1; }
+    else if (tool === 'bolt') { ghost.kind = 'arc'; ghost.a = [rand(0.15, 0.4) * W, rand(0.25, 0.45) * H]; ghost.b = [rand(0.6, 0.85) * W, rand(0.5, 0.75) * H]; ghost.tap = [rand(0.3, 0.7) * W, rand(0.55, 0.8) * H]; ghost.dur = 2.0; ghost.tapped = false; }
+    else if (tool === 'halo') { ghost.kind = 'ring'; ghost.c = [rand(0.3, 0.7) * W, rand(0.3, 0.65) * H]; ghost.r = Math.min(W, H) * rand(0.12, 0.22); ghost.dur = 1.0; }
+    else { ghost.kind = 'path'; ghost.c = [W / 2, H * 0.48]; ghost.sx = Math.min(W * 0.36, 300); ghost.sy = Math.min(H * 0.2, 170); ghost.dur = 2.6; ghost.ph = rand(0, 6.28); }
+  }
+  function endGhost() { if (LP.pointers().ghost) LP.up('ghost'); ghost.on = false; }
+  function stepGhost(dt) {
+    if (!ghost.on) return;
+    ghost.t += dt; var k = Math.min(1, ghost.t / ghost.dur), ptr = LP.pointers().ghost;
+    if (ghost.kind === 'taps') {
+      var due = Math.floor(ghost.t / 0.75);
+      while (ghost.i <= Math.min(due, 2)) { var q = ghost.pts[ghost.i]; LP.down('ghost', q[0], q[1]); LP.up('ghost'); ghost.i++; }
+    } else if (ghost.kind === 'hold') {
+      var hx = ghost.c[0] + Math.sin(ghost.t * 0.9) * 30, hy = ghost.c[1] + Math.cos(ghost.t * 0.7) * 20;
+      if (!ptr) LP.down('ghost', hx, hy); else { ptr.t = performance.now() - dt * 1000; LP.move('ghost', hx, hy); }
+      if (k >= 0.8 && LP.pointers().ghost) LP.up('ghost');
+    } else if (ghost.kind === 'arc') {
+      var ak = Math.min(1, ghost.t / 1.0);
+      if (ghost.t < 1.0) { var ax = ghost.a[0] + (ghost.b[0] - ghost.a[0]) * ak, ay = ghost.a[1] + (ghost.b[1] - ghost.a[1]) * ak; if (!ptr) LP.down('ghost', ghost.a[0], ghost.a[1]); else { ptr.t = performance.now() - dt * 1000; LP.move('ghost', ax, ay); } }
+      else { if (ptr) LP.up('ghost'); if (ghost.t > 1.4 && !ghost.tapped) { ghost.tapped = true; LP.down('ghost', ghost.tap[0], ghost.tap[1]); LP.up('ghost'); } }
+    } else if (ghost.kind === 'pull') {
+      var pk = 1 - Math.pow(1 - k, 2);
+      if (!ptr) LP.down('ghost', ghost.c[0], ghost.c[1]);
+      else { ptr.t = performance.now() - dt * 1000; LP.move('ghost', ghost.c[0] + Math.cos(ghost.a) * ghost.r * pk, ghost.c[1] + Math.sin(ghost.a) * ghost.r * pk); }
+    } else if (ghost.kind === 'ring') {
+      if (!ptr) LP.down('ghost', ghost.c[0], ghost.c[1]);
+      else { ptr.t = performance.now() - dt * 1000; LP.move('ghost', ghost.c[0] + ghost.r * k, ghost.c[1] + ghost.r * 0.3 * k); }
+    } else {
+      var th = ghost.ph + k * Math.PI * 2, den = 1 + Math.sin(th) * Math.sin(th);
+      var x = ghost.c[0] + ghost.sx * Math.cos(th) / den, y = ghost.c[1] + ghost.sy * 1.8 * Math.sin(th) * Math.cos(th) / den;
+      if (!ptr) LP.down('ghost', x, y); else { ptr.t = performance.now() - dt * 1000; LP.move('ghost', x, y); }
+    }
+    if (k >= 1) { var wasPull = ghost.kind === 'pull'; endGhost(); idle = wasPull ? -7 : 0; } /* a released harmonograph swings for a while; let it */
+  }
+
+  // ---- loop ----
+  var last = performance.now(), fps = 60, hudT = 0, hud = document.getElementById('hud');
+  function frame(now) {
+    var dt = Math.min(0.05, (now - last) / 1000); last = now; fps = fps * 0.95 + (1 / Math.max(dt, 0.001)) * 0.05;
+    var busy = Object.keys(LP.pointers()).some(function (k) { return k !== 'ghost'; });
+    if (!busy) idle += dt;
+    if (P.autopilot && !still && !ghost.on && !busy && idle > 5) startGhost();
+    stepGhost(dt);
+    LP.step(dt); LP.drawUi();
+    hudT += dt;
+    if (hudT > 0.4 && root.getAttribute('data-mode') === 'dev') {
+      hudT = 0; var c = LP.counts();
+      hud.textContent = (worldIx >= 0 ? WORLDS[worldIx].name : 'Mutant') + ' · ' + P.tool + ' · rays ' + c.rays + ' · sparks ' + c.sparks + ' · ' + Math.round(fps) + ' fps';
+    }
+    requestAnimationFrame(frame);
+  }
+  setWorld(0);
+  /*TEST-HOOK*/
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</body></html>
